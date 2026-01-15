@@ -20,6 +20,13 @@ public class ClothConfigIntegration {
         ConfigCategory general = builder.getOrCreateCategory(Component.translatable("category.mobendium.general"));
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
 
+        general.addEntry(entryBuilder.startStrList(Component.translatable("option.mobendium.blacklist"), config.entityBlacklist)
+                .setDefaultValue(ModConfig.getDefaultBlacklist())
+                .setTooltip(Component.translatable("option.mobendium.blacklist.tooltip"))
+                .setSaveConsumer(newValue -> config.entityBlacklist = newValue)
+                .build());
+
         return builder.build();
     }
+
 }

@@ -18,9 +18,6 @@
         "main": [
             "com.evandev.mobendium.MobendiumMod"
         ],
-        "client": [
-            "com.evandev.mobendium.client.MobendiumModClient"
-        ],
         "modmenu": [
             "com.evandev.mobendium.compat.ModMenuIntegration"
         ]
