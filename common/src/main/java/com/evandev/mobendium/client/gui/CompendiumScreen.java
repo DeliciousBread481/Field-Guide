@@ -5,8 +5,7 @@ import com.evandev.mobendium.client.MobDataManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
@@ -16,17 +15,12 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class CompendiumScreen extends Screen {
+public class CompendiumScreen extends BookScreen {
     private static final int ITEMS_PER_PAGE = 9;
     private static final int GRID_COLS = 3;
     private static final int CELL_SIZE = 40; // Size of the box for each mob
-    private static final int GAP = 10;
+    private static final int GAP = 0;
 
-    private static final int BG_WIDTH = 300;
-    private static final int BG_HEIGHT = 200;
-
-    private int leftPos;
-    private int topPos;
     private int currentPage = 0;
     private List<EntityType<?>> allEntities;
 
@@ -36,17 +30,37 @@ public class CompendiumScreen extends Screen {
 
     @Override
     protected void init() {
-        this.leftPos = (this.width - BG_WIDTH) / 2;
-        this.topPos = (this.height - BG_HEIGHT) / 2;
+        super.init();
         this.allEntities = MobDataManager.getValidEntities();
 
-        addRenderableWidget(Button.builder(Component.literal("<"), b -> prevPage())
-                .bounds(this.leftPos + 20, this.topPos + 150, 20, 20)
-                .build());
-
-        addRenderableWidget(Button.builder(Component.literal(">"), b -> nextPage())
-                .bounds(this.leftPos + BG_WIDTH - 40, this.topPos + 150, 20, 20)
-                .build());
+        // TODO: Don't render if on first page
+        this.addRenderableWidget(new ImageButton(
+                this.leftPageBounds.left(),
+                this.leftPageBounds.bottom() - 15,
+                16,
+                16,
+                0,
+                0,
+                16,
+                Constants.PREV_PAGE_TEXTURE,
+                16,
+                16,
+                b -> prevPage()
+        ));
+        // TODO: Don't render if on last page
+        this.addRenderableWidget(new ImageButton(
+                this.rightPageBounds.right() - 16,
+                this.rightPageBounds.bottom() - 15,
+                16,
+                16,
+                0,
+                0,
+                16,
+                Constants.NEXT_PAGE_TEXTURE,
+                16,
+                16,
+                b -> nextPage()
+        ));
     }
 
     private void prevPage() {
@@ -63,18 +77,18 @@ public class CompendiumScreen extends Screen {
 
         // Book background
         RenderSystem.setShaderTexture(0, Constants.BOOK_TEXTURE);
-        guiGraphics.blit(Constants.BOOK_TEXTURE, leftPos, topPos, 0, 0, BG_WIDTH, BG_HEIGHT, BG_WIDTH, BG_HEIGHT);
+        guiGraphics.blit(Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
         // Page number
         int totalPages = (int) Math.ceil((double) allEntities.size() / ITEMS_PER_PAGE);
         String pageStr = (currentPage + 1) + " of " + totalPages;
-        guiGraphics.drawCenteredString(this.font, pageStr, this.width / 2, this.topPos + 155, 0x404040);
+        guiGraphics.drawString(this.font, pageStr, this.leftPageBounds.left() + this.leftPageBounds.width() / 2 - font.width(pageStr) / 2, this.leftPageBounds.bottom() - 16, 0xB2997D, false);
 
         // Mobs grid
-        int startX = leftPos + 55;
-        int startY = topPos + 30;
+        int startX = this.leftPageBounds.left() + 6;
+        int startY = this.leftPageBounds.top() + 11;
 
         int startIndex = currentPage * ITEMS_PER_PAGE;
         int endIndex = Math.min(startIndex + ITEMS_PER_PAGE, allEntities.size());
@@ -93,7 +107,9 @@ public class CompendiumScreen extends Screen {
 
             // Slot background/highlight
             if (hovered && unlocked) {
-                guiGraphics.fill(x, y, x + CELL_SIZE, y + CELL_SIZE, 0x80FFFFFF);
+                guiGraphics.blit(Constants.CELL_BACKGROUND_HOVER_TEXTURE, x, y, 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE);
+            } else {
+                guiGraphics.blit(Constants.CELL_BACKGROUND_TEXTURE, x, y, 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE);
             }
 
             renderMobInGrid(guiGraphics, type, x + CELL_SIZE / 2, y + CELL_SIZE - 5, 15, unlocked);
@@ -113,8 +129,8 @@ public class CompendiumScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (super.mouseClicked(mouseX, mouseY, button)) return true;
 
-        int startX = leftPos + 55;
-        int startY = topPos + 30;
+        int startX = this.leftPageBounds.left() + 6;
+        int startY = this.leftPageBounds.top() + 11;
         int startIndex = currentPage * ITEMS_PER_PAGE;
         int endIndex = Math.min(startIndex + ITEMS_PER_PAGE, allEntities.size());
 

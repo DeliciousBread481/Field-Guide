@@ -13,15 +13,10 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.NotNull;
 
-public class MobDetailScreen extends Screen {
-    private static final int BG_WIDTH = 300;
-    private static final int BG_HEIGHT = 200;
-
+public class MobDetailScreen extends BookScreen {
     private final Screen parent;
     private final EntityType<?> entityType;
     private Entity renderedEntity;
-    private int leftPos;
-    private int topPos;
 
     public MobDetailScreen(Screen parent, EntityType<?> entityType) {
         super(entityType.getDescription());
@@ -31,15 +26,14 @@ public class MobDetailScreen extends Screen {
 
     @Override
     protected void init() {
-        this.leftPos = (this.width - BG_WIDTH) / 2;
-        this.topPos = (this.height - BG_HEIGHT) / 2;
+        super.init();
 
         if (this.minecraft != null && this.minecraft.level != null) {
             this.renderedEntity = entityType.create(this.minecraft.level);
         }
 
         addRenderableWidget(Button.builder(Component.literal("Back"), b -> this.minecraft.setScreen(parent))
-                .bounds(this.leftPos + 10, this.topPos + 10, 40, 20)
+                .bounds(this.bounds.left() + 10, this.bounds.top() + 10, 40, 20)
                 .build());
     }
 
@@ -49,28 +43,31 @@ public class MobDetailScreen extends Screen {
 
         // Book background
         RenderSystem.setShaderTexture(0, Constants.BOOK_TEXTURE);
-        guiGraphics.blit(Constants.BOOK_TEXTURE, leftPos, topPos, 0, 0, BG_WIDTH, BG_HEIGHT, BG_WIDTH, BG_HEIGHT);
+        guiGraphics.blit(Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
+        guiGraphics.blit(Constants.PAGE_DETAILS_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
         // Entity name
-        guiGraphics.drawCenteredString(font, entityType.getDescription(), leftPos + (BG_WIDTH / 4), topPos + 20, 0x000000);
+        guiGraphics.drawString(this.font, entityType.getDescription(), this.leftPageBounds.left() + this.leftPageBounds.width() / 2 - font.width(entityType.getDescription()) / 2, this.leftPageBounds.top() + 14, 0x7A583C, false);
 
         // Entity model
+        int xPos = leftPageBounds.left() + leftPageBounds.width()/2;
+        int yPos = leftPageBounds.bottom() - 27;
         if (renderedEntity instanceof LivingEntity living) {
-            InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, leftPos + 65, topPos + 120, 40,
-                    (float) (leftPos + 65) - mouseX,
-                    (float) (topPos + 120 - 50) - mouseY,
+            InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, xPos, yPos, 40,
+                    (float) xPos - mouseX,
+                    (float) yPos - mouseY,
                     living);
         }
 
         // Description
         String description = MobDataManager.getEntityDescription(entityType);
-        int textX = leftPos + 135;
-        int textY = topPos + 25;
-        int textAreaWidth = 100;
+        int textX = this.rightPageBounds.left() + 11;
+        int textY = this.rightPageBounds.top() + 17;
+        int textAreaWidth = this.rightPageBounds.width() - 22;
 
-        guiGraphics.drawWordWrap(font, Component.literal(description), textX, textY, textAreaWidth, 0x000000);
+        guiGraphics.drawWordWrap(font, Component.literal(description), textX, textY, textAreaWidth, 0x7A583C);
     }
 
 }
