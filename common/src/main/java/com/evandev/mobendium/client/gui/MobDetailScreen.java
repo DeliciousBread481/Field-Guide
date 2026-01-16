@@ -4,7 +4,7 @@ import com.evandev.mobendium.Constants;
 import com.evandev.mobendium.client.MobDataManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
@@ -32,9 +32,19 @@ public class MobDetailScreen extends BookScreen {
             this.renderedEntity = entityType.create(this.minecraft.level);
         }
 
-        addRenderableWidget(Button.builder(Component.literal("Back"), b -> this.minecraft.setScreen(parent))
-                .bounds(this.bounds.left() + 10, this.bounds.top() + 10, 40, 20)
-                .build());
+        this.addRenderableWidget(new ImageButton(
+                this.bounds.left() - 2,
+                this.bounds.top() + 27,
+                23,
+                23,
+                0,
+                0,
+                23,
+                Constants.BACK_TEXTURE,
+                23,
+                23,
+                b -> this.minecraft.setScreen(parent)
+        ));
     }
 
     @Override
