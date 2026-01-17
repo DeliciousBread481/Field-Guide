@@ -16,10 +16,10 @@
     "environment": "*",
     "entrypoints": {
         "main": [
-            "com.evandev.mobendium.MobendiumMod"
+            "com.evandev.fieldguide.MobendiumMod"
         ],
         "modmenu": [
-            "com.evandev.mobendium.compat.ModMenuIntegration"
+            "com.evandev.fieldguide.compat.ModMenuIntegration"
         ]
     },
     "mixins": [

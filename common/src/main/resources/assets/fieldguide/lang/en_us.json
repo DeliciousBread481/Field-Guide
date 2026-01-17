@@ -1,0 +1,10 @@
+{
+  "title.fieldguide.config": "Mobendium Config",
+  "category.fieldguide.general": "General Settings",
+  "title.fieldguide.compendium": "Mob Compendium",
+  "gui.fieldguide.open": "Open Mobendium",
+  "fieldguide.description.missing": "No description available for this creature yet.",
+  "fieldguide.unknown": "Unknown Creature",
+  "option.fieldguide.blacklist": "Entity Blacklist",
+  "option.fieldguide.blacklist.tooltip": "Entities that should not appear in the compendium.\nSupports 'modid:entity_id' or 'modid:*' for wildcards."
+}
