@@ -3,11 +3,11 @@ package com.evandev.fieldguide.client.gui;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.MobDataManager;
 import com.evandev.fieldguide.client.gui.util.Bounds;
+import com.evandev.fieldguide.client.gui.util.EntityRenderHelper;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
-import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -106,7 +106,7 @@ public class CompendiumScreen extends BookScreen {
                 guiGraphics.blit(Constants.CELL_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE);
             }
 
-            renderMobInGrid(guiGraphics, type, bounds.x_center(), bounds.bottom() - 5, 15, unlocked);
+            renderMobInGrid(guiGraphics, type, bounds.x_center(), bounds.bottom() - 8, 15, unlocked);
 
             // Tooltip on hover
             if (hovered) {
@@ -165,16 +165,11 @@ public class CompendiumScreen extends BookScreen {
 
     private void renderMobInGrid(GuiGraphics guiGraphics, EntityType<?> type, int x, int y, int scale, boolean unlocked) {
         Entity entity = null;
-        if (Minecraft.getInstance().level != null) {
-            entity = type.create(Minecraft.getInstance().level);
+        if (this.minecraft != null && this.minecraft.level != null) {
+            entity = type.create(this.minecraft.level);
         }
         if (entity instanceof LivingEntity living) {
-            if (!unlocked) {
-                // TODO: render silhouettes
-                guiGraphics.drawCenteredString(font, "?", x, y - 10, 0x000000);
-            } else {
-                InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, x, y, scale, 0, 0, living);
-            }
+            EntityRenderHelper.renderEntityInGui(guiGraphics, living, x, y, scale, !unlocked);
         }
     }
 
