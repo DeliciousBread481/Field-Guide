@@ -2,6 +2,7 @@ package com.evandev.mobendium.client.gui;
 
 import com.evandev.mobendium.Constants;
 import com.evandev.mobendium.client.MobDataManager;
+import com.evandev.mobendium.client.gui.util.Bounds;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -16,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class CompendiumScreen extends BookScreen {
-    private static final int ITEMS_PER_PAGE = 9;
+    private static final int ITEMS_PER_PAGE = 18;
     private static final int GRID_COLS = 3;
     private static final int CELL_SIZE = 40; // Size of the box for each mob
     private static final int GAP = 0;
@@ -44,7 +45,7 @@ public class CompendiumScreen extends BookScreen {
                 16,
                 Constants.PREV_PAGE_TEXTURE,
                 16,
-                16,
+                16*2,
                 b -> prevPage()
         ));
         // TODO: Don't render if on last page
@@ -58,7 +59,7 @@ public class CompendiumScreen extends BookScreen {
                 16,
                 Constants.NEXT_PAGE_TEXTURE,
                 16,
-                16,
+                16*2,
                 b -> nextPage()
         ));
     }
@@ -81,38 +82,31 @@ public class CompendiumScreen extends BookScreen {
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
-        // Page number
+        // Page numbers
         int totalPages = (int) Math.ceil((double) allEntities.size() / ITEMS_PER_PAGE);
-        String pageStr = (currentPage + 1) + " of " + totalPages;
-        guiGraphics.drawString(this.font, pageStr, this.leftPageBounds.left() + this.leftPageBounds.width() / 2 - font.width(pageStr) / 2, this.leftPageBounds.bottom() - 16, 0xB2997D, false);
+
+        renderPageNumber((currentPage + 1) * 2 - 1, totalPages * 2, this.leftPageBounds, guiGraphics);
+        renderPageNumber((currentPage + 1) * 2, totalPages * 2, this.rightPageBounds, guiGraphics);
 
         // Mobs grid
-        int startX = this.leftPageBounds.left() + 6;
-        int startY = this.leftPageBounds.top() + 11;
-
         int startIndex = currentPage * ITEMS_PER_PAGE;
         int endIndex = Math.min(startIndex + ITEMS_PER_PAGE, allEntities.size());
 
         for (int i = startIndex; i < endIndex; i++) {
             EntityType<?> type = allEntities.get(i);
-            int localIndex = i - startIndex;
-            int col = localIndex % GRID_COLS;
-            int row = localIndex / GRID_COLS;
-
-            int x = startX + (col * (CELL_SIZE + GAP));
-            int y = startY + (row * (CELL_SIZE + GAP));
+            Bounds bounds = getGridCellBounds(i);
 
             boolean unlocked = MobDataManager.isUnlocked(type);
-            boolean hovered = mouseX >= x && mouseX < x + CELL_SIZE && mouseY >= y && mouseY < y + CELL_SIZE;
+            boolean hovered = bounds.contains(mouseX, mouseY);
 
             // Slot background/highlight
             if (hovered && unlocked) {
-                guiGraphics.blit(Constants.CELL_BACKGROUND_HOVER_TEXTURE, x, y, 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                guiGraphics.blit(Constants.CELL_BACKGROUND_HOVER_TEXTURE, bounds.x(), bounds.y(), 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE);
             } else {
-                guiGraphics.blit(Constants.CELL_BACKGROUND_TEXTURE, x, y, 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                guiGraphics.blit(Constants.CELL_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE);
             }
 
-            renderMobInGrid(guiGraphics, type, x + CELL_SIZE / 2, y + CELL_SIZE - 5, 15, unlocked);
+            renderMobInGrid(guiGraphics, type, bounds.x_center(), bounds.bottom() - 5, 15, unlocked);
 
             // Tooltip on hover
             if (hovered) {
@@ -125,23 +119,40 @@ public class CompendiumScreen extends BookScreen {
         }
     }
 
+    private Bounds getGridCellBounds(int i) {
+        Bounds pageBounds;
+        int startIndex = currentPage * ITEMS_PER_PAGE;
+        if (i < startIndex + ITEMS_PER_PAGE / 2) {
+            pageBounds = this.leftPageBounds;
+        } else {
+            pageBounds = this.rightPageBounds;
+        }
+        int startX = pageBounds.left() + 6;
+        int startY = pageBounds.top() + 11;
+        int localIndex = (i - startIndex) % (ITEMS_PER_PAGE / 2);
+        int col = localIndex % GRID_COLS;
+        int row = localIndex / GRID_COLS;
+
+        int x = startX + (col * (CELL_SIZE + GAP));
+        int y = startY + (row * (CELL_SIZE + GAP));
+
+        return new Bounds(x, y, CELL_SIZE, CELL_SIZE);
+    }
+
+    private void renderPageNumber(int page, int total, Bounds bounds, GuiGraphics guiGraphics) {
+        String str = page + " of " + total;
+        guiGraphics.drawString(this.font, str, bounds.x_center() - font.width(str) / 2, bounds.bottom() - 16, 0xB2997D, false);
+    }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (super.mouseClicked(mouseX, mouseY, button)) return true;
 
-        int startX = this.leftPageBounds.left() + 6;
-        int startY = this.leftPageBounds.top() + 11;
         int startIndex = currentPage * ITEMS_PER_PAGE;
         int endIndex = Math.min(startIndex + ITEMS_PER_PAGE, allEntities.size());
 
         for (int i = startIndex; i < endIndex; i++) {
-            int localIndex = i - startIndex;
-            int col = localIndex % GRID_COLS;
-            int row = localIndex / GRID_COLS;
-            int x = startX + (col * (CELL_SIZE + GAP));
-            int y = startY + (row * (CELL_SIZE + GAP));
-
-            if (mouseX >= x && mouseX < x + CELL_SIZE && mouseY >= y && mouseY < y + CELL_SIZE) {
+            if (getGridCellBounds(i).contains((int)mouseX, (int)mouseY)) {
                 EntityType<?> type = allEntities.get(i);
                 if (MobDataManager.isUnlocked(type)) {
                     Minecraft.getInstance().setScreen(new MobDetailScreen(this, type));

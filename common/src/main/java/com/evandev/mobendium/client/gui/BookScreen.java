@@ -7,6 +7,8 @@ import net.minecraft.network.chat.Component;
 public abstract class BookScreen extends Screen {
     private static final int BG_WIDTH = 300;
     private static final int BG_HEIGHT = 200;
+    private static final int PAGE_WIDTH = 132;
+    private static final int PAGE_HEIGHT = 164;
 
     protected Bounds bounds;
     protected Bounds leftPageBounds;
@@ -19,7 +21,7 @@ public abstract class BookScreen extends Screen {
     @Override
     protected void init() {
         this.bounds = new Bounds((this.width - BG_WIDTH) / 2,(this.height - BG_HEIGHT) / 2, BG_WIDTH, BG_HEIGHT);
-        this.leftPageBounds = new Bounds(this.bounds.left() + 16,this.bounds.top() + 19,132,164);
-        this.rightPageBounds = new Bounds(this.leftPageBounds.right() + 5,leftPageBounds.top(),132,164);
+        this.leftPageBounds = new Bounds(this.bounds.left() + 16,this.bounds.top() + 19, PAGE_WIDTH, PAGE_HEIGHT);
+        this.rightPageBounds = new Bounds(this.leftPageBounds.right() + 5,leftPageBounds.top(), PAGE_WIDTH, PAGE_HEIGHT);
     }
 }

@@ -42,7 +42,7 @@ public class MobDetailScreen extends BookScreen {
                 23,
                 Constants.BACK_TEXTURE,
                 23,
-                23,
+                23*2,
                 b -> this.minecraft.setScreen(parent)
         ));
     }

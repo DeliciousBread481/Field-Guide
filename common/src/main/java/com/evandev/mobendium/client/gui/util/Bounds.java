@@ -13,4 +13,10 @@ public record Bounds(int x, int y, int width, int height) {
     public int bottom() {
         return y + height;
     }
+    public int x_center() { return x + width / 2; }
+    public int y_center() { return y + height / 2; }
+
+    public boolean contains(int x, int y) {
+        return x >= left() && x < right() && y >= top() && y < bottom();
+    }
 }
