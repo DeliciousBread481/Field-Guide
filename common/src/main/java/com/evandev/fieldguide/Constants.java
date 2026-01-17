@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 
 public class Constants {
     public static final String MOD_ID = "fieldguide";
-    public static final String MOD_NAME = "Mobendium";
+    public static final String MOD_NAME = "FieldGuide";
     public static final Logger LOG = LoggerFactory.getLogger(MOD_NAME);
 
     public static final ResourceLocation BOOK_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/book.png");

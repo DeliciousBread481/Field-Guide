@@ -2,7 +2,7 @@ package com.evandev.fieldguide;
 
 import net.fabricmc.api.ModInitializer;
 
-public class MobendiumMod implements ModInitializer {
+public class FieldGuideMod implements ModInitializer {
 
     @Override
     public void onInitialize() {

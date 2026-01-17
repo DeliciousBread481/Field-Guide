@@ -19,7 +19,7 @@ public class PauseScreenMixin extends Screen {
     }
 
     @Inject(method = "createPauseMenu", at = @At("HEAD"))
-    private void addMobendiumButton(CallbackInfo ci) {
+    private void addFieldGuideButton(CallbackInfo ci) {
 
         // TODO: fix position
         int buttonSize = 20;

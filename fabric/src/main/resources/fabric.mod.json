@@ -8,15 +8,15 @@
         "${mod_author}"
     ],
     "contact": {
-        "homepage": "https://github.com/evanbones/Mobendium",
-        "sources": "https://github.com/evanbones/Mobendium"
+        "homepage": "https://github.com/evanbones/FieldGuide",
+        "sources": "https://github.com/evanbones/FieldGuide"
     },
     "license": "${license}",
     "icon": "${mod_id}.png",
     "environment": "*",
     "entrypoints": {
         "main": [
-            "com.evandev.fieldguide.MobendiumMod"
+            "com.evandev.fieldguide.FieldGuideMod"
         ],
         "modmenu": [
             "com.evandev.fieldguide.compat.ModMenuIntegration"

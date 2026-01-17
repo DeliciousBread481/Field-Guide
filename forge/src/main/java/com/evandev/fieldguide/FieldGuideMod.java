@@ -9,9 +9,9 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 @Mod(Constants.MOD_ID)
-public class MobendiumMod {
+public class FieldGuideMod {
 
-    public MobendiumMod() {
+    public FieldGuideMod() {
         CommonClass.init();
         MinecraftForge.EVENT_BUS.register(this);
 

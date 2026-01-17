@@ -35,7 +35,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: Mobendium-${{ github.ref_name }}
+          name: FieldGuide-${{ github.ref_name }}
           path: |
             **/build/libs/*.jar
             !**/build/libs/*-sources.jar
