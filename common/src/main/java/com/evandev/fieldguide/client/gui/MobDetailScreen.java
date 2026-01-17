@@ -2,11 +2,11 @@ package com.evandev.fieldguide.client.gui;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.MobDataManager;
+import com.evandev.fieldguide.client.gui.util.EntityRenderHelper;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -42,7 +42,7 @@ public class MobDetailScreen extends BookScreen {
                 23,
                 Constants.BACK_TEXTURE,
                 23,
-                23*2,
+                23 * 2,
                 b -> this.minecraft.setScreen(parent)
         ));
     }
@@ -62,13 +62,10 @@ public class MobDetailScreen extends BookScreen {
         guiGraphics.drawString(this.font, entityType.getDescription(), this.leftPageBounds.left() + this.leftPageBounds.width() / 2 - font.width(entityType.getDescription()) / 2, this.leftPageBounds.top() + 14, 0x7A583C, false);
 
         // Entity model
-        int xPos = leftPageBounds.left() + leftPageBounds.width()/2;
+        int xPos = leftPageBounds.left() + leftPageBounds.width() / 2;
         int yPos = leftPageBounds.bottom() - 27;
         if (renderedEntity instanceof LivingEntity living) {
-            InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics, xPos, yPos, 40,
-                    (float) xPos - mouseX,
-                    (float) yPos - mouseY,
-                    living);
+            EntityRenderHelper.renderEntityStatic(guiGraphics, living, xPos, yPos, 40, false);
         }
 
         // Description
@@ -79,5 +76,4 @@ public class MobDetailScreen extends BookScreen {
 
         guiGraphics.drawWordWrap(font, Component.literal(description), textX, textY, textAreaWidth, 0x7A583C);
     }
-
 }

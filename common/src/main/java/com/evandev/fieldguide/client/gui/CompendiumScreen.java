@@ -14,16 +14,21 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class CompendiumScreen extends BookScreen {
     private static final int ITEMS_PER_PAGE = 18;
     private static final int GRID_COLS = 3;
-    private static final int CELL_SIZE = 40; // Size of the box for each mob
+    // Size of the box for each mob
+    private static final int CELL_SIZE = 40;
     private static final int GAP = 0;
-
+    private final Map<EntityType<?>, Entity> entityCache = new HashMap<>();
     private int currentPage = 0;
     private List<EntityType<?>> allEntities;
+    private ImageButton prevPageButton;
+    private ImageButton nextPageButton;
 
     public CompendiumScreen() {
         super(Component.translatable("title.fieldguide.compendium"));
@@ -34,8 +39,7 @@ public class CompendiumScreen extends BookScreen {
         super.init();
         this.allEntities = MobDataManager.getValidEntities();
 
-        // TODO: Don't render if on first page
-        this.addRenderableWidget(new ImageButton(
+        this.prevPageButton = new ImageButton(
                 this.leftPageBounds.left(),
                 this.leftPageBounds.bottom() - 15,
                 16,
@@ -45,11 +49,14 @@ public class CompendiumScreen extends BookScreen {
                 16,
                 Constants.PREV_PAGE_TEXTURE,
                 16,
-                16*2,
-                b -> prevPage()
-        ));
-        // TODO: Don't render if on last page
-        this.addRenderableWidget(new ImageButton(
+                16 * 2,
+                b -> {
+                    prevPage();
+                    b.setFocused(false); // Fix stuck texture
+                }
+        );
+
+        this.nextPageButton = new ImageButton(
                 this.rightPageBounds.right() - 16,
                 this.rightPageBounds.bottom() - 15,
                 16,
@@ -59,17 +66,35 @@ public class CompendiumScreen extends BookScreen {
                 16,
                 Constants.NEXT_PAGE_TEXTURE,
                 16,
-                16*2,
-                b -> nextPage()
-        ));
+                16 * 2,
+                b -> {
+                    nextPage();
+                    b.setFocused(false);
+                }
+        );
+
+        this.addRenderableWidget(prevPageButton);
+        this.addRenderableWidget(nextPageButton);
+        updatePageButtons();
+    }
+
+    private void updatePageButtons() {
+        this.prevPageButton.visible = currentPage > 0;
+        this.nextPageButton.visible = (currentPage + 1) * ITEMS_PER_PAGE < allEntities.size();
     }
 
     private void prevPage() {
-        if (currentPage > 0) currentPage--;
+        if (currentPage > 0) {
+            currentPage--;
+            updatePageButtons();
+        }
     }
 
     private void nextPage() {
-        if ((currentPage + 1) * ITEMS_PER_PAGE < allEntities.size()) currentPage++;
+        if ((currentPage + 1) * ITEMS_PER_PAGE < allEntities.size()) {
+            currentPage++;
+            updatePageButtons();
+        }
     }
 
     @Override
@@ -152,7 +177,7 @@ public class CompendiumScreen extends BookScreen {
         int endIndex = Math.min(startIndex + ITEMS_PER_PAGE, allEntities.size());
 
         for (int i = startIndex; i < endIndex; i++) {
-            if (getGridCellBounds(i).contains((int)mouseX, (int)mouseY)) {
+            if (getGridCellBounds(i).contains((int) mouseX, (int) mouseY)) {
                 EntityType<?> type = allEntities.get(i);
                 if (MobDataManager.isUnlocked(type)) {
                     Minecraft.getInstance().setScreen(new MobDetailScreen(this, type));
@@ -164,13 +189,11 @@ public class CompendiumScreen extends BookScreen {
     }
 
     private void renderMobInGrid(GuiGraphics guiGraphics, EntityType<?> type, int x, int y, int scale, boolean unlocked) {
-        Entity entity = null;
         if (this.minecraft != null && this.minecraft.level != null) {
-            entity = type.create(this.minecraft.level);
-        }
-        if (entity instanceof LivingEntity living) {
-            EntityRenderHelper.renderEntityInGui(guiGraphics, living, x, y, scale, !unlocked);
+            Entity entity = entityCache.computeIfAbsent(type, t -> t.create(this.minecraft.level));
+            if (entity instanceof LivingEntity living) {
+                EntityRenderHelper.renderEntityNormalized(guiGraphics, living, x, y, scale, !unlocked);
+            }
         }
     }
-
 }
