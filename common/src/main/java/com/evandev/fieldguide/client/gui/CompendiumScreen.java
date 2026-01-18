@@ -50,9 +50,7 @@ public class CompendiumScreen extends BookScreen {
                 Constants.PREV_PAGE_TEXTURE,
                 16,
                 16 * 2,
-                b -> {
-                    prevPage();
-                }
+                b -> prevPage()
         );
 
         this.nextPageButton = new ImageButton(
@@ -66,9 +64,7 @@ public class CompendiumScreen extends BookScreen {
                 Constants.NEXT_PAGE_TEXTURE,
                 16,
                 16 * 2,
-                b -> {
-                    nextPage();
-                }
+                b -> nextPage()
         );
 
         this.addRenderableWidget(prevPageButton);

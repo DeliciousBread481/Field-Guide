@@ -54,49 +54,7 @@ public class ModConfig {
 
     public static List<String> getDefaultBlacklist() {
         List<String> defaults = new ArrayList<>();
-        defaults.add("minecraft:arrow");
-        defaults.add("minecraft:spectral_arrow");
-        defaults.add("minecraft:trident");
-        defaults.add("minecraft:snowball");
-        defaults.add("minecraft:egg");
-        defaults.add("minecraft:ender_pearl");
-        defaults.add("minecraft:experience_bottle");
-        defaults.add("minecraft:potion");
-        defaults.add("minecraft:experience_orb");
-        defaults.add("minecraft:item");
-        defaults.add("minecraft:falling_block");
-        defaults.add("minecraft:tnt");
-        defaults.add("minecraft:marker");
         defaults.add("minecraft:armor_stand");
-        defaults.add("minecraft:area_effect_cloud");
-        defaults.add("minecraft:block_display");
-        defaults.add("minecraft:boat");
-        defaults.add("minecraft:chest_boat");
-        defaults.add("minecraft:chest_minecart");
-        defaults.add("minecraft:command_block_minecart");
-        defaults.add("minecraft:dragon_fireball");
-        defaults.add("minecraft:end_crystal");
-        defaults.add("minecraft:evoker_fangs");
-        defaults.add("minecraft:eye_of_ender");
-        defaults.add("minecraft:fireball");
-        defaults.add("minecraft:firework_rocket");
-        defaults.add("minecraft:furnace_minecart");
-        defaults.add("minecraft:glow_item_frame");
-        defaults.add("minecraft:hopper_minecart");
-        defaults.add("minecraft:interaction");
-        defaults.add("minecraft:item_display");
-        defaults.add("minecraft:item_frame");
-        defaults.add("minecraft:leash_knot");
-        defaults.add("minecraft:lightning_bolt");
-        defaults.add("minecraft:llama_spit");
-        defaults.add("minecraft:minecart");
-        defaults.add("minecraft:painting");
-        defaults.add("minecraft:shulker_bullet");
-        defaults.add("minecraft:small_fireball");
-        defaults.add("minecraft:spawner_minecart");
-        defaults.add("minecraft:text_display");
-        defaults.add("minecraft:tnt_minecart");
-        defaults.add("minecraft:wither_skull");
 
         return defaults;
     }

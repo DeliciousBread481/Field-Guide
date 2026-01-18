@@ -3,6 +3,7 @@ package com.evandev.fieldguide.client;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.config.ModConfig;
 import com.google.gson.*;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -10,10 +11,17 @@ import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.util.GsonHelper;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.Vec3;
 
-import java.io.Reader;
+import java.io.*;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -22,16 +30,20 @@ public class MobDataManager implements ResourceManagerReloadListener {
     private static final MobDataManager INSTANCE = new MobDataManager();
 
     private final Map<ResourceLocation, Category> categories = new LinkedHashMap<>();
+    private final Set<String> unlockedEntities = new HashSet<>();
+    private Path currentSavePath = null;
 
     private List<EntityType<?>> flattenedEntityCache = null;
+
+    private MobDataManager() {
+    }
 
     public static MobDataManager getInstance() {
         return INSTANCE;
     }
 
     /**
-     * Gets a list of all valid EntityTypes from all categories.
-     * Preserves the order defined in data packs (pinned items first).
+     * Gets an ordered list of all valid EntityTypes from all categories.
      */
     public static List<EntityType<?>> getValidEntities() {
         if (INSTANCE.flattenedEntityCache == null) {
@@ -51,13 +63,10 @@ public class MobDataManager implements ResourceManagerReloadListener {
      * Checks if the player has unlocked this mob.
      */
     public static boolean isUnlocked(EntityType<?> type) {
-        // TODO: Hook up to player data
-        return true;
+        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        return INSTANCE.unlockedEntities.contains(id.toString());
     }
 
-    /**
-     * Gets the description for the entity based on priority.
-     */
     public static String getEntityDescription(EntityType<?> type) {
         ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
 
@@ -75,6 +84,117 @@ public class MobDataManager implements ResourceManagerReloadListener {
 
     public static void clearCache() {
         INSTANCE.flattenedEntityCache = null;
+    }
+
+    /**
+     * Called when the client joins a world (Singleplayer).
+     */
+    public void onWorldLoad(Path worldSaveDir) {
+        this.unlockedEntities.clear();
+        if (worldSaveDir != null) {
+            this.currentSavePath = worldSaveDir.resolve("fieldguide.dat");
+            loadProgress();
+        } else {
+            this.currentSavePath = null;
+        }
+    }
+
+    /**
+     * Called when the client leaves a world.
+     */
+    public void onWorldUnload() {
+        if (this.currentSavePath != null) {
+            saveProgress();
+        }
+        this.currentSavePath = null;
+        this.unlockedEntities.clear();
+    }
+
+    /**
+     * Called every client tick to check for spyglass usage.
+     */
+    public void onClientTick(Minecraft minecraft) {
+        if (minecraft.player == null || minecraft.level == null) return;
+
+        if (minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(Items.SPYGLASS)) {
+            double range = 64.0D;
+            Vec3 eyePos = minecraft.player.getEyePosition(1.0F);
+            Vec3 viewVec = minecraft.player.getViewVector(1.0F);
+            Vec3 endPos = eyePos.add(viewVec.scale(range));
+            AABB searchBox = minecraft.player.getBoundingBox().expandTowards(viewVec.scale(range)).inflate(1.0D);
+
+            EntityHitResult hitResult = ProjectileUtil.getEntityHitResult(
+                    minecraft.player,
+                    eyePos,
+                    endPos,
+                    searchBox,
+                    (entity) -> !entity.isSpectator() && entity.isPickable(),
+                    range * range
+            );
+
+            if (hitResult != null) {
+                Entity entity = hitResult.getEntity();
+                unlock(entity.getType());
+            }
+        }
+    }
+
+    /**
+     * Unlocks an entity and saves progress.
+     */
+    public void unlock(EntityType<?> type) {
+        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        if (unlockedEntities.add(id.toString())) {
+            if (Minecraft.getInstance().player != null) {
+                Minecraft.getInstance().player.displayClientMessage(
+                        net.minecraft.network.chat.Component.translatable("fieldguide.toast.unlocked", type.getDescription()),
+                        true
+                );
+            }
+            saveProgress();
+        }
+    }
+
+    private void loadProgress() {
+        if (currentSavePath == null) return;
+        File file = currentSavePath.toFile();
+
+        if (file.exists()) {
+            try (FileReader reader = new FileReader(file)) {
+                JsonObject json = GSON.fromJson(reader, JsonObject.class);
+                if (json != null && json.has("unlocked")) {
+                    JsonArray array = json.getAsJsonArray("unlocked");
+                    for (JsonElement e : array) {
+                        unlockedEntities.add(e.getAsString());
+                    }
+                }
+            } catch (Exception e) {
+                Constants.LOG.error("Failed to load field guide progress", e);
+            }
+        }
+    }
+
+    private void saveProgress() {
+        if (currentSavePath == null) return;
+        File file = currentSavePath.toFile();
+
+        try {
+            JsonObject json = new JsonObject();
+            JsonArray array = new JsonArray();
+            for (String id : unlockedEntities) {
+                array.add(id);
+            }
+            json.add("unlocked", array);
+
+            File parent = file.getParentFile();
+            if (parent != null && !parent.exists()) parent.mkdirs();
+
+            try (FileWriter writer = new FileWriter(file)) {
+                GSON.toJson(json, writer);
+            }
+        } catch (IOException e) {
+            Constants.LOG.error("Failed to save field guide progress", e);
+        }
     }
 
     @Override
@@ -125,7 +245,6 @@ public class MobDataManager implements ResourceManagerReloadListener {
                 categories.size()
         );
     }
-
 
     private void loadCategoryData(Category category, JsonObject json) {
         if (GsonHelper.getAsBoolean(json, "replace", false)) {
