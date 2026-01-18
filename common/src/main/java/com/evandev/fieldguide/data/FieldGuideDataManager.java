@@ -41,6 +41,7 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
     private int scanTicks = 0;
     private Entity fadingEntity = null;
     private int fadeTicks = 0;
+    private int prevScanTicks = 0;
 
     private FieldGuideDataManager() {
     }
@@ -128,6 +129,11 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         return Math.min(1.0F, (float) scanTicks / (float) SCAN_DURATION);
     }
 
+    public float getScanProgress(float partialTicks) {
+        float lerped = (float) prevScanTicks + ((float) scanTicks - (float) prevScanTicks) * partialTicks;
+        return Math.min(1.0F, lerped / (float) SCAN_DURATION);
+    }
+
     public Entity getFadingEntity() {
         return fadingEntity;
     }
@@ -198,40 +204,55 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
                     range * range
             );
 
-            if (hitResult != null) {
-                Entity entity = hitResult.getEntity();
-                EntityType<?> type = entity.getType();
+            Entity targetEntity = (hitResult != null) ? hitResult.getEntity() : null;
+            boolean targetIsValid = false;
 
-                if (getValidEntities().contains(type)) {
-                    if (!isUnlocked(type)) {
-                        if (entity == scanningEntity) {
-                            scanTicks++;
-                            if (scanTicks >= SCAN_DURATION) {
-                                unlock(type);
-                                minecraft.player.playSound(SoundEvents.VILLAGER_WORK_LIBRARIAN, 1.0F, 1.0F);
+            if (targetEntity != null) {
+                EntityType<?> type = targetEntity.getType();
+                if (getValidEntities().contains(type) && !isUnlocked(type)) {
+                    targetIsValid = true;
+                }
+            }
 
-                                scanningEntity = null;
-                                scanTicks = 0;
+            if (targetIsValid) {
+                EntityType<?> type = targetEntity.getType();
+                if (targetEntity == scanningEntity) {
+                    this.prevScanTicks = this.scanTicks;
+                    scanTicks++;
+                    if (scanTicks >= SCAN_DURATION) {
+                        unlock(type);
+                        minecraft.player.playSound(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 1.0F, 1.0F);
+                        minecraft.player.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
 
-                                fadingEntity = entity;
-                                fadeTicks = FADE_DURATION;
-                            }
-                        } else {
-                            scanningEntity = entity;
-                            scanTicks = 0;
-                        }
-                    } else {
+                        scanningEntity = null;
+                        scanTicks = 0;
+
+                        fadingEntity = targetEntity;
+                        fadeTicks = FADE_DURATION;
+                    }
+                } else {
+                    this.prevScanTicks = 0;
+                    scanningEntity = targetEntity;
+                    scanTicks = 0;
+                }
+            } else {
+                if (scanTicks > 0) {
+                    this.prevScanTicks = this.scanTicks;
+                    scanTicks -= 2;
+                    if (scanTicks <= 0) {
                         scanningEntity = null;
                         scanTicks = 0;
                     }
                 } else {
                     scanningEntity = null;
-                    scanTicks = 0;
                 }
-            } else {
+            }
+
+            if (scanningEntity != null && (scanningEntity.isRemoved() || !scanningEntity.isAlive())) {
                 scanningEntity = null;
                 scanTicks = 0;
             }
+
         } else {
             scanningEntity = null;
             scanTicks = 0;

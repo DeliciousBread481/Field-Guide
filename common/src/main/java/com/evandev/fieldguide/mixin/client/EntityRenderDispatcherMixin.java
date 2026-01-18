@@ -29,7 +29,7 @@ public class EntityRenderDispatcherMixin {
         float alpha = 0.4f;
 
         if (isScanning) {
-            progress = manager.getScanProgress();
+            progress = manager.getScanProgress(partialTicks);
         } else {
             alpha *= manager.getFadeProgress();
         }
@@ -37,7 +37,11 @@ public class EntityRenderDispatcherMixin {
         float width = entity.getBbWidth();
         float height = entity.getBbHeight();
         float currentHeight = height * progress;
-        float w2 = width / 2.0F;
+
+        float inflation = 0.05F;
+        float halfW = (width / 2.0F) + inflation;
+        float minH = -inflation;
+        float maxH = Math.min(height + inflation, currentHeight + inflation);
 
         poseStack.pushPose();
         poseStack.translate(x, y, z);
@@ -45,25 +49,35 @@ public class EntityRenderDispatcherMixin {
         VertexConsumer consumer = buffer.getBuffer(RenderType.lightning());
         Matrix4f matrix = poseStack.last().pose();
 
-        fieldguide$addQuad(consumer, matrix, -w2, w2, 0, 0, -w2, w2, alpha);
-        fieldguide$addQuad(consumer, matrix, -w2, w2, currentHeight, currentHeight, -w2, w2, alpha);
-        fieldguide$addQuad(consumer, matrix, -w2, w2, 0, currentHeight, w2, w2, alpha);
-        fieldguide$addQuad(consumer, matrix, -w2, w2, 0, currentHeight, -w2, -w2, alpha);
-        fieldguide$addQuad(consumer, matrix, -w2, -w2, 0, currentHeight, -w2, w2, alpha);
-        fieldguide$addQuad(consumer, matrix, w2, w2, 0, currentHeight, -w2, w2, alpha);
+        // Front
+        fieldguide$vertex(consumer, matrix, halfW, minH, halfW, alpha);
+        fieldguide$vertex(consumer, matrix, halfW, maxH, halfW, alpha);
+        fieldguide$vertex(consumer, matrix, -halfW, maxH, halfW, alpha);
+        fieldguide$vertex(consumer, matrix, -halfW, minH, halfW, alpha);
+
+        // Back
+        fieldguide$vertex(consumer, matrix, -halfW, minH, -halfW, alpha);
+        fieldguide$vertex(consumer, matrix, -halfW, maxH, -halfW, alpha);
+        fieldguide$vertex(consumer, matrix, halfW, maxH, -halfW, alpha);
+        fieldguide$vertex(consumer, matrix, halfW, minH, -halfW, alpha);
+
+        // Left
+        fieldguide$vertex(consumer, matrix, -halfW, minH, halfW, alpha);
+        fieldguide$vertex(consumer, matrix, -halfW, maxH, halfW, alpha);
+        fieldguide$vertex(consumer, matrix, -halfW, maxH, -halfW, alpha);
+        fieldguide$vertex(consumer, matrix, -halfW, minH, -halfW, alpha);
+
+        // Right
+        fieldguide$vertex(consumer, matrix, halfW, minH, -halfW, alpha);
+        fieldguide$vertex(consumer, matrix, halfW, maxH, -halfW, alpha);
+        fieldguide$vertex(consumer, matrix, halfW, maxH, halfW, alpha);
+        fieldguide$vertex(consumer, matrix, halfW, minH, halfW, alpha);
 
         poseStack.popPose();
     }
 
     @Unique
-    private void fieldguide$addQuad(VertexConsumer consumer, Matrix4f matrix, float xMin, float xMax, float yMin, float yMax, float zMin, float zMax, float alpha) {
-        float r = 1.0f;
-        float g = 1.0f;
-        float b = 1.0f;
-
-        consumer.vertex(matrix, xMin, yMin, zMin).color(r, g, b, alpha).endVertex();
-        consumer.vertex(matrix, xMin, yMax, zMin).color(r, g, b, alpha).endVertex();
-        consumer.vertex(matrix, xMax, yMax, zMax).color(r, g, b, alpha).endVertex();
-        consumer.vertex(matrix, xMax, yMin, zMax).color(r, g, b, alpha).endVertex();
+    private void fieldguide$vertex(VertexConsumer consumer, Matrix4f matrix, float x, float y, float z, float alpha) {
+        consumer.vertex(matrix, x, y, z).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
     }
 }
