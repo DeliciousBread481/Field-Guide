@@ -22,7 +22,6 @@ import java.util.Map;
 public class CompendiumScreen extends BookScreen {
     private static final int ITEMS_PER_PAGE = 18;
     private static final int GRID_COLS = 3;
-    // Size of the box for each mob
     private static final int CELL_SIZE = 40;
     private static final int GAP = 0;
     private final Map<EntityType<?>, Entity> entityCache = new HashMap<>();
@@ -53,7 +52,6 @@ public class CompendiumScreen extends BookScreen {
                 16 * 2,
                 b -> {
                     prevPage();
-                    b.setFocused(false); // Fix stuck texture
                 }
         );
 
@@ -70,7 +68,6 @@ public class CompendiumScreen extends BookScreen {
                 16 * 2,
                 b -> {
                     nextPage();
-                    b.setFocused(false);
                 }
         );
 
@@ -180,7 +177,10 @@ public class CompendiumScreen extends BookScreen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (super.mouseClicked(mouseX, mouseY, button)) return true;
+        if (super.mouseClicked(mouseX, mouseY, button)) {
+            this.setFocused(null);
+            return true;
+        }
 
         int startIndex = currentPage * ITEMS_PER_PAGE;
         int endIndex = Math.min(startIndex + ITEMS_PER_PAGE, allEntities.size());

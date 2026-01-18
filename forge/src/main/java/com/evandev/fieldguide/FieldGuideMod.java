@@ -1,8 +1,11 @@
 package com.evandev.fieldguide;
 
+import com.evandev.fieldguide.client.MobDataManager;
 import com.evandev.fieldguide.config.ClothConfigIntegration;
 import net.minecraftforge.client.ConfigScreenHandler;
+import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
@@ -14,6 +17,9 @@ public class FieldGuideMod {
     public FieldGuideMod() {
         CommonClass.init();
         MinecraftForge.EVENT_BUS.register(this);
+
+        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        modEventBus.addListener(this::registerReloadListeners);
 
         if (ModList.get().isLoaded("cloth_config")) {
             FMLJavaModLoadingContext.get().getModEventBus().register(new Object() {
@@ -30,4 +36,7 @@ public class FieldGuideMod {
         }
     }
 
+    public void registerReloadListeners(RegisterClientReloadListenersEvent event) {
+        event.registerReloadListener(MobDataManager.getInstance());
+    }
 }

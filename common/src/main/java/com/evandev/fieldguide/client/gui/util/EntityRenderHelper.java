@@ -29,7 +29,7 @@ public class EntityRenderHelper {
             float minScale = 0.1F;
             float maxScale = 0.35F;
 
-            if (referenceSize > 16.0F) {
+            if (referenceSize >= 3.0F) {
                 float extraScaleFactor = 30.0F / referenceSize;
                 scaleFactor *= extraScaleFactor;
                 return Math.min(Math.max(scaleFactor, minScale * extraScaleFactor), maxScale);
@@ -48,12 +48,17 @@ public class EntityRenderHelper {
         float dynamicFactor = getScaleFactorForEntity(entity);
         float finalScale = (baseScale * 0.32F) * dynamicFactor;
 
+        float entityHeight = entity.getBbHeight();
+
+        if (entityHeight * finalScale > maxHeight * 0.9f) {
+            finalScale = (maxHeight * 0.9f) / entityHeight;
+        }
+
         if (!Float.isFinite(finalScale) || finalScale <= 0.0F) {
             finalScale = baseScale * 0.3F;
         }
 
-        float height = entity.getBbHeight();
-        int feetY = (int) (y + (height * finalScale / 2.0f));
+        int feetY = (int) (y + (entityHeight * finalScale / 2.0f));
 
         int minX = x - maxWidth / 2;
         int minY = y - maxHeight / 2;

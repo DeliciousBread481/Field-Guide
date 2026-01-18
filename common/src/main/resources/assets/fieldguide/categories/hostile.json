@@ -1,0 +1,10 @@
+{
+  "tab_color": "#FF0000",
+  "tab_icon": "minecraft:iron_sword",
+  "contents": [
+    {
+      "type": "auto_populate",
+      "strategy": "hostile"
+    }
+  ]
+}

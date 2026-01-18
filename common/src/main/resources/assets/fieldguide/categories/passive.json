@@ -1,0 +1,10 @@
+{
+  "tab_color": "#52C83F",
+  "tab_icon": "minecraft:feather",
+  "contents": [
+    {
+      "type": "auto_populate",
+      "strategy": "passive"
+    }
+  ]
+}
