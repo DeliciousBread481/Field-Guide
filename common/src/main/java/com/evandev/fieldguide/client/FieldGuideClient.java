@@ -12,8 +12,8 @@ import net.minecraft.world.entity.EntityType;
 import org.lwjgl.glfw.GLFW;
 
 public class FieldGuideClient {
-    public static KeyMapping OPEN_GUIDE_KEY;
     private static final long AUTO_OPEN_THRESHOLD_MS = 5000;
+    public static KeyMapping OPEN_GUIDE_KEY;
 
     public static void init() {
         OPEN_GUIDE_KEY = new KeyMapping(
@@ -31,23 +31,17 @@ public class FieldGuideClient {
                 long lastTime = manager.getLastUnlockTime();
                 EntityType<?> lastEntity = manager.getLastUnlockedEntity();
 
-                Screen mainScreen;
-                Category targetCategory = null;
-                if (lastEntity != null) {
-                    targetCategory = manager.getCategoryForEntity(lastEntity);
-                }
+                boolean isRecent = (System.currentTimeMillis() - lastTime) < AUTO_OPEN_THRESHOLD_MS;
 
-                if (targetCategory != null) {
-                    mainScreen = new FieldGuideScreen(targetCategory);
+                if (isRecent && lastEntity != null) {
+                    Category targetCategory = manager.getCategoryForEntity(lastEntity);
+                    if (targetCategory != null) {
+                        int page = FieldGuideScreen.getPageForEntry(targetCategory, lastEntity);
+                        Screen mainScreen = new FieldGuideScreen(targetCategory, page);
+                        minecraft.setScreen(new FieldGuideEntryScreen(mainScreen, lastEntity));
+                    }
                 } else {
-                    mainScreen = new FieldGuideScreen();
-                }
-
-                // If discovered recently, open directly to entry
-                if (lastEntity != null && (System.currentTimeMillis() - lastTime) < AUTO_OPEN_THRESHOLD_MS) {
-                    minecraft.setScreen(new FieldGuideEntryScreen(mainScreen, lastEntity));
-                } else {
-                    minecraft.setScreen(mainScreen);
+                    minecraft.setScreen(new FieldGuideScreen());
                 }
             }
         }

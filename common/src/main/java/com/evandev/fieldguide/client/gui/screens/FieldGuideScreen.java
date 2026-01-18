@@ -1,9 +1,9 @@
 package com.evandev.fieldguide.client.gui.screens;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.client.gui.widget.TabButton;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntityRenderHelper;
+import com.evandev.fieldguide.client.gui.widget.TabButton;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.FieldGuideDataManager;
 import com.mojang.blaze3d.platform.Lighting;
@@ -59,6 +59,28 @@ public class FieldGuideScreen extends BookScreen {
         this.selectedCategory = initialCategory;
     }
 
+    /**
+     * Constructor to open a specific category and page.
+     */
+    public FieldGuideScreen(Category initialCategory, int initialPage) {
+        this(initialCategory);
+        this.currentPage = initialPage;
+    }
+
+    /**
+     * Helper to calculate which page an entity is on.
+     */
+    public static int getPageForEntry(Category category, EntityType<?> entry) {
+        int index = category.getEntities().indexOf(entry);
+        if (index < 0) return 0;
+
+        if (index < ITEMS_PER_PAGE) {
+            return 0;
+        }
+
+        return 1 + (index - ITEMS_PER_PAGE) / ITEMS_PER_VIEW;
+    }
+
     @Override
     protected void init() {
         super.init();
@@ -70,7 +92,14 @@ public class FieldGuideScreen extends BookScreen {
                 .thenComparing(c -> c.getId().getPath()));
 
         if (this.selectedCategory != null) {
-            selectCategory(this.selectedCategory);
+            Category c = this.selectedCategory;
+            int savedPage = this.currentPage;
+
+            this.selectedCategory = null;
+            selectCategory(c);
+
+            this.currentPage = savedPage;
+            lastOpenedPage = savedPage;
         } else {
             Category categoryToOpen = null;
             int pageToRestore = 0;

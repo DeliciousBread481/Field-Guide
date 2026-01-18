@@ -10,6 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -27,42 +28,25 @@ import java.util.stream.Collectors;
 public class FieldGuideDataManager implements ResourceManagerReloadListener {
     private static final Gson GSON = new GsonBuilder().create();
     private static final FieldGuideDataManager INSTANCE = new FieldGuideDataManager();
-
+    private static final int SCAN_DURATION = 60;
+    private static final int FADE_DURATION = 20;
     private final Map<ResourceLocation, Category> categories = new LinkedHashMap<>();
     private final Set<String> unlockedEntities = new HashSet<>();
     private final Set<String> seenEntities = new HashSet<>();
     private Path currentSavePath = null;
-
     private List<EntityType<?>> flattenedEntityCache = null;
-
     private long lastUnlockTime = 0;
     private EntityType<?> lastUnlockedEntity = null;
+    private Entity scanningEntity = null;
+    private int scanTicks = 0;
+    private Entity fadingEntity = null;
+    private int fadeTicks = 0;
 
     private FieldGuideDataManager() {
     }
 
     public static FieldGuideDataManager getInstance() {
         return INSTANCE;
-    }
-
-    public long getLastUnlockTime() {
-        return lastUnlockTime;
-    }
-
-    public EntityType<?> getLastUnlockedEntity() {
-        return lastUnlockedEntity;
-    }
-
-    /**
-     * Helper to find which category holds a specific entity.
-     */
-    public Category getCategoryForEntity(EntityType<?> entityType) {
-        for (Category category : categories.values()) {
-            if (category.getEntities().contains(entityType)) {
-                return category;
-            }
-        }
-        return null;
     }
 
     public static List<EntityType<?>> getValidEntities() {
@@ -128,6 +112,42 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         }
     }
 
+    public long getLastUnlockTime() {
+        return lastUnlockTime;
+    }
+
+    public EntityType<?> getLastUnlockedEntity() {
+        return lastUnlockedEntity;
+    }
+
+    public Entity getScanningEntity() {
+        return scanningEntity;
+    }
+
+    public float getScanProgress() {
+        return Math.min(1.0F, (float) scanTicks / (float) SCAN_DURATION);
+    }
+
+    public Entity getFadingEntity() {
+        return fadingEntity;
+    }
+
+    public float getFadeProgress() {
+        return (float) fadeTicks / (float) FADE_DURATION;
+    }
+
+    /**
+     * Helper to find which category holds a specific entity.
+     */
+    public Category getCategoryForEntity(EntityType<?> entityType) {
+        for (Category category : categories.values()) {
+            if (category.getEntities().contains(entityType)) {
+                return category;
+            }
+        }
+        return null;
+    }
+
     /**
      * Called when the client joins a world (Singleplayer).
      */
@@ -160,7 +180,9 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
     public void onClientTick(Minecraft minecraft) {
         if (minecraft.player == null || minecraft.level == null) return;
 
-        if (minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(Items.SPYGLASS)) {
+        boolean isUsingSpyglass = minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(Items.SPYGLASS);
+
+        if (isUsingSpyglass) {
             double range = 64.0D;
             Vec3 eyePos = minecraft.player.getEyePosition(1.0F);
             Vec3 viewVec = minecraft.player.getViewVector(1.0F);
@@ -178,7 +200,47 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
 
             if (hitResult != null) {
                 Entity entity = hitResult.getEntity();
-                unlock(entity.getType());
+                EntityType<?> type = entity.getType();
+
+                if (getValidEntities().contains(type)) {
+                    if (!isUnlocked(type)) {
+                        if (entity == scanningEntity) {
+                            scanTicks++;
+                            if (scanTicks >= SCAN_DURATION) {
+                                unlock(type);
+                                minecraft.player.playSound(SoundEvents.VILLAGER_WORK_LIBRARIAN, 1.0F, 1.0F);
+
+                                scanningEntity = null;
+                                scanTicks = 0;
+
+                                fadingEntity = entity;
+                                fadeTicks = FADE_DURATION;
+                            }
+                        } else {
+                            scanningEntity = entity;
+                            scanTicks = 0;
+                        }
+                    } else {
+                        scanningEntity = null;
+                        scanTicks = 0;
+                    }
+                } else {
+                    scanningEntity = null;
+                    scanTicks = 0;
+                }
+            } else {
+                scanningEntity = null;
+                scanTicks = 0;
+            }
+        } else {
+            scanningEntity = null;
+            scanTicks = 0;
+        }
+
+        if (fadeTicks > 0) {
+            fadeTicks--;
+            if (fadeTicks <= 0) {
+                fadingEntity = null;
             }
         }
     }
