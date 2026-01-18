@@ -24,6 +24,12 @@ public class ClothConfigIntegration {
         ConfigCategory general = builder.getOrCreateCategory(Component.translatable("category.fieldguide.general"));
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
 
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.show_pause_button"), config.showPauseMenuButton)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.fieldguide.show_pause_button.tooltip"))
+                .setSaveConsumer(newValue -> config.showPauseMenuButton = newValue)
+                .build());
+
         general.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.blacklist"), config.entityBlacklist)
                 .setDefaultValue(ModConfig.getDefaultBlacklist())
                 .setTooltip(Component.translatable("option.fieldguide.blacklist.tooltip"))

@@ -19,7 +19,7 @@ public class ModConfig {
 
     private static ModConfig INSTANCE;
 
-    // Config fields
+    public boolean showPauseMenuButton = true;
     public List<String> entityBlacklist = new ArrayList<>();
 
     public static ModConfig get() {

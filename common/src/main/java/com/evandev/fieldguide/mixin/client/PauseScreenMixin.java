@@ -2,6 +2,7 @@ package com.evandev.fieldguide.mixin.client;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideScreen;
+import com.evandev.fieldguide.config.ModConfig;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.PauseScreen;
@@ -21,6 +22,10 @@ public class PauseScreenMixin extends Screen {
 
     @Inject(method = "createPauseMenu", at = @At("RETURN"))
     private void addFieldGuideButton(CallbackInfo ci) {
+        if (!ModConfig.get().showPauseMenuButton) {
+            return;
+        }
+
         int buttonSize = 20;
         int margin = 4;
 

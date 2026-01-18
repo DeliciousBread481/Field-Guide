@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.client.gui.screens;
 
+import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -23,5 +24,14 @@ public abstract class BookScreen extends Screen {
         this.bounds = new Bounds((this.width - BG_WIDTH) / 2,(this.height - BG_HEIGHT) / 2, BG_WIDTH, BG_HEIGHT);
         this.leftPageBounds = new Bounds(this.bounds.left() + 16,this.bounds.top() + 19, PAGE_WIDTH, PAGE_HEIGHT);
         this.rightPageBounds = new Bounds(this.leftPageBounds.right() + 5,leftPageBounds.top(), PAGE_WIDTH, PAGE_HEIGHT);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (FieldGuideClient.OPEN_GUIDE_KEY.matches(keyCode, scanCode)) {
+            this.onClose();
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 }

@@ -10,6 +10,9 @@
   "option.fieldguide.blacklist": "Entity Blacklist",
   "option.fieldguide.blacklist.tooltip": "Entities that should not appear in the field guide.\nSupports 'modid:entity_id' or 'modid:*' for wildcards.",
 
+  "option.fieldguide.show_pause_button": "Show Pause Menu Button",
+  "option.fieldguide.show_pause_button.tooltip": "If enabled, a button to open the Field Guide will appear in the pause menu.",
+
   "key.fieldguide.open": "Open Field Guide",
 
   "fieldguide.new": "New!",
