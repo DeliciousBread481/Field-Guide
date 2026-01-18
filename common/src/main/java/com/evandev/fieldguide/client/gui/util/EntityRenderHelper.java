@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.client.gui.util;
 
 import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -13,22 +14,64 @@ import org.joml.Quaternionf;
 public class EntityRenderHelper {
 
     /**
+     * Calculates a scaling factor based on entity size using an inverse square relationship.
+     */
+    private static float getScaleFactorForEntity(LivingEntity entity) {
+        try {
+            float width = entity.getBbWidth();
+            float height = entity.getBbHeight();
+            float referenceSize = Math.max(width, height);
+
+            float scaleFactor = 1.0F / (referenceSize * referenceSize);
+            float calibrationFactor = 2.0F;
+            scaleFactor *= calibrationFactor;
+
+            float minScale = 0.1F;
+            float maxScale = 0.35F;
+
+            if (referenceSize > 16.0F) {
+                float extraScaleFactor = 30.0F / referenceSize;
+                scaleFactor *= extraScaleFactor;
+                return Math.min(Math.max(scaleFactor, minScale * extraScaleFactor), maxScale);
+            } else {
+                return Math.min(Math.max(scaleFactor, minScale), maxScale) * 3.5F;
+            }
+        } catch (Exception e) {
+            return 0.35F;
+        }
+    }
+
+    /**
      * Renders an entity normalized to fit within a standard widget box.
      */
-    public static void renderEntityNormalized(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, float scale, boolean silhouette) {
-        float entitySize = Math.max(entity.getBbHeight(), entity.getBbWidth());
-        if (entitySize > 0) {
-            float scaleFactor = 1.0F / entitySize;
-            scale = scale * scaleFactor;
+    public static void renderEntityNormalized(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, int maxWidth, int maxHeight, float baseScale, boolean silhouette) {
+        float dynamicFactor = getScaleFactorForEntity(entity);
+        float finalScale = (baseScale * 0.32F) * dynamicFactor;
+
+        if (!Float.isFinite(finalScale) || finalScale <= 0.0F) {
+            finalScale = baseScale * 0.3F;
         }
-        renderEntityStatic(guiGraphics, entity, x, y, scale, silhouette);
+
+        float height = entity.getBbHeight();
+        int feetY = (int) (y + (height * finalScale / 2.0f));
+
+        int minX = x - maxWidth / 2;
+        int minY = y - maxHeight / 2;
+        int maxX = x + maxWidth / 2;
+        int maxY = y + maxHeight / 2;
+
+        guiGraphics.enableScissor(minX, minY, maxX, maxY);
+
+        renderEntityStatic(guiGraphics, entity, x, feetY, finalScale, silhouette);
+
+        guiGraphics.disableScissor();
     }
 
     /**
      * Renders an entity with a fixed pose and no animation.
      */
     public static void renderEntityStatic(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, float scale, boolean silhouette) {
-        float cameraXAngle = -10;
+        float cameraXAngle = -30;
         float bodyYAngle = 20;
         float headYAngle = 0;
         Quaternionf poseOrientation = new Quaternionf().rotateZ((float) Math.PI);
@@ -56,7 +99,9 @@ public class EntityRenderHelper {
         pose.mulPose(poseOrientation);
 
         if (silhouette) {
-            // TODO: Apply silhouette shading
+            RenderSystem.setShaderFogColor(0.7F, 0.6F, 0.5F);
+            RenderSystem.setShaderFogStart(0.0F);
+            RenderSystem.setShaderFogEnd(0.1F);
         }
 
         Lighting.setupForEntityInInventory();
@@ -64,15 +109,19 @@ public class EntityRenderHelper {
         cameraOrientation.conjugate();
         dispatcher.overrideCameraOrientation(cameraOrientation);
         dispatcher.setRenderShadow(false);
+
         dispatcher.render(entity, 0.0, 0.0, 0.0, 0.0F, 0.0F, pose, guiGraphics.bufferSource(), LightTexture.FULL_BRIGHT);
 
-        // Reset
         guiGraphics.flush();
+
         dispatcher.setRenderShadow(true);
         pose.popPose();
+
         if (silhouette) {
-            // TODO: Reset silhouette shading
+            RenderSystem.setShaderFogStart(Float.MAX_VALUE);
+            RenderSystem.setShaderFogEnd(Float.MAX_VALUE);
         }
+
         Lighting.setupFor3DItems();
     }
 }

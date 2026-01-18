@@ -63,9 +63,9 @@ public class MobDetailScreen extends BookScreen {
 
         // Entity model
         int xPos = leftPageBounds.left() + leftPageBounds.width() / 2;
-        int yPos = leftPageBounds.bottom() - 27;
+        int yPos = leftPageBounds.y_center();
         if (renderedEntity instanceof LivingEntity living) {
-            EntityRenderHelper.renderEntityStatic(guiGraphics, living, xPos, yPos, 40, false);
+            EntityRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, false);
         }
 
         // Description

@@ -4,6 +4,7 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.MobDataManager;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntityRenderHelper;
+import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -120,21 +121,29 @@ public class CompendiumScreen extends BookScreen {
         for (int i = startIndex; i < endIndex; i++) {
             EntityType<?> type = allEntities.get(i);
             Bounds bounds = getGridCellBounds(i);
-
             boolean unlocked = MobDataManager.isUnlocked(type);
             boolean hovered = bounds.contains(mouseX, mouseY);
 
-            // Slot background/highlight
+            // Render background
             if (hovered && unlocked) {
                 guiGraphics.blit(Constants.CELL_BACKGROUND_HOVER_TEXTURE, bounds.x(), bounds.y(), 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE);
             } else {
                 guiGraphics.blit(Constants.CELL_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE);
             }
 
-            renderMobInGrid(guiGraphics, type, bounds.x_center(), bounds.bottom() - 8, 15, unlocked);
+            // Render mob
+            renderMobInGrid(guiGraphics, type, bounds.x_center(), bounds.y_center(), 30, unlocked);
+        }
 
-            // Tooltip on hover
-            if (hovered) {
+        Lighting.setupForFlatItems();
+
+        // Tooltip on hover
+        for (int i = startIndex; i < endIndex; i++) {
+            Bounds bounds = getGridCellBounds(i);
+            if (bounds.contains(mouseX, mouseY)) {
+                EntityType<?> type = allEntities.get(i);
+                boolean unlocked = MobDataManager.isUnlocked(type);
+
                 if (unlocked) {
                     guiGraphics.renderTooltip(this.font, type.getDescription(), mouseX, mouseY);
                 } else {
@@ -192,7 +201,7 @@ public class CompendiumScreen extends BookScreen {
         if (this.minecraft != null && this.minecraft.level != null) {
             Entity entity = entityCache.computeIfAbsent(type, t -> t.create(this.minecraft.level));
             if (entity instanceof LivingEntity living) {
-                EntityRenderHelper.renderEntityNormalized(guiGraphics, living, x, y, scale, !unlocked);
+                EntityRenderHelper.renderEntityNormalized(guiGraphics, living, x, y, CELL_SIZE - 8, CELL_SIZE - 8, scale, !unlocked);
             }
         }
     }
