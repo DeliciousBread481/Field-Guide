@@ -126,6 +126,12 @@ public class FieldGuideScreen extends BookScreen {
 
             // Render mob
             renderMobInGrid(guiGraphics, type, bounds.x_center(), bounds.y_center(), 30, unlocked);
+
+            // Render "new" tooltip
+            if (MobDataManager.isNew(type)) {
+                Component newText = Component.translatable("fieldguide.new");
+                guiGraphics.drawCenteredString(this.font, newText, bounds.x_center(), bounds.bottom() - 8, 0x63B40C);
+            }
         }
 
         Lighting.setupForFlatItems();
@@ -184,6 +190,11 @@ public class FieldGuideScreen extends BookScreen {
         for (int i = startIndex; i < endIndex; i++) {
             if (getGridCellBounds(i).contains((int) mouseX, (int) mouseY)) {
                 EntityType<?> type = allEntities.get(i);
+
+                if (MobDataManager.isNew(type)) {
+                    MobDataManager.markAsSeen(type);
+                }
+
                 Minecraft.getInstance().setScreen(new FieldGuideEntryScreen(this, type));
                 return true;
             }

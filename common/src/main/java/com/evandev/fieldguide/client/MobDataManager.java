@@ -31,6 +31,7 @@ public class MobDataManager implements ResourceManagerReloadListener {
 
     private final Map<ResourceLocation, Category> categories = new LinkedHashMap<>();
     private final Set<String> unlockedEntities = new HashSet<>();
+    private final Set<String> seenEntities = new HashSet<>();
     private Path currentSavePath = null;
 
     private List<EntityType<?>> flattenedEntityCache = null;
@@ -67,6 +68,25 @@ public class MobDataManager implements ResourceManagerReloadListener {
         return INSTANCE.unlockedEntities.contains(id.toString());
     }
 
+    /**
+     * Checks if the player has unlocked the mob but not yet viewed its entry.
+     */
+    public static boolean isNew(EntityType<?> type) {
+        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        String key = id.toString();
+        return INSTANCE.unlockedEntities.contains(key) && !INSTANCE.seenEntities.contains(key);
+    }
+
+    /**
+     * Marks an entity as seen, removing the "New!" status.
+     */
+    public static void markAsSeen(EntityType<?> type) {
+        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        if (INSTANCE.seenEntities.add(id.toString())) {
+            INSTANCE.saveProgress();
+        }
+    }
+
     public static String getEntityDescription(EntityType<?> type) {
         ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
 
@@ -91,6 +111,7 @@ public class MobDataManager implements ResourceManagerReloadListener {
      */
     public void onWorldLoad(Path worldSaveDir) {
         this.unlockedEntities.clear();
+        this.seenEntities.clear();
         if (worldSaveDir != null) {
             this.currentSavePath = worldSaveDir.resolve("fieldguide.dat");
             loadProgress();
@@ -108,6 +129,7 @@ public class MobDataManager implements ResourceManagerReloadListener {
         }
         this.currentSavePath = null;
         this.unlockedEntities.clear();
+        this.seenEntities.clear();
     }
 
     /**
@@ -162,10 +184,17 @@ public class MobDataManager implements ResourceManagerReloadListener {
         if (file.exists()) {
             try (FileReader reader = new FileReader(file)) {
                 JsonObject json = GSON.fromJson(reader, JsonObject.class);
-                if (json != null && json.has("unlocked")) {
-                    JsonArray array = json.getAsJsonArray("unlocked");
+                if (json != null) {
+                    if (json.has("unlocked")) {
+                        JsonArray array = json.getAsJsonArray("unlocked");
+                        for (JsonElement e : array) {
+                            unlockedEntities.add(e.getAsString());
+                        }
+                    }
+
+                    JsonArray array = json.getAsJsonArray("seen");
                     for (JsonElement e : array) {
-                        unlockedEntities.add(e.getAsString());
+                        seenEntities.add(e.getAsString());
                     }
                 }
             } catch (Exception e) {
@@ -180,11 +209,18 @@ public class MobDataManager implements ResourceManagerReloadListener {
 
         try {
             JsonObject json = new JsonObject();
-            JsonArray array = new JsonArray();
+
+            JsonArray unlockedArray = new JsonArray();
             for (String id : unlockedEntities) {
-                array.add(id);
+                unlockedArray.add(id);
             }
-            json.add("unlocked", array);
+            json.add("unlocked", unlockedArray);
+
+            JsonArray seenArray = new JsonArray();
+            for (String id : seenEntities) {
+                seenArray.add(id);
+            }
+            json.add("seen", seenArray);
 
             File parent = file.getParentFile();
             if (parent != null && !parent.exists()) parent.mkdirs();

@@ -6,6 +6,7 @@
   "fieldguide.description.missing": "No description available for this creature yet.",
   "fieldguide.description.locked": "Observe with a spyglass to discover details.",
   "fieldguide.unknown": "???",
+  "fieldguide.new": "New!",
   "fieldguide.undiscovered": "Undiscovered",
   "option.fieldguide.blacklist": "Entity Blacklist",
   "fieldguide.toast.unlocked": "Discovered a new mob!",
