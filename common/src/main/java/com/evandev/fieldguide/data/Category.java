@@ -5,6 +5,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.item.SpawnEggItem;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -76,7 +77,13 @@ public class Category {
                     if ("hostile".equalsIgnoreCase(strategy)) {
                         return type.getCategory() == MobCategory.MONSTER;
                     } else if ("passive".equalsIgnoreCase(strategy)) {
-                        return type.getCategory() != MobCategory.MONSTER && type.getCategory() != MobCategory.MISC;
+                        if (type.getCategory() == MobCategory.MONSTER) {
+                            return false;
+                        }
+                        if (type.getCategory() == MobCategory.MISC) {
+                            return SpawnEggItem.byId(type) != null;
+                        }
+                        return true;
                     }
                     return false;
                 })
