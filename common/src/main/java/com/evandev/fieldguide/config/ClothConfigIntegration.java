@@ -30,6 +30,14 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.showPauseMenuButton = newValue)
                 .build());
 
+        general.addEntry(entryBuilder.startDoubleField(Component.translatable("option.fieldguide.scan_speed"), config.scanSpeed)
+                .setDefaultValue(1.5D)
+                .setMin(0.1D)
+                .setMax(10.0D)
+                .setTooltip(Component.translatable("option.fieldguide.scan_speed.tooltip"))
+                .setSaveConsumer(newValue -> config.scanSpeed = newValue)
+                .build());
+
         general.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.blacklist"), config.entityBlacklist)
                 .setDefaultValue(ModConfig.getDefaultBlacklist())
                 .setTooltip(Component.translatable("option.fieldguide.blacklist.tooltip"))

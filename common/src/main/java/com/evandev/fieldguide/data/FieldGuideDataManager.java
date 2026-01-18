@@ -2,6 +2,7 @@ package com.evandev.fieldguide.data;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.gui.toasts.FieldGuideToast;
+import com.evandev.fieldguide.config.ModConfig;
 import com.google.gson.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
@@ -28,7 +29,6 @@ import java.util.stream.Collectors;
 public class FieldGuideDataManager implements ResourceManagerReloadListener {
     private static final Gson GSON = new GsonBuilder().create();
     private static final FieldGuideDataManager INSTANCE = new FieldGuideDataManager();
-    private static final int SCAN_DURATION = 20;
     private static final int FADE_DURATION = 10;
     private final Map<ResourceLocation, Category> categories = new LinkedHashMap<>();
     private final Set<String> unlockedEntities = new HashSet<>();
@@ -113,6 +113,10 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         }
     }
 
+    private int getScanDuration() {
+        return (int) (ModConfig.get().scanSpeed * 20);
+    }
+
     public long getLastUnlockTime() {
         return lastUnlockTime;
     }
@@ -127,7 +131,7 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
 
     public float getScanProgress(float partialTicks) {
         float lerped = (float) prevScanTicks + ((float) scanTicks - (float) prevScanTicks) * partialTicks;
-        return Math.min(1.0F, lerped / (float) SCAN_DURATION);
+        return Math.min(1.0F, lerped / (float) getScanDuration());
     }
 
     public Entity getFadingEntity() {
@@ -215,7 +219,7 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
                 if (targetEntity == scanningEntity) {
                     this.prevScanTicks = this.scanTicks;
                     scanTicks++;
-                    if (scanTicks >= SCAN_DURATION) {
+                    if (scanTicks >= getScanDuration()) {
                         unlock(type);
                         minecraft.player.playSound(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 1.0F, 1.0F);
                         minecraft.player.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
