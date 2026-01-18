@@ -10,7 +10,11 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -27,6 +31,9 @@ public class FieldGuideScreen extends BookScreen {
     private static final int TAB_WIDTH = 24;
     private static final int TAB_HEIGHT = 20;
     private static final int TAB_GAP = 1;
+
+    private static ResourceLocation lastOpenedCategory = null;
+    private static int lastOpenedPage = 0;
 
     private final Map<EntityType<?>, Entity> entryCache = new HashMap<>();
     private final List<Category> sortedCategories = new ArrayList<>();
@@ -53,10 +60,35 @@ public class FieldGuideScreen extends BookScreen {
         this.sortedCategories.sort(Comparator.comparingInt(Category::getTabIndex)
                 .thenComparing(c -> c.getId().getPath()));
 
-        if (selectedCategory == null && !sortedCategories.isEmpty()) {
-            selectCategory(sortedCategories.get(0));
-        } else if (selectedCategory != null) {
-            selectCategory(selectedCategory);
+        if (this.selectedCategory != null) {
+            selectCategory(this.selectedCategory);
+        } else {
+            Category categoryToOpen = null;
+            int pageToRestore = 0;
+
+            if (lastOpenedCategory != null) {
+                categoryToOpen = FieldGuideDataManager.getCategories().get(lastOpenedCategory);
+                if (categoryToOpen != null) {
+                    pageToRestore = lastOpenedPage;
+                }
+            }
+
+            if (categoryToOpen == null && !sortedCategories.isEmpty()) {
+                categoryToOpen = sortedCategories.get(0);
+            }
+
+            if (categoryToOpen != null) {
+                selectCategory(categoryToOpen);
+
+                this.currentPage = pageToRestore;
+
+                int totalSpreads = getTotalSpreads();
+                if (this.currentPage >= totalSpreads) {
+                    this.currentPage = Math.max(0, totalSpreads - 1);
+                }
+
+                lastOpenedPage = this.currentPage;
+            }
         }
 
         this.prevPageButton = new ImageButton(
@@ -113,15 +145,24 @@ public class FieldGuideScreen extends BookScreen {
 
     /**
      * Selects a category and refreshes the entry list.
-     * Made public so TabButton can call it.
      */
     public void selectCategory(Category category) {
+        if (this.selectedCategory == category) return;
+
         this.selectedCategory = category;
         this.currentPage = 0;
+
         this.currentEntries = category.getEntities();
+
+        lastOpenedCategory = this.selectedCategory.getId();
+        lastOpenedPage = this.currentPage;
 
         if (!this.children().isEmpty()) {
             this.rebuildWidgets();
+        }
+
+        if (this.prevPageButton != null) {
+            updatePageButtons();
         }
     }
 
@@ -145,6 +186,7 @@ public class FieldGuideScreen extends BookScreen {
     private void prevPage() {
         if (currentPage > 0) {
             currentPage--;
+            lastOpenedPage = currentPage;
             updatePageButtons();
         }
     }
@@ -152,6 +194,7 @@ public class FieldGuideScreen extends BookScreen {
     private void nextPage() {
         if (currentPage < getTotalSpreads() - 1) {
             currentPage++;
+            lastOpenedPage = currentPage;
             updatePageButtons();
         }
     }
@@ -184,28 +227,50 @@ public class FieldGuideScreen extends BookScreen {
     }
 
     private void renderCategoryInfo(GuiGraphics guiGraphics) {
+        guiGraphics.blit(Constants.TITLE_PAGE_TEXTURE, this.leftPageBounds.left(), this.leftPageBounds.top(), 0, 0, this.leftPageBounds.width(), this.leftPageBounds.height(), this.leftPageBounds.width(), this.leftPageBounds.height());
+
         Component title = Component.translatable("category.fieldguide." + selectedCategory.getId().getPath());
-        int titleWidth = this.font.width(title);
-        guiGraphics.drawString(this.font, title,
-                this.leftPageBounds.x_center() - titleWidth / 2,
-                this.leftPageBounds.top() + 15, 0x7A583C, false);
+
+        int titleY = this.leftPageBounds.top() + 60;
+        List<FormattedCharSequence> lines = this.font.split(title, 70);
+
+        for (FormattedCharSequence line : lines) {
+            int lineWidth = this.font.width(line);
+            int lineX = this.leftPageBounds.x_center() - lineWidth / 2;
+
+            guiGraphics.drawString(this.font, line, lineX + 1, titleY + 1, 0xF6EACD, false);
+            guiGraphics.drawString(this.font, line, lineX, titleY, 0x7A583C, false);
+
+            titleY += this.font.lineHeight;
+        }
 
         int total = currentEntries.size();
         if (total > 0) {
             long unlocked = currentEntries.stream().filter(FieldGuideDataManager::isUnlocked).count();
 
-            int barWidth = 100;
-            int barHeight = 6;
-            int x = this.leftPageBounds.x_center() - barWidth / 2;
-            int y = this.leftPageBounds.bottom() - 40;
-
-            guiGraphics.fill(x, y, x + barWidth, y + barHeight, 0xFFdbcbb0);
+            int barWidth = 91;
+            int barHeight = 2;
+            int x = this.leftPageBounds.x_center() - barWidth / 2 + 2;
+            int y = this.leftPageBounds.bottom() - 47;
 
             int progressWidth = (int) ((float) unlocked / total * barWidth);
             guiGraphics.fill(x, y, x + progressWidth, y + barHeight, 0xFF7A583C);
 
-            String progressText = unlocked + " of " + total;
-            guiGraphics.drawCenteredString(this.font, progressText, this.leftPageBounds.x_center(), y + 10, 0x7A583C);
+            String countText = String.valueOf(unlocked);
+            String ofText = " of ";
+            String totalText = String.valueOf(total);
+
+            int totalWidth = font.width(countText) + font.width(ofText) + font.width(totalText);
+            int textX = this.leftPageBounds.x_center() - totalWidth / 2;
+            int textY = y + 10;
+
+            guiGraphics.drawString(this.font, countText, textX, textY, 0x7A583C, false);
+            textX += font.width(countText);
+
+            guiGraphics.drawString(this.font, ofText, textX, textY, 0xE0D2AE, false);
+            textX += font.width(ofText);
+
+            guiGraphics.drawString(this.font, totalText, textX, textY, 0x7A583C, false);
         }
     }
 
@@ -247,7 +312,11 @@ public class FieldGuideScreen extends BookScreen {
 
                 if (FieldGuideDataManager.isNew(type)) {
                     Component newText = Component.translatable("fieldguide.new");
-                    guiGraphics.drawCenteredString(this.font, newText, bounds.x_center(), bounds.bottom() - 8, 0x63B40C);
+                    int textWidth = this.font.width(newText);
+                    int textX = bounds.x_center() - textWidth / 2;
+                    int textY = bounds.bottom() - 8;
+
+                    guiGraphics.drawString(this.font, newText, textX, textY, 0x63B40C, false);
                 }
             }
         }
@@ -318,6 +387,8 @@ public class FieldGuideScreen extends BookScreen {
                     if (FieldGuideDataManager.isNew(type)) {
                         FieldGuideDataManager.markAsSeen(type);
                     }
+
+                    Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
 
                     Minecraft.getInstance().setScreen(new FieldGuideEntryScreen(this, type));
                     return true;
