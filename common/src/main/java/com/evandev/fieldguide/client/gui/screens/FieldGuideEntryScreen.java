@@ -1,4 +1,4 @@
-package com.evandev.fieldguide.client.gui;
+package com.evandev.fieldguide.client.gui.screens;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.data.FieldGuideDataManager;

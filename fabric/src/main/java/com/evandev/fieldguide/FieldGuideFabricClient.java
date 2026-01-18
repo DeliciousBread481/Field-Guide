@@ -1,9 +1,14 @@
 package com.evandev.fieldguide;
 
+import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.data.FieldGuideDataManager;
+import com.evandev.fieldguide.server.command.FieldGuideCommand;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.resources.ResourceLocation;
@@ -17,6 +22,9 @@ import java.nio.file.Path;
 public class FieldGuideFabricClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+        FieldGuideClient.init();
+        KeyBindingHelper.registerKeyBinding(FieldGuideClient.OPEN_GUIDE_KEY);
+
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
             @Override
             public ResourceLocation getFabricId() {
@@ -29,7 +37,14 @@ public class FieldGuideFabricClient implements ClientModInitializer {
             }
         });
 
-        ClientTickEvents.END_CLIENT_TICK.register(FieldGuideDataManager.getInstance()::onClientTick);
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            FieldGuideDataManager.getInstance().onClientTick(client);
+            FieldGuideClient.onClientTick(client);
+        });
+
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+            FieldGuideCommand.register(dispatcher);
+        });
 
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             Path saveDir = null;

@@ -1,6 +1,7 @@
-package com.evandev.fieldguide.client.gui;
+package com.evandev.fieldguide.client.gui.widget;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.client.gui.screens.FieldGuideScreen;
 import com.evandev.fieldguide.data.Category;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;

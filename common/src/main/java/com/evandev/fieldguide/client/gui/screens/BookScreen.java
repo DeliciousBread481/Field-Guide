@@ -1,4 +1,4 @@
-package com.evandev.fieldguide.client.gui;
+package com.evandev.fieldguide.client.gui.screens;
 
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import net.minecraft.client.gui.screens.Screen;

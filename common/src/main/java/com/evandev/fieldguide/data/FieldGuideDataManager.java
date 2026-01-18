@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.data;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.client.gui.toasts.FieldGuideToast;
 import com.google.gson.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
@@ -160,19 +161,43 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
     }
 
     /**
-     * Unlocks an entity and saves progress.
+     * Unlocks an entity and saves progress, showing a toast notification.
      */
     public void unlock(EntityType<?> type) {
+        unlock(type, true);
+    }
+
+    /**
+     * Unlocks an entity and saves progress, optionally showing a toast.
+     */
+    public void unlock(EntityType<?> type, boolean showToast) {
         ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
         if (unlockedEntities.add(id.toString())) {
-            if (Minecraft.getInstance().player != null) {
-                Minecraft.getInstance().player.displayClientMessage(
-                        net.minecraft.network.chat.Component.translatable("fieldguide.toast.unlocked", type.getDescription()),
-                        true
-                );
+            if (showToast) {
+                Minecraft.getInstance().getToasts().addToast(new FieldGuideToast(type));
             }
             saveProgress();
         }
+    }
+
+    /**
+     * Revokes access to an entity entry and saves progress.
+     */
+    public void revoke(EntityType<?> type) {
+        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        if (unlockedEntities.remove(id.toString())) {
+            seenEntities.remove(id.toString());
+            saveProgress();
+        }
+    }
+
+    /**
+     * Revokes access to all entity entries.
+     */
+    public void revokeAll() {
+        unlockedEntities.clear();
+        seenEntities.clear();
+        saveProgress();
     }
 
     private void loadProgress() {

@@ -19,4 +19,5 @@ public class Constants {
     public static final ResourceLocation PREV_PAGE_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/prev_page.png");
     public static final ResourceLocation BACK_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/back.png");
     public static final ResourceLocation TAB_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/tab.png");
+    public static final ResourceLocation TOAST_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/toast.png");
 }

@@ -1,6 +1,7 @@
-package com.evandev.fieldguide.client.gui;
+package com.evandev.fieldguide.client.gui.screens;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.client.gui.widget.TabButton;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntityRenderHelper;
 import com.evandev.fieldguide.data.Category;
@@ -47,7 +48,7 @@ public class FieldGuideScreen extends BookScreen {
     private ImageButton nextPageButton;
 
     public FieldGuideScreen() {
-        super(Component.translatable("title.fieldguide.compendium"));
+        super(Component.translatable("title.fieldguide.field_guide"));
     }
 
     @Override
@@ -248,9 +249,9 @@ public class FieldGuideScreen extends BookScreen {
         if (total > 0) {
             long unlocked = currentEntries.stream().filter(FieldGuideDataManager::isUnlocked).count();
 
-            int barWidth = 91;
+            int barWidth = 89;
             int barHeight = 2;
-            int x = this.leftPageBounds.x_center() - barWidth / 2 + 2;
+            int x = this.leftPageBounds.x_center() - barWidth / 2 + 1;
             int y = this.leftPageBounds.bottom() - 47;
 
             int progressWidth = (int) ((float) unlocked / total * barWidth);

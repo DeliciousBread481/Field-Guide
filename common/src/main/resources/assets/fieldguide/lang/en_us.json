@@ -1,16 +1,32 @@
 {
   "title.fieldguide.config": "Field Guide Config",
-  "category.fieldguide.general": "General Settings",
-  "title.fieldguide.compendium": "Field Guide",
+  "title.fieldguide.field_guide": "Field Guide",
+
   "gui.fieldguide.open": "Open Field Guide",
-  "fieldguide.description.missing": "No description available for this creature yet.",
-  "fieldguide.description.locked": "Observe with a spyglass to discover details.",
-  "fieldguide.unknown": "???",
-  "fieldguide.new": "New!",
-  "fieldguide.undiscovered": "Undiscovered",
+
+  "category.fieldguide.main": "Field Guide",
+  "category.fieldguide.general": "General Settings",
+
   "option.fieldguide.blacklist": "Entity Blacklist",
-  "fieldguide.toast.unlocked": "New field guide entry unlocked!",
   "option.fieldguide.blacklist.tooltip": "Entities that should not appear in the field guide.\nSupports 'modid:entity_id' or 'modid:*' for wildcards.",
+
+  "key.fieldguide.open": "Open Field Guide",
+
+  "fieldguide.new": "New!",
+  "fieldguide.unknown": "???",
+  "fieldguide.undiscovered": "Undiscovered",
+  "fieldguide.description.missing": "No description available for this entry yet.",
+  "fieldguide.description.locked": "Observe with a spyglass to discover details.",
+  "fieldguide.toast.unlocked": "Entry Unlocked!",
+
+  "commands.fieldguide.grant.everything.success": "Granted %s field guide entries to targets",
+  "commands.fieldguide.grant.category.success": "Granted category %s (%s entries) to targets",
+  "commands.fieldguide.grant.entry.success": "Granted entry %s to targets",
+  "commands.fieldguide.revoke.everything.success": "Revoked all field guide entries from targets",
+  "commands.fieldguide.revoke.category.success": "Revoked category %s (%s entries) from targets",
+  "commands.fieldguide.revoke.entry.success": "Revoked entry %s from targets",
+  "commands.fieldguide.category.not_found": "Category %s not found",
+  "commands.fieldguide.entry.not_found": "Entry %s not found",
 
   "category.fieldguide.hostile": "Book of Monsters",
   "category.fieldguide.passive": "Book of Creatures"
