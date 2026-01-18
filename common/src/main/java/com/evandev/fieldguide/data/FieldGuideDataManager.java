@@ -28,8 +28,8 @@ import java.util.stream.Collectors;
 public class FieldGuideDataManager implements ResourceManagerReloadListener {
     private static final Gson GSON = new GsonBuilder().create();
     private static final FieldGuideDataManager INSTANCE = new FieldGuideDataManager();
-    private static final int SCAN_DURATION = 60;
-    private static final int FADE_DURATION = 20;
+    private static final int SCAN_DURATION = 20;
+    private static final int FADE_DURATION = 10;
     private final Map<ResourceLocation, Category> categories = new LinkedHashMap<>();
     private final Set<String> unlockedEntities = new HashSet<>();
     private final Set<String> seenEntities = new HashSet<>();
@@ -123,10 +123,6 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
 
     public Entity getScanningEntity() {
         return scanningEntity;
-    }
-
-    public float getScanProgress() {
-        return Math.min(1.0F, (float) scanTicks / (float) SCAN_DURATION);
     }
 
     public float getScanProgress(float partialTicks) {

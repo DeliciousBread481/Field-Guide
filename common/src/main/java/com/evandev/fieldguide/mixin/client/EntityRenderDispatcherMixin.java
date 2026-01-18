@@ -38,7 +38,8 @@ public class EntityRenderDispatcherMixin {
         float height = entity.getBbHeight();
         float currentHeight = height * progress;
 
-        float inflation = 0.05F;
+        float inflation = 0.1F + (width * 0.25F);
+
         float halfW = (width / 2.0F) + inflation;
         float minH = -inflation;
         float maxH = Math.min(height + inflation, currentHeight + inflation);
@@ -50,34 +51,60 @@ public class EntityRenderDispatcherMixin {
         Matrix4f matrix = poseStack.last().pose();
 
         // Front
-        fieldguide$vertex(consumer, matrix, halfW, minH, halfW, alpha);
-        fieldguide$vertex(consumer, matrix, halfW, maxH, halfW, alpha);
-        fieldguide$vertex(consumer, matrix, -halfW, maxH, halfW, alpha);
-        fieldguide$vertex(consumer, matrix, -halfW, minH, halfW, alpha);
+        fieldguide$drawDoubleSidedQuad(consumer, matrix,
+                halfW, minH, halfW,
+                halfW, maxH, halfW,
+                -halfW, maxH, halfW,
+                -halfW, minH, halfW,
+                alpha);
 
         // Back
-        fieldguide$vertex(consumer, matrix, -halfW, minH, -halfW, alpha);
-        fieldguide$vertex(consumer, matrix, -halfW, maxH, -halfW, alpha);
-        fieldguide$vertex(consumer, matrix, halfW, maxH, -halfW, alpha);
-        fieldguide$vertex(consumer, matrix, halfW, minH, -halfW, alpha);
+        fieldguide$drawDoubleSidedQuad(consumer, matrix,
+                -halfW, minH, -halfW,
+                -halfW, maxH, -halfW,
+                halfW, maxH, -halfW,
+                halfW, minH, -halfW,
+                alpha);
 
         // Left
-        fieldguide$vertex(consumer, matrix, -halfW, minH, halfW, alpha);
-        fieldguide$vertex(consumer, matrix, -halfW, maxH, halfW, alpha);
-        fieldguide$vertex(consumer, matrix, -halfW, maxH, -halfW, alpha);
-        fieldguide$vertex(consumer, matrix, -halfW, minH, -halfW, alpha);
+        fieldguide$drawDoubleSidedQuad(consumer, matrix,
+                -halfW, minH, halfW,
+                -halfW, maxH, halfW,
+                -halfW, maxH, -halfW,
+                -halfW, minH, -halfW,
+                alpha);
 
         // Right
-        fieldguide$vertex(consumer, matrix, halfW, minH, -halfW, alpha);
-        fieldguide$vertex(consumer, matrix, halfW, maxH, -halfW, alpha);
-        fieldguide$vertex(consumer, matrix, halfW, maxH, halfW, alpha);
-        fieldguide$vertex(consumer, matrix, halfW, minH, halfW, alpha);
+        fieldguide$drawDoubleSidedQuad(consumer, matrix,
+                halfW, minH, -halfW,
+                halfW, maxH, -halfW,
+                halfW, maxH, halfW,
+                halfW, minH, halfW,
+                alpha);
 
         poseStack.popPose();
     }
 
+    /**
+     * Helper to draw a quad visible from both sides by drawing it twice with opposite winding orders.
+     */
     @Unique
-    private void fieldguide$vertex(VertexConsumer consumer, Matrix4f matrix, float x, float y, float z, float alpha) {
-        consumer.vertex(matrix, x, y, z).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
+    private void fieldguide$drawDoubleSidedQuad(VertexConsumer consumer, Matrix4f matrix,
+                                                float x1, float y1, float z1,
+                                                float x2, float y2, float z2,
+                                                float x3, float y3, float z3,
+                                                float x4, float y4, float z4,
+                                                float alpha) {
+        // Outside face
+        consumer.vertex(matrix, x1, y1, z1).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
+        consumer.vertex(matrix, x2, y2, z2).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
+        consumer.vertex(matrix, x3, y3, z3).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
+        consumer.vertex(matrix, x4, y4, z4).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
+
+        // Inside face
+        consumer.vertex(matrix, x4, y4, z4).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
+        consumer.vertex(matrix, x3, y3, z3).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
+        consumer.vertex(matrix, x2, y2, z2).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
+        consumer.vertex(matrix, x1, y1, z1).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
     }
 }
