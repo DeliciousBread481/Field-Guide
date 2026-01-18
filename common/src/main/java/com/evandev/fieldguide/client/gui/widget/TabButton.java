@@ -38,15 +38,18 @@ public class TabButton extends ImageButton {
     public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         boolean isSelected = (category == parent.getSelectedCategory());
 
-        RenderSystem.setShaderColor(r, g, b, 1.0F);
+//        RenderSystem.setShaderColor(r, g, b, 1.0F);
 
-        int vOffset = isSelected ? 20 : 0;
+        int vOffset = isSelected ? 24 : 0;
 
-        guiGraphics.blit(Constants.TAB_TEXTURE, this.getX(), this.getY(), 0, vOffset, this.width, this.height, 24, 40);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        guiGraphics.blit(Constants.TAB_TEXTURE, this.getX(), this.getY(), 0, vOffset, this.width, this.height, 24, 48);
+//        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
-        int iconX = this.getX() + 4;
-        int iconY = this.getY() + 2;
+        int iconX = this.getX() + 3;
+        if (isSelected) {
+            iconX = iconX + 1;
+        }
+        int iconY = this.getY() + 4;
         guiGraphics.renderItem(iconStack, iconX, iconY);
     }
 

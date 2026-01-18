@@ -63,7 +63,9 @@ public class FieldGuideEntryScreen extends BookScreen {
         String description = unlocked ? FieldGuideDataManager.getEntityDescription(entityType) : Component.translatable("fieldguide.description.locked").getString();
 
         // Entity name
-        guiGraphics.drawString(this.font, title, this.leftPageBounds.left() + this.leftPageBounds.width() / 2 - font.width(title) / 2, this.leftPageBounds.top() + 14, 0x7A583C, false);
+        guiGraphics.drawString(this.font, title, this.leftPageBounds.x_center() - font.width(title) / 2 + 1, this.leftPageBounds.top() + 14 + 1, 0xF6EACD, false);
+        guiGraphics.drawString(this.font, title, this.leftPageBounds.x_center() - font.width(title) / 2, this.leftPageBounds.top() + 14, 0x7A583C, false);
+
 
         // Entity model
         int xPos = leftPageBounds.left() + leftPageBounds.width() / 2;

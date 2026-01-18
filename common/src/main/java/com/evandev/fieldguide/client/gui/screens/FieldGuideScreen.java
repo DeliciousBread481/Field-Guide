@@ -30,8 +30,8 @@ public class FieldGuideScreen extends BookScreen {
     private static final int CELL_SIZE = 40;
     private static final int GAP = 0;
     private static final int TAB_WIDTH = 24;
-    private static final int TAB_HEIGHT = 20;
-    private static final int TAB_GAP = 1;
+    private static final int TAB_HEIGHT = 24;
+    private static final int TAB_GAP = 0;
 
     private static ResourceLocation lastOpenedCategory = null;
     private static int lastOpenedPage = 0;
@@ -154,12 +154,12 @@ public class FieldGuideScreen extends BookScreen {
     }
 
     private void initTabs() {
-        int startY = this.bounds.top() + 10;
+        int startY = this.bounds.bottom() - 36 - TAB_HEIGHT;
 
         for (int i = 0; i < sortedCategories.size(); i++) {
             Category category = sortedCategories.get(i);
-            int yPos = startY + (i * (TAB_HEIGHT + TAB_GAP));
-            int xPos = this.bounds.left() - TAB_WIDTH;
+            int yPos = startY - (i * (TAB_HEIGHT + TAB_GAP));
+            int xPos = this.bounds.left() - 6;
 
             TabButton tab = new TabButton(
                     xPos,
@@ -286,10 +286,10 @@ public class FieldGuideScreen extends BookScreen {
         if (total > 0) {
             long unlocked = currentEntries.stream().filter(FieldGuideDataManager::isUnlocked).count();
 
-            int barWidth = 89;
+            int barWidth = 92;
             int barHeight = 2;
-            int x = this.leftPageBounds.x_center() - barWidth / 2 + 1;
-            int y = this.leftPageBounds.bottom() - 47;
+            int x = this.leftPageBounds.x_center() - barWidth / 2;
+            int y = this.leftPageBounds.bottom() - 46;
 
             int progressWidth = (int) ((float) unlocked / total * barWidth);
             guiGraphics.fill(x, y, x + progressWidth, y + barHeight, 0xFF7A583C);
