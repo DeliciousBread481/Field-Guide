@@ -35,6 +35,9 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
 
     private List<EntityType<?>> flattenedEntityCache = null;
 
+    private long lastUnlockTime = 0;
+    private EntityType<?> lastUnlockedEntity = null;
+
     private FieldGuideDataManager() {
     }
 
@@ -42,9 +45,26 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         return INSTANCE;
     }
 
+    public long getLastUnlockTime() {
+        return lastUnlockTime;
+    }
+
+    public EntityType<?> getLastUnlockedEntity() {
+        return lastUnlockedEntity;
+    }
+
     /**
-     * Gets an ordered list of all valid EntityTypes from all categories.
+     * Helper to find which category holds a specific entity.
      */
+    public Category getCategoryForEntity(EntityType<?> entityType) {
+        for (Category category : categories.values()) {
+            if (category.getEntities().contains(entityType)) {
+                return category;
+            }
+        }
+        return null;
+    }
+
     public static List<EntityType<?>> getValidEntities() {
         if (INSTANCE.flattenedEntityCache == null) {
             INSTANCE.flattenedEntityCache = INSTANCE.categories.values().stream()
@@ -174,8 +194,15 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
      * Unlocks an entity and saves progress, optionally showing a toast.
      */
     public void unlock(EntityType<?> type, boolean showToast) {
+        if (!getValidEntities().contains(type)) {
+            return;
+        }
+
         ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
         if (unlockedEntities.add(id.toString())) {
+            this.lastUnlockedEntity = type;
+            this.lastUnlockTime = System.currentTimeMillis();
+
             if (showToast) {
                 Minecraft.getInstance().getToasts().addToast(new FieldGuideToast(type));
             }
@@ -249,7 +276,11 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
             json.add("seen", seenArray);
 
             File parent = file.getParentFile();
-            if (parent != null && !parent.exists()) parent.mkdirs();
+            if (parent != null && !parent.exists()) {
+                if (!parent.mkdirs()) {
+                    throw new IOException("Failed to create directories: " + parent);
+                }
+            }
 
             try (FileWriter writer = new FileWriter(file)) {
                 GSON.toJson(json, writer);
@@ -341,5 +372,4 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
     }
 
     enum EntryType {ENTRY, AUTO_POPULATE}
-
 }

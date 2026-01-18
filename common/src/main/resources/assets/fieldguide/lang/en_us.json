@@ -20,7 +20,9 @@
   "fieldguide.undiscovered": "Undiscovered",
   "fieldguide.description.missing": "No description available for this entry yet.",
   "fieldguide.description.locked": "Observe with a spyglass to discover details.",
-  "fieldguide.toast.unlocked": "Entry Unlocked!",
+
+  "fieldguide.toast.added": "%s Discovered!",
+  "fieldguide.toast.view_hint": "Press %s to view",
 
   "commands.fieldguide.grant.everything.success": "Granted %s field guide entries to targets",
   "commands.fieldguide.grant.category.success": "Granted category %s (%s entries) to targets",

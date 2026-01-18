@@ -51,6 +51,14 @@ public class FieldGuideScreen extends BookScreen {
         super(Component.translatable("title.fieldguide.field_guide"));
     }
 
+    /**
+     * Constructor to open a specific category immediately.
+     */
+    public FieldGuideScreen(Category initialCategory) {
+        this();
+        this.selectedCategory = initialCategory;
+    }
+
     @Override
     protected void init() {
         super.init();
