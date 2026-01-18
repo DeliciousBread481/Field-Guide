@@ -1,10 +1,11 @@
 {
-  "title.fieldguide.config": "FieldGuide Config",
+  "title.fieldguide.config": "Field Guide Config",
   "category.fieldguide.general": "General Settings",
-  "title.fieldguide.compendium": "Mob Compendium",
-  "gui.fieldguide.open": "Open FieldGuide",
+  "title.fieldguide.compendium": "Field Guide",
+  "gui.fieldguide.open": "Open Field Guide",
   "fieldguide.description.missing": "No description available for this creature yet.",
-  "fieldguide.unknown": "Unknown Creature",
+  "fieldguide.unknown": "???",
   "option.fieldguide.blacklist": "Entity Blacklist",
-  "option.fieldguide.blacklist.tooltip": "Entities that should not appear in the compendium.\nSupports 'modid:entity_id' or 'modid:*' for wildcards."
+  "fieldguide.toast.unlocked": "Discovered a new mob!",
+  "option.fieldguide.blacklist.tooltip": "Entities that should not appear in the field guide.\nSupports 'modid:entity_id' or 'modid:*' for wildcards."
 }

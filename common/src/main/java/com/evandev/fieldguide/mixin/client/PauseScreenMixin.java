@@ -2,6 +2,7 @@ package com.evandev.fieldguide.mixin.client;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.gui.CompendiumScreen;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -18,31 +19,55 @@ public class PauseScreenMixin extends Screen {
         super(title);
     }
 
-    @Inject(method = "createPauseMenu", at = @At("HEAD"))
+    @Inject(method = "createPauseMenu", at = @At("RETURN"))
     private void addFieldGuideButton(CallbackInfo ci) {
-
-        // TODO: fix position
         int buttonSize = 20;
-        int margin = 5;
+        int margin = 4;
 
-        this.addRenderableWidget(new ImageButton(
-                this.width - buttonSize - margin,
-                margin,
+        int xTexStart = 0;
+        int yTexStart = 0;
+        int yDiffTex = 20;
+        int textureWidth = 20;
+        int textureHeight = 40;
+
+        Component message = Component.translatable("gui.fieldguide.open");
+
+        int columnX = this.width / 2 - 102;
+        int targetY = 0;
+
+        for (Object child : this.children()) {
+            if (child instanceof AbstractWidget widget) {
+                if (widget.getX() == columnX && widget.getY() > targetY) {
+                    targetY = widget.getY();
+                }
+            }
+        }
+
+        if (targetY == 0) {
+            targetY = this.height / 4 + 120 + 24;
+        }
+
+        int finalX = columnX - buttonSize - margin;
+
+        ImageButton guideButton = new ImageButton(
+                finalX,
+                targetY,
                 buttonSize,
                 buttonSize,
-                0,
-                0,
-                20,
+                xTexStart,
+                yTexStart,
+                yDiffTex,
                 Constants.BUTTON_TEXTURE,
-                20,
-                40,
+                textureWidth,
+                textureHeight,
                 (button) -> {
                     if (this.minecraft != null) {
                         this.minecraft.setScreen(new CompendiumScreen());
                     }
                 },
-                Component.translatable("gui.fieldguide.open")
-        ));
-    }
+                message
+        );
 
+        this.addRenderableWidget(guideButton);
+    }
 }
