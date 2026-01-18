@@ -9,6 +9,9 @@
   "fieldguide.new": "New!",
   "fieldguide.undiscovered": "Undiscovered",
   "option.fieldguide.blacklist": "Entity Blacklist",
-  "fieldguide.toast.unlocked": "Discovered a new mob!",
-  "option.fieldguide.blacklist.tooltip": "Entities that should not appear in the field guide.\nSupports 'modid:entity_id' or 'modid:*' for wildcards."
+  "fieldguide.toast.unlocked": "New field guide entry unlocked!",
+  "option.fieldguide.blacklist.tooltip": "Entities that should not appear in the field guide.\nSupports 'modid:entity_id' or 'modid:*' for wildcards.",
+
+  "category.fieldguide.hostile": "Book of Monsters",
+  "category.fieldguide.passive": "Book of Creatures"
 }

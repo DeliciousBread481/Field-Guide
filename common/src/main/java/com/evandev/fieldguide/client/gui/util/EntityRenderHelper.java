@@ -83,10 +83,6 @@ public class EntityRenderHelper {
     /**
      * Renders an entity with a fixed pose and no animation.
      */
-    public static void renderEntityStatic(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, float scale, boolean silhouette) {
-        renderEntityStatic(guiGraphics, entity, x, y, scale, silhouette, 0.7F, 0.6F, 0.5F);
-    }
-
     public static void renderEntityStatic(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, float scale, boolean silhouette, float r, float g, float b) {
         float cameraXAngle = -30;
         float bodyYAngle = 20;
