@@ -103,6 +103,9 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
 
     public static void clearCache() {
         INSTANCE.flattenedEntityCache = null;
+        for (Category category : INSTANCE.categories.values()) {
+            category.resolveEntities();
+        }
     }
 
     /**
