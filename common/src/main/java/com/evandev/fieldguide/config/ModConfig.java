@@ -71,18 +71,18 @@ public class ModConfig {
         defaults.add("minecraft:area_effect_cloud");
         defaults.add("minecraft:block_display");
         defaults.add("minecraft:boat");
-        defaults.add("minecraft:boat_with_chest");
-        defaults.add("minecraft:minecart_with_chest");
-        defaults.add("minecraft:minecart_with_command_block");
+        defaults.add("minecraft:chest_boat");
+        defaults.add("minecraft:chest_minecart");
+        defaults.add("minecraft:command_block_minecart");
         defaults.add("minecraft:dragon_fireball");
         defaults.add("minecraft:end_crystal");
         defaults.add("minecraft:evoker_fangs");
         defaults.add("minecraft:eye_of_ender");
         defaults.add("minecraft:fireball");
         defaults.add("minecraft:firework_rocket");
-        defaults.add("minecraft:minecart_with_furnace");
+        defaults.add("minecraft:furnace_minecart");
         defaults.add("minecraft:glow_item_frame");
-        defaults.add("minecraft:minecart_with_hopper");
+        defaults.add("minecraft:hopper_minecart");
         defaults.add("minecraft:interaction");
         defaults.add("minecraft:item_display");
         defaults.add("minecraft:item_frame");
@@ -93,9 +93,9 @@ public class ModConfig {
         defaults.add("minecraft:painting");
         defaults.add("minecraft:shulker_bullet");
         defaults.add("minecraft:small_fireball");
-        defaults.add("minecraft:minecart_with_monster_spawner");
+        defaults.add("minecraft:spawner_minecart");
         defaults.add("minecraft:text_display");
-        defaults.add("minecraft:minecart_with_tnt");
+        defaults.add("minecraft:tnt_minecart");
         defaults.add("minecraft:wither_skull");
 
         return defaults;

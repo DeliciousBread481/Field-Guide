@@ -60,4 +60,11 @@ public class MobDataManager {
         return I18n.get("fieldguide.description.missing");
     }
 
+    /**
+     * Clears the entity cache, forcing the list to be rebuilt
+     * based on the current configuration.
+     */
+    public static void clearCache() {
+        cachedEntityList = null;
+    }
 }

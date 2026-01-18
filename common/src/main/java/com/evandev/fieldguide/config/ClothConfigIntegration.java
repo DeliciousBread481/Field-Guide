@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.config;
 
+import com.evandev.fieldguide.client.MobDataManager;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
@@ -15,7 +16,10 @@ public class ClothConfigIntegration {
                 .setParentScreen(parent)
                 .setTitle(Component.translatable("title.fieldguide.config"));
 
-        builder.setSavingRunnable(ModConfig::save);
+        builder.setSavingRunnable(() -> {
+            ModConfig.save();
+            MobDataManager.clearCache();
+        });
 
         ConfigCategory general = builder.getOrCreateCategory(Component.translatable("category.fieldguide.general"));
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
