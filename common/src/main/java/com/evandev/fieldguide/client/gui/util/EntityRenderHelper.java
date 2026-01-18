@@ -43,8 +43,16 @@ public class EntityRenderHelper {
 
     /**
      * Renders an entity normalized to fit within a standard widget box.
+     * Defaults to the standard sepia silhouette color.
      */
     public static void renderEntityNormalized(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, int maxWidth, int maxHeight, float baseScale, boolean silhouette) {
+        renderEntityNormalized(guiGraphics, entity, x, y, maxWidth, maxHeight, baseScale, silhouette, 0.7F, 0.6F, 0.5F);
+    }
+
+    /**
+     * Renders an entity normalized to fit within a standard widget box with a specific silhouette color.
+     */
+    public static void renderEntityNormalized(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, int maxWidth, int maxHeight, float baseScale, boolean silhouette, float r, float g, float b) {
         float dynamicFactor = getScaleFactorForEntity(entity);
         float finalScale = (baseScale * 0.32F) * dynamicFactor;
 
@@ -67,7 +75,7 @@ public class EntityRenderHelper {
 
         guiGraphics.enableScissor(minX, minY, maxX, maxY);
 
-        renderEntityStatic(guiGraphics, entity, x, feetY, finalScale, silhouette);
+        renderEntityStatic(guiGraphics, entity, x, feetY, finalScale, silhouette, r, g, b);
 
         guiGraphics.disableScissor();
     }
@@ -76,6 +84,10 @@ public class EntityRenderHelper {
      * Renders an entity with a fixed pose and no animation.
      */
     public static void renderEntityStatic(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, float scale, boolean silhouette) {
+        renderEntityStatic(guiGraphics, entity, x, y, scale, silhouette, 0.7F, 0.6F, 0.5F);
+    }
+
+    public static void renderEntityStatic(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, float scale, boolean silhouette, float r, float g, float b) {
         float cameraXAngle = -30;
         float bodyYAngle = 20;
         float headYAngle = 0;
@@ -104,7 +116,7 @@ public class EntityRenderHelper {
         pose.mulPose(poseOrientation);
 
         if (silhouette) {
-            RenderSystem.setShaderFogColor(0.7F, 0.6F, 0.5F);
+            RenderSystem.setShaderFogColor(r, g, b);
             RenderSystem.setShaderFogStart(0.0F);
             RenderSystem.setShaderFogEnd(0.1F);
         }

@@ -1,7 +1,7 @@
 package com.evandev.fieldguide.mixin.client;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.client.gui.CompendiumScreen;
+import com.evandev.fieldguide.client.gui.FieldGuideScreen;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.PauseScreen;
@@ -62,7 +62,7 @@ public class PauseScreenMixin extends Screen {
                 textureHeight,
                 (button) -> {
                     if (this.minecraft != null) {
-                        this.minecraft.setScreen(new CompendiumScreen());
+                        this.minecraft.setScreen(new FieldGuideScreen());
                     }
                 },
                 message

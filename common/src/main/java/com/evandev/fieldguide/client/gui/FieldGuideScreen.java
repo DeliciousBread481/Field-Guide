@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class CompendiumScreen extends BookScreen {
+public class FieldGuideScreen extends BookScreen {
     private static final int ITEMS_PER_PAGE = 18;
     private static final int GRID_COLS = 3;
     private static final int CELL_SIZE = 40;
@@ -30,7 +30,7 @@ public class CompendiumScreen extends BookScreen {
     private ImageButton prevPageButton;
     private ImageButton nextPageButton;
 
-    public CompendiumScreen() {
+    public FieldGuideScreen() {
         super(Component.translatable("title.fieldguide.compendium"));
     }
 
@@ -118,7 +118,7 @@ public class CompendiumScreen extends BookScreen {
             boolean hovered = bounds.contains(mouseX, mouseY);
 
             // Render background
-            if (hovered && unlocked) {
+            if (hovered) {
                 guiGraphics.blit(Constants.CELL_BACKGROUND_HOVER_TEXTURE, bounds.x(), bounds.y(), 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE);
             } else {
                 guiGraphics.blit(Constants.CELL_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE);
@@ -184,10 +184,8 @@ public class CompendiumScreen extends BookScreen {
         for (int i = startIndex; i < endIndex; i++) {
             if (getGridCellBounds(i).contains((int) mouseX, (int) mouseY)) {
                 EntityType<?> type = allEntities.get(i);
-                if (MobDataManager.isUnlocked(type)) {
-                    Minecraft.getInstance().setScreen(new MobDetailScreen(this, type));
-                    return true;
-                }
+                Minecraft.getInstance().setScreen(new FieldGuideEntryScreen(this, type));
+                return true;
             }
         }
         return false;

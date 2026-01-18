@@ -13,13 +13,13 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.NotNull;
 
-public class MobDetailScreen extends BookScreen {
+public class FieldGuideEntryScreen extends BookScreen {
     private final Screen parent;
     private final EntityType<?> entityType;
     private Entity renderedEntity;
 
-    public MobDetailScreen(Screen parent, EntityType<?> entityType) {
-        super(entityType.getDescription());
+    public FieldGuideEntryScreen(Screen parent, EntityType<?> entityType) {
+        super(MobDataManager.isUnlocked(entityType) ? entityType.getDescription() : Component.translatable("fieldguide.undiscovered"));
         this.parent = parent;
         this.entityType = entityType;
     }
@@ -58,18 +58,25 @@ public class MobDetailScreen extends BookScreen {
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
+        boolean unlocked = MobDataManager.isUnlocked(entityType);
+        Component title = unlocked ? entityType.getDescription() : Component.translatable("fieldguide.undiscovered");
+        String description = unlocked ? MobDataManager.getEntityDescription(entityType) : Component.translatable("fieldguide.description.locked").getString();
+
         // Entity name
-        guiGraphics.drawString(this.font, entityType.getDescription(), this.leftPageBounds.left() + this.leftPageBounds.width() / 2 - font.width(entityType.getDescription()) / 2, this.leftPageBounds.top() + 14, 0x7A583C, false);
+        guiGraphics.drawString(this.font, title, this.leftPageBounds.left() + this.leftPageBounds.width() / 2 - font.width(title) / 2, this.leftPageBounds.top() + 14, 0x7A583C, false);
 
         // Entity model
         int xPos = leftPageBounds.left() + leftPageBounds.width() / 2;
         int yPos = leftPageBounds.y_center();
         if (renderedEntity instanceof LivingEntity living) {
-            EntityRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, false);
+            if (unlocked) {
+                EntityRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, false);
+            } else {
+                EntityRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, true, 0.0F, 0.0F, 0.0F);
+            }
         }
 
         // Description
-        String description = MobDataManager.getEntityDescription(entityType);
         int textX = this.rightPageBounds.left() + 11;
         int textY = this.rightPageBounds.top() + 17;
         int textAreaWidth = this.rightPageBounds.width() - 22;
