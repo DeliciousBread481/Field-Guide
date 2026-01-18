@@ -1,7 +1,7 @@
 package com.evandev.fieldguide.client.gui;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.client.MobDataManager;
+import com.evandev.fieldguide.data.FieldGuideDataManager;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntityRenderHelper;
 import com.mojang.blaze3d.platform.Lighting;
@@ -37,7 +37,7 @@ public class FieldGuideScreen extends BookScreen {
     @Override
     protected void init() {
         super.init();
-        this.allEntities = MobDataManager.getValidEntities();
+        this.allEntities = FieldGuideDataManager.getValidEntities();
 
         this.prevPageButton = new ImageButton(
                 this.leftPageBounds.left(),
@@ -114,7 +114,7 @@ public class FieldGuideScreen extends BookScreen {
         for (int i = startIndex; i < endIndex; i++) {
             EntityType<?> type = allEntities.get(i);
             Bounds bounds = getGridCellBounds(i);
-            boolean unlocked = MobDataManager.isUnlocked(type);
+            boolean unlocked = FieldGuideDataManager.isUnlocked(type);
             boolean hovered = bounds.contains(mouseX, mouseY);
 
             // Render background
@@ -128,7 +128,7 @@ public class FieldGuideScreen extends BookScreen {
             renderMobInGrid(guiGraphics, type, bounds.x_center(), bounds.y_center(), 30, unlocked);
 
             // Render "new" tooltip
-            if (MobDataManager.isNew(type)) {
+            if (FieldGuideDataManager.isNew(type)) {
                 Component newText = Component.translatable("fieldguide.new");
                 guiGraphics.drawCenteredString(this.font, newText, bounds.x_center(), bounds.bottom() - 8, 0x63B40C);
             }
@@ -141,7 +141,7 @@ public class FieldGuideScreen extends BookScreen {
             Bounds bounds = getGridCellBounds(i);
             if (bounds.contains(mouseX, mouseY)) {
                 EntityType<?> type = allEntities.get(i);
-                boolean unlocked = MobDataManager.isUnlocked(type);
+                boolean unlocked = FieldGuideDataManager.isUnlocked(type);
 
                 if (unlocked) {
                     guiGraphics.renderTooltip(this.font, type.getDescription(), mouseX, mouseY);
@@ -191,8 +191,8 @@ public class FieldGuideScreen extends BookScreen {
             if (getGridCellBounds(i).contains((int) mouseX, (int) mouseY)) {
                 EntityType<?> type = allEntities.get(i);
 
-                if (MobDataManager.isNew(type)) {
-                    MobDataManager.markAsSeen(type);
+                if (FieldGuideDataManager.isNew(type)) {
+                    FieldGuideDataManager.markAsSeen(type);
                 }
 
                 Minecraft.getInstance().setScreen(new FieldGuideEntryScreen(this, type));

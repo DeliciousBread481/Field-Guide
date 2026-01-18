@@ -1,6 +1,7 @@
 {
   "tab_color": "#52C83F",
   "tab_icon": "minecraft:feather",
+  "tab_index": 2,
   "contents": [
     {
       "type": "auto_populate",

@@ -1,6 +1,7 @@
 {
   "tab_color": "#FF0000",
   "tab_icon": "minecraft:iron_sword",
+  "tab_index": 1,
   "contents": [
     {
       "type": "auto_populate",

@@ -1,12 +1,11 @@
 package com.evandev.fieldguide;
 
-import com.evandev.fieldguide.client.MobDataManager;
+import com.evandev.fieldguide.data.FieldGuideDataManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
-import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -26,22 +25,22 @@ public class FieldGuideFabricClient implements ClientModInitializer {
 
             @Override
             public void onResourceManagerReload(@NotNull ResourceManager resourceManager) {
-                MobDataManager.getInstance().onResourceManagerReload(resourceManager);
+                FieldGuideDataManager.getInstance().onResourceManagerReload(resourceManager);
             }
         });
 
-        ClientTickEvents.END_CLIENT_TICK.register(MobDataManager.getInstance()::onClientTick);
+        ClientTickEvents.END_CLIENT_TICK.register(FieldGuideDataManager.getInstance()::onClientTick);
 
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             Path saveDir = null;
             if (client.hasSingleplayerServer() && client.getSingleplayerServer() != null) {
                 saveDir = client.getSingleplayerServer().getWorldPath(LevelResource.ROOT);
             }
-            MobDataManager.getInstance().onWorldLoad(saveDir);
+            FieldGuideDataManager.getInstance().onWorldLoad(saveDir);
         });
 
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
-            MobDataManager.getInstance().onWorldUnload();
+            FieldGuideDataManager.getInstance().onWorldUnload();
         });
     }
 }

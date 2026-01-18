@@ -1,7 +1,7 @@
 package com.evandev.fieldguide.client.gui;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.client.MobDataManager;
+import com.evandev.fieldguide.data.FieldGuideDataManager;
 import com.evandev.fieldguide.client.gui.util.EntityRenderHelper;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
@@ -19,7 +19,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     private Entity renderedEntity;
 
     public FieldGuideEntryScreen(Screen parent, EntityType<?> entityType) {
-        super(MobDataManager.isUnlocked(entityType) ? entityType.getDescription() : Component.translatable("fieldguide.undiscovered"));
+        super(FieldGuideDataManager.isUnlocked(entityType) ? entityType.getDescription() : Component.translatable("fieldguide.undiscovered"));
         this.parent = parent;
         this.entityType = entityType;
     }
@@ -58,9 +58,9 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
-        boolean unlocked = MobDataManager.isUnlocked(entityType);
+        boolean unlocked = FieldGuideDataManager.isUnlocked(entityType);
         Component title = unlocked ? entityType.getDescription() : Component.translatable("fieldguide.undiscovered");
-        String description = unlocked ? MobDataManager.getEntityDescription(entityType) : Component.translatable("fieldguide.description.locked").getString();
+        String description = unlocked ? FieldGuideDataManager.getEntityDescription(entityType) : Component.translatable("fieldguide.description.locked").getString();
 
         // Entity name
         guiGraphics.drawString(this.font, title, this.leftPageBounds.left() + this.leftPageBounds.width() / 2 - font.width(title) / 2, this.leftPageBounds.top() + 14, 0x7A583C, false);

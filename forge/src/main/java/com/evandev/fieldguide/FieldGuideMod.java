@@ -1,6 +1,6 @@
 package com.evandev.fieldguide;
 
-import com.evandev.fieldguide.client.MobDataManager;
+import com.evandev.fieldguide.data.FieldGuideDataManager;
 import com.evandev.fieldguide.config.ClothConfigIntegration;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.storage.LevelResource;
@@ -43,13 +43,13 @@ public class FieldGuideMod {
     }
 
     public void registerReloadListeners(RegisterClientReloadListenersEvent event) {
-        event.registerReloadListener(MobDataManager.getInstance());
+        event.registerReloadListener(FieldGuideDataManager.getInstance());
     }
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
-            MobDataManager.getInstance().onClientTick(Minecraft.getInstance());
+            FieldGuideDataManager.getInstance().onClientTick(Minecraft.getInstance());
         }
     }
 
@@ -60,11 +60,11 @@ public class FieldGuideMod {
         if (client.hasSingleplayerServer() && client.getSingleplayerServer() != null) {
             saveDir = client.getSingleplayerServer().getWorldPath(LevelResource.ROOT);
         }
-        MobDataManager.getInstance().onWorldLoad(saveDir);
+        FieldGuideDataManager.getInstance().onWorldLoad(saveDir);
     }
 
     @SubscribeEvent
     public void onClientPlayerLogout(ClientPlayerNetworkEvent.LoggingOut event) {
-        MobDataManager.getInstance().onWorldUnload();
+        FieldGuideDataManager.getInstance().onWorldUnload();
     }
 }
