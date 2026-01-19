@@ -1,4 +1,4 @@
-# Universal Field Guide
+# Field Guide
 
 ---
 
