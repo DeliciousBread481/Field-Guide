@@ -1,7 +1,7 @@
 {
   "tab_color": "#52C83F",
-  "tab_icon": "fieldguide:textures/gui/icons/bee.png",
-  "tab_index": 2,
+  "tab_icon": "fieldguide:textures/gui/icons/azalea.png",
+  "tab_index": 3,
   "contents": [
     {
       "type": "auto_populate",

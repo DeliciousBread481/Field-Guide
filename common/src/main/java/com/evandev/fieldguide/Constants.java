@@ -20,4 +20,12 @@ public class Constants {
     public static final ResourceLocation BACK_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/back.png");
     public static final ResourceLocation TAB_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/tab.png");
     public static final ResourceLocation TOAST_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/toast.png");
+
+    public static final int TEXT_COLOR = 0x8A5E3B;
+    public static final int TEXT_MUTED_COLOR = 0xAF8C5C;
+    public static final int TEXT_SHADOW_COLOR = 0xF6EACD;
+    public static final int PAGE_NUMBER_COLOR = 0xC7A875;
+    public static final int LIST_SILHOUETTE_COLOR = 0xddc69b;
+    public static final int DETAILS_SILHOUETTE_COLOR = 0xddc69b;
+
 }

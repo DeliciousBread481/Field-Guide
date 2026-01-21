@@ -33,8 +33,8 @@ public class FieldGuideEntryScreen extends BookScreen {
         }
 
         this.addRenderableWidget(new ImageButton(
-                this.bounds.left() - 2,
-                this.bounds.top() + 27,
+                this.bounds.left() - 4,
+                this.bounds.top() + 84,
                 23,
                 23,
                 0,
@@ -63,8 +63,8 @@ public class FieldGuideEntryScreen extends BookScreen {
         String description = unlocked ? FieldGuideDataManager.getEntityDescription(entityType) : Component.translatable("fieldguide.description.locked").getString();
 
         // Entity name
-        guiGraphics.drawString(this.font, title, this.leftPageBounds.x_center() - font.width(title) / 2 + 1, this.leftPageBounds.top() + 14 + 1, 0xF6EACD, false);
-        guiGraphics.drawString(this.font, title, this.leftPageBounds.x_center() - font.width(title) / 2, this.leftPageBounds.top() + 14, 0x7A583C, false);
+        guiGraphics.drawString(this.font, title, this.leftPageBounds.x_center() - font.width(title) / 2 + 1, this.leftPageBounds.top() + 14 + 1, Constants.TEXT_SHADOW_COLOR, false);
+        guiGraphics.drawString(this.font, title, this.leftPageBounds.x_center() - font.width(title) / 2, this.leftPageBounds.top() + 14, Constants.TEXT_COLOR, false);
 
 
         // Entity model
@@ -74,7 +74,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             if (unlocked) {
                 EntityRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, false);
             } else {
-                EntityRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, true, 0.0F, 0.0F, 0.0F);
+                EntityRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, true, Constants.DETAILS_SILHOUETTE_COLOR);
             }
         }
 
@@ -83,6 +83,6 @@ public class FieldGuideEntryScreen extends BookScreen {
         int textY = this.rightPageBounds.top() + 17;
         int textAreaWidth = this.rightPageBounds.width() - 22;
 
-        guiGraphics.drawWordWrap(font, Component.literal(description), textX, textY, textAreaWidth, 0x7A583C);
+        guiGraphics.drawWordWrap(font, Component.literal(description), textX, textY, textAreaWidth, Constants.TEXT_COLOR);
     }
 }

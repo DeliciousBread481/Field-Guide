@@ -15,7 +15,7 @@ import net.minecraft.world.item.Items;
 public class TabButton extends ImageButton {
     private final Category category;
     private final FieldGuideScreen parent;
-    private final ItemStack iconStack;
+//    private final ItemStack iconStack;
     private final float r, g, b;
 
     public TabButton(int x, int y, int width, int height, Category category, FieldGuideScreen parent) {
@@ -28,8 +28,8 @@ public class TabButton extends ImageButton {
         this.g = ((colorInt >> 8) & 0xFF) / 255.0F;
         this.b = (colorInt & 0xFF) / 255.0F;
 
-        ItemStack stack = new ItemStack(BuiltInRegistries.ITEM.get(category.getTabIcon()));
-        this.iconStack = stack.isEmpty() ? new ItemStack(Items.BARRIER) : stack;
+//        ItemStack stack = new ItemStack(BuiltInRegistries.ITEM.get(category.getTabIcon()));
+//        this.iconStack = stack.isEmpty() ? new ItemStack(Items.BARRIER) : stack;
 
         this.setTooltip(Tooltip.create(Component.translatable("category.fieldguide." + category.getId().getPath())));
     }
@@ -45,12 +45,13 @@ public class TabButton extends ImageButton {
         guiGraphics.blit(Constants.TAB_TEXTURE, this.getX(), this.getY(), 0, vOffset, this.width, this.height, 24, 48);
 //        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
-        int iconX = this.getX() + 3;
+        int iconX = this.getX() + 4;
+        int iconY = this.getY() + 3;
         if (isSelected) {
-            iconX = iconX + 1;
+            iconY = iconY - 1;
         }
-        int iconY = this.getY() + 4;
-        guiGraphics.renderItem(iconStack, iconX, iconY);
+        guiGraphics.blit(category.getTabIcon(), iconX, iconY, 0, 0, 16, 16, 16, 16);
+//        guiGraphics.renderItem(iconStack, iconX, iconY);
     }
 
     private int parseColor(String hex) {

@@ -1,6 +1,6 @@
 {
   "tab_color": "#FF0000",
-  "tab_icon": "minecraft:iron_sword",
+  "tab_icon": "fieldguide:textures/gui/icons/creeper.png",
   "tab_index": 1,
   "contents": [
     {

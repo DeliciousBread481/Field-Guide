@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.client.gui.util;
 
+import com.evandev.fieldguide.Constants;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -10,6 +11,8 @@ import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.world.entity.LivingEntity;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
+
+import java.awt.*;
 
 public class EntityRenderHelper {
 
@@ -46,13 +49,13 @@ public class EntityRenderHelper {
      * Defaults to the standard sepia silhouette color.
      */
     public static void renderEntityNormalized(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, int maxWidth, int maxHeight, float baseScale, boolean silhouette) {
-        renderEntityNormalized(guiGraphics, entity, x, y, maxWidth, maxHeight, baseScale, silhouette, 0.7F, 0.6F, 0.5F);
+        renderEntityNormalized(guiGraphics, entity, x, y, maxWidth, maxHeight, baseScale, silhouette, Constants.LIST_SILHOUETTE_COLOR);
     }
 
     /**
      * Renders an entity normalized to fit within a standard widget box with a specific silhouette color.
      */
-    public static void renderEntityNormalized(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, int maxWidth, int maxHeight, float baseScale, boolean silhouette, float r, float g, float b) {
+    public static void renderEntityNormalized(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, int maxWidth, int maxHeight, float baseScale, boolean silhouette, int color) {
         float dynamicFactor = getScaleFactorForEntity(entity);
         float finalScale = (baseScale * 0.32F) * dynamicFactor;
 
@@ -75,7 +78,7 @@ public class EntityRenderHelper {
 
         guiGraphics.enableScissor(minX, minY, maxX, maxY);
 
-        renderEntityStatic(guiGraphics, entity, x, feetY, finalScale, silhouette, r, g, b);
+        renderEntityStatic(guiGraphics, entity, x, feetY, finalScale, silhouette, color);
 
         guiGraphics.disableScissor();
     }
@@ -83,7 +86,7 @@ public class EntityRenderHelper {
     /**
      * Renders an entity with a fixed pose and no animation.
      */
-    public static void renderEntityStatic(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, float scale, boolean silhouette, float r, float g, float b) {
+    public static void renderEntityStatic(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, float scale, boolean silhouette, int color) {
         float cameraXAngle = -30;
         float bodyYAngle = 20;
         float headYAngle = 0;
@@ -112,6 +115,11 @@ public class EntityRenderHelper {
         pose.mulPose(poseOrientation);
 
         if (silhouette) {
+            Color rgb = new Color(color);
+            float r = rgb.getRed() / 255F;
+            float g = rgb.getGreen() / 255F;
+            float b = rgb.getBlue() / 255F;
+
             RenderSystem.setShaderFogColor(r, g, b);
             RenderSystem.setShaderFogStart(0.0F);
             RenderSystem.setShaderFogEnd(0.1F);

@@ -154,12 +154,12 @@ public class FieldGuideScreen extends BookScreen {
     }
 
     private void initTabs() {
-        int startY = this.bounds.bottom() - 36 - TAB_HEIGHT;
+        int startX = this.bounds.left() + 25;
 
         for (int i = 0; i < sortedCategories.size(); i++) {
             Category category = sortedCategories.get(i);
-            int yPos = startY - (i * (TAB_HEIGHT + TAB_GAP));
-            int xPos = this.bounds.left() - 6;
+            int xPos = startX + (i * (TAB_WIDTH + TAB_GAP));
+            int yPos = this.bounds.top();
 
             TabButton tab = new TabButton(
                     xPos,
@@ -276,8 +276,8 @@ public class FieldGuideScreen extends BookScreen {
             int lineWidth = this.font.width(line);
             int lineX = this.leftPageBounds.x_center() - lineWidth / 2;
 
-            guiGraphics.drawString(this.font, line, lineX + 1, titleY + 1, 0xF6EACD, false);
-            guiGraphics.drawString(this.font, line, lineX, titleY, 0x7A583C, false);
+            guiGraphics.drawString(this.font, line, lineX + 1, titleY + 1, Constants.TEXT_SHADOW_COLOR, false);
+            guiGraphics.drawString(this.font, line, lineX, titleY, Constants.TEXT_COLOR, false);
 
             titleY += this.font.lineHeight;
         }
@@ -302,13 +302,13 @@ public class FieldGuideScreen extends BookScreen {
             int textX = this.leftPageBounds.x_center() - totalWidth / 2;
             int textY = y + 10;
 
-            guiGraphics.drawString(this.font, countText, textX, textY, 0x7A583C, false);
+            guiGraphics.drawString(this.font, countText, textX, textY, Constants.TEXT_COLOR, false);
             textX += font.width(countText);
 
-            guiGraphics.drawString(this.font, ofText, textX, textY, 0xE0D2AE, false);
+            guiGraphics.drawString(this.font, ofText, textX, textY, Constants.TEXT_MUTED_COLOR, false);
             textX += font.width(ofText);
 
-            guiGraphics.drawString(this.font, totalText, textX, textY, 0x7A583C, false);
+            guiGraphics.drawString(this.font, totalText, textX, textY, Constants.TEXT_COLOR, false);
         }
     }
 
@@ -405,7 +405,7 @@ public class FieldGuideScreen extends BookScreen {
 
     private void renderPageNumber(int page, int total, Bounds bounds, GuiGraphics guiGraphics) {
         String str = page + " of " + total;
-        guiGraphics.drawString(this.font, str, bounds.x_center() - font.width(str) / 2, bounds.bottom() - 16, 0xB2997D, false);
+        guiGraphics.drawString(this.font, str, bounds.x_center() - font.width(str) / 2, bounds.bottom() - 16, Constants.PAGE_NUMBER_COLOR, false);
     }
 
     @Override
