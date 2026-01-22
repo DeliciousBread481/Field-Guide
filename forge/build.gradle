@@ -47,10 +47,10 @@ dependencies {
     compileOnly 'org.jetbrains:annotations:26.0.2-1'
 
     // Item Descriptions
-    modImplementation "maven.modrinth:item-descriptions:${item_descriptions_version}-forge"
+    modRuntimeOnly "maven.modrinth:item-descriptions:${item_descriptions_version}-forge"
 
     // EMI
-    modImplementation "dev.emi:emi-forge:${emi_version}"
+    modRuntimeOnly "dev.emi:emi-forge:${emi_version}"
 
     // Cloth Config
     modImplementation "me.shedaniel.cloth:cloth-config-forge:${cloth_config_version}"

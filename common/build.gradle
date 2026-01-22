@@ -14,9 +14,6 @@ legacyForge {
 }
 
 dependencies {
-    // EMI
-    compileOnly "dev.emi:emi-xplat-mojmap:${emi_version}"
-
     // Cloth Config
     compileOnly "me.shedaniel.cloth:cloth-config-forge:${cloth_config_version}"
 
