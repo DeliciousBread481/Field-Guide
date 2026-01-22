@@ -1,8 +1,8 @@
 package com.evandev.fieldguide.client.gui.screens;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.data.FieldGuideDataManager;
-import com.evandev.fieldguide.client.gui.util.EntityRenderHelper;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
@@ -11,25 +11,38 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 public class FieldGuideEntryScreen extends BookScreen {
     private final Screen parent;
-    private final EntityType<?> entityType;
+    private final Object entry;
     private Entity renderedEntity;
 
-    public FieldGuideEntryScreen(Screen parent, EntityType<?> entityType) {
-        super(FieldGuideDataManager.isUnlocked(entityType) ? entityType.getDescription() : Component.translatable("fieldguide.undiscovered"));
+    public FieldGuideEntryScreen(Screen parent, Object entry) {
+        super(getTitleForEntry(entry));
         this.parent = parent;
-        this.entityType = entityType;
+        this.entry = entry;
+    }
+
+    private static Component getTitleForEntry(Object entry) {
+        if (FieldGuideDataManager.isUnlocked(entry)) {
+            if (entry instanceof EntityType<?> type) return type.getDescription();
+            if (entry instanceof Block block) return block.getName();
+        }
+        return Component.translatable("fieldguide.undiscovered");
     }
 
     @Override
     protected void init() {
         super.init();
 
-        if (this.minecraft != null && this.minecraft.level != null) {
-            this.renderedEntity = entityType.create(this.minecraft.level);
+        if (entry instanceof EntityType<?> type) {
+            if (this.minecraft != null && this.minecraft.level != null) {
+                this.renderedEntity = type.create(this.minecraft.level);
+            }
         }
 
         this.addRenderableWidget(new ImageButton(
@@ -58,24 +71,27 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
-        boolean unlocked = FieldGuideDataManager.isUnlocked(entityType);
-        Component title = unlocked ? entityType.getDescription() : Component.translatable("fieldguide.undiscovered");
-        String description = unlocked ? FieldGuideDataManager.getEntityDescription(entityType) : Component.translatable("fieldguide.description.locked").getString();
+        boolean unlocked = FieldGuideDataManager.isUnlocked(entry);
+        Component title = getTitleForEntry(entry);
+        String description = unlocked ? FieldGuideDataManager.getEntryDescription(entry) : Component.translatable("fieldguide.description.locked").getString();
 
-        // Entity name
+        // Entry name
         guiGraphics.drawString(this.font, title, this.leftPageBounds.x_center() - font.width(title) / 2 + 1, this.leftPageBounds.top() + 14 + 1, Constants.TEXT_SHADOW_COLOR, false);
         guiGraphics.drawString(this.font, title, this.leftPageBounds.x_center() - font.width(title) / 2, this.leftPageBounds.top() + 14, Constants.TEXT_COLOR, false);
 
 
-        // Entity model
+        // Entry model
         int xPos = leftPageBounds.left() + leftPageBounds.width() / 2;
         int yPos = leftPageBounds.y_center();
-        if (renderedEntity instanceof LivingEntity living) {
+
+        if (entry instanceof EntityType && renderedEntity instanceof LivingEntity living) {
             if (unlocked) {
-                EntityRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, false);
+                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, false);
             } else {
-                EntityRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, true, Constants.DETAILS_SILHOUETTE_COLOR);
+                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, true, Constants.DETAILS_SILHOUETTE_COLOR);
             }
+        } else if (entry instanceof Block block) {
+            EntryRenderHelper.renderBlockItem(guiGraphics, block, xPos, yPos, 4.0F, !unlocked);
         }
 
         // Description

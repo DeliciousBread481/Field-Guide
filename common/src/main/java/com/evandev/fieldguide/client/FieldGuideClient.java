@@ -8,7 +8,6 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.world.entity.EntityType;
 import org.lwjgl.glfw.GLFW;
 
 public class FieldGuideClient {
@@ -29,16 +28,16 @@ public class FieldGuideClient {
             if (minecraft.screen == null && minecraft.player != null) {
                 FieldGuideDataManager manager = FieldGuideDataManager.getInstance();
                 long lastTime = manager.getLastUnlockTime();
-                EntityType<?> lastEntity = manager.getLastUnlockedEntity();
+                Object lastEntry = manager.getLastUnlockedEntry();
 
                 boolean isRecent = (System.currentTimeMillis() - lastTime) < AUTO_OPEN_THRESHOLD_MS;
 
-                if (isRecent && lastEntity != null) {
-                    Category targetCategory = manager.getCategoryForEntity(lastEntity);
+                if (isRecent && lastEntry != null) {
+                    Category targetCategory = manager.getCategoryForEntry(lastEntry);
                     if (targetCategory != null) {
-                        int page = FieldGuideScreen.getPageForEntry(targetCategory, lastEntity);
+                        int page = FieldGuideScreen.getPageForEntry(targetCategory, lastEntry);
                         Screen mainScreen = new FieldGuideScreen(targetCategory, page);
-                        minecraft.setScreen(new FieldGuideEntryScreen(mainScreen, lastEntity));
+                        minecraft.setScreen(new FieldGuideEntryScreen(mainScreen, lastEntry));
                     }
                 } else {
                     minecraft.setScreen(new FieldGuideScreen());

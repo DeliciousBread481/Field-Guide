@@ -37,5 +37,6 @@
   "commands.fieldguide.entry.not_found": "Entry %s not found",
 
   "category.fieldguide.hostile": "Book of Monsters",
-  "category.fieldguide.passive": "Book of Creatures"
+  "category.fieldguide.passive": "Book of Creatures",
+  "category.fieldguide.flora": "Book of Flora"
 }

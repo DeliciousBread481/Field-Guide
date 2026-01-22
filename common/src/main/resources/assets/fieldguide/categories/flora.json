@@ -5,7 +5,7 @@
   "contents": [
     {
       "type": "auto_populate",
-      "strategy": "passive"
+      "strategy": "flora"
     }
   ]
 }

@@ -12,6 +12,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.block.Block;
 
 import java.util.Optional;
 
@@ -33,7 +34,9 @@ public class FieldGuideCommand {
                                 )
                                 .then(Commands.literal("only")
                                         .then(Commands.argument("entry", ResourceLocationArgument.id())
-                                                .suggests((ctx, builder) -> SharedSuggestionProvider.suggestResource(FieldGuideDataManager.getValidEntities().stream().map(BuiltInRegistries.ENTITY_TYPE::getKey), builder))
+                                                .suggests((ctx, builder) -> SharedSuggestionProvider.suggestResource(
+                                                        FieldGuideDataManager.getValidEntries().stream().map(FieldGuideDataManager::getEntryId),
+                                                        builder))
                                                 .executes(ctx -> grantEntry(ctx.getSource(), ResourceLocationArgument.getId(ctx, "entry")))
                                         )
                                 )
@@ -52,7 +55,9 @@ public class FieldGuideCommand {
                                 )
                                 .then(Commands.literal("only")
                                         .then(Commands.argument("entry", ResourceLocationArgument.id())
-                                                .suggests((ctx, builder) -> SharedSuggestionProvider.suggestResource(FieldGuideDataManager.getValidEntities().stream().map(BuiltInRegistries.ENTITY_TYPE::getKey), builder))
+                                                .suggests((ctx, builder) -> SharedSuggestionProvider.suggestResource(
+                                                        FieldGuideDataManager.getValidEntries().stream().map(FieldGuideDataManager::getEntryId),
+                                                        builder))
                                                 .executes(ctx -> revokeEntry(ctx.getSource(), ResourceLocationArgument.getId(ctx, "entry")))
                                         )
                                 )
@@ -64,8 +69,8 @@ public class FieldGuideCommand {
     private static int grantEverything(CommandSourceStack source) {
         FieldGuideDataManager manager = FieldGuideDataManager.getInstance();
         int count = 0;
-        for (EntityType<?> type : FieldGuideDataManager.getValidEntities()) {
-            manager.unlock(type, false);
+        for (Object entry : FieldGuideDataManager.getValidEntries()) {
+            manager.unlock(entry, false);
             count++;
         }
         int finalCount = count;
@@ -81,8 +86,8 @@ public class FieldGuideCommand {
         }
 
         int count = 0;
-        for (EntityType<?> type : category.getEntities()) {
-            FieldGuideDataManager.getInstance().unlock(type, false);
+        for (Object entry : category.getEntries()) {
+            FieldGuideDataManager.getInstance().unlock(entry, false);
             count++;
         }
         int finalCount = count;
@@ -91,9 +96,9 @@ public class FieldGuideCommand {
     }
 
     private static int grantEntry(CommandSourceStack source, ResourceLocation entryId) {
-        Optional<EntityType<?>> optionalType = BuiltInRegistries.ENTITY_TYPE.getOptional(entryId);
-        if (optionalType.isPresent()) {
-            FieldGuideDataManager.getInstance().unlock(optionalType.get(), true);
+        Object entry = resolveEntry(entryId);
+        if (entry != null) {
+            FieldGuideDataManager.getInstance().unlock(entry, true);
             source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.entry.success", entryId), true);
             return 1;
         } else {
@@ -116,8 +121,8 @@ public class FieldGuideCommand {
         }
 
         int count = 0;
-        for (EntityType<?> type : category.getEntities()) {
-            FieldGuideDataManager.getInstance().revoke(type);
+        for (Object entry : category.getEntries()) {
+            FieldGuideDataManager.getInstance().revoke(entry);
             count++;
         }
         int finalCount = count;
@@ -126,14 +131,22 @@ public class FieldGuideCommand {
     }
 
     private static int revokeEntry(CommandSourceStack source, ResourceLocation entryId) {
-        Optional<EntityType<?>> optionalType = BuiltInRegistries.ENTITY_TYPE.getOptional(entryId);
-        if (optionalType.isPresent()) {
-            FieldGuideDataManager.getInstance().revoke(optionalType.get());
+        Object entry = resolveEntry(entryId);
+        if (entry != null) {
+            FieldGuideDataManager.getInstance().revoke(entry);
             source.sendSuccess(() -> Component.translatable("commands.fieldguide.revoke.entry.success", entryId), true);
             return 1;
         } else {
             source.sendFailure(Component.translatable("commands.fieldguide.entry.not_found", entryId));
             return 0;
         }
+    }
+
+    private static Object resolveEntry(ResourceLocation id) {
+        Optional<EntityType<?>> entityType = BuiltInRegistries.ENTITY_TYPE.getOptional(id);
+        if (entityType.isPresent()) return entityType.get();
+
+        Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(id);
+        return block.orElse(null);
     }
 }

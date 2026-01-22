@@ -9,15 +9,17 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 
 import java.awt.*;
 
-public class EntityRenderHelper {
+public class EntryRenderHelper {
 
     /**
-     * Calculates a scaling factor based on entity size using an inverse square relationship.
+     * Calculates a scaling factor based on entry size using an inverse square relationship.
      */
     private static float getScaleFactorForEntity(LivingEntity entity) {
         try {
@@ -45,7 +47,7 @@ public class EntityRenderHelper {
     }
 
     /**
-     * Renders an entity normalized to fit within a standard widget box.
+     * Renders an entry normalized to fit within a standard widget box.
      * Defaults to the standard sepia silhouette color.
      */
     public static void renderEntityNormalized(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, int maxWidth, int maxHeight, float baseScale, boolean silhouette) {
@@ -53,7 +55,7 @@ public class EntityRenderHelper {
     }
 
     /**
-     * Renders an entity normalized to fit within a standard widget box with a specific silhouette color.
+     * Renders an entry normalized to fit within a standard widget box with a specific silhouette color.
      */
     public static void renderEntityNormalized(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, int maxWidth, int maxHeight, float baseScale, boolean silhouette, int color) {
         float dynamicFactor = getScaleFactorForEntity(entity);
@@ -84,7 +86,7 @@ public class EntityRenderHelper {
     }
 
     /**
-     * Renders an entity with a fixed pose and no animation.
+     * Renders an entry with a fixed pose and no animation.
      */
     public static void renderEntityStatic(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, float scale, boolean silhouette, int color) {
         float cameraXAngle = -30;
@@ -144,5 +146,36 @@ public class EntityRenderHelper {
         }
 
         Lighting.setupFor3DItems();
+    }
+
+    public static void renderBlockItem(GuiGraphics guiGraphics, Block block, int x, int y, float scale, boolean silhouette) {
+        ItemStack stack = new ItemStack(block);
+        if (stack.isEmpty()) return;
+
+        PoseStack pose = guiGraphics.pose();
+        pose.pushPose();
+        pose.translate(x, y, 0);
+        pose.scale(scale, scale, 1.0F);
+        pose.translate(-8, -8, 0);
+
+        if (silhouette) {
+            Color rgb = new Color(Constants.LIST_SILHOUETTE_COLOR);
+            float r = rgb.getRed() / 255F;
+            float g = rgb.getGreen() / 255F;
+            float b = rgb.getBlue() / 255F;
+
+            RenderSystem.setShaderFogColor(r, g, b);
+            RenderSystem.setShaderFogStart(0.0F);
+            RenderSystem.setShaderFogEnd(0.1F);
+
+            guiGraphics.renderItem(stack, 0, 0);
+
+            RenderSystem.setShaderFogStart(Float.MAX_VALUE);
+            RenderSystem.setShaderFogEnd(Float.MAX_VALUE);
+        } else {
+            guiGraphics.renderItem(stack, 0, 0);
+        }
+
+        pose.popPose();
     }
 }

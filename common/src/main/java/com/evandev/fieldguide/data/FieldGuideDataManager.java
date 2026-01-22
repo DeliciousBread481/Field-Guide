@@ -17,9 +17,10 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.EntityHitResult;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.*;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -31,15 +32,16 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
     private static final FieldGuideDataManager INSTANCE = new FieldGuideDataManager();
     private static final int FADE_DURATION = 10;
     private final Map<ResourceLocation, Category> categories = new LinkedHashMap<>();
-    private final Set<String> unlockedEntities = new HashSet<>();
-    private final Set<String> seenEntities = new HashSet<>();
+    private final Set<String> unlockedEntries = new HashSet<>();
+    private final Set<String> seenEntries = new HashSet<>();
     private Path currentSavePath = null;
-    private List<EntityType<?>> flattenedEntityCache = null;
+    private List<Object> flattenedEntryCache = null;
     private long lastUnlockTime = 0;
-    private EntityType<?> lastUnlockedEntity = null;
-    private Entity scanningEntity = null;
+    private Object lastUnlockedEntry = null;
+
+    private Object scanningTarget = null;
     private int scanTicks = 0;
-    private Entity fadingEntity = null;
+    private Object fadingTarget = null;
     private int fadeTicks = 0;
     private int prevScanTicks = 0;
 
@@ -50,14 +52,14 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         return INSTANCE;
     }
 
-    public static List<EntityType<?>> getValidEntities() {
-        if (INSTANCE.flattenedEntityCache == null) {
-            INSTANCE.flattenedEntityCache = INSTANCE.categories.values().stream()
-                    .flatMap(cat -> cat.getEntities().stream())
+    public static List<Object> getValidEntries() {
+        if (INSTANCE.flattenedEntryCache == null) {
+            INSTANCE.flattenedEntryCache = INSTANCE.categories.values().stream()
+                    .flatMap(cat -> cat.getEntries().stream())
                     .distinct()
                     .collect(Collectors.toList());
         }
-        return INSTANCE.flattenedEntityCache;
+        return INSTANCE.flattenedEntryCache;
     }
 
     public static Map<ResourceLocation, Category> getCategories() {
@@ -65,37 +67,55 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
     }
 
     /**
-     * Checks if the player has unlocked this mob.
+     * Checks if the player has unlocked this entry.
      */
-    public static boolean isUnlocked(EntityType<?> type) {
-        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
-        return INSTANCE.unlockedEntities.contains(id.toString());
+    public static ResourceLocation getEntryId(Object entry) {
+        if (entry instanceof EntityType<?> type) {
+            return BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        } else if (entry instanceof Block block) {
+            return BuiltInRegistries.BLOCK.getKey(block);
+        }
+        return null;
     }
 
     /**
-     * Checks if the player has unlocked the mob but not yet viewed its entry.
+     * Checks if the player has unlocked the entry but not yet viewed it.
      */
-    public static boolean isNew(EntityType<?> type) {
-        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+    public static boolean isUnlocked(Object entry) {
+        ResourceLocation id = getEntryId(entry);
+        return id != null && INSTANCE.unlockedEntries.contains(id.toString());
+    }
+
+    public static boolean isNew(Object entry) {
+        ResourceLocation id = getEntryId(entry);
+        if (id == null) return false;
         String key = id.toString();
-        return INSTANCE.unlockedEntities.contains(key) && !INSTANCE.seenEntities.contains(key);
+        return INSTANCE.unlockedEntries.contains(key) && !INSTANCE.seenEntries.contains(key);
     }
 
     /**
-     * Marks an entity as seen, removing the "New!" status.
+     * Marks an entry as seen, removing the "New!" status.
      */
-    public static void markAsSeen(EntityType<?> type) {
-        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
-        if (INSTANCE.seenEntities.add(id.toString())) {
+    public static void markAsSeen(Object entry) {
+        ResourceLocation id = getEntryId(entry);
+        if (id != null && INSTANCE.seenEntries.add(id.toString())) {
             INSTANCE.saveProgress();
         }
     }
 
-    public static String getEntityDescription(EntityType<?> type) {
-        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+    public static String getEntryDescription(Object entry) {
+        ResourceLocation id = getEntryId(entry);
+        if (id == null) return "";
 
         String overrideKey = "fieldguide." + id.getNamespace() + "." + id.getPath() + ".description";
-        String fallbackKey = "entity." + id.getNamespace() + "." + id.getPath() + ".description";
+
+        String fallbackKey;
+
+        if (entry instanceof EntityType) {
+            fallbackKey = "entity." + id.getNamespace() + "." + id.getPath() + ".description";
+        } else {
+            fallbackKey = "lore." + id.getNamespace() + "." + id.getPath();
+        }
 
         if (I18n.exists(overrideKey)) {
             return I18n.get(overrideKey);
@@ -107,9 +127,9 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
     }
 
     public static void clearCache() {
-        INSTANCE.flattenedEntityCache = null;
+        INSTANCE.flattenedEntryCache = null;
         for (Category category : INSTANCE.categories.values()) {
-            category.resolveEntities();
+            category.resolveEntries();
         }
     }
 
@@ -121,12 +141,16 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         return lastUnlockTime;
     }
 
-    public EntityType<?> getLastUnlockedEntity() {
-        return lastUnlockedEntity;
+    public Object getLastUnlockedEntry() {
+        return lastUnlockedEntry;
+    }
+
+    public Object getScanningTarget() {
+        return scanningTarget;
     }
 
     public Entity getScanningEntity() {
-        return scanningEntity;
+        return scanningTarget instanceof Entity ? (Entity) scanningTarget : null;
     }
 
     public float getScanProgress(float partialTicks) {
@@ -135,7 +159,7 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
     }
 
     public Entity getFadingEntity() {
-        return fadingEntity;
+        return fadingTarget instanceof Entity ? (Entity) fadingTarget : null;
     }
 
     public float getFadeProgress() {
@@ -145,9 +169,9 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
     /**
      * Helper to find which category holds a specific entity.
      */
-    public Category getCategoryForEntity(EntityType<?> entityType) {
+    public Category getCategoryForEntry(Object entry) {
         for (Category category : categories.values()) {
-            if (category.getEntities().contains(entityType)) {
+            if (category.getEntries().contains(entry)) {
                 return category;
             }
         }
@@ -158,8 +182,8 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
      * Called when the client joins a world (Singleplayer).
      */
     public void onWorldLoad(Path worldSaveDir) {
-        this.unlockedEntities.clear();
-        this.seenEntities.clear();
+        this.unlockedEntries.clear();
+        this.seenEntries.clear();
         if (worldSaveDir != null) {
             this.currentSavePath = worldSaveDir.resolve("fieldguide.dat");
             loadProgress();
@@ -176,8 +200,8 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
             saveProgress();
         }
         this.currentSavePath = null;
-        this.unlockedEntities.clear();
-        this.seenEntities.clear();
+        this.unlockedEntries.clear();
+        this.seenEntries.clear();
     }
 
     /**
@@ -193,46 +217,62 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
             Vec3 eyePos = minecraft.player.getEyePosition(1.0F);
             Vec3 viewVec = minecraft.player.getViewVector(1.0F);
             Vec3 endPos = eyePos.add(viewVec.scale(range));
-            AABB searchBox = minecraft.player.getBoundingBox().expandTowards(viewVec.scale(range)).inflate(1.0D);
 
-            EntityHitResult hitResult = ProjectileUtil.getEntityHitResult(
-                    minecraft.player,
-                    eyePos,
-                    endPos,
-                    searchBox,
+            AABB searchBox = minecraft.player.getBoundingBox().expandTowards(viewVec.scale(range)).inflate(1.0D);
+            EntityHitResult entityHit = ProjectileUtil.getEntityHitResult(
+                    minecraft.player, eyePos, endPos, searchBox,
                     (entity) -> !entity.isSpectator() && entity.isPickable(),
                     range * range
             );
 
-            Entity targetEntity = (hitResult != null) ? hitResult.getEntity() : null;
-            boolean targetIsValid = false;
+            BlockHitResult blockHit = minecraft.level.clip(new ClipContext(
+                    eyePos, endPos, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, minecraft.player
+            ));
 
-            if (targetEntity != null) {
-                EntityType<?> type = targetEntity.getType();
-                if (getValidEntities().contains(type) && !isUnlocked(type)) {
-                    targetIsValid = true;
+            Object foundTarget = null;
+            double entityDist = entityHit != null ? eyePos.distanceToSqr(entityHit.getLocation()) : Double.MAX_VALUE;
+            double blockDist = blockHit.getType() != HitResult.Type.MISS ? eyePos.distanceToSqr(blockHit.getLocation()) : Double.MAX_VALUE;
+
+            if (entityHit != null && entityDist < blockDist) {
+                EntityType<?> type = entityHit.getEntity().getType();
+                if (getValidEntries().contains(type) && !isUnlocked(type)) {
+                    foundTarget = entityHit.getEntity();
+                }
+            } else if (blockHit.getType() == HitResult.Type.BLOCK) {
+                BlockState state = minecraft.level.getBlockState(blockHit.getBlockPos());
+                Block block = state.getBlock();
+                if (getValidEntries().contains(block) && !isUnlocked(block)) {
+                    foundTarget = block;
                 }
             }
 
-            if (targetIsValid) {
-                EntityType<?> type = targetEntity.getType();
-                if (targetEntity == scanningEntity) {
+            if (foundTarget != null) {
+                Object targetKey = (foundTarget instanceof Entity) ? ((Entity) foundTarget).getType() : foundTarget;
+
+                boolean sameTarget;
+                if (scanningTarget instanceof Entity && foundTarget instanceof Entity) {
+                    sameTarget = scanningTarget == foundTarget;
+                } else {
+                    sameTarget = Objects.equals(scanningTarget, foundTarget);
+                }
+
+                if (sameTarget) {
                     this.prevScanTicks = this.scanTicks;
                     scanTicks++;
                     if (scanTicks >= getScanDuration()) {
-                        unlock(type);
+                        unlock(targetKey);
                         minecraft.player.playSound(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 1.0F, 1.0F);
                         minecraft.player.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
 
-                        scanningEntity = null;
+                        scanningTarget = null;
                         scanTicks = 0;
 
-                        fadingEntity = targetEntity;
+                        fadingTarget = foundTarget;
                         fadeTicks = FADE_DURATION;
                     }
                 } else {
                     this.prevScanTicks = 0;
-                    scanningEntity = targetEntity;
+                    scanningTarget = foundTarget;
                     scanTicks = 0;
                 }
             } else {
@@ -240,76 +280,67 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
                     this.prevScanTicks = this.scanTicks;
                     scanTicks -= 2;
                     if (scanTicks <= 0) {
-                        scanningEntity = null;
+                        scanningTarget = null;
                         scanTicks = 0;
                     }
                 } else {
-                    scanningEntity = null;
+                    scanningTarget = null;
                 }
             }
 
-            if (scanningEntity != null && (scanningEntity.isRemoved() || !scanningEntity.isAlive())) {
-                scanningEntity = null;
+            if (scanningTarget instanceof Entity ent && (ent.isRemoved() || !ent.isAlive())) {
+                scanningTarget = null;
                 scanTicks = 0;
             }
 
         } else {
-            scanningEntity = null;
+            scanningTarget = null;
             scanTicks = 0;
         }
 
         if (fadeTicks > 0) {
             fadeTicks--;
             if (fadeTicks <= 0) {
-                fadingEntity = null;
+                fadingTarget = null;
             }
         }
     }
 
-    /**
-     * Unlocks an entity and saves progress, showing a toast notification.
-     */
-    public void unlock(EntityType<?> type) {
-        unlock(type, true);
+    public void unlock(Object entry) {
+        unlock(entry, true);
     }
 
-    /**
-     * Unlocks an entity and saves progress, optionally showing a toast.
-     */
-    public void unlock(EntityType<?> type, boolean showToast) {
-        if (!getValidEntities().contains(type)) {
+    public void unlock(Object entry, boolean showToast) {
+        if (!getValidEntries().contains(entry)) {
             return;
         }
 
-        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
-        if (unlockedEntities.add(id.toString())) {
-            this.lastUnlockedEntity = type;
+        ResourceLocation id = getEntryId(entry);
+        if (id != null && unlockedEntries.add(id.toString())) {
+            this.lastUnlockedEntry = entry;
             this.lastUnlockTime = System.currentTimeMillis();
 
             if (showToast) {
-                Minecraft.getInstance().getToasts().addToast(new FieldGuideToast(type));
+                Minecraft.getInstance().getToasts().addToast(new FieldGuideToast(entry));
             }
             saveProgress();
         }
     }
 
-    /**
-     * Revokes access to an entity entry and saves progress.
-     */
-    public void revoke(EntityType<?> type) {
-        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
-        if (unlockedEntities.remove(id.toString())) {
-            seenEntities.remove(id.toString());
+    public void revoke(Object entry) {
+        ResourceLocation id = getEntryId(entry);
+        if (id != null && unlockedEntries.remove(id.toString())) {
+            seenEntries.remove(id.toString());
             saveProgress();
         }
     }
 
     /**
-     * Revokes access to all entity entries.
+     * Revokes access to all entries.
      */
     public void revokeAll() {
-        unlockedEntities.clear();
-        seenEntities.clear();
+        unlockedEntries.clear();
+        seenEntries.clear();
         saveProgress();
     }
 
@@ -324,13 +355,15 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
                     if (json.has("unlocked")) {
                         JsonArray array = json.getAsJsonArray("unlocked");
                         for (JsonElement e : array) {
-                            unlockedEntities.add(e.getAsString());
+                            unlockedEntries.add(e.getAsString());
                         }
                     }
 
-                    JsonArray array = json.getAsJsonArray("seen");
-                    for (JsonElement e : array) {
-                        seenEntities.add(e.getAsString());
+                    if (json.has("seen")) {
+                        JsonArray array = json.getAsJsonArray("seen");
+                        for (JsonElement e : array) {
+                            seenEntries.add(e.getAsString());
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -347,13 +380,13 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
             JsonObject json = new JsonObject();
 
             JsonArray unlockedArray = new JsonArray();
-            for (String id : unlockedEntities) {
+            for (String id : unlockedEntries) {
                 unlockedArray.add(id);
             }
             json.add("unlocked", unlockedArray);
 
             JsonArray seenArray = new JsonArray();
-            for (String id : seenEntities) {
+            for (String id : seenEntries) {
                 seenArray.add(id);
             }
             json.add("seen", seenArray);
@@ -376,7 +409,7 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
     @Override
     public void onResourceManagerReload(ResourceManager resourceManager) {
         categories.clear();
-        flattenedEntityCache = null;
+        flattenedEntryCache = null;
 
         Map<ResourceLocation, List<Resource>> resources =
                 resourceManager.listResourceStacks(
@@ -409,17 +442,14 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
                 }
             }
 
-            category.resolveEntities();
+            category.resolveEntries();
 
-            if (!category.getEntities().isEmpty()) {
+            if (!category.getEntries().isEmpty()) {
                 categories.put(categoryId, category);
             }
         }
 
-        Constants.LOG.info(
-                "Loaded {} field guide categories.",
-                categories.size()
-        );
+        Constants.LOG.info("Loaded {} field guide categories.", categories.size());
     }
 
     private void loadCategoryData(Category category, JsonObject json) {
@@ -454,5 +484,5 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         }
     }
 
-    enum EntryType {ENTRY, AUTO_POPULATE}
+    public enum EntryType {ENTRY, AUTO_POPULATE}
 }
