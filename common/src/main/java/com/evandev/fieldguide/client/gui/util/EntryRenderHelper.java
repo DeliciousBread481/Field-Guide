@@ -7,14 +7,23 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.block.state.properties.Property;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 
 import java.awt.*;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Optional;
 
 public class EntryRenderHelper {
 
@@ -127,7 +136,7 @@ public class EntryRenderHelper {
             RenderSystem.setShaderFogEnd(0.1F);
         }
 
-        Lighting.setupForEntityInInventory();
+        Lighting.setupForFlatItems();
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         cameraOrientation.conjugate();
         dispatcher.overrideCameraOrientation(cameraOrientation);
@@ -148,15 +157,34 @@ public class EntryRenderHelper {
         Lighting.setupFor3DItems();
     }
 
-    public static void renderBlockItem(GuiGraphics guiGraphics, Block block, int x, int y, float scale, boolean silhouette) {
-        ItemStack stack = new ItemStack(block);
-        if (stack.isEmpty()) return;
+    public static void renderBlock(GuiGraphics guiGraphics, Block block, int x, int y, float scale, boolean silhouette) {
+        BlockState state = block.defaultBlockState();
+
+        // Check if block has "vertical" property
+        Property<?> verticalProp = state.getProperties().stream()
+                .filter(p -> p instanceof EnumProperty<?>)
+                .filter(p -> {
+                    String name = p.getName();
+                    return name.equals("half");
+                })
+                .findFirst()
+                .orElse(null);
+
+        // Set blockstates to max values
+        state = stateWithMaxPropertyValue(state, "age");
+        state = stateWithMaxPropertyValue(state, "flower_amount");
+
+        // Rendering
+        float cameraXAngle = 30;
+        float cameraYAngle = 20;
 
         PoseStack pose = guiGraphics.pose();
         pose.pushPose();
-        pose.translate(x, y, 0);
-        pose.scale(scale, scale, 1.0F);
-        pose.translate(-8, -8, 0);
+        pose.translate(x, y, 50.0);
+        pose.scale(scale, -scale, scale);
+        pose.mulPose(com.mojang.math.Axis.XP.rotationDegrees(cameraXAngle));
+        pose.mulPose(com.mojang.math.Axis.YP.rotationDegrees(cameraYAngle));
+        pose.translate(-0.5, -0.5, -0.5);
 
         if (silhouette) {
             Color rgb = new Color(Constants.LIST_SILHOUETTE_COLOR);
@@ -167,15 +195,84 @@ public class EntryRenderHelper {
             RenderSystem.setShaderFogColor(r, g, b);
             RenderSystem.setShaderFogStart(0.0F);
             RenderSystem.setShaderFogEnd(0.1F);
-
-            guiGraphics.renderItem(stack, 0, 0);
-
-            RenderSystem.setShaderFogStart(Float.MAX_VALUE);
-            RenderSystem.setShaderFogEnd(Float.MAX_VALUE);
-        } else {
-            guiGraphics.renderItem(stack, 0, 0);
         }
 
+        Lighting.setupForFlatItems();
+        BlockRenderDispatcher dispatcher = Minecraft.getInstance().getBlockRenderer();
+
+        if (verticalProp == null) {
+            // Render single block
+            dispatcher.renderSingleBlock(state, pose, guiGraphics.bufferSource(), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
+        } else {
+            // Render multiple blocks vertically
+            Collection<?> values = verticalProp.getPossibleValues();
+
+            // Sort values in correct order from bottom -> top
+            if (!values.isEmpty() && values.iterator().next() instanceof Comparable) {
+                @SuppressWarnings("unchecked")
+                Collection<Comparable<?>> sorted = (Collection<Comparable<?>>) values;
+                values = sorted.stream()
+                        .sorted((a, b) -> Integer.compare(
+                                ((Enum<?>) b).ordinal(),
+                                ((Enum<?>) a).ordinal()
+                        ))
+                        .toList();
+            }
+
+            for (Object value : values) {
+                @SuppressWarnings({"rawtypes", "unchecked"})
+                BlockState variant = state.setValue((Property) verticalProp, (Comparable) value);
+
+                dispatcher.renderSingleBlock(variant, pose, guiGraphics.bufferSource(), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
+
+                // Move up 1 block
+                pose.translate(0.0F, 1.0F, 0.0F);
+            }
+        }
+
+        guiGraphics.flush();
         pose.popPose();
+
+        if (silhouette) {
+            RenderSystem.setShaderFogStart(Float.MAX_VALUE);
+            RenderSystem.setShaderFogEnd(Float.MAX_VALUE);
+        }
+        Lighting.setupFor3DItems();
+    }
+
+    public static BlockState stateWithMaxPropertyValue(BlockState state, String propertyName) {
+        if (state == null || propertyName == null) {
+            return state;
+        }
+
+        // Find the property by name
+        Optional<Property<?>> propertyOpt = state.getProperties().stream()
+                .filter(p -> p.getName().equals(propertyName))
+                .findFirst();
+
+        if (propertyOpt.isEmpty()) {
+            return state;
+        }
+
+        Property<?> property = propertyOpt.get();
+
+        // Find the maximum possible value
+        Comparable<?> maxValue = property.getPossibleValues().stream()
+                .max((a, b) -> {
+                    if (a instanceof Number && b instanceof Number) {
+                        return Double.compare(((Number) a).doubleValue(),
+                                ((Number) b).doubleValue());
+                    }
+                    return (a).compareTo(b);
+                })
+                .orElse(null);
+
+        if (maxValue == null) {
+            return state;
+        }
+
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        BlockState newState = state.setValue((Property) property, (Comparable) maxValue);
+        return newState;
     }
 }

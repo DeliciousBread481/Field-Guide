@@ -91,7 +91,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                 EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, true, Constants.DETAILS_SILHOUETTE_COLOR);
             }
         } else if (entry instanceof Block block) {
-            EntryRenderHelper.renderBlockItem(guiGraphics, block, xPos, yPos, 4.0F, !unlocked);
+            EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 30.0F, !unlocked);
         }
 
         // Description

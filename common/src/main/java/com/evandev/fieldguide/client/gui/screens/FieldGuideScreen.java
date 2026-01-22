@@ -457,7 +457,7 @@ public class FieldGuideScreen extends BookScreen {
                 }
             }
         } else if (entry instanceof Block block) {
-            EntryRenderHelper.renderBlockItem(guiGraphics, block, x, y, 2.0F, !unlocked);
+            EntryRenderHelper.renderBlock(guiGraphics, block, x, y, 15.0F, !unlocked);
         }
     }
 }
