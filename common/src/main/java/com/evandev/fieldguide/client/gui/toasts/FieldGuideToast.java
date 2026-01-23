@@ -7,14 +7,18 @@ import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 
 public class FieldGuideToast implements Toast {
     private final Object entry;
+    private final ItemStack itemstack;
 
     public FieldGuideToast(Object entry) {
         this.entry = entry;
+        this.itemstack = new ItemStack(Items.SPYGLASS);
     }
 
     @Override
@@ -28,11 +32,13 @@ public class FieldGuideToast implements Toast {
             name = block.getName();
         }
 
-        Component title = Component.translatable("fieldguide.toast.added", name);
-        Component hint = Component.translatable("fieldguide.toast.view_hint", FieldGuideClient.OPEN_GUIDE_KEY.getTranslatedKeyMessage());
+        Component discovered = Component.translatable("fieldguide.toast.discovered");
+        //Component hint = Component.translatable("fieldguide.toast.view_hint", FieldGuideClient.OPEN_GUIDE_KEY.getTranslatedKeyMessage());
 
-        guiGraphics.drawString(toastComponent.getMinecraft().font, title, 30, 7, -11534256, false);
-        guiGraphics.drawString(toastComponent.getMinecraft().font, hint, 30, 18, -16777216, false);
+        guiGraphics.drawString(toastComponent.getMinecraft().font, name, 30, 7, 0x704623, false);
+        guiGraphics.drawString(toastComponent.getMinecraft().font, discovered, 30, 17, 0xAF8C5C, false);
+
+        guiGraphics.renderItem(itemstack, 9, 7);
 
         return timeSinceLastVisible >= 5000L ? Visibility.HIDE : Visibility.SHOW;
     }

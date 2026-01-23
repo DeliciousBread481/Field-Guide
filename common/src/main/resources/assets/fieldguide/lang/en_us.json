@@ -25,10 +25,11 @@
 
   "fieldguide.new": "New!",
   "fieldguide.unknown": "???",
-  "fieldguide.undiscovered": "Undiscovered",
-  "fieldguide.description.missing": "No description available for this entry yet.",
+  "fieldguide.undiscovered": "???",
+  "fieldguide.description.missing": "No description available.",
   "fieldguide.description.locked": "Observe with a spyglass to discover details.",
 
+  "fieldguide.toast.discovered": "Discovered!",
   "fieldguide.toast.added": "%s Discovered!",
   "fieldguide.toast.view_hint": "Press %s to view",
 
@@ -41,7 +42,7 @@
   "commands.fieldguide.category.not_found": "Category %s not found",
   "commands.fieldguide.entry.not_found": "Entry %s not found",
 
-  "category.fieldguide.hostile": "Book of Monsters",
-  "category.fieldguide.passive": "Book of Creatures",
-  "category.fieldguide.flora": "Book of Flora"
+  "category.fieldguide.hostile": "Monsters",
+  "category.fieldguide.passive": "Creatures",
+  "category.fieldguide.flora": "Flora"
 }
