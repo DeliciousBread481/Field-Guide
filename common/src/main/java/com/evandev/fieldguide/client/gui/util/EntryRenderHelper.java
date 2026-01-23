@@ -11,6 +11,9 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -22,9 +25,64 @@ import org.joml.Vector3f;
 
 import java.awt.*;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 public class EntryRenderHelper {
+
+    private static final Map<Object, Optional<ResourceLocation>> OVERRIDE_CACHE = new HashMap<>();
+
+    public static void clearCache() {
+        OVERRIDE_CACHE.clear();
+    }
+
+    private static Optional<ResourceLocation> getOverride(Object entry) {
+        if (OVERRIDE_CACHE.containsKey(entry)) {
+            return OVERRIDE_CACHE.get(entry);
+        }
+
+        ResourceLocation id = null;
+        if (entry instanceof EntityType<?> type) {
+            id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        } else if (entry instanceof Block block) {
+            id = BuiltInRegistries.BLOCK.getKey(block);
+        }
+
+        if (id != null) {
+            ResourceLocation texture = new ResourceLocation(id.getNamespace(), "textures/fieldguide/entries/" + id.getPath() + ".png");
+            if (Minecraft.getInstance().getResourceManager().getResource(texture).isPresent()) {
+                OVERRIDE_CACHE.put(entry, Optional.of(texture));
+                return Optional.of(texture);
+            }
+        }
+
+        OVERRIDE_CACHE.put(entry, Optional.empty());
+        return Optional.empty();
+    }
+
+    private static boolean tryRenderOverride(GuiGraphics guiGraphics, Object entry, int x, int y, int width, int height, boolean silhouette, int color) {
+        Optional<ResourceLocation> override = getOverride(entry);
+        if (override.isPresent()) {
+            ResourceLocation texture = override.get();
+
+            if (silhouette) {
+                Color rgb = new Color(color);
+                guiGraphics.setColor(rgb.getRed() / 255F, rgb.getGreen() / 255F, rgb.getBlue() / 255F, 1.0F);
+            } else {
+                guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+            }
+
+            int drawX = x - width / 2;
+            int drawY = y - height / 2;
+
+            guiGraphics.blit(texture, drawX, drawY, 0, 0, width, height, width, height);
+
+            guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+            return true;
+        }
+        return false;
+    }
 
     /**
      * Calculates a scaling factor based on entry size using an inverse square relationship.
@@ -66,6 +124,10 @@ public class EntryRenderHelper {
      * Renders an entity normalized to fit within a standard widget box with a specific silhouette color.
      */
     public static void renderEntityNormalized(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, int maxWidth, int maxHeight, float baseScale, boolean silhouette, int color) {
+        if (tryRenderOverride(guiGraphics, entity.getType(), x, y, maxWidth, maxHeight, silhouette, color)) {
+            return;
+        }
+
         float dynamicFactor = getScaleFactorForEntity(entity);
         float finalScale = (baseScale * 0.32F) * dynamicFactor;
 
@@ -96,11 +158,11 @@ public class EntryRenderHelper {
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(true);
 
-        pose.mulPoseMatrix((new Matrix4f()).scaling(scale, scale, -scale));
+        pose.scale(scale, scale, -scale);
         pose.mulPose(Axis.ZP.rotationDegrees(180.0F));
 
         float cameraXAngle = -30;
-        float bodyYAngle = 20;
+        float bodyYAngle = 30;
 
         Quaternionf cameraOrientation = Axis.XP.rotationDegrees(cameraXAngle);
         Quaternionf bodyOrientation = Axis.YP.rotationDegrees(-bodyYAngle);
@@ -154,6 +216,11 @@ public class EntryRenderHelper {
     }
 
     public static void renderBlock(GuiGraphics guiGraphics, Block block, int x, int y, float scale, boolean silhouette) {
+        int estimatedSize = (int) (scale * 2);
+        if (tryRenderOverride(guiGraphics, block, x, y, estimatedSize, estimatedSize, silhouette, Constants.LIST_SILHOUETTE_COLOR)) {
+            return;
+        }
+
         BlockState state = block.defaultBlockState();
 
         // Check if block has "vertical" property

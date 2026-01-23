@@ -2,6 +2,7 @@ package com.evandev.fieldguide.data;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.gui.toasts.FieldGuideToast;
+import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.config.ModConfig;
 import com.google.gson.*;
 import net.minecraft.client.Minecraft;
@@ -128,6 +129,7 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
 
     public static void clearCache() {
         INSTANCE.flattenedEntryCache = null;
+        EntryRenderHelper.clearCache();
         for (Category category : INSTANCE.categories.values()) {
             category.resolveEntries();
         }
@@ -410,6 +412,7 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
     public void onResourceManagerReload(ResourceManager resourceManager) {
         categories.clear();
         flattenedEntryCache = null;
+        EntryRenderHelper.clearCache();
 
         Map<ResourceLocation, List<Resource>> resources =
                 resourceManager.listResourceStacks(
