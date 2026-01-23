@@ -7,6 +7,7 @@ import com.evandev.fieldguide.config.ModConfig;
 import com.google.gson.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
@@ -42,8 +43,12 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
 
     private Object scanningTarget = null;
     private int scanTicks = 0;
+    private BlockPos scanningPos = null;
+
     private Object fadingTarget = null;
     private int fadeTicks = 0;
+    private BlockPos fadingPos = null;
+
     private int prevScanTicks = 0;
 
     private FieldGuideDataManager() {
@@ -151,6 +156,10 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         return scanningTarget;
     }
 
+    public BlockPos getScanningPos() {
+        return scanningPos;
+    }
+
     public Entity getScanningEntity() {
         return scanningTarget instanceof Entity ? (Entity) scanningTarget : null;
     }
@@ -162,6 +171,14 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
 
     public Entity getFadingEntity() {
         return fadingTarget instanceof Entity ? (Entity) fadingTarget : null;
+    }
+
+    public BlockPos getFadingPos() {
+        return fadingPos;
+    }
+
+    public Object getFadingTarget() {
+        return fadingTarget;
     }
 
     public float getFadeProgress() {
@@ -231,6 +248,26 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
                     eyePos, endPos, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, minecraft.player
             ));
 
+            while (blockHit.getType() == HitResult.Type.BLOCK) {
+                BlockState state = minecraft.level.getBlockState(blockHit.getBlockPos());
+                ResourceLocation id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
+
+                if (id.getNamespace().equals("minecraft") && (id.getPath().equals("grass") || id.getPath().equals("tall_grass"))) {
+                    Vec3 hitVec = blockHit.getLocation();
+                    Vec3 nextStart = hitVec.add(viewVec.scale(0.01));
+
+                    if (eyePos.distanceToSqr(nextStart) >= range * range) {
+                        break;
+                    }
+
+                    blockHit = minecraft.level.clip(new ClipContext(
+                            nextStart, endPos, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, minecraft.player
+                    ));
+                } else {
+                    break;
+                }
+            }
+
             Object foundTarget = null;
             double entityDist = entityHit != null ? eyePos.distanceToSqr(entityHit.getLocation()) : Double.MAX_VALUE;
             double blockDist = blockHit.getType() != HitResult.Type.MISS ? eyePos.distanceToSqr(blockHit.getLocation()) : Double.MAX_VALUE;
@@ -261,20 +298,38 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
                 if (sameTarget) {
                     this.prevScanTicks = this.scanTicks;
                     scanTicks++;
+
+                    if (foundTarget instanceof Block) {
+                        this.scanningPos = blockHit.getBlockPos();
+                    }
+
                     if (scanTicks >= getScanDuration()) {
                         unlock(targetKey);
                         minecraft.player.playSound(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 1.0F, 1.0F);
                         minecraft.player.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
 
-                        scanningTarget = null;
-                        scanTicks = 0;
-
                         fadingTarget = foundTarget;
+                        if (foundTarget instanceof Block) {
+                            fadingPos = scanningPos;
+                        } else {
+                            fadingPos = null;
+                        }
                         fadeTicks = FADE_DURATION;
+
+                        scanningTarget = null;
+                        scanningPos = null;
+                        scanTicks = 0;
                     }
                 } else {
                     this.prevScanTicks = 0;
                     scanningTarget = foundTarget;
+
+                    if (scanningTarget instanceof Block) {
+                        this.scanningPos = blockHit.getBlockPos();
+                    } else {
+                        this.scanningPos = null;
+                    }
+
                     scanTicks = 0;
                 }
             } else {
@@ -283,10 +338,12 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
                     scanTicks -= 2;
                     if (scanTicks <= 0) {
                         scanningTarget = null;
+                        scanningPos = null;
                         scanTicks = 0;
                     }
                 } else {
                     scanningTarget = null;
+                    scanningPos = null;
                 }
             }
 
@@ -297,6 +354,7 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
 
         } else {
             scanningTarget = null;
+            scanningPos = null;
             scanTicks = 0;
         }
 
@@ -304,6 +362,7 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
             fadeTicks--;
             if (fadeTicks <= 0) {
                 fadingTarget = null;
+                fadingPos = null;
             }
         }
     }

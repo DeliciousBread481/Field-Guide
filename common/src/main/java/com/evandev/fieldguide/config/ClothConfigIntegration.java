@@ -25,13 +25,13 @@ public class ClothConfigIntegration {
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
 
         general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.show_pause_button"), config.showPauseMenuButton)
-                .setDefaultValue(true)
+                .setDefaultValue(ModConfig.get().showPauseMenuButton)
                 .setTooltip(Component.translatable("option.fieldguide.show_pause_button.tooltip"))
                 .setSaveConsumer(newValue -> config.showPauseMenuButton = newValue)
                 .build());
 
         general.addEntry(entryBuilder.startDoubleField(Component.translatable("option.fieldguide.scan_speed"), config.scanSpeed)
-                .setDefaultValue(1.5D)
+                .setDefaultValue(ModConfig.get().scanSpeed)
                 .setMin(0.1D)
                 .setMax(10.0D)
                 .setTooltip(Component.translatable("option.fieldguide.scan_speed.tooltip"))

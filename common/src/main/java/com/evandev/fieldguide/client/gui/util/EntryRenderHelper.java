@@ -4,10 +4,12 @@ import com.evandev.fieldguide.Constants;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -19,7 +21,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.Property;
-import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
@@ -65,20 +66,70 @@ public class EntryRenderHelper {
         Optional<ResourceLocation> override = getOverride(entry);
         if (override.isPresent()) {
             ResourceLocation texture = override.get();
-
-            if (silhouette) {
-                Color rgb = new Color(color);
-                guiGraphics.setColor(rgb.getRed() / 255F, rgb.getGreen() / 255F, rgb.getBlue() / 255F, 1.0F);
-            } else {
-                guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-            }
-
             int drawX = x - width / 2;
             int drawY = y - height / 2;
 
-            guiGraphics.blit(texture, drawX, drawY, 0, 0, width, height, width, height);
+            if (silhouette) {
+                Color rgb = new Color(color);
+                float r = rgb.getRed() / 255F;
+                float g = rgb.getGreen() / 255F;
+                float b = rgb.getBlue() / 255F;
 
-            guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+                RenderSystem.enableDepthTest();
+                RenderSystem.setShaderFogColor(r, g, b);
+                RenderSystem.setShaderFogStart(0.0F);
+                RenderSystem.setShaderFogEnd(0.1F);
+
+                guiGraphics.flush();
+
+                VertexConsumer consumer = guiGraphics.bufferSource().getBuffer(RenderType.entityCutout(texture));
+
+                guiGraphics.pose().last();
+
+                consumer.vertex(drawX, drawY + height, 0)
+                        .color(255, 255, 255, 255)
+                        .uv(0.0F, 1.0F)
+                        .overlayCoords(OverlayTexture.NO_OVERLAY)
+                        .uv2(LightTexture.FULL_BRIGHT)
+                        .normal(0, 0, 1)
+                        .endVertex();
+
+                consumer.vertex(drawX + width, drawY + height, 0)
+                        .color(255, 255, 255, 255)
+                        .uv(1.0F, 1.0F)
+                        .overlayCoords(OverlayTexture.NO_OVERLAY)
+                        .uv2(LightTexture.FULL_BRIGHT)
+                        .normal(0, 0, 1)
+                        .endVertex();
+
+                consumer.vertex(drawX + width, drawY, 0)
+                        .color(255, 255, 255, 255)
+                        .uv(1.0F, 0.0F)
+                        .overlayCoords(OverlayTexture.NO_OVERLAY)
+                        .uv2(LightTexture.FULL_BRIGHT)
+                        .normal(0, 0, 1)
+                        .endVertex();
+
+                consumer.vertex(drawX, drawY, 0)
+                        .color(255, 255, 255, 255)
+                        .uv(0.0F, 0.0F)
+                        .overlayCoords(OverlayTexture.NO_OVERLAY)
+                        .uv2(LightTexture.FULL_BRIGHT)
+                        .normal(0, 0, 1)
+                        .endVertex();
+
+                guiGraphics.flush();
+
+                RenderSystem.setShaderFogStart(Float.MAX_VALUE);
+                RenderSystem.setShaderFogEnd(Float.MAX_VALUE);
+                RenderSystem.disableDepthTest();
+
+            } else {
+                guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+                guiGraphics.blit(texture, drawX, drawY, 0, 0, width, height, width, height);
+                guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+            }
+
             return true;
         }
         return false;
@@ -168,14 +219,15 @@ public class EntryRenderHelper {
         Quaternionf bodyOrientation = Axis.YP.rotationDegrees(-bodyYAngle);
 
         pose.mulPose(cameraOrientation);
-        pose.mulPose(bodyOrientation);
 
         // Setup Entity rotations
-        entity.setYRot(180.0F);
+        float normalizedBodyRot = 180.0F + bodyYAngle;
+
+        entity.setYRot(normalizedBodyRot);
         entity.setXRot(0.0F);
         entity.yHeadRot = entity.getYRot();
         entity.yHeadRotO = entity.getYRot();
-        entity.yBodyRot = 180.0F;
+        entity.yBodyRot = normalizedBodyRot;
         entity.yBodyRotO = entity.yBodyRot;
 
         entity.tickCount = 0;
@@ -195,6 +247,7 @@ public class EntryRenderHelper {
         }
 
         Lighting.setupForEntityInInventory();
+        setupEntityLighting();
 
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         dispatcher.setRenderShadow(false);
@@ -237,7 +290,7 @@ public class EntryRenderHelper {
 
         // Rendering
         float cameraXAngle = 30;
-        float cameraYAngle = 215;
+        float cameraYAngle = 210;
 
         PoseStack pose = guiGraphics.pose();
         pose.pushPose();
@@ -305,6 +358,16 @@ public class EntryRenderHelper {
         light0.normalize();
 
         Vector3f light1 = new Vector3f(-0.2F, 0.0F, 0.7F);
+        light1.normalize();
+
+        RenderSystem.setShaderLights(light0, light1);
+    }
+
+    private static void setupEntityLighting() {
+        Vector3f light0 = new Vector3f(-1.0F, -1.0F, 1.0F);
+        light0.normalize();
+
+        Vector3f light1 = new Vector3f(1.0F, -1.0F, 1.0F);
         light1.normalize();
 
         RenderSystem.setShaderLights(light0, light1);
