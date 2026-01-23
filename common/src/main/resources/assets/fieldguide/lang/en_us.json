@@ -3,6 +3,8 @@
   "title.fieldguide.field_guide": "Field Guide",
 
   "gui.fieldguide.open": "Open Field Guide",
+  "gui.fieldguide.search": "Search...",
+  "gui.fieldguide.no_results": "No Results",
 
   "category.fieldguide.main": "Field Guide",
   "category.fieldguide.general": "General Settings",

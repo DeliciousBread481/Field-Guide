@@ -10,6 +10,7 @@ import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
@@ -33,6 +34,8 @@ public class FieldGuideScreen extends BookScreen {
     private static final int TAB_WIDTH = 24;
     private static final int TAB_HEIGHT = 24;
     private static final int TAB_GAP = 0;
+    private static final int SEARCH_WIDTH = 140;
+    private static final int SEARCH_HEIGHT = 16;
 
     private static ResourceLocation lastOpenedCategory = null;
     private static int lastOpenedPage = 0;
@@ -44,6 +47,9 @@ public class FieldGuideScreen extends BookScreen {
 
     private Category selectedCategory;
     private int currentPage = 0;
+
+    private EditBox searchBox;
+    private boolean isSearching = false;
 
     private ImageButton prevPageButton;
     private ImageButton nextPageButton;
@@ -146,6 +152,18 @@ public class FieldGuideScreen extends BookScreen {
                 b -> nextPage()
         );
 
+        int searchX = this.width / 2 - SEARCH_WIDTH / 2;
+        int searchY = this.bounds.bottom() + 5;
+
+        this.searchBox = new EditBox(this.font, searchX, searchY, SEARCH_WIDTH, SEARCH_HEIGHT, Component.translatable("gui.fieldguide.search"));
+        this.searchBox.setMaxLength(50);
+        this.searchBox.setBordered(false);
+        this.searchBox.setVisible(true);
+        this.searchBox.setTextColor(0xFFFFFF);
+        this.searchBox.setResponder(this::onSearchChanged);
+
+        this.addRenderableWidget(this.searchBox);
+
         this.addRenderableWidget(prevPageButton);
         this.addRenderableWidget(nextPageButton);
 
@@ -238,6 +256,60 @@ public class FieldGuideScreen extends BookScreen {
         }
     }
 
+    /**
+     * Handles search text changes.
+     */
+    private void onSearchChanged(String query) {
+        String processedQuery = query.toLowerCase(Locale.ROOT).trim();
+        this.isSearching = !processedQuery.isEmpty();
+        this.currentPage = 0;
+
+        if (!isSearching) {
+            if (this.selectedCategory != null) {
+                this.currentEntries = this.selectedCategory.getEntries();
+            }
+        } else {
+            List<Object> allEntries = FieldGuideDataManager.getValidEntries();
+            this.currentEntries = new ArrayList<>();
+
+            for (Object entry : allEntries) {
+
+                ResourceLocation id = FieldGuideDataManager.getEntryId(entry);
+                if (id == null) continue;
+
+                boolean match = false;
+
+                // Handle @ModId search
+                if (processedQuery.startsWith("@")) {
+                    String modQuery = processedQuery.substring(1);
+                    if (id.getNamespace().contains(modQuery)) {
+                        match = true;
+                    }
+                } else {
+                    // Search Name or ID
+                    String name = getNameForEntry(entry).getString().toLowerCase(Locale.ROOT);
+                    if (name.contains(processedQuery) || id.getPath().contains(processedQuery)) {
+                        match = true;
+                    }
+                }
+
+                if (match) {
+                    this.currentEntries.add(entry);
+                }
+            }
+        }
+        updatePageButtons();
+    }
+
+    /**
+     * Helper to get name for search logic.
+     */
+    private Component getNameForEntry(Object entry) {
+        if (entry instanceof EntityType<?> type) return type.getDescription();
+        if (entry instanceof Block block) return block.getName();
+        return Component.empty();
+    }
+
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(guiGraphics);
@@ -245,10 +317,29 @@ public class FieldGuideScreen extends BookScreen {
         RenderSystem.setShaderTexture(0, Constants.BOOK_TEXTURE);
         guiGraphics.blit(Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
 
+        if (this.searchBox != null) {
+            int boxX = this.searchBox.getX() - 4;
+            int boxY = this.searchBox.getY() - 4;
+            int boxW = this.searchBox.getWidth() + 8;
+            int boxH = this.searchBox.getHeight() + 8;
+
+            guiGraphics.fill(boxX, boxY, boxX + boxW, boxY + boxH, 0xFF000000);
+            guiGraphics.renderOutline(boxX, boxY, boxW, boxH, 0xFF7A583C);
+
+            if (this.searchBox.getValue().isEmpty() && !this.searchBox.isFocused()) {
+                guiGraphics.drawString(this.font, "Search...", this.searchBox.getX(), this.searchBox.getY(), 0x888888, false);
+            }
+        }
+
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
-        if (selectedCategory != null && currentPage == 0) {
+        if (!isSearching && selectedCategory != null && currentPage == 0) {
             renderCategoryInfo(guiGraphics);
+        } else if (isSearching && currentEntries.isEmpty()) {
+            Component noResults = Component.translatable("gui.fieldguide.no_results");
+            int textX = this.bounds.left() + this.bounds.width() / 2 - this.font.width(noResults) / 2;
+            int textY = this.bounds.top() + this.bounds.height() / 2;
+            guiGraphics.drawString(this.font, noResults, textX, textY, Constants.TEXT_COLOR, false);
         }
 
         int totalSpreads = getTotalSpreads();
@@ -318,6 +409,10 @@ public class FieldGuideScreen extends BookScreen {
      * Returns -1 if the slot is empty (e.g., the title page area).
      */
     private int getItemIndexForSlot(int slotIndex) {
+        if (isSearching) {
+            return (currentPage * ITEMS_PER_VIEW) + slotIndex;
+        }
+
         if (currentPage == 0) {
             if (slotIndex < ITEMS_PER_PAGE) {
                 return -1;
