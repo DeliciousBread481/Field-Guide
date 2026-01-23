@@ -140,6 +140,28 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         }
     }
 
+    private static boolean isMatch(Object entry, String processedQuery, ResourceLocation id) {
+        boolean match = false;
+        if (processedQuery.startsWith("@")) {
+            String modQuery = processedQuery.substring(1);
+            if (id.getNamespace().contains(modQuery)) {
+                match = true;
+            }
+        } else {
+            String name = "";
+            if (entry instanceof EntityType<?> type) {
+                name = type.getDescription().getString();
+            } else if (entry instanceof Block block) {
+                name = block.getName().getString();
+            }
+
+            if (name.toLowerCase(Locale.ROOT).contains(processedQuery) || id.getPath().contains(processedQuery)) {
+                match = true;
+            }
+        }
+        return match;
+    }
+
     private int getScanDuration() {
         return (int) (ModConfig.get().scanSpeed * 20);
     }
@@ -544,6 +566,31 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
                 }
             }
         }
+    }
+
+    /**
+     * Searches for entries matching the query.
+     * Supports @modid filtering and unlocked entry filtering.
+     */
+    public List<Object> searchEntries(String query) {
+        String processedQuery = query.toLowerCase(Locale.ROOT).trim();
+        List<Object> results = new ArrayList<>();
+
+        if (processedQuery.isEmpty()) return results;
+
+        for (Object entry : getValidEntries()) {
+            if (!isUnlocked(entry)) continue;
+
+            ResourceLocation id = getEntryId(entry);
+            if (id == null) continue;
+
+            boolean match = isMatch(entry, processedQuery, id);
+
+            if (match) {
+                results.add(entry);
+            }
+        }
+        return results;
     }
 
     public enum EntryType {ENTRY, AUTO_POPULATE}
