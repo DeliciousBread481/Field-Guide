@@ -15,6 +15,9 @@
   "option.fieldguide.show_pause_button": "Show Pause Menu Button",
   "option.fieldguide.show_pause_button.tooltip": "If enabled, a button to open the Field Guide will appear in the pause menu.",
 
+  "option.fieldguide.show_undiscovered_names": "Show Undiscovered Names",
+  "option.fieldguide.show_undiscovered_names.tooltip": "If enabled, names of undiscovered entries will be visible and searchable.",
+
   "option.fieldguide.scan_speed": "Scanning Speed",
   "option.fieldguide.scan_speed.tooltip": "The time in seconds it takes to scan an entity.",
 

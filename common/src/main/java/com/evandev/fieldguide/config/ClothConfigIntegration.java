@@ -30,6 +30,12 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.showPauseMenuButton = newValue)
                 .build());
 
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.show_undiscovered_names"), config.showUndiscoveredNames)
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("option.fieldguide.show_undiscovered_names.tooltip"))
+                .setSaveConsumer(newValue -> config.showUndiscoveredNames = newValue)
+                .build());
+
         general.addEntry(entryBuilder.startDoubleField(Component.translatable("option.fieldguide.scan_speed"), config.scanSpeed)
                 .setDefaultValue(ModConfig.get().scanSpeed)
                 .setMin(0.1D)

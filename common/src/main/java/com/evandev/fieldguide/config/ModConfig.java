@@ -20,6 +20,7 @@ public class ModConfig {
     private static ModConfig INSTANCE;
 
     public boolean showPauseMenuButton = true;
+    public boolean showUndiscoveredNames = false;
     public double scanSpeed = 1.0D;
     public List<String> entityBlacklist = new ArrayList<>();
 

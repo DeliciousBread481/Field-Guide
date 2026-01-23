@@ -2,6 +2,7 @@ package com.evandev.fieldguide.client.gui.screens;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
+import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.FieldGuideDataManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
@@ -13,8 +14,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Objects;
 
 public class FieldGuideEntryScreen extends BookScreen {
     private final Screen parent;
@@ -28,7 +27,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private static Component getTitleForEntry(Object entry) {
-        if (FieldGuideDataManager.isUnlocked(entry)) {
+        if (FieldGuideDataManager.isUnlocked(entry) || ModConfig.get().showUndiscoveredNames) {
             if (entry instanceof EntityType<?> type) return type.getDescription();
             if (entry instanceof Block block) return block.getName();
         }

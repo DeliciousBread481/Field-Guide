@@ -72,9 +72,6 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         return INSTANCE.categories;
     }
 
-    /**
-     * Checks if the player has unlocked this entry.
-     */
     public static ResourceLocation getEntryId(Object entry) {
         if (entry instanceof EntityType<?> type) {
             return BuiltInRegistries.ENTITY_TYPE.getKey(type);
@@ -84,9 +81,6 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         return null;
     }
 
-    /**
-     * Checks if the player has unlocked the entry but not yet viewed it.
-     */
     public static boolean isUnlocked(Object entry) {
         ResourceLocation id = getEntryId(entry);
         return id != null && INSTANCE.unlockedEntries.contains(id.toString());
@@ -99,9 +93,6 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         return INSTANCE.unlockedEntries.contains(key) && !INSTANCE.seenEntries.contains(key);
     }
 
-    /**
-     * Marks an entry as seen, removing the "New!" status.
-     */
     public static void markAsSeen(Object entry) {
         ResourceLocation id = getEntryId(entry);
         if (id != null && INSTANCE.seenEntries.add(id.toString())) {
@@ -207,9 +198,6 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         return (float) fadeTicks / (float) FADE_DURATION;
     }
 
-    /**
-     * Helper to find which category holds a specific entity.
-     */
     public Category getCategoryForEntry(Object entry) {
         for (Category category : categories.values()) {
             if (category.getEntries().contains(entry)) {
@@ -219,9 +207,6 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         return null;
     }
 
-    /**
-     * Called when the client joins a world (Singleplayer).
-     */
     public void onWorldLoad(Path worldSaveDir) {
         this.unlockedEntries.clear();
         this.seenEntries.clear();
@@ -233,9 +218,6 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         }
     }
 
-    /**
-     * Called when the client leaves a world.
-     */
     public void onWorldUnload() {
         if (this.currentSavePath != null) {
             saveProgress();
@@ -245,9 +227,6 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         this.seenEntries.clear();
     }
 
-    /**
-     * Called every client tick to check for spyglass usage.
-     */
     public void onClientTick(Minecraft minecraft) {
         if (minecraft.player == null || minecraft.level == null) return;
 
@@ -418,9 +397,6 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         }
     }
 
-    /**
-     * Revokes access to all entries.
-     */
     public void revokeAll() {
         unlockedEntries.clear();
         seenEntries.clear();
@@ -579,7 +555,7 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         if (processedQuery.isEmpty()) return results;
 
         for (Object entry : getValidEntries()) {
-            if (!isUnlocked(entry)) continue;
+            if (!isUnlocked(entry) && !ModConfig.get().showUndiscoveredNames) continue;
 
             ResourceLocation id = getEntryId(entry);
             if (id == null) continue;

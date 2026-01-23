@@ -5,6 +5,7 @@ import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.gui.widget.FieldGuideSearchBox;
 import com.evandev.fieldguide.client.gui.widget.TabButton;
+import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.FieldGuideDataManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -146,9 +147,6 @@ public class FieldGuideScreen extends BookScreen {
         updatePageButtons();
     }
 
-    /**
-     * Delegates filtering to the DataManager.
-     */
     private void onSearchChanged(String query) {
         this.isSearching = !query.trim().isEmpty();
         this.currentPage = 0;
@@ -395,7 +393,7 @@ public class FieldGuideScreen extends BookScreen {
                 if (bounds.contains(mouseX, mouseY)) {
                     Object entry = currentEntries.get(itemIndex);
                     boolean unlocked = FieldGuideDataManager.isUnlocked(entry);
-                    if (unlocked) {
+                    if (unlocked || ModConfig.get().showUndiscoveredNames) {
                         Component name;
                         if (entry instanceof EntityType<?> type) name = type.getDescription();
                         else if (entry instanceof Block block) name = block.getName();

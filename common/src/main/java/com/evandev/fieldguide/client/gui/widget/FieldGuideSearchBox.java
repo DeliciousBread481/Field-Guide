@@ -26,9 +26,9 @@ public class FieldGuideSearchBox extends EditBox {
     @Override
     public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         int boxX = this.getX() - 4;
-        int boxY = this.getY() - 1;
+        int boxY = this.getY() - 4;
         int boxW = this.width + 8;
-        int boxH = this.height + 2;
+        int boxH = this.height + 4;
 
         int borderColor = this.isFocused() ? BORDER_COLOR_FOCUSED : BORDER_COLOR_NORMAL;
 
