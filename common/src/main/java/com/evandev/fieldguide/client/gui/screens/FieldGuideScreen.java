@@ -39,13 +39,14 @@ public class FieldGuideScreen extends BookScreen {
     private static final int TAB_GAP = 0;
 
     private static final int SEARCH_WIDTH = 140;
-    private static final int SEARCH_HEIGHT = 16;
+    private static final int SEARCH_HEIGHT = 20;
 
     private static ResourceLocation lastOpenedCategory = null;
     private static int lastOpenedPage = 0;
 
     private final Map<EntityType<?>, Entity> entryCache = new HashMap<>();
     private final List<Category> sortedCategories = new ArrayList<>();
+    private final List<TabButton> tabs = new ArrayList<>();
 
     private List<Object> currentEntries = new ArrayList<>();
 
@@ -56,7 +57,7 @@ public class FieldGuideScreen extends BookScreen {
     private ImageButton nextPageButton;
 
     private FieldGuideSearchBox searchBox;
-    private boolean isSearching = false;
+    public boolean isSearching = false;
 
     public FieldGuideScreen() {
         super(Component.translatable("title.fieldguide.field_guide"));
@@ -168,8 +169,19 @@ public class FieldGuideScreen extends BookScreen {
             int xPos = startX + (i * (TAB_WIDTH + TAB_GAP));
             int yPos = this.bounds.top();
             TabButton tab = new TabButton(xPos, yPos, TAB_WIDTH, TAB_HEIGHT, category, this);
+            tabs.add(tab);
             this.addRenderableWidget(tab);
         }
+    }
+
+    private void renderSearchTab(GuiGraphics guiGraphics) {
+        int x = this.bounds.left() + 25;
+        int y = this.bounds.top();
+        guiGraphics.blit(Constants.TAB_TEXTURE, x, y, 0, 24, 24, 24, 24, 48);
+
+        int iconX = x + 4;
+        int iconY = y + 3;
+        guiGraphics.blit(Constants.SEARCH_ICON, iconX, iconY - 1, 0, 0, 16, 16, 16, 16);
     }
 
     public Category getSelectedCategory() {
@@ -207,6 +219,9 @@ public class FieldGuideScreen extends BookScreen {
         int totalSpreads = getTotalSpreads();
         this.prevPageButton.visible = currentPage > 0;
         this.nextPageButton.visible = currentPage < totalSpreads - 1;
+        this.tabs.forEach(tab -> {
+            tab.visible = !isSearching;
+        });
     }
 
     private void prevPage() {
@@ -281,20 +296,26 @@ public class FieldGuideScreen extends BookScreen {
 
         if (!isSearching && selectedCategory != null && currentPage == 0) {
             renderCategoryInfo(guiGraphics);
-        } else if (isSearching && currentEntries.isEmpty()) {
-            Component noResults = Component.translatable("gui.fieldguide.no_results");
-            int textX = this.bounds.left() + this.bounds.width() / 2 - this.font.width(noResults) / 2;
-            int textY = this.bounds.top() + this.bounds.height() / 2;
-            guiGraphics.drawString(this.font, noResults, textX, textY, Constants.TEXT_COLOR, false);
+        } else if (isSearching){
+            renderSearchTab(guiGraphics);
+            if(currentEntries.isEmpty()) {
+                Component noResults = Component.translatable("gui.fieldguide.no_results");
+                int textX = this.leftPageBounds.x_center() - this.font.width(noResults) / 2;
+                int textY = this.leftPageBounds.y_center();
+                guiGraphics.drawString(this.font, noResults, textX, textY, Constants.TEXT_MUTED_COLOR, false);
+            }
         }
 
-        int totalSpreads = getTotalSpreads();
-        int totalPagesStr = totalSpreads * 2;
         int leftPageNum = (currentPage + 1) * 2 - 1;
         int rightPageNum = (currentPage + 1) * 2;
+        int totalSpreads = getTotalSpreads();
+        int totalPagesStr = totalSpreads * 2;
 
-        if (leftPageNum > 1) renderPageNumber(leftPageNum, totalPagesStr, this.leftPageBounds, guiGraphics);
-        renderPageNumber(rightPageNum, totalPagesStr, this.rightPageBounds, guiGraphics);
+        if (leftPageNum > 1 || isSearching) renderPageNumber(leftPageNum, totalPagesStr, this.leftPageBounds, guiGraphics);
+
+        if (currentEntries.size() > leftPageNum * ITEMS_PER_PAGE - (isSearching ? 0 : ITEMS_PER_PAGE)) {
+            renderPageNumber(rightPageNum, totalPagesStr, this.rightPageBounds, guiGraphics);
+        }
 
         renderGrid(guiGraphics, mouseX, mouseY);
     }
