@@ -52,6 +52,7 @@ public class FieldGuideScreen extends BookScreen {
 
     private Category selectedCategory;
     private int currentPage = 0;
+    private String searchQuery = "";
 
     private ImageButton prevPageButton;
     private ImageButton nextPageButton;
@@ -71,6 +72,11 @@ public class FieldGuideScreen extends BookScreen {
     public FieldGuideScreen(Category initialCategory, int initialPage) {
         this(initialCategory);
         this.currentPage = initialPage;
+    }
+
+    public FieldGuideScreen(Category initialCategory, String searchQuery) {
+        this(initialCategory);
+        this.searchQuery = searchQuery;
     }
 
     public static int getPageForEntry(Category category, Object entry) {
@@ -118,11 +124,6 @@ public class FieldGuideScreen extends BookScreen {
             lastOpenedPage = this.currentPage;
         }
 
-        int searchX = this.width / 2 - SEARCH_WIDTH / 2;
-        int searchY = this.bounds.bottom() + 5;
-
-        this.searchBox = new FieldGuideSearchBox(this.font, searchX, searchY, SEARCH_WIDTH, SEARCH_HEIGHT, this::onSearchChanged);
-        this.addRenderableWidget(this.searchBox);
 
         this.prevPageButton = new ImageButton(
                 this.leftPageBounds.left(),
@@ -145,18 +146,26 @@ public class FieldGuideScreen extends BookScreen {
 
         initTabs();
 
-        updatePageButtons();
+        int searchX = this.width / 2 - SEARCH_WIDTH / 2;
+        int searchY = this.bounds.bottom() + 5;
+
+        this.searchBox = new FieldGuideSearchBox(this.font, searchX, searchY, SEARCH_WIDTH, SEARCH_HEIGHT, this::onSearchChanged);
+        this.searchBox.setValue(this.searchQuery); // This also triggers onSearchChanged()
+        this.addRenderableWidget(this.searchBox);
+
+        // updatePageButtons(); // Already called from onSearchChanged
     }
 
     private void onSearchChanged(String query) {
         this.isSearching = !query.trim().isEmpty();
-        this.currentPage = 0;
+        this.searchQuery = query;
 
         if (!isSearching) {
             if (this.selectedCategory != null) {
                 this.currentEntries = this.selectedCategory.getEntries();
             }
         } else {
+            this.currentPage = 0;
             this.currentEntries = FieldGuideDataManager.getInstance().searchEntries(query);
         }
         updatePageButtons();
