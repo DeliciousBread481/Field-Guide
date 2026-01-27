@@ -86,10 +86,11 @@ public class FieldGuideCommand {
         }
 
         int count = 0;
-        for (Object entry : category.getEntries()) {
+        for (Object entry : FieldGuideDataManager.getInstance().getEntriesForCategory(category)) {
             FieldGuideDataManager.getInstance().unlock(entry, false);
             count++;
         }
+
         int finalCount = count;
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.category.success", categoryId, finalCount), true);
         return count;
@@ -121,10 +122,11 @@ public class FieldGuideCommand {
         }
 
         int count = 0;
-        for (Object entry : category.getEntries()) {
+        for (Object entry : FieldGuideDataManager.getInstance().getEntriesForCategory(category)) {
             FieldGuideDataManager.getInstance().revoke(entry);
             count++;
         }
+
         int finalCount = count;
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.revoke.category.success", categoryId, finalCount), true);
         return count;

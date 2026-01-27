@@ -78,7 +78,8 @@ public class FieldGuideScreen extends BookScreen {
     }
 
     public static int getPageForEntry(Category category, Object entry) {
-        int index = category.getEntries().indexOf(entry);
+        List<Object> entries = FieldGuideDataManager.getInstance().getEntriesForCategory(category);
+        int index = entries.indexOf(entry);
         if (index < 0) return 0;
         if (index < ITEMS_PER_PAGE) return 0;
         return 1 + (index - ITEMS_PER_PAGE) / ITEMS_PER_VIEW;
@@ -97,8 +98,13 @@ public class FieldGuideScreen extends BookScreen {
         super.init();
 
         this.sortedCategories.clear();
-        this.sortedCategories.addAll(FieldGuideDataManager.getCategories().values());
-        this.sortedCategories.sort(Comparator.comparingInt(Category::getTabIndex)
+        for (Category cat : FieldGuideDataManager.getCategories().values()) {
+            List<Object> entries = FieldGuideDataManager.getInstance().getEntriesForCategory(cat);
+            if (entries != null && !entries.isEmpty()) {
+                this.sortedCategories.add(cat);
+            }
+        }
+        this.sortedCategories.sort(Comparator.comparingInt(Category::getSortIndex)
                 .thenComparing(c -> c.getId().getPath()));
 
         if (this.selectedCategory == null) {
@@ -112,7 +118,7 @@ public class FieldGuideScreen extends BookScreen {
         }
 
         if (this.selectedCategory != null) {
-            this.currentEntries = this.selectedCategory.getEntries();
+            this.currentEntries = FieldGuideDataManager.getInstance().getEntriesForCategory(this.selectedCategory);
             lastOpenedCategory = this.selectedCategory.getId();
 
             int totalSpreads = getTotalSpreads();
@@ -158,7 +164,7 @@ public class FieldGuideScreen extends BookScreen {
 
         if (!isSearching) {
             if (this.selectedCategory != null) {
-                this.currentEntries = this.selectedCategory.getEntries();
+                this.currentEntries = FieldGuideDataManager.getInstance().getEntriesForCategory(this.selectedCategory);
             }
         } else {
             this.currentPage = 0;
@@ -197,7 +203,7 @@ public class FieldGuideScreen extends BookScreen {
         if (this.selectedCategory == category) return;
         this.selectedCategory = category;
         this.currentPage = 0;
-        this.currentEntries = category.getEntries();
+        this.currentEntries = FieldGuideDataManager.getInstance().getEntriesForCategory(category);
         lastOpenedCategory = this.selectedCategory.getId();
         lastOpenedPage = this.currentPage;
 
@@ -245,13 +251,8 @@ public class FieldGuideScreen extends BookScreen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.searchBox != null) {
-            this.searchBox.setFocused(this.searchBox.isMouseOver(mouseX, mouseY));
-        }
-
-        if (super.mouseClicked(mouseX, mouseY, button)) {
-            return true;
-        }
+        if (this.searchBox != null) this.searchBox.setFocused(this.searchBox.isMouseOver(mouseX, mouseY));
+        if (super.mouseClicked(mouseX, mouseY, button)) return true;
 
         for (int i = 0; i < ITEMS_PER_VIEW; i++) {
             int globalSlotIndex = currentPage * ITEMS_PER_VIEW + i;
@@ -259,9 +260,7 @@ public class FieldGuideScreen extends BookScreen {
                 int itemIndex = getItemIndexForSlot(i);
                 if (itemIndex >= 0 && itemIndex < currentEntries.size()) {
                     Object entry = currentEntries.get(itemIndex);
-                    if (FieldGuideDataManager.isNew(entry)) {
-                        FieldGuideDataManager.markAsSeen(entry);
-                    }
+                    if (FieldGuideDataManager.isNew(entry)) FieldGuideDataManager.markAsSeen(entry);
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                     Minecraft.getInstance().setScreen(new FieldGuideEntryScreen(this, entry));
                     return true;
@@ -274,27 +273,18 @@ public class FieldGuideScreen extends BookScreen {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (this.searchBox.isFocused()) {
-            if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
-                return super.keyPressed(keyCode, scanCode, modifiers);
-            }
-
-            if (this.searchBox.keyPressed(keyCode, scanCode, modifiers)) {
-                return true;
-            }
-
+            if (keyCode == GLFW.GLFW_KEY_ESCAPE) return super.keyPressed(keyCode, scanCode, modifiers);
+            if (this.searchBox.keyPressed(keyCode, scanCode, modifiers)) return true;
             return true;
         }
-
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(guiGraphics);
-
         RenderSystem.setShaderTexture(0, Constants.BOOK_TEXTURE);
         guiGraphics.blit(Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
-
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
         if (!isSearching && selectedCategory != null && currentPage == 0) {
@@ -303,9 +293,7 @@ public class FieldGuideScreen extends BookScreen {
             renderSearchTab(guiGraphics);
             if (currentEntries.isEmpty()) {
                 Component noResults = Component.translatable("gui.fieldguide.no_results");
-                int textX = this.leftPageBounds.x_center() - this.font.width(noResults) / 2;
-                int textY = this.leftPageBounds.y_center();
-                guiGraphics.drawString(this.font, noResults, textX, textY, Constants.TEXT_MUTED_COLOR, false);
+                guiGraphics.drawString(this.font, noResults, this.leftPageBounds.x_center() - this.font.width(noResults) / 2, this.leftPageBounds.y_center(), Constants.TEXT_MUTED_COLOR, false);
             }
         }
 
@@ -367,9 +355,7 @@ public class FieldGuideScreen extends BookScreen {
     }
 
     private int getItemIndexForSlot(int slotIndex) {
-        if (isSearching) {
-            return (currentPage * ITEMS_PER_VIEW) + slotIndex;
-        }
+        if (isSearching) return (currentPage * ITEMS_PER_VIEW) + slotIndex;
         if (currentPage == 0) {
             if (slotIndex < ITEMS_PER_PAGE) return -1;
             return slotIndex - ITEMS_PER_PAGE;
@@ -482,11 +468,11 @@ public class FieldGuideScreen extends BookScreen {
                 }
 
                 if (entity instanceof LivingEntity living) {
-                    EntryRenderHelper.renderEntityNormalized(guiGraphics, living, x, y, CELL_SIZE - 8, CELL_SIZE - 8, scale, !unlocked);
+                    EntryRenderHelper.renderEntityNormalized(guiGraphics, living, x, y, CELL_SIZE - 8, CELL_SIZE - 8, scale, !unlocked, Constants.LIST_SILHOUETTE_COLOR, false);
                 }
             }
         } else if (entry instanceof Block block) {
-            EntryRenderHelper.renderBlock(guiGraphics, block, x, y, 15.0F, !unlocked);
+            EntryRenderHelper.renderBlock(guiGraphics, block, x, y, 15.0F, !unlocked, false);
         }
     }
 }

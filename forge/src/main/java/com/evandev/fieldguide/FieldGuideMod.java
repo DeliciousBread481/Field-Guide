@@ -4,10 +4,12 @@ import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.config.ClothConfigIntegration;
 import com.evandev.fieldguide.data.FieldGuideDataManager;
 import com.evandev.fieldguide.network.RequestDropsPacket;
+import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncDropsPacket;
 import com.evandev.fieldguide.platform.ForgeNetworkHelper;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.LootTableHelper;
+import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.command.FieldGuideCommand;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -22,8 +24,10 @@ import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
@@ -88,10 +92,18 @@ public class FieldGuideMod {
         context.setPacketHandled(true);
     }
 
-    public static void handleSync(SyncDropsPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
+    public static void handleSyncDrops(SyncDropsPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
         NetworkEvent.Context context = contextSupplier.get();
         context.enqueueWork(() -> {
             FieldGuideDataManager.getInstance().setDrops(packet.getEntryId(), packet.getDrops());
+        });
+        context.setPacketHandled(true);
+    }
+
+    public static void handleSyncCategories(SyncCategoriesPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
+        NetworkEvent.Context context = contextSupplier.get();
+        context.enqueueWork(() -> {
+            FieldGuideDataManager.getInstance().updateCategoriesFromServer(packet.getCategories());
         });
         context.setPacketHandled(true);
     }
@@ -107,6 +119,12 @@ public class FieldGuideMod {
     public void registerKeyMappings(RegisterKeyMappingsEvent event) {
         FieldGuideClient.init();
         event.register(FieldGuideClient.OPEN_GUIDE_KEY);
+    }
+
+    @SubscribeEvent
+    public void onAddReloadListeners(AddReloadListenerEvent event) {
+        // Register server data loader
+        event.addListener(ServerFieldGuideManager.getInstance());
     }
 
     @SubscribeEvent
@@ -131,6 +149,13 @@ public class FieldGuideMod {
             saveDir = client.getSingleplayerServer().getWorldPath(LevelResource.ROOT);
         }
         FieldGuideDataManager.getInstance().onWorldLoad(saveDir);
+    }
+
+    @SubscribeEvent
+    public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            ServerFieldGuideManager.getInstance().syncToPlayer(player);
+        }
     }
 
     @SubscribeEvent
