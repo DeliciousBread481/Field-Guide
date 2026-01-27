@@ -2,6 +2,7 @@ package com.evandev.fieldguide.platform;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.network.RequestDropsPacket;
+import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncDropsPacket;
 import com.evandev.fieldguide.platform.services.INetworkHelper;
 import net.minecraft.resources.ResourceLocation;
@@ -22,7 +23,8 @@ public class ForgeNetworkHelper implements INetworkHelper {
     public static void register() {
         int id = 0;
         CHANNEL.registerMessage(id++, RequestDropsPacket.class, RequestDropsPacket::encode, RequestDropsPacket::new, com.evandev.fieldguide.FieldGuideMod::handleRequest);
-        CHANNEL.registerMessage(id++, SyncDropsPacket.class, SyncDropsPacket::encode, SyncDropsPacket::new, com.evandev.fieldguide.FieldGuideMod::handleSync);
+        CHANNEL.registerMessage(id++, SyncDropsPacket.class, SyncDropsPacket::encode, SyncDropsPacket::new, com.evandev.fieldguide.FieldGuideMod::handleSyncDrops);
+        CHANNEL.registerMessage(id++, SyncCategoriesPacket.class, SyncCategoriesPacket::encode, SyncCategoriesPacket::new, com.evandev.fieldguide.FieldGuideMod::handleSyncCategories);
     }
 
     @Override

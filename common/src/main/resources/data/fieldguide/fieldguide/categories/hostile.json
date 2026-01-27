@@ -1,0 +1,9 @@
+{
+  "sort_index": 1,
+  "contents": [
+    {
+      "type": "auto_populate",
+      "strategy": "hostile"
+    }
+  ]
+}

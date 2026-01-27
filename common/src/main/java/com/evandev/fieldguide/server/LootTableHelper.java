@@ -39,7 +39,7 @@ public class LootTableHelper {
                     JsonObject json = GsonHelper.parse(reader);
                     collectItemsFromLootTable(json, drops);
                 } catch (Exception e) {
-                    Constants.LOG.error("Failed to load loot table: " + fileId, e);
+                    Constants.LOG.error("Failed to load loot table: {}", fileId, e);
                 }
             }
         }
