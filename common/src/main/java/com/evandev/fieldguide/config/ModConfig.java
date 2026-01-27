@@ -24,8 +24,8 @@ public class ModConfig {
     public int pauseButtonYOffset = 0;
 
     public boolean showInventoryButton = true;
-    public int inventoryButtonXOffset = 125;
-    public int inventoryButtonYOffset = 62;
+    public int inventoryButtonXOffset = 126;
+    public int inventoryButtonYOffset = 61;
 
     public boolean showUndiscoveredNames = false;
     public double scanSpeed = 1.0D;

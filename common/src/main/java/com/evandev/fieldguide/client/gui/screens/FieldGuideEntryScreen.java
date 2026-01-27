@@ -114,8 +114,8 @@ public class FieldGuideEntryScreen extends BookScreen {
             List<ItemStack> drops = FieldGuideDataManager.getInstance().getDrops(entry);
 
             if (!drops.isEmpty()) {
-                int itemSize = 16;
-                int spacing = 4;
+                int itemSize = 18;
+                int spacing = 2;
                 int maxLineWidth = this.rightPageBounds.width() - 20;
 
                 List<List<ItemStack>> lines = new ArrayList<>();
@@ -143,8 +143,9 @@ public class FieldGuideEntryScreen extends BookScreen {
                     int startX = this.rightPageBounds.x_center() - (lineWidth / 2);
 
                     for (ItemStack stack : line) {
-                        guiGraphics.renderItem(stack, startX, startY);
-                        guiGraphics.renderItemDecorations(this.font, stack, startX, startY);
+                        guiGraphics.blit(Constants.ITEM_BACKGROUND_TEXTURE, startX, startY, 0, 0, itemSize, itemSize, itemSize, itemSize);
+                        guiGraphics.renderItem(stack, startX + 1, startY + 1);
+                        guiGraphics.renderItemDecorations(this.font, stack, startX + 1, startY + 1);
                         startX += itemSize + spacing;
                     }
                     startY += itemSize + spacing;

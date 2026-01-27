@@ -27,21 +27,20 @@ public abstract class InventoryScreenMixin extends EffectRenderingInventoryScree
             return;
         }
 
-        int buttonSize = 20;
         int xPos = this.leftPos + ModConfig.get().inventoryButtonXOffset;
         int yPos = this.topPos + ModConfig.get().inventoryButtonYOffset;
 
         this.addRenderableWidget(new ImageButton(
                 xPos,
                 yPos,
-                buttonSize,
-                buttonSize,
+                20,
+                18,
                 0,
                 0,
+                18,
+                Constants.INVENTORY_BUTTON_TEXTURE,
                 20,
-                Constants.BUTTON_TEXTURE,
-                20,
-                40,
+                36,
                 (button) -> {
                     if (this.minecraft != null) {
                         this.minecraft.setScreen(new FieldGuideScreen());
