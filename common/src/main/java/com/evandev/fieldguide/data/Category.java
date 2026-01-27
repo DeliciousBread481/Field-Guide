@@ -105,7 +105,7 @@ public class Category {
         results.addAll(BuiltInRegistries.ENTITY_TYPE.stream()
                 .filter(type -> {
                     if ("hostile".equalsIgnoreCase(strategy)) {
-                        return type.getCategory() == MobCategory.MONSTER;
+                        return type.getCategory() == MobCategory.MONSTER && SpawnEggItem.byId(type) != null;
                     } else if ("passive".equalsIgnoreCase(strategy)) {
                         if (type.getCategory() == MobCategory.MONSTER) {
                             return false;
