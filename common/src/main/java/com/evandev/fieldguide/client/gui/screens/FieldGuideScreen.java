@@ -47,18 +47,14 @@ public class FieldGuideScreen extends BookScreen {
     private final Map<EntityType<?>, Entity> entryCache = new HashMap<>();
     private final List<Category> sortedCategories = new ArrayList<>();
     private final List<TabButton> tabs = new ArrayList<>();
-
+    public boolean isSearching = false;
     private List<Object> currentEntries = new ArrayList<>();
-
     private Category selectedCategory;
     private int currentPage = 0;
     private String searchQuery = "";
-
     private ImageButton prevPageButton;
     private ImageButton nextPageButton;
-
     private FieldGuideSearchBox searchBox;
-    public boolean isSearching = false;
 
     public FieldGuideScreen() {
         super(Component.translatable("title.fieldguide.field_guide"));
@@ -228,9 +224,7 @@ public class FieldGuideScreen extends BookScreen {
         int totalSpreads = getTotalSpreads();
         this.prevPageButton.visible = currentPage > 0;
         this.nextPageButton.visible = currentPage < totalSpreads - 1;
-        this.tabs.forEach(tab -> {
-            tab.visible = !isSearching;
-        });
+        this.tabs.forEach(tab -> tab.visible = !isSearching);
     }
 
     private void prevPage() {
@@ -305,9 +299,9 @@ public class FieldGuideScreen extends BookScreen {
 
         if (!isSearching && selectedCategory != null && currentPage == 0) {
             renderCategoryInfo(guiGraphics);
-        } else if (isSearching){
+        } else if (isSearching) {
             renderSearchTab(guiGraphics);
-            if(currentEntries.isEmpty()) {
+            if (currentEntries.isEmpty()) {
                 Component noResults = Component.translatable("gui.fieldguide.no_results");
                 int textX = this.leftPageBounds.x_center() - this.font.width(noResults) / 2;
                 int textY = this.leftPageBounds.y_center();
@@ -320,7 +314,8 @@ public class FieldGuideScreen extends BookScreen {
         int totalSpreads = getTotalSpreads();
         int totalPagesStr = totalSpreads * 2;
 
-        if (leftPageNum > 1 || isSearching) renderPageNumber(leftPageNum, totalPagesStr, this.leftPageBounds, guiGraphics);
+        if (leftPageNum > 1 || isSearching)
+            renderPageNumber(leftPageNum, totalPagesStr, this.leftPageBounds, guiGraphics);
 
         if (currentEntries.size() > leftPageNum * ITEMS_PER_PAGE - (isSearching ? 0 : ITEMS_PER_PAGE)) {
             renderPageNumber(rightPageNum, totalPagesStr, this.rightPageBounds, guiGraphics);
@@ -461,7 +456,16 @@ public class FieldGuideScreen extends BookScreen {
     private void renderEntryInGrid(GuiGraphics guiGraphics, Object entry, int x, int y, int scale, boolean unlocked) {
         if (entry instanceof EntityType<?> type) {
             if (this.minecraft != null && this.minecraft.level != null) {
-                Entity entity = entryCache.computeIfAbsent(type, t -> t.create(this.minecraft.level));
+                Entity entity = entryCache.get(type);
+                if (entity == null && !entryCache.containsKey(type)) {
+                    try {
+                        entity = type.create(this.minecraft.level);
+                    } catch (Exception e) {
+                        Constants.LOG.error("Failed to render entity in Field Guide: {}", type.getDescription().getString(), e);
+                    }
+                    entryCache.put(type, entity);
+                }
+
                 if (entity instanceof LivingEntity living) {
                     EntryRenderHelper.renderEntityNormalized(guiGraphics, living, x, y, CELL_SIZE - 8, CELL_SIZE - 8, scale, !unlocked);
                 }

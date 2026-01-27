@@ -40,7 +40,12 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         if (entry instanceof EntityType<?> type) {
             if (this.minecraft != null && this.minecraft.level != null) {
-                this.renderedEntity = type.create(this.minecraft.level);
+                try {
+                    this.renderedEntity = type.create(this.minecraft.level);
+                } catch (Exception e) {
+                    Constants.LOG.error("Failed to create entity preview: {}", type.getDescription().getString(), e);
+                    this.renderedEntity = null;
+                }
             }
         }
 
