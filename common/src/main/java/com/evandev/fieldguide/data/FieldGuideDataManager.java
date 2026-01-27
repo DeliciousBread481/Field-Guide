@@ -4,6 +4,8 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.gui.toasts.FieldGuideToast;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.network.RequestDropsPacket;
+import com.evandev.fieldguide.platform.Services;
 import com.google.gson.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
@@ -18,6 +20,8 @@ import net.minecraft.util.GsonHelper;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.Block;
@@ -36,19 +40,18 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
     private final Map<ResourceLocation, Category> categories = new LinkedHashMap<>();
     private final Set<String> unlockedEntries = new HashSet<>();
     private final Set<String> seenEntries = new HashSet<>();
+    private final Map<Object, List<ItemStack>> dropCache = new HashMap<>();
+    private final Set<Object> requestedDrops = new HashSet<>();
     private Path currentSavePath = null;
     private List<Object> flattenedEntryCache = null;
     private long lastUnlockTime = 0;
     private Object lastUnlockedEntry = null;
-
     private Object scanningTarget = null;
     private int scanTicks = 0;
     private BlockPos scanningPos = null;
-
     private Object fadingTarget = null;
     private int fadeTicks = 0;
     private BlockPos fadingPos = null;
-
     private int prevScanTicks = 0;
 
     private FieldGuideDataManager() {
@@ -125,6 +128,7 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
 
     public static void clearCache() {
         INSTANCE.flattenedEntryCache = null;
+        INSTANCE.dropCache.clear();
         EntryRenderHelper.clearCache();
         for (Category category : INSTANCE.categories.values()) {
             category.resolveEntries();
@@ -151,6 +155,92 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
             }
         }
         return match;
+    }
+
+    /**
+     * Gets drops. If missing, requests from server.
+     */
+    public List<ItemStack> getDrops(Object entry) {
+        if (dropCache.containsKey(entry)) return dropCache.get(entry);
+
+        if (!requestedDrops.contains(entry)) {
+            ResourceLocation id = getEntryId(entry);
+            if (id != null) {
+                requestedDrops.add(entry);
+                Services.NETWORK.sendToServer(new RequestDropsPacket(id));
+            }
+        }
+
+        return Collections.emptyList();
+    }
+
+    /**
+     * Called by the Packet Handler to update the Client's cache.
+     */
+    public void setDrops(ResourceLocation entryId, List<ItemStack> drops) {
+        Optional<Object> foundEntry = getValidEntries().stream()
+                .filter(e -> Objects.equals(getEntryId(e), entryId))
+                .findFirst();
+
+        foundEntry.ifPresent(o -> dropCache.put(o, drops));
+    }
+
+    /**
+     * Calculates the drops for an entry using the Server's ResourceManager.
+     */
+    public List<ItemStack> serverCalculateDrops(ResourceManager serverResourceManager, Object entry) {
+        List<ItemStack> drops = new ArrayList<>();
+        ResourceLocation lootTableId = null;
+
+        if (entry instanceof EntityType<?> type) {
+            lootTableId = type.getDefaultLootTable();
+        } else if (entry instanceof Block block) {
+            lootTableId = block.getLootTable();
+        }
+
+        if (lootTableId != null && !lootTableId.toString().equals("minecraft:empty")) {
+            ResourceLocation fileId = new ResourceLocation(lootTableId.getNamespace(), "loot_tables/" + lootTableId.getPath() + ".json");
+
+            Optional<Resource> resource = serverResourceManager.getResource(fileId);
+            if (resource.isPresent()) {
+                try (Reader reader = resource.get().openAsReader()) {
+                    JsonObject json = GsonHelper.parse(reader);
+                    collectItemsFromLootTable(json, drops);
+                } catch (Exception e) {
+                    Constants.LOG.error("Failed to load loot table: {}", fileId, e);
+                }
+            }
+        }
+
+        // Deduplicate items
+        List<ItemStack> distinctDrops = new ArrayList<>();
+        Set<Item> seenItems = new HashSet<>();
+        for (ItemStack stack : drops) {
+            if (seenItems.add(stack.getItem())) {
+                distinctDrops.add(stack);
+            }
+        }
+        return distinctDrops;
+    }
+
+    private void collectItemsFromLootTable(JsonElement element, List<ItemStack> drops) {
+        if (element.isJsonObject()) {
+            JsonObject obj = element.getAsJsonObject();
+            if (obj.has("type") && "minecraft:item".equals(GsonHelper.getAsString(obj, "type"))) {
+                if (obj.has("name")) {
+                    String name = GsonHelper.getAsString(obj, "name");
+                    ResourceLocation itemId = new ResourceLocation(name);
+                    BuiltInRegistries.ITEM.getOptional(itemId).ifPresent(item -> drops.add(new ItemStack(item)));
+                }
+            }
+            for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
+                collectItemsFromLootTable(entry.getValue(), drops);
+            }
+        } else if (element.isJsonArray()) {
+            for (JsonElement e : element.getAsJsonArray()) {
+                collectItemsFromLootTable(e, drops);
+            }
+        }
     }
 
     private int getScanDuration() {
@@ -469,6 +559,7 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
     public void onResourceManagerReload(ResourceManager resourceManager) {
         categories.clear();
         flattenedEntryCache = null;
+        dropCache.clear();
         EntryRenderHelper.clearCache();
 
         Map<ResourceLocation, List<Resource>> resources =

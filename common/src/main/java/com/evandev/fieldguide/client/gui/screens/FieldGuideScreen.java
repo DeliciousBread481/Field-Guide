@@ -9,10 +9,12 @@ import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.FieldGuideDataManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
@@ -146,10 +148,8 @@ public class FieldGuideScreen extends BookScreen {
         int searchY = this.bounds.bottom() + 5;
 
         this.searchBox = new FieldGuideSearchBox(this.font, searchX, searchY, SEARCH_WIDTH, SEARCH_HEIGHT, this::onSearchChanged);
-        this.searchBox.setValue(this.searchQuery); // This also triggers onSearchChanged()
+        this.searchBox.setValue(this.searchQuery);
         this.addRenderableWidget(this.searchBox);
-
-        // updatePageButtons(); // Already called from onSearchChanged
     }
 
     private void onSearchChanged(String query) {
@@ -418,12 +418,27 @@ public class FieldGuideScreen extends BookScreen {
                 if (bounds.contains(mouseX, mouseY)) {
                     Object entry = currentEntries.get(itemIndex);
                     boolean unlocked = FieldGuideDataManager.isUnlocked(entry);
+
                     if (unlocked || ModConfig.get().showUndiscoveredNames) {
                         Component name;
                         if (entry instanceof EntityType<?> type) name = type.getDescription();
                         else if (entry instanceof Block block) name = block.getName();
                         else name = Component.translatable("fieldguide.unknown");
-                        guiGraphics.renderTooltip(this.font, name, mouseX, mouseY);
+
+                        List<Component> tooltip = new ArrayList<>();
+                        tooltip.add(name);
+
+                        if (this.minecraft != null && this.minecraft.options.advancedItemTooltips) {
+                            ResourceLocation id = null;
+                            if (entry instanceof EntityType<?> type) id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+                            else if (entry instanceof Block block) id = BuiltInRegistries.BLOCK.getKey(block);
+
+                            if (id != null) {
+                                tooltip.add(Component.literal(id.toString()).withStyle(ChatFormatting.DARK_GRAY));
+                            }
+                        }
+
+                        guiGraphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
                     } else {
                         guiGraphics.renderTooltip(this.font, Component.translatable("fieldguide.unknown"), mouseX, mouseY);
                     }

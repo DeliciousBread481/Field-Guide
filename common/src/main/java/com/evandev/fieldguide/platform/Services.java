@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.platform;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.platform.services.INetworkHelper;
 import com.evandev.fieldguide.platform.services.IPlatformHelper;
 
 import java.util.ServiceLoader;
@@ -8,6 +9,7 @@ import java.util.ServiceLoader;
 public class Services {
 
     public static final IPlatformHelper PLATFORM = load(IPlatformHelper.class);
+    public static final INetworkHelper NETWORK = load(INetworkHelper.class);
 
     public static <T> T load(Class<T> clazz) {
         final T loadedService = ServiceLoader.load(clazz)

@@ -12,8 +12,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class FieldGuideEntryScreen extends BookScreen {
     private final Screen parent;
@@ -104,5 +108,62 @@ public class FieldGuideEntryScreen extends BookScreen {
         int textAreaWidth = this.rightPageBounds.width() - 22;
 
         guiGraphics.drawWordWrap(font, Component.literal(description), textX, textY, textAreaWidth, Constants.TEXT_COLOR);
+
+        // Drops
+        if (unlocked) {
+            List<ItemStack> drops = FieldGuideDataManager.getInstance().getDrops(entry);
+
+            if (!drops.isEmpty()) {
+                int itemSize = 16;
+                int spacing = 4;
+                int maxLineWidth = this.rightPageBounds.width() - 20;
+
+                List<List<ItemStack>> lines = new ArrayList<>();
+                List<ItemStack> currentLine = new ArrayList<>();
+                int currentWidth = 0;
+
+                for (ItemStack stack : drops) {
+                    int needed = (currentLine.isEmpty() ? 0 : spacing) + itemSize;
+                    if (currentWidth + needed > maxLineWidth) {
+                        lines.add(currentLine);
+                        currentLine = new ArrayList<>();
+                        currentWidth = 0;
+                    }
+                    currentWidth += (currentLine.isEmpty() ? 0 : spacing) + itemSize;
+                    currentLine.add(stack);
+                }
+                lines.add(currentLine);
+
+                int totalBlockHeight = lines.size() * itemSize + (lines.size() - 1) * spacing;
+                int startY = this.rightPageBounds.bottom() - 15 - totalBlockHeight;
+                int originalStartY = startY;
+
+                for (List<ItemStack> line : lines) {
+                    int lineWidth = line.size() * itemSize + (line.size() - 1) * spacing;
+                    int startX = this.rightPageBounds.x_center() - (lineWidth / 2);
+
+                    for (ItemStack stack : line) {
+                        guiGraphics.renderItem(stack, startX, startY);
+                        guiGraphics.renderItemDecorations(this.font, stack, startX, startY);
+                        startX += itemSize + spacing;
+                    }
+                    startY += itemSize + spacing;
+                }
+
+                startY = originalStartY;
+                for (List<ItemStack> line : lines) {
+                    int lineWidth = line.size() * itemSize + (line.size() - 1) * spacing;
+                    int startX = this.rightPageBounds.x_center() - (lineWidth / 2);
+
+                    for (ItemStack stack : line) {
+                        if (mouseX >= startX && mouseX < startX + itemSize && mouseY >= startY && mouseY < startY + itemSize) {
+                            guiGraphics.renderTooltip(this.font, stack, mouseX, mouseY);
+                        }
+                        startX += itemSize + spacing;
+                    }
+                    startY += itemSize + spacing;
+                }
+            }
+        }
     }
 }

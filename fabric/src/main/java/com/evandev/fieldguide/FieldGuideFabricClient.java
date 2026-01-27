@@ -2,12 +2,14 @@ package com.evandev.fieldguide;
 
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.data.FieldGuideDataManager;
+import com.evandev.fieldguide.network.SyncDropsPacket;
+import com.evandev.fieldguide.platform.FabricNetworkHelper;
 import com.evandev.fieldguide.server.command.FieldGuideCommand;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
@@ -56,6 +58,13 @@ public class FieldGuideFabricClient implements ClientModInitializer {
 
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             FieldGuideDataManager.getInstance().onWorldUnload();
+        });
+
+        ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.SYNC_DROPS_CHANNEL, (client, handler, buf, responseSender) -> {
+            SyncDropsPacket packet = new SyncDropsPacket(buf);
+            client.execute(() -> {
+                FieldGuideDataManager.getInstance().setDrops(packet.getEntryId(), packet.getDrops());
+            });
         });
     }
 }
