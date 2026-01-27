@@ -25,9 +25,40 @@ public class ClothConfigIntegration {
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
 
         general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.show_pause_button"), config.showPauseMenuButton)
-                .setDefaultValue(ModConfig.get().showPauseMenuButton)
+                .setDefaultValue(true)
                 .setTooltip(Component.translatable("option.fieldguide.show_pause_button.tooltip"))
                 .setSaveConsumer(newValue -> config.showPauseMenuButton = newValue)
+                .build());
+
+        general.addEntry(entryBuilder.startIntField(Component.translatable("option.fieldguide.pause_button_x"), config.pauseButtonXOffset)
+                .setDefaultValue(0)
+                .setTooltip(Component.translatable("option.fieldguide.pause_button_x.tooltip"))
+                .setSaveConsumer(newValue -> config.pauseButtonXOffset = newValue)
+                .build());
+
+        general.addEntry(entryBuilder.startIntField(Component.translatable("option.fieldguide.pause_button_y"), config.pauseButtonYOffset)
+                .setDefaultValue(0)
+                .setTooltip(Component.translatable("option.fieldguide.pause_button_y.tooltip"))
+                .setSaveConsumer(newValue -> config.pauseButtonYOffset = newValue)
+                .build());
+
+        // --- INVENTORY SETTINGS ---
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.show_inventory_button"), config.showInventoryButton)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.fieldguide.show_inventory_button.tooltip"))
+                .setSaveConsumer(newValue -> config.showInventoryButton = newValue)
+                .build());
+
+        general.addEntry(entryBuilder.startIntField(Component.translatable("option.fieldguide.inventory_button_x"), config.inventoryButtonXOffset)
+                .setDefaultValue(125)
+                .setTooltip(Component.translatable("option.fieldguide.inventory_button_x.tooltip"))
+                .setSaveConsumer(newValue -> config.inventoryButtonXOffset = newValue)
+                .build());
+
+        general.addEntry(entryBuilder.startIntField(Component.translatable("option.fieldguide.inventory_button_y"), config.inventoryButtonYOffset)
+                .setDefaultValue(62)
+                .setTooltip(Component.translatable("option.fieldguide.inventory_button_y.tooltip"))
+                .setSaveConsumer(newValue -> config.inventoryButtonYOffset = newValue)
                 .build());
 
         general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.show_undiscovered_names"), config.showUndiscoveredNames)

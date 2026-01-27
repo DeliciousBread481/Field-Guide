@@ -12,8 +12,19 @@
   "option.fieldguide.blacklist": "Entity Blacklist",
   "option.fieldguide.blacklist.tooltip": "Entities that should not appear in the field guide.\nSupports 'modid:entity_id' or 'modid:*' for wildcards.",
 
+  "option.fieldguide.show_inventory_button": "Show Inventory Button",
+  "option.fieldguide.show_inventory_button.tooltip": "If enabled, a button to open the Field Guide will appear in the player inventory.",
+  "option.fieldguide.inventory_button_x": "Inventory Button X Offset",
+  "option.fieldguide.inventory_button_x.tooltip": "Horizontal position offset for the inventory button.",
+  "option.fieldguide.inventory_button_y": "Inventory Button Y Offset",
+  "option.fieldguide.inventory_button_y.tooltip": "Vertical position offset for the inventory button.",
+  
   "option.fieldguide.show_pause_button": "Show Pause Menu Button",
   "option.fieldguide.show_pause_button.tooltip": "If enabled, a button to open the Field Guide will appear in the pause menu.",
+  "option.fieldguide.pause_button_x": "Pause Button X Offset",
+  "option.fieldguide.pause_button_x.tooltip": "Horizontal position offset for the pause menu button.",
+  "option.fieldguide.pause_button_y": "Pause Button Y Offset",
+  "option.fieldguide.pause_button_y.tooltip": "Vertical position offset for the pause menu button.",
 
   "option.fieldguide.show_undiscovered_names": "Show Undiscovered Names",
   "option.fieldguide.show_undiscovered_names.tooltip": "If enabled, names of undiscovered entries will be visible and searchable.",
@@ -26,7 +37,6 @@
   "fieldguide.new": "New!",
   "fieldguide.unknown": "???",
   "fieldguide.undiscovered": "???",
-  "fieldguide.drops": "Drops",
   "fieldguide.description.missing": "No description available.",
   "fieldguide.description.locked": "Observe with a spyglass to discover details.",
 

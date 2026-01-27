@@ -8,6 +8,7 @@
   ],
   "client": [
     "client.EntityRenderDispatcherMixin",
+    "client.InventoryScreenMixin",
     "client.LevelRendererMixin",
     "client.PauseScreenMixin"
   ],

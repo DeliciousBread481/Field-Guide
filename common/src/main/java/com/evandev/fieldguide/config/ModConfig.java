@@ -20,6 +20,13 @@ public class ModConfig {
     private static ModConfig INSTANCE;
 
     public boolean showPauseMenuButton = true;
+    public int pauseButtonXOffset = 0;
+    public int pauseButtonYOffset = 0;
+
+    public boolean showInventoryButton = true;
+    public int inventoryButtonXOffset = 125;
+    public int inventoryButtonYOffset = 62;
+
     public boolean showUndiscoveredNames = false;
     public double scanSpeed = 1.0D;
     public List<String> entityBlacklist = new ArrayList<>();

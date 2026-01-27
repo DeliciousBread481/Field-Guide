@@ -22,7 +22,8 @@ public class PauseScreenMixin extends Screen {
 
     @Inject(method = "createPauseMenu", at = @At("RETURN"))
     private void addFieldGuideButton(CallbackInfo ci) {
-        if (!ModConfig.get().showPauseMenuButton) {
+        ModConfig config = ModConfig.get();
+        if (!config.showPauseMenuButton) {
             return;
         }
 
@@ -52,11 +53,12 @@ public class PauseScreenMixin extends Screen {
             targetY = this.height / 4 + 120 + 24;
         }
 
-        int finalX = columnX - buttonSize - margin;
+        int finalX = (columnX - buttonSize - margin) + config.pauseButtonXOffset;
+        int finalY = targetY + config.pauseButtonYOffset;
 
         ImageButton guideButton = new ImageButton(
                 finalX,
-                targetY,
+                finalY,
                 buttonSize,
                 buttonSize,
                 xTexStart,
