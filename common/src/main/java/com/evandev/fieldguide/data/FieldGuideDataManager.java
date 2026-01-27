@@ -253,7 +253,7 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
             results.addAll(BuiltInRegistries.ENTITY_TYPE.stream()
                     .filter(type -> {
                         if ("hostile".equalsIgnoreCase(strategy))
-                            return type.getCategory() == MobCategory.MONSTER && SpawnEggItem.byId(type) != null;
+                            return type.getCategory() == MobCategory.MONSTER;
                         if ("passive".equalsIgnoreCase(strategy))
                             return type.getCategory() != MobCategory.MONSTER && (type.getCategory() != MobCategory.MISC || SpawnEggItem.byId(type) != null);
                         return false;
