@@ -39,12 +39,12 @@ public class SyncCategoriesPacket {
 
             b.writeInt(cat.getEntries().size());
             for (CategoryEntry entry : cat.getEntries()) {
-                b.writeEnum(entry.getType());
-                b.writeBoolean(entry.getId() != null);
-                if (entry.getId() != null) b.writeResourceLocation(entry.getId());
+                b.writeEnum(entry.type());
+                b.writeBoolean(entry.id() != null);
+                if (entry.id() != null) b.writeResourceLocation(entry.id());
 
-                b.writeBoolean(entry.getStrategy() != null);
-                if (entry.getStrategy() != null) b.writeUtf(entry.getStrategy());
+                b.writeBoolean(entry.strategy() != null);
+                if (entry.strategy() != null) b.writeUtf(entry.strategy());
             }
         });
     }

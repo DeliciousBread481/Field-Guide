@@ -220,17 +220,17 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         ModConfig config = ModConfig.get();
 
         for (CategoryEntry entry : category.getEntries()) {
-            if (entry.getType() == CategoryEntry.Type.ENTRY) {
-                if (entry.getId() == null) continue;
-                Optional<EntityType<?>> entityType = BuiltInRegistries.ENTITY_TYPE.getOptional(entry.getId());
+            if (entry.type() == CategoryEntry.Type.ENTRY) {
+                if (entry.id() == null) continue;
+                Optional<EntityType<?>> entityType = BuiltInRegistries.ENTITY_TYPE.getOptional(entry.id());
                 if (entityType.isPresent()) {
                     if (isValidEntity(entityType.get(), config)) foundEntries.add(entityType.get());
                 } else {
-                    Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(entry.getId());
+                    Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(entry.id());
                     if (block.isPresent() && isValidBlock(block.get(), config)) foundEntries.add(block.get());
                 }
-            } else if (entry.getType() == CategoryEntry.Type.AUTO_POPULATE) {
-                foundEntries.addAll(getEntriesForStrategy(entry.getStrategy(), config));
+            } else if (entry.type() == CategoryEntry.Type.AUTO_POPULATE) {
+                foundEntries.addAll(getEntriesForStrategy(entry.strategy(), config));
             }
         }
         resolvedCategoryEntries.put(category.getId(), new ArrayList<>(foundEntries));
@@ -252,7 +252,8 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         } else {
             results.addAll(BuiltInRegistries.ENTITY_TYPE.stream()
                     .filter(type -> {
-                        if ("hostile".equalsIgnoreCase(strategy)) return type.getCategory() == MobCategory.MONSTER;
+                        if ("hostile".equalsIgnoreCase(strategy))
+                            return type.getCategory() == MobCategory.MONSTER && SpawnEggItem.byId(type) != null;
                         if ("passive".equalsIgnoreCase(strategy))
                             return type.getCategory() != MobCategory.MONSTER && (type.getCategory() != MobCategory.MISC || SpawnEggItem.byId(type) != null);
                         return false;
