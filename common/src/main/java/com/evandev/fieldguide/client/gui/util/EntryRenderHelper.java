@@ -1,6 +1,8 @@
 package com.evandev.fieldguide.client.gui.util;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.client.data.EntryVisual;
+import com.evandev.fieldguide.data.FieldGuideDataManager;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -32,15 +34,17 @@ import java.util.Optional;
 
 public class EntryRenderHelper {
 
-    private static final Map<Object, Optional<ResourceLocation>> OVERRIDE_CACHE = new HashMap<>();
+    private static final Map<String, Optional<ResourceLocation>> OVERRIDE_CACHE = new HashMap<>();
 
     public static void clearCache() {
         OVERRIDE_CACHE.clear();
     }
 
-    private static Optional<ResourceLocation> getOverride(Object entry) {
-        if (OVERRIDE_CACHE.containsKey(entry)) {
-            return OVERRIDE_CACHE.get(entry);
+    private static Optional<ResourceLocation> getOverride(Object entry, boolean isPage) {
+        String key = entry.toString() + (isPage ? "_page" : "_grid");
+
+        if (OVERRIDE_CACHE.containsKey(key)) {
+            return OVERRIDE_CACHE.get(key);
         }
 
         ResourceLocation id = null;
@@ -51,19 +55,30 @@ public class EntryRenderHelper {
         }
 
         if (id != null) {
-            ResourceLocation texture = new ResourceLocation(id.getNamespace(), "textures/fieldguide/entries/" + id.getPath() + ".png");
-            if (Minecraft.getInstance().getResourceManager().getResource(texture).isPresent()) {
-                OVERRIDE_CACHE.put(entry, Optional.of(texture));
-                return Optional.of(texture);
+            // Define paths to check
+            ResourceLocation specificLoc = new ResourceLocation(id.getNamespace(),
+                    "textures/fieldguide/entries/" + id.getPath() + (isPage ? "_page.png" : "_grid.png"));
+
+            ResourceLocation defaultLoc = new ResourceLocation(id.getNamespace(),
+                    "textures/fieldguide/entries/" + id.getPath() + ".png");
+
+            // Check specific first (e.g., pig_page.png), then default (pig.png)
+            if (Minecraft.getInstance().getResourceManager().getResource(specificLoc).isPresent()) {
+                OVERRIDE_CACHE.put(key, Optional.of(specificLoc));
+                return Optional.of(specificLoc);
+            } else if (Minecraft.getInstance().getResourceManager().getResource(defaultLoc).isPresent()) {
+                OVERRIDE_CACHE.put(key, Optional.of(defaultLoc));
+                return Optional.of(defaultLoc);
             }
         }
 
-        OVERRIDE_CACHE.put(entry, Optional.empty());
+        OVERRIDE_CACHE.put(key, Optional.empty());
         return Optional.empty();
     }
 
-    private static boolean tryRenderOverride(GuiGraphics guiGraphics, Object entry, int x, int y, int width, int height, boolean silhouette, int color) {
-        Optional<ResourceLocation> override = getOverride(entry);
+    private static boolean tryRenderOverride(GuiGraphics guiGraphics, Object entry, int x, int y, int width, int height, boolean silhouette, int color, boolean isPage) {
+        Optional<ResourceLocation> override = getOverride(entry, isPage);
+
         if (override.isPresent()) {
             ResourceLocation texture = override.get();
             int drawX = x - width / 2;
@@ -163,32 +178,40 @@ public class EntryRenderHelper {
         }
     }
 
-    /**
-     * Renders an entity normalized to fit within a standard widget box.
-     * Defaults to the standard sepia silhouette color.
-     */
-    public static void renderEntityNormalized(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, int maxWidth, int maxHeight, float baseScale, boolean silhouette) {
-        renderEntityNormalized(guiGraphics, entity, x, y, maxWidth, maxHeight, baseScale, silhouette, Constants.LIST_SILHOUETTE_COLOR);
-    }
-
-    /**
-     * Renders an entity normalized to fit within a standard widget box with a specific silhouette color.
-     */
-    public static void renderEntityNormalized(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, int maxWidth, int maxHeight, float baseScale, boolean silhouette, int color) {
-        if (tryRenderOverride(guiGraphics, entity.getType(), x, y, maxWidth, maxHeight, silhouette, color)) {
+    public static void renderEntityNormalized(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, int maxWidth, int maxHeight, float baseScale, boolean silhouette, int color, boolean isPage) {
+        if (tryRenderOverride(guiGraphics, entity.getType(), x, y, maxWidth, maxHeight, silhouette, color, isPage)) {
             return;
         }
 
+        ResourceLocation id = FieldGuideDataManager.getEntryId(entity.getType());
+        EntryVisual visual = FieldGuideDataManager.getInstance().getEntryVisual(id);
+
+        float visualScale = visual.scale;
+        float yOff = visual.yOffset;
+        if (isPage) {
+            if (visual.pageScale != null) visualScale = visual.pageScale;
+            if (visual.pageYOffset != null) yOff = visual.pageYOffset;
+        } else {
+            if (visual.gridScale != null) visualScale = visual.gridScale;
+            if (visual.gridYOffset != null) yOff = visual.gridYOffset;
+        }
+
         float dynamicFactor = getScaleFactorForEntity(entity);
-        float finalScale = (baseScale * 0.32F) * dynamicFactor;
+        float finalScale;
+
+        if (visualScale == 1.0f && visual.gridScale == null && visual.pageScale == null) {
+            finalScale = (baseScale * 0.32F) * dynamicFactor;
+        } else {
+            finalScale = baseScale * visualScale;
+        }
 
         float entityHeight = entity.getBbHeight();
         if (entityHeight * finalScale > maxHeight * 0.9f) {
             finalScale = (maxHeight * 0.9f) / entityHeight;
         }
 
-        // Standardize Y offset
-        int feetY = (int) (y + (entityHeight * finalScale / 2.0f));
+        int feetY = (int) (y + (entityHeight * finalScale / 2.0f) + yOff);
+
         int minX = x - maxWidth / 2;
         int minY = y - maxHeight / 2;
         int maxX = x + maxWidth / 2;
@@ -216,7 +239,6 @@ public class EntryRenderHelper {
         float bodyYAngle = 30;
 
         Quaternionf cameraOrientation = Axis.XP.rotationDegrees(cameraXAngle);
-        Quaternionf bodyOrientation = Axis.YP.rotationDegrees(-bodyYAngle);
 
         pose.mulPose(cameraOrientation);
 
@@ -268,9 +290,10 @@ public class EntryRenderHelper {
         Lighting.setupForFlatItems();
     }
 
-    public static void renderBlock(GuiGraphics guiGraphics, Block block, int x, int y, float scale, boolean silhouette) {
+    public static void renderBlock(GuiGraphics guiGraphics, Block block, int x, int y, float scale, boolean silhouette, boolean isPage) {
         int estimatedSize = (int) (scale * 2);
-        if (tryRenderOverride(guiGraphics, block, x, y, estimatedSize, estimatedSize, silhouette, Constants.LIST_SILHOUETTE_COLOR)) {
+
+        if (tryRenderOverride(guiGraphics, block, x, y, estimatedSize, estimatedSize, silhouette, Constants.LIST_SILHOUETTE_COLOR, isPage)) {
             return;
         }
 
@@ -288,7 +311,6 @@ public class EntryRenderHelper {
         state = stateWithMaxPropertyValue(state, "flower_amount");
         state = stateWithMaxPropertyValue(state, "pickles");
 
-        // Rendering
         float cameraXAngle = 30;
         float cameraYAngle = 210;
 
@@ -320,8 +342,6 @@ public class EntryRenderHelper {
         } else {
             // Render multiple blocks vertically
             Collection<?> values = verticalProp.getPossibleValues();
-
-            // Sort values in correct order from bottom -> top
             if (!values.isEmpty() && values.iterator().next() instanceof Comparable) {
                 @SuppressWarnings("unchecked")
                 Collection<Comparable<?>> sorted = (Collection<Comparable<?>>) values;

@@ -1,6 +1,8 @@
 package com.evandev.fieldguide.data;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.client.data.CategoryVisual;
+import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.gui.toasts.FieldGuideToast;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.config.ModConfig;
@@ -19,16 +21,21 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.*;
+import org.jetbrains.annotations.NotNull;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.Reader;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -37,13 +44,23 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
     private static final Gson GSON = new GsonBuilder().create();
     private static final FieldGuideDataManager INSTANCE = new FieldGuideDataManager();
     private static final int FADE_DURATION = 10;
-    private final Map<ResourceLocation, Category> categories = new LinkedHashMap<>();
+
+    // Data Structures
+    private final Map<ResourceLocation, Category> syncedCategories = new LinkedHashMap<>();
+    private final Map<ResourceLocation, List<Object>> resolvedCategoryEntries = new HashMap<>();
+
+    // Visuals
+    private final Map<ResourceLocation, CategoryVisual> categoryVisuals = new HashMap<>();
+    private final Map<ResourceLocation, EntryVisual> entryVisuals = new HashMap<>();
+
+    // Progress
     private final Set<String> unlockedEntries = new HashSet<>();
     private final Set<String> seenEntries = new HashSet<>();
     private final Map<Object, List<ItemStack>> dropCache = new HashMap<>();
     private final Set<Object> requestedDrops = new HashSet<>();
     private Path currentSavePath = null;
-    private List<Object> flattenedEntryCache = null;
+
+    // Scanning State
     private long lastUnlockTime = 0;
     private Object lastUnlockedEntry = null;
     private Object scanningTarget = null;
@@ -51,8 +68,8 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
     private BlockPos scanningPos = null;
     private Object fadingTarget = null;
     private int fadeTicks = 0;
-    private BlockPos fadingPos = null;
     private int prevScanTicks = 0;
+    private BlockPos fadingPos = null;
 
     private FieldGuideDataManager() {
     }
@@ -61,26 +78,27 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         return INSTANCE;
     }
 
-    public static List<Object> getValidEntries() {
-        if (INSTANCE.flattenedEntryCache == null) {
-            INSTANCE.flattenedEntryCache = INSTANCE.categories.values().stream()
-                    .flatMap(cat -> cat.getEntries().stream())
-                    .distinct()
-                    .collect(Collectors.toList());
-        }
-        return INSTANCE.flattenedEntryCache;
+    public static void clearCache() {
+        INSTANCE.dropCache.clear();
+        INSTANCE.resolvedCategoryEntries.clear();
+        EntryRenderHelper.clearCache();
+        INSTANCE.resolveAllEntries();
     }
 
     public static Map<ResourceLocation, Category> getCategories() {
-        return INSTANCE.categories;
+        return INSTANCE.syncedCategories;
+    }
+
+    public static List<Object> getValidEntries() {
+        return INSTANCE.resolvedCategoryEntries.values().stream()
+                .flatMap(List::stream)
+                .distinct()
+                .collect(Collectors.toList());
     }
 
     public static ResourceLocation getEntryId(Object entry) {
-        if (entry instanceof EntityType<?> type) {
-            return BuiltInRegistries.ENTITY_TYPE.getKey(type);
-        } else if (entry instanceof Block block) {
-            return BuiltInRegistries.BLOCK.getKey(block);
-        }
+        if (entry instanceof EntityType<?> type) return BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        if (entry instanceof Block block) return BuiltInRegistries.BLOCK.getKey(block);
         return null;
     }
 
@@ -91,230 +109,192 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
 
     public static boolean isNew(Object entry) {
         ResourceLocation id = getEntryId(entry);
-        if (id == null) return false;
-        String key = id.toString();
-        return INSTANCE.unlockedEntries.contains(key) && !INSTANCE.seenEntries.contains(key);
+        return id != null && INSTANCE.unlockedEntries.contains(id.toString()) && !INSTANCE.seenEntries.contains(id.toString());
     }
 
     public static void markAsSeen(Object entry) {
         ResourceLocation id = getEntryId(entry);
-        if (id != null && INSTANCE.seenEntries.add(id.toString())) {
-            INSTANCE.saveProgress();
-        }
+        if (id != null && INSTANCE.seenEntries.add(id.toString())) INSTANCE.saveProgress();
     }
+
+    // --- Logic & Resolving ---
 
     public static String getEntryDescription(Object entry) {
         ResourceLocation id = getEntryId(entry);
         if (id == null) return "";
-
         String overrideKey = "fieldguide." + id.getNamespace() + "." + id.getPath() + ".description";
-
-        String fallbackKey;
-
-        if (entry instanceof EntityType) {
-            fallbackKey = "entity." + id.getNamespace() + "." + id.getPath() + ".description";
-        } else {
-            fallbackKey = "lore." + id.getNamespace() + "." + id.getPath();
-        }
-
-        if (I18n.exists(overrideKey)) {
-            return I18n.get(overrideKey);
-        } else if (I18n.exists(fallbackKey)) {
-            return I18n.get(fallbackKey);
-        }
-
-        return I18n.get("fieldguide.description.missing");
+        String fallbackKey = (entry instanceof EntityType) ? "entity." + id.getNamespace() + "." + id.getPath() + ".description" : "lore." + id.getNamespace() + "." + id.getPath();
+        return I18n.exists(overrideKey) ? I18n.get(overrideKey) : (I18n.exists(fallbackKey) ? I18n.get(fallbackKey) : I18n.get("fieldguide.description.missing"));
     }
 
-    public static void clearCache() {
-        INSTANCE.flattenedEntryCache = null;
-        INSTANCE.dropCache.clear();
+    /**
+     * Called when the client receives the SyncCategoriesPacket from the server.
+     */
+    public void updateCategoriesFromServer(List<Category> categories) {
+        this.syncedCategories.clear();
+        categories.sort(Comparator.comparingInt(Category::getSortIndex).thenComparing(Category::getId));
+
+        for (Category cat : categories) {
+            this.syncedCategories.put(cat.getId(), cat);
+        }
+        resolveAllEntries();
+    }
+
+    public CategoryVisual getCategoryVisual(ResourceLocation categoryId) {
+        return categoryVisuals.getOrDefault(categoryId, CategoryVisual.DEFAULT);
+    }
+
+    public EntryVisual getEntryVisual(ResourceLocation entryId) {
+        return entryVisuals.getOrDefault(entryId, new EntryVisual());
+    }
+
+    @Override
+    public void onResourceManagerReload(@NotNull ResourceManager resourceManager) {
+        categoryVisuals.clear();
+        entryVisuals.clear();
         EntryRenderHelper.clearCache();
-        for (Category category : INSTANCE.categories.values()) {
-            category.resolveEntries();
-        }
+
+        loadVisuals(resourceManager, "visuals/categories", (id, json) -> {
+            CategoryVisual visual = new CategoryVisual();
+            if (json.has("color")) visual.color = GsonHelper.getAsString(json, "color");
+            if (json.has("icon")) visual.icon = new ResourceLocation(GsonHelper.getAsString(json, "icon"));
+            categoryVisuals.put(id, visual);
+        });
+
+        loadVisuals(resourceManager, "visuals/entries", (id, json) -> {
+            EntryVisual visual = new EntryVisual();
+
+            // Base
+            if (json.has("scale")) visual.scale = GsonHelper.getAsFloat(json, "scale");
+            if (json.has("y_offset")) visual.yOffset = GsonHelper.getAsFloat(json, "y_offset");
+            if (json.has("x_offset")) visual.xOffset = GsonHelper.getAsFloat(json, "x_offset");
+
+            // Grid Overrides
+            if (json.has("grid_scale")) visual.gridScale = GsonHelper.getAsFloat(json, "grid_scale");
+            if (json.has("grid_y_offset")) visual.gridYOffset = GsonHelper.getAsFloat(json, "grid_y_offset");
+            if (json.has("grid_x_offset")) visual.gridXOffset = GsonHelper.getAsFloat(json, "grid_x_offset");
+
+            // Page Overrides
+            if (json.has("page_scale")) visual.pageScale = GsonHelper.getAsFloat(json, "page_scale");
+            if (json.has("page_y_offset")) visual.pageYOffset = GsonHelper.getAsFloat(json, "page_y_offset");
+            if (json.has("page_x_offset")) visual.pageXOffset = GsonHelper.getAsFloat(json, "page_x_offset");
+
+            entryVisuals.put(id, visual);
+        });
+        resolveAllEntries();
+
+        Constants.LOG.info("Loaded {} category visuals and {} entry visuals.", categoryVisuals.size(), entryVisuals.size());
     }
 
-    private static boolean isMatch(Object entry, String processedQuery, ResourceLocation id) {
-        boolean match = false;
-        if (processedQuery.startsWith("@")) {
-            String modQuery = processedQuery.substring(1);
-            if (id.getNamespace().contains(modQuery)) {
-                match = true;
-            }
-        } else {
-            String name = "";
-            if (entry instanceof EntityType<?> type) {
-                name = type.getDescription().getString();
-            } else if (entry instanceof Block block) {
-                name = block.getName().getString();
-            }
+    private void loadVisuals(ResourceManager mgr, String folder, java.util.function.BiConsumer<ResourceLocation, JsonObject> processor) {
+        Map<ResourceLocation, List<Resource>> resources = mgr.listResourceStacks("fieldguide/" + folder,
+                id -> id.getPath().endsWith(".json"));
 
-            if (name.toLowerCase(Locale.ROOT).contains(processedQuery) || id.getPath().contains(processedQuery)) {
-                match = true;
-            }
-        }
-        return match;
-    }
+        for (Map.Entry<ResourceLocation, List<Resource>> entry : resources.entrySet()) {
+            ResourceLocation fileId = entry.getKey();
+            String path = fileId.getPath();
+            String idPath = path.substring(("fieldguide/" + folder + "/").length(), path.length() - ".json".length());
+            ResourceLocation targetId = new ResourceLocation(fileId.getNamespace(), idPath);
 
-    /**
-     * Gets drops. If missing, requests from server.
-     */
-    public List<ItemStack> getDrops(Object entry) {
-        if (dropCache.containsKey(entry)) return dropCache.get(entry);
-
-        if (!requestedDrops.contains(entry)) {
-            ResourceLocation id = getEntryId(entry);
-            if (id != null) {
-                requestedDrops.add(entry);
-                Services.NETWORK.sendToServer(new RequestDropsPacket(id));
-            }
-        }
-
-        return Collections.emptyList();
-    }
-
-    /**
-     * Called by the Packet Handler to update the Client's cache.
-     */
-    public void setDrops(ResourceLocation entryId, List<ItemStack> drops) {
-        Optional<Object> foundEntry = getValidEntries().stream()
-                .filter(e -> Objects.equals(getEntryId(e), entryId))
-                .findFirst();
-
-        foundEntry.ifPresent(o -> dropCache.put(o, drops));
-    }
-
-    /**
-     * Calculates the drops for an entry using the Server's ResourceManager.
-     */
-    public List<ItemStack> serverCalculateDrops(ResourceManager serverResourceManager, Object entry) {
-        List<ItemStack> drops = new ArrayList<>();
-        ResourceLocation lootTableId = null;
-
-        if (entry instanceof EntityType<?> type) {
-            lootTableId = type.getDefaultLootTable();
-        } else if (entry instanceof Block block) {
-            lootTableId = block.getLootTable();
-        }
-
-        if (lootTableId != null && !lootTableId.toString().equals("minecraft:empty")) {
-            ResourceLocation fileId = new ResourceLocation(lootTableId.getNamespace(), "loot_tables/" + lootTableId.getPath() + ".json");
-
-            Optional<Resource> resource = serverResourceManager.getResource(fileId);
-            if (resource.isPresent()) {
-                try (Reader reader = resource.get().openAsReader()) {
-                    JsonObject json = GsonHelper.parse(reader);
-                    collectItemsFromLootTable(json, drops);
+            for (Resource resource : entry.getValue()) {
+                try (Reader reader = resource.openAsReader()) {
+                    processor.accept(targetId, GsonHelper.parse(reader));
                 } catch (Exception e) {
-                    Constants.LOG.error("Failed to load loot table: {}", fileId, e);
+                    Constants.LOG.error("Error loading field guide visual: {}", fileId, e);
                 }
             }
         }
-
-        // Deduplicate items
-        List<ItemStack> distinctDrops = new ArrayList<>();
-        Set<Item> seenItems = new HashSet<>();
-        for (ItemStack stack : drops) {
-            if (seenItems.add(stack.getItem())) {
-                distinctDrops.add(stack);
-            }
-        }
-        return distinctDrops;
     }
 
-    private void collectItemsFromLootTable(JsonElement element, List<ItemStack> drops) {
-        if (element.isJsonObject()) {
-            JsonObject obj = element.getAsJsonObject();
-            if (obj.has("type") && "minecraft:item".equals(GsonHelper.getAsString(obj, "type"))) {
-                if (obj.has("name")) {
-                    String name = GsonHelper.getAsString(obj, "name");
-                    ResourceLocation itemId = new ResourceLocation(name);
-                    BuiltInRegistries.ITEM.getOptional(itemId).ifPresent(item -> drops.add(new ItemStack(item)));
+    // --- Helper Accessors ---
+
+    private void resolveAllEntries() {
+        resolvedCategoryEntries.clear();
+        for (Category cat : syncedCategories.values()) {
+            resolveCategory(cat);
+        }
+    }
+
+    private void resolveCategory(Category category) {
+        Set<Object> foundEntries = new LinkedHashSet<>();
+        ModConfig config = ModConfig.get();
+
+        for (CategoryEntry entry : category.getEntries()) {
+            if (entry.getType() == CategoryEntry.Type.ENTRY) {
+                if (entry.getId() == null) continue;
+                Optional<EntityType<?>> entityType = BuiltInRegistries.ENTITY_TYPE.getOptional(entry.getId());
+                if (entityType.isPresent()) {
+                    if (isValidEntity(entityType.get(), config)) foundEntries.add(entityType.get());
+                } else {
+                    Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(entry.getId());
+                    if (block.isPresent() && isValidBlock(block.get(), config)) foundEntries.add(block.get());
                 }
-            }
-            for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
-                collectItemsFromLootTable(entry.getValue(), drops);
-            }
-        } else if (element.isJsonArray()) {
-            for (JsonElement e : element.getAsJsonArray()) {
-                collectItemsFromLootTable(e, drops);
+            } else if (entry.getType() == CategoryEntry.Type.AUTO_POPULATE) {
+                foundEntries.addAll(getEntriesForStrategy(entry.getStrategy(), config));
             }
         }
+        resolvedCategoryEntries.put(category.getId(), new ArrayList<>(foundEntries));
     }
 
-    private int getScanDuration() {
-        return (int) (ModConfig.get().scanSpeed * 20);
+    // --- Progression ---
+
+    public List<Object> getEntriesForCategory(Category category) {
+        return resolvedCategoryEntries.getOrDefault(category.getId(), Collections.emptyList());
     }
 
-    public long getLastUnlockTime() {
-        return lastUnlockTime;
+    private List<Object> getEntriesForStrategy(String strategy, ModConfig config) {
+        List<Object> results = new ArrayList<>();
+        if ("flora".equalsIgnoreCase(strategy)) {
+            results.addAll(BuiltInRegistries.BLOCK.stream()
+                    .filter(block -> block instanceof BushBlock || block instanceof LeavesBlock || block instanceof VineBlock || block instanceof CactusBlock || block instanceof SugarCaneBlock || block instanceof WaterlilyBlock || block instanceof StemBlock)
+                    .sorted(Comparator.comparing(block -> BuiltInRegistries.BLOCK.getKey(block).toString()))
+                    .toList());
+        } else {
+            results.addAll(BuiltInRegistries.ENTITY_TYPE.stream()
+                    .filter(type -> {
+                        if ("hostile".equalsIgnoreCase(strategy)) return type.getCategory() == MobCategory.MONSTER;
+                        if ("passive".equalsIgnoreCase(strategy))
+                            return type.getCategory() != MobCategory.MONSTER && (type.getCategory() != MobCategory.MISC || SpawnEggItem.byId(type) != null);
+                        return false;
+                    })
+                    .sorted(Comparator.comparing(type -> BuiltInRegistries.ENTITY_TYPE.getKey(type).toString()))
+                    .toList());
+        }
+        return results;
     }
 
-    public Object getLastUnlockedEntry() {
-        return lastUnlockedEntry;
+    private boolean isValidEntity(EntityType<?> type, ModConfig config) {
+        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        return type.canSummon() && !config.isEntityBlacklisted(id);
     }
 
-    public Object getScanningTarget() {
-        return scanningTarget;
-    }
-
-    public BlockPos getScanningPos() {
-        return scanningPos;
-    }
-
-    public Entity getScanningEntity() {
-        return scanningTarget instanceof Entity ? (Entity) scanningTarget : null;
-    }
-
-    public float getScanProgress(float partialTicks) {
-        float lerped = (float) prevScanTicks + ((float) scanTicks - (float) prevScanTicks) * partialTicks;
-        return Math.min(1.0F, lerped / (float) getScanDuration());
-    }
-
-    public Entity getFadingEntity() {
-        return fadingTarget instanceof Entity ? (Entity) fadingTarget : null;
-    }
-
-    public BlockPos getFadingPos() {
-        return fadingPos;
-    }
-
-    public Object getFadingTarget() {
-        return fadingTarget;
-    }
-
-    public float getFadeProgress() {
-        return (float) fadeTicks / (float) FADE_DURATION;
+    private boolean isValidBlock(Block block, ModConfig config) {
+        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
+        return !config.isEntityBlacklisted(id);
     }
 
     public Category getCategoryForEntry(Object entry) {
-        for (Category category : categories.values()) {
-            if (category.getEntries().contains(entry)) {
-                return category;
-            }
+        for (Map.Entry<ResourceLocation, List<Object>> cat : resolvedCategoryEntries.entrySet()) {
+            if (cat.getValue().contains(entry)) return syncedCategories.get(cat.getKey());
         }
         return null;
     }
 
-    public void onWorldLoad(Path worldSaveDir) {
-        this.unlockedEntries.clear();
-        this.seenEntries.clear();
-        if (worldSaveDir != null) {
-            this.currentSavePath = worldSaveDir.resolve("fieldguide.dat");
-            loadProgress();
-        } else {
-            this.currentSavePath = null;
-        }
-    }
+    public List<Object> searchEntries(String query) {
+        String processedQuery = query.toLowerCase(Locale.ROOT).trim();
+        List<Object> results = new ArrayList<>();
+        if (processedQuery.isEmpty()) return results;
+        for (Object entry : getValidEntries()) {
+            if (!isUnlocked(entry) && !ModConfig.get().showUndiscoveredNames) continue;
+            ResourceLocation id = getEntryId(entry);
+            if (id == null) continue;
 
-    public void onWorldUnload() {
-        if (this.currentSavePath != null) {
-            saveProgress();
+            String name = (entry instanceof EntityType<?> type) ? type.getDescription().getString() : ((Block) entry).getName().getString();
+            boolean match = name.toLowerCase(Locale.ROOT).contains(processedQuery) || id.getPath().contains(processedQuery);
+
+            if (match) results.add(entry);
         }
-        this.currentSavePath = null;
-        this.unlockedEntries.clear();
-        this.seenEntries.clear();
+        return results;
     }
 
     public void onClientTick(Minecraft minecraft) {
@@ -394,7 +374,7 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
                         this.scanningPos = blockHit.getBlockPos();
                     }
 
-                    if (scanTicks >= getScanDuration()) {
+                    if (scanTicks >= (int) (ModConfig.get().scanSpeed * 20)) {
                         unlock(targetKey);
                         minecraft.player.playSound(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 1.0F, 1.0F);
                         minecraft.player.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
@@ -458,24 +438,123 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         }
     }
 
+    public Object getScanningTarget() {
+        return scanningTarget;
+    }
+
+    public BlockPos getScanningPos() {
+        return scanningPos;
+    }
+
+    public Entity getScanningEntity() {
+        return scanningTarget instanceof Entity ? (Entity) scanningTarget : null;
+    }
+
+    public float getScanProgress(float partialTicks) {
+        float lerped = (float) prevScanTicks + ((float) scanTicks - (float) prevScanTicks) * partialTicks;
+        return Math.min(1.0F, lerped / (int) (ModConfig.get().scanSpeed * 20));
+    }
+
+    public Object getFadingTarget() {
+        return fadingTarget;
+    }
+
+    public BlockPos getFadingPos() {
+        return fadingPos;
+    }
+
+    public Entity getFadingEntity() {
+        return fadingTarget instanceof Entity ? (Entity) fadingTarget : null;
+    }
+
+    public float getFadeProgress() {
+        return (float) fadeTicks / (float) FADE_DURATION;
+    }
+
     public void unlock(Object entry) {
         unlock(entry, true);
     }
 
     public void unlock(Object entry, boolean showToast) {
-        if (!getValidEntries().contains(entry)) {
-            return;
-        }
-
         ResourceLocation id = getEntryId(entry);
         if (id != null && unlockedEntries.add(id.toString())) {
             this.lastUnlockedEntry = entry;
             this.lastUnlockTime = System.currentTimeMillis();
-
-            if (showToast) {
-                Minecraft.getInstance().getToasts().addToast(new FieldGuideToast(entry));
-            }
+            if (showToast) Minecraft.getInstance().getToasts().addToast(new FieldGuideToast(entry));
             saveProgress();
+        }
+    }
+
+    public long getLastUnlockTime() {
+        return lastUnlockTime;
+    }
+
+    public Object getLastUnlockedEntry() {
+        return lastUnlockedEntry;
+    }
+
+    // Drops Logic
+    public List<ItemStack> getDrops(Object entry) {
+        if (dropCache.containsKey(entry)) return dropCache.get(entry);
+        if (!requestedDrops.contains(entry)) {
+            ResourceLocation id = getEntryId(entry);
+            if (id != null) {
+                requestedDrops.add(entry);
+                Services.NETWORK.sendToServer(new RequestDropsPacket(id));
+            }
+        }
+        return Collections.emptyList();
+    }
+
+    public void setDrops(ResourceLocation entryId, List<ItemStack> drops) {
+        getValidEntries().stream().filter(e -> Objects.equals(getEntryId(e), entryId))
+                .findFirst().ifPresent(o -> dropCache.put(o, drops));
+    }
+
+    // Save/Load
+    public void onWorldLoad(Path worldSaveDir) {
+        this.unlockedEntries.clear();
+        this.seenEntries.clear();
+        this.currentSavePath = worldSaveDir != null ? worldSaveDir.resolve("fieldguide.dat") : null;
+        loadProgress();
+    }
+
+    public void onWorldUnload() {
+        if (this.currentSavePath != null) saveProgress();
+        this.currentSavePath = null;
+        this.unlockedEntries.clear();
+        this.seenEntries.clear();
+    }
+
+    private void loadProgress() {
+        if (currentSavePath == null || !currentSavePath.toFile().exists()) return;
+        try (FileReader reader = new FileReader(currentSavePath.toFile())) {
+            JsonObject json = GSON.fromJson(reader, JsonObject.class);
+            if (json.has("unlocked"))
+                for (JsonElement e : json.getAsJsonArray("unlocked")) unlockedEntries.add(e.getAsString());
+            if (json.has("seen")) for (JsonElement e : json.getAsJsonArray("seen")) seenEntries.add(e.getAsString());
+        } catch (Exception e) {
+            Constants.LOG.error("Failed to load progress", e);
+        }
+    }
+
+    private void saveProgress() {
+        if (currentSavePath == null) return;
+        try {
+            JsonObject json = new JsonObject();
+            JsonArray uArr = new JsonArray();
+            unlockedEntries.forEach(uArr::add);
+            json.add("unlocked", uArr);
+            JsonArray sArr = new JsonArray();
+            seenEntries.forEach(sArr::add);
+            json.add("seen", sArr);
+            File file = currentSavePath.toFile();
+            if (file.getParentFile() != null) file.getParentFile().mkdirs();
+            try (FileWriter w = new FileWriter(file)) {
+                GSON.toJson(json, w);
+            }
+        } catch (Exception e) {
+            Constants.LOG.error("Failed to save progress", e);
         }
     }
 
@@ -492,173 +571,4 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         seenEntries.clear();
         saveProgress();
     }
-
-    private void loadProgress() {
-        if (currentSavePath == null) return;
-        File file = currentSavePath.toFile();
-
-        if (file.exists()) {
-            try (FileReader reader = new FileReader(file)) {
-                JsonObject json = GSON.fromJson(reader, JsonObject.class);
-                if (json != null) {
-                    if (json.has("unlocked")) {
-                        JsonArray array = json.getAsJsonArray("unlocked");
-                        for (JsonElement e : array) {
-                            unlockedEntries.add(e.getAsString());
-                        }
-                    }
-
-                    if (json.has("seen")) {
-                        JsonArray array = json.getAsJsonArray("seen");
-                        for (JsonElement e : array) {
-                            seenEntries.add(e.getAsString());
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                Constants.LOG.error("Failed to load field guide progress", e);
-            }
-        }
-    }
-
-    private void saveProgress() {
-        if (currentSavePath == null) return;
-        File file = currentSavePath.toFile();
-
-        try {
-            JsonObject json = new JsonObject();
-
-            JsonArray unlockedArray = new JsonArray();
-            for (String id : unlockedEntries) {
-                unlockedArray.add(id);
-            }
-            json.add("unlocked", unlockedArray);
-
-            JsonArray seenArray = new JsonArray();
-            for (String id : seenEntries) {
-                seenArray.add(id);
-            }
-            json.add("seen", seenArray);
-
-            File parent = file.getParentFile();
-            if (parent != null && !parent.exists()) {
-                if (!parent.mkdirs()) {
-                    throw new IOException("Failed to create directories: " + parent);
-                }
-            }
-
-            try (FileWriter writer = new FileWriter(file)) {
-                GSON.toJson(json, writer);
-            }
-        } catch (IOException e) {
-            Constants.LOG.error("Failed to save field guide progress", e);
-        }
-    }
-
-    @Override
-    public void onResourceManagerReload(ResourceManager resourceManager) {
-        categories.clear();
-        flattenedEntryCache = null;
-        dropCache.clear();
-        EntryRenderHelper.clearCache();
-
-        Map<ResourceLocation, List<Resource>> resources =
-                resourceManager.listResourceStacks(
-                        "categories",
-                        id -> id.getNamespace().equals(Constants.MOD_ID)
-                                && id.getPath().endsWith(".json")
-                );
-
-        List<ResourceLocation> sortedIds = new ArrayList<>(resources.keySet());
-        sortedIds.sort(Comparator.comparing(ResourceLocation::getPath));
-
-        for (ResourceLocation fileId : sortedIds) {
-            String path = fileId.getPath();
-            String idPath = path.substring(
-                    "categories/".length(),
-                    path.length() - ".json".length()
-            );
-
-            ResourceLocation categoryId =
-                    new ResourceLocation(Constants.MOD_ID, idPath);
-
-            Category category = new Category(categoryId);
-
-            for (Resource resource : resources.get(fileId)) {
-                try (Reader reader = resource.openAsReader()) {
-                    JsonObject json = GsonHelper.parse(reader);
-                    loadCategoryData(category, json);
-                } catch (Exception e) {
-                    Constants.LOG.error("Failed to load field guide category: {}", fileId, e);
-                }
-            }
-
-            category.resolveEntries();
-
-            if (!category.getEntries().isEmpty()) {
-                categories.put(categoryId, category);
-            }
-        }
-
-        Constants.LOG.info("Loaded {} field guide categories.", categories.size());
-    }
-
-    private void loadCategoryData(Category category, JsonObject json) {
-        if (GsonHelper.getAsBoolean(json, "replace", false)) {
-            category.entries.clear();
-        }
-
-        if (json.has("tab_color")) {
-            category.tabColor = GsonHelper.getAsString(json, "tab_color");
-        }
-        if (json.has("tab_icon")) {
-            category.tabIcon = new ResourceLocation(GsonHelper.getAsString(json, "tab_icon"));
-        }
-        if (json.has("tab_index")) {
-            category.tabIndex = GsonHelper.getAsInt(json, "tab_index");
-        }
-
-        if (json.has("contents")) {
-            JsonArray contents = GsonHelper.getAsJsonArray(json, "contents");
-            for (JsonElement element : contents) {
-                JsonObject entryObj = element.getAsJsonObject();
-                String type = GsonHelper.getAsString(entryObj, "type");
-
-                if ("entry".equals(type)) {
-                    ResourceLocation entityId = new ResourceLocation(GsonHelper.getAsString(entryObj, "id"));
-                    category.entries.add(new CategoryEntry(EntryType.ENTRY, entityId, null));
-                } else if ("auto_populate".equals(type)) {
-                    String strategy = GsonHelper.getAsString(entryObj, "strategy");
-                    category.entries.add(new CategoryEntry(EntryType.AUTO_POPULATE, null, strategy));
-                }
-            }
-        }
-    }
-
-    /**
-     * Searches for entries matching the query.
-     * Supports @modid filtering and unlocked entry filtering.
-     */
-    public List<Object> searchEntries(String query) {
-        String processedQuery = query.toLowerCase(Locale.ROOT).trim();
-        List<Object> results = new ArrayList<>();
-
-        if (processedQuery.isEmpty()) return results;
-
-        for (Object entry : getValidEntries()) {
-            if (!isUnlocked(entry) && !ModConfig.get().showUndiscoveredNames) continue;
-
-            ResourceLocation id = getEntryId(entry);
-            if (id == null) continue;
-
-            boolean match = isMatch(entry, processedQuery, id);
-
-            if (match) {
-                results.add(entry);
-            }
-        }
-        return results;
-    }
-
-    public enum EntryType {ENTRY, AUTO_POPULATE}
 }

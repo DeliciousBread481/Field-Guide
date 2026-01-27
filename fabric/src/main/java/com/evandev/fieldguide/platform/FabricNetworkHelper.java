@@ -2,6 +2,7 @@ package com.evandev.fieldguide.platform;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.network.RequestDropsPacket;
+import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncDropsPacket;
 import com.evandev.fieldguide.platform.services.INetworkHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -14,6 +15,7 @@ import net.minecraft.server.level.ServerPlayer;
 public class FabricNetworkHelper implements INetworkHelper {
     public static final ResourceLocation REQUEST_DROPS_CHANNEL = new ResourceLocation(Constants.MOD_ID, "request_drops");
     public static final ResourceLocation SYNC_DROPS_CHANNEL = new ResourceLocation(Constants.MOD_ID, "sync_drops");
+    public static final ResourceLocation SYNC_CATEGORIES_CHANNEL = new ResourceLocation(Constants.MOD_ID, "sync_categories");
 
     @Override
     public void sendToServer(Object packet) {
@@ -30,6 +32,9 @@ public class FabricNetworkHelper implements INetworkHelper {
         if (packet instanceof SyncDropsPacket sync) {
             sync.encode(buf);
             ServerPlayNetworking.send(player, SYNC_DROPS_CHANNEL, buf);
+        } else if (packet instanceof SyncCategoriesPacket syncCat) {
+            syncCat.encode(buf);
+            ServerPlayNetworking.send(player, SYNC_CATEGORIES_CHANNEL, buf);
         }
     }
 }
