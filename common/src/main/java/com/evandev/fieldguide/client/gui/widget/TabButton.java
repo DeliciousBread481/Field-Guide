@@ -4,7 +4,7 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.data.CategoryVisual;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideScreen;
 import com.evandev.fieldguide.data.Category;
-import com.evandev.fieldguide.data.FieldGuideDataManager;
+import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.Tooltip;
@@ -21,7 +21,7 @@ public class TabButton extends ImageButton {
         this.category = category;
         this.parent = parent;
 
-        this.visual = FieldGuideDataManager.getInstance().getCategoryVisual(category.getId());
+        this.visual = ClientFieldGuideManager.getInstance().getCategoryVisual(category.getId());
 
         int colorInt = visual.getColorInt();
         this.r = ((colorInt >> 16) & 0xFF) / 255.0F;

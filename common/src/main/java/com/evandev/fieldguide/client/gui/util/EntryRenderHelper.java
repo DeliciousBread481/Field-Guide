@@ -2,7 +2,7 @@ package com.evandev.fieldguide.client.gui.util;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.data.EntryVisual;
-import com.evandev.fieldguide.data.FieldGuideDataManager;
+import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -182,8 +182,8 @@ public class EntryRenderHelper {
             return;
         }
 
-        ResourceLocation id = FieldGuideDataManager.getEntryId(entity.getType());
-        EntryVisual visual = FieldGuideDataManager.getInstance().getEntryVisual(id);
+        ResourceLocation id = ClientFieldGuideManager.getEntryId(entity.getType());
+        EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(id);
 
         float visualScale = visual.scale;
         float yOff = visual.yOffset;
@@ -196,13 +196,8 @@ public class EntryRenderHelper {
         }
 
         float dynamicFactor = getScaleFactorForEntity(entity);
-        float finalScale;
-
-        if (visualScale == 1.0f && visual.gridScale == null && visual.pageScale == null) {
-            finalScale = (baseScale * 0.32F) * dynamicFactor;
-        } else {
-            finalScale = baseScale * visualScale;
-        }
+        float standardScale = (baseScale * 0.32F) * dynamicFactor;
+        float finalScale = standardScale * visualScale;
 
         float entityHeight = entity.getBbHeight();
         if (entityHeight * finalScale > maxHeight * 0.9f) {
@@ -286,8 +281,20 @@ public class EntryRenderHelper {
         Lighting.setupForFlatItems();
     }
 
-    public static void renderBlock(GuiGraphics guiGraphics, Block block, int x, int y, float scale, boolean silhouette, boolean isPage) {
-        int estimatedSize = (int) (scale * 2);
+    public static void renderBlock(GuiGraphics guiGraphics, Block block, int x, int y, float baseScale, boolean silhouette, boolean isPage) {
+        ResourceLocation id = ClientFieldGuideManager.getEntryId(block);
+        EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(id);
+
+        float visualScale = visual.scale;
+        if (isPage) {
+            if (visual.pageScale != null) visualScale = visual.pageScale;
+        } else {
+            if (visual.gridScale != null) visualScale = visual.gridScale;
+        }
+
+        float finalScale = baseScale * visualScale;
+
+        int estimatedSize = (int) (finalScale * 2);
 
         if (tryRenderOverride(guiGraphics, block, x, y, estimatedSize, estimatedSize, silhouette, Constants.LIST_SILHOUETTE_COLOR, isPage)) {
             return;
@@ -320,7 +327,9 @@ public class EntryRenderHelper {
         PoseStack pose = guiGraphics.pose();
         pose.pushPose();
         pose.translate(x, y, 50.0);
-        pose.scale(scale, -scale, scale);
+
+        pose.scale(finalScale, -finalScale, finalScale);
+
         pose.mulPose(Axis.XP.rotationDegrees(cameraXAngle));
         pose.mulPose(Axis.YP.rotationDegrees(cameraYAngle));
         pose.translate(-0.5, -0.5, -0.5);

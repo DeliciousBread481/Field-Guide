@@ -1,7 +1,7 @@
 package com.evandev.fieldguide;
 
 import com.evandev.fieldguide.client.FieldGuideClient;
-import com.evandev.fieldguide.data.FieldGuideDataManager;
+import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.network.GrantContentPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncDropsPacket;
@@ -35,23 +35,23 @@ public class FieldGuideFabricClient implements ClientModInitializer {
 
             @Override
             public void onResourceManagerReload(@NotNull ResourceManager resourceManager) {
-                FieldGuideDataManager.getInstance().onResourceManagerReload(resourceManager);
+                ClientFieldGuideManager.getInstance().onResourceManagerReload(resourceManager);
             }
         });
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            FieldGuideDataManager.getInstance().onClientTick(client);
+            ClientFieldGuideManager.getInstance().onClientTick(client);
             FieldGuideClient.onClientTick(client);
         });
 
         ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.SYNC_DROPS_CHANNEL, (client, handler, buf, responseSender) -> {
             SyncDropsPacket packet = new SyncDropsPacket(buf);
-            client.execute(() -> FieldGuideDataManager.getInstance().setDrops(packet.getEntryId(), packet.getDrops()));
+            client.execute(() -> ClientFieldGuideManager.getInstance().setDrops(packet.getEntryId(), packet.getDrops()));
         });
 
         ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.SYNC_CATEGORIES_CHANNEL, (client, handler, buf, responseSender) -> {
             SyncCategoriesPacket packet = new SyncCategoriesPacket(buf);
-            client.execute(() -> FieldGuideDataManager.getInstance().updateCategoriesFromServer(packet.getCategories()));
+            client.execute(() -> ClientFieldGuideManager.getInstance().updateCategoriesFromServer(packet.getCategories()));
         });
 
         ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.GRANT_CONTENT_CHANNEL, (client, handler, buf, responseSender) -> {
@@ -68,11 +68,11 @@ public class FieldGuideFabricClient implements ClientModInitializer {
                 saveDir = client.gameDirectory.toPath().resolve("fieldguide_saves").resolve(serverId);
             }
 
-            FieldGuideDataManager.getInstance().onWorldLoad(saveDir);
+            ClientFieldGuideManager.getInstance().onWorldLoad(saveDir);
         });
 
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
-            FieldGuideDataManager.getInstance().onWorldUnload();
+            ClientFieldGuideManager.getInstance().onWorldUnload();
         });
     }
 }

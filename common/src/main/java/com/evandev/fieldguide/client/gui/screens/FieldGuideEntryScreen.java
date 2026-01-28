@@ -3,7 +3,7 @@ package com.evandev.fieldguide.client.gui.screens;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.data.FieldGuideDataManager;
+import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
@@ -31,7 +31,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private static Component getTitleForEntry(Object entry) {
-        if (FieldGuideDataManager.isUnlocked(entry) || ModConfig.get().showUndiscoveredNames) {
+        if (ClientFieldGuideManager.isUnlocked(entry) || ModConfig.get().showUndiscoveredNames) {
             if (entry instanceof EntityType<?> type) return type.getDescription();
             if (entry instanceof Block block) return block.getName();
         }
@@ -79,9 +79,9 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
-        boolean unlocked = FieldGuideDataManager.isUnlocked(entry);
+        boolean unlocked = ClientFieldGuideManager.isUnlocked(entry);
         Component title = getTitleForEntry(entry);
-        String description = unlocked ? FieldGuideDataManager.getEntryDescription(entry) : Component.translatable("fieldguide.description.locked").getString();
+        String description = unlocked ? ClientFieldGuideManager.getEntryDescription(entry) : Component.translatable("fieldguide.description.locked").getString();
 
         // Entry name
         guiGraphics.drawString(this.font, title, this.leftPageBounds.x_center() - font.width(title) / 2 + 1, this.leftPageBounds.top() + 14 + 1, Constants.TEXT_SHADOW_COLOR, false);
@@ -111,7 +111,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         // Drops
         if (unlocked) {
-            List<ItemStack> drops = FieldGuideDataManager.getInstance().getDrops(entry);
+            List<ItemStack> drops = ClientFieldGuideManager.getInstance().getDrops(entry);
 
             if (!drops.isEmpty()) {
                 int itemSize = 18;

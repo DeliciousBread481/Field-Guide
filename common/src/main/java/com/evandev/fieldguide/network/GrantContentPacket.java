@@ -1,7 +1,7 @@
 package com.evandev.fieldguide.network;
 
 import com.evandev.fieldguide.data.Category;
-import com.evandev.fieldguide.data.FieldGuideDataManager;
+import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
@@ -42,7 +42,7 @@ public class GrantContentPacket {
     }
 
     public void handleClient() {
-        FieldGuideDataManager manager = FieldGuideDataManager.getInstance();
+        ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
         if (action == Action.GRANT) {
             handleGrant(manager);
         } else {
@@ -50,24 +50,24 @@ public class GrantContentPacket {
         }
     }
 
-    private void handleGrant(FieldGuideDataManager manager) {
+    private void handleGrant(ClientFieldGuideManager manager) {
         switch (type) {
             case EVERYTHING -> {
-                for (Object entry : FieldGuideDataManager.getValidEntries()) {
+                for (Object entry : ClientFieldGuideManager.getValidEntries()) {
                     manager.unlock(entry, false);
                 }
             }
             case CATEGORY -> {
-                Category cat = FieldGuideDataManager.getCategories().get(id);
+                Category cat = ClientFieldGuideManager.getCategories().get(id);
                 if (cat != null) {
                     for (Object entry : manager.getEntriesForCategory(cat)) {
                         manager.unlock(entry, false);
                     }
                 }
             }
-            case ENTRY -> FieldGuideDataManager.getValidEntries().stream()
+            case ENTRY -> ClientFieldGuideManager.getValidEntries().stream()
                     .filter(e -> {
-                        ResourceLocation entryId = FieldGuideDataManager.getEntryId(e);
+                        ResourceLocation entryId = ClientFieldGuideManager.getEntryId(e);
                         return entryId != null && entryId.equals(id);
                     })
                     .findFirst()
@@ -75,20 +75,20 @@ public class GrantContentPacket {
         }
     }
 
-    private void handleRevoke(FieldGuideDataManager manager) {
+    private void handleRevoke(ClientFieldGuideManager manager) {
         switch (type) {
             case EVERYTHING -> manager.revokeAll();
             case CATEGORY -> {
-                Category cat = FieldGuideDataManager.getCategories().get(id);
+                Category cat = ClientFieldGuideManager.getCategories().get(id);
                 if (cat != null) {
                     for (Object entry : manager.getEntriesForCategory(cat)) {
                         manager.revoke(entry);
                     }
                 }
             }
-            case ENTRY -> FieldGuideDataManager.getValidEntries().stream()
+            case ENTRY -> ClientFieldGuideManager.getValidEntries().stream()
                     .filter(e -> {
-                        ResourceLocation entryId = FieldGuideDataManager.getEntryId(e);
+                        ResourceLocation entryId = ClientFieldGuideManager.getEntryId(e);
                         return entryId != null && entryId.equals(id);
                     })
                     .findFirst()

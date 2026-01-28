@@ -1,6 +1,6 @@
 package com.evandev.fieldguide.config;
 
-import com.evandev.fieldguide.data.FieldGuideDataManager;
+import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
@@ -20,7 +20,7 @@ public class ClothConfigIntegration {
 
         builder.setSavingRunnable(() -> {
             ModConfig.save();
-            FieldGuideDataManager.clearCache();
+            ClientFieldGuideManager.clearCache();
         });
 
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();

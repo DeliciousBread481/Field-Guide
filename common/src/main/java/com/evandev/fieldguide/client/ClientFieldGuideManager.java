@@ -1,4 +1,4 @@
-package com.evandev.fieldguide.data;
+package com.evandev.fieldguide.client;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.data.CategoryVisual;
@@ -6,6 +6,8 @@ import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.gui.toasts.FieldGuideToast;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.data.Category;
+import com.evandev.fieldguide.data.CategoryEntry;
 import com.evandev.fieldguide.network.RequestDropsPacket;
 import com.evandev.fieldguide.platform.Services;
 import com.google.gson.*;
@@ -42,9 +44,9 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class FieldGuideDataManager implements ResourceManagerReloadListener {
+public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     private static final Gson GSON = new GsonBuilder().create();
-    private static final FieldGuideDataManager INSTANCE = new FieldGuideDataManager();
+    private static final ClientFieldGuideManager INSTANCE = new ClientFieldGuideManager();
     private static final int FADE_DURATION = 10;
 
     // Data Structures
@@ -73,10 +75,10 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
     private int prevScanTicks = 0;
     private BlockPos fadingPos = null;
 
-    private FieldGuideDataManager() {
+    private ClientFieldGuideManager() {
     }
 
-    public static FieldGuideDataManager getInstance() {
+    public static ClientFieldGuideManager getInstance() {
         return INSTANCE;
     }
 
@@ -161,7 +163,17 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
             categoryVisuals.put(id, visual);
         });
 
-        loadVisuals(resourceManager, "visuals/entries", (id, json) -> {
+        loadVisuals(resourceManager, "visuals/entries", (derivedId, json) -> {
+            ResourceLocation targetId = derivedId;
+            if (json.has("id")) {
+                String idStr = GsonHelper.getAsString(json, "id");
+                try {
+                    targetId = new ResourceLocation(idStr);
+                } catch (Exception e) {
+                    Constants.LOG.error("Invalid 'id' in visual override: {}", idStr, e);
+                }
+            }
+
             EntryVisual visual = new EntryVisual();
 
             // Base
@@ -179,7 +191,7 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
             if (json.has("page_y_offset")) visual.pageYOffset = GsonHelper.getAsFloat(json, "page_y_offset");
             if (json.has("page_x_offset")) visual.pageXOffset = GsonHelper.getAsFloat(json, "page_x_offset");
 
-            entryVisuals.put(id, visual);
+            entryVisuals.put(targetId, visual);
         });
         resolveAllEntries();
 

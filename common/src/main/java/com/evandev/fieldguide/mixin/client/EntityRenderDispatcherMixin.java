@@ -1,6 +1,6 @@
 package com.evandev.fieldguide.mixin.client;
 
-import com.evandev.fieldguide.data.FieldGuideDataManager;
+import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -19,7 +19,7 @@ public class EntityRenderDispatcherMixin {
 
     @Inject(method = "render", at = @At("RETURN"))
     private void renderScanOverlay(Entity entity, double x, double y, double z, float rotationYaw, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLight, CallbackInfo ci) {
-        FieldGuideDataManager manager = FieldGuideDataManager.getInstance();
+        ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
         boolean isScanning = manager.getScanningEntity() == entity;
         boolean isFading = manager.getFadingEntity() == entity;
 

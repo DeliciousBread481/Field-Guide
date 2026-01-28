@@ -7,7 +7,7 @@ import com.evandev.fieldguide.client.gui.widget.FieldGuideSearchBox;
 import com.evandev.fieldguide.client.gui.widget.TabButton;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
-import com.evandev.fieldguide.data.FieldGuideDataManager;
+import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -78,7 +78,7 @@ public class FieldGuideScreen extends BookScreen {
     }
 
     public static int getPageForEntry(Category category, Object entry) {
-        List<Object> entries = FieldGuideDataManager.getInstance().getEntriesForCategory(category);
+        List<Object> entries = ClientFieldGuideManager.getInstance().getEntriesForCategory(category);
         int index = entries.indexOf(entry);
         if (index < 0) return 0;
         if (index < ITEMS_PER_PAGE) return 0;
@@ -98,8 +98,8 @@ public class FieldGuideScreen extends BookScreen {
         super.init();
 
         this.sortedCategories.clear();
-        for (Category cat : FieldGuideDataManager.getCategories().values()) {
-            List<Object> entries = FieldGuideDataManager.getInstance().getEntriesForCategory(cat);
+        for (Category cat : ClientFieldGuideManager.getCategories().values()) {
+            List<Object> entries = ClientFieldGuideManager.getInstance().getEntriesForCategory(cat);
             if (entries != null && !entries.isEmpty()) {
                 this.sortedCategories.add(cat);
             }
@@ -109,7 +109,7 @@ public class FieldGuideScreen extends BookScreen {
 
         if (this.selectedCategory == null) {
             if (lastOpenedCategory != null) {
-                this.selectedCategory = FieldGuideDataManager.getCategories().get(lastOpenedCategory);
+                this.selectedCategory = ClientFieldGuideManager.getCategories().get(lastOpenedCategory);
             }
 
             if (this.selectedCategory == null && !sortedCategories.isEmpty()) {
@@ -118,7 +118,7 @@ public class FieldGuideScreen extends BookScreen {
         }
 
         if (this.selectedCategory != null) {
-            this.currentEntries = FieldGuideDataManager.getInstance().getEntriesForCategory(this.selectedCategory);
+            this.currentEntries = ClientFieldGuideManager.getInstance().getEntriesForCategory(this.selectedCategory);
             lastOpenedCategory = this.selectedCategory.getId();
 
             int totalSpreads = getTotalSpreads();
@@ -164,11 +164,11 @@ public class FieldGuideScreen extends BookScreen {
 
         if (!isSearching) {
             if (this.selectedCategory != null) {
-                this.currentEntries = FieldGuideDataManager.getInstance().getEntriesForCategory(this.selectedCategory);
+                this.currentEntries = ClientFieldGuideManager.getInstance().getEntriesForCategory(this.selectedCategory);
             }
         } else {
             this.currentPage = 0;
-            this.currentEntries = FieldGuideDataManager.getInstance().searchEntries(query);
+            this.currentEntries = ClientFieldGuideManager.getInstance().searchEntries(query);
         }
         updatePageButtons();
     }
@@ -203,7 +203,7 @@ public class FieldGuideScreen extends BookScreen {
         if (this.selectedCategory == category) return;
         this.selectedCategory = category;
         this.currentPage = 0;
-        this.currentEntries = FieldGuideDataManager.getInstance().getEntriesForCategory(category);
+        this.currentEntries = ClientFieldGuideManager.getInstance().getEntriesForCategory(category);
         lastOpenedCategory = this.selectedCategory.getId();
         lastOpenedPage = this.currentPage;
 
@@ -260,7 +260,7 @@ public class FieldGuideScreen extends BookScreen {
                 int itemIndex = getItemIndexForSlot(i);
                 if (itemIndex >= 0 && itemIndex < currentEntries.size()) {
                     Object entry = currentEntries.get(itemIndex);
-                    if (FieldGuideDataManager.isNew(entry)) FieldGuideDataManager.markAsSeen(entry);
+                    if (ClientFieldGuideManager.isNew(entry)) ClientFieldGuideManager.markAsSeen(entry);
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                     Minecraft.getInstance().setScreen(new FieldGuideEntryScreen(this, entry));
                     return true;
@@ -329,7 +329,7 @@ public class FieldGuideScreen extends BookScreen {
 
         int total = currentEntries.size();
         if (total > 0) {
-            long unlocked = currentEntries.stream().filter(FieldGuideDataManager::isUnlocked).count();
+            long unlocked = currentEntries.stream().filter(ClientFieldGuideManager::isUnlocked).count();
             int barWidth = 92;
             int barHeight = 2;
             int x = this.leftPageBounds.x_center() - barWidth / 2;
@@ -372,7 +372,7 @@ public class FieldGuideScreen extends BookScreen {
                 Object entry = currentEntries.get(itemIndex);
                 int globalSlotIndex = currentPage * ITEMS_PER_VIEW + i;
                 Bounds bounds = getGridCellBounds(globalSlotIndex);
-                boolean unlocked = FieldGuideDataManager.isUnlocked(entry);
+                boolean unlocked = ClientFieldGuideManager.isUnlocked(entry);
                 boolean hovered = bounds.contains(mouseX, mouseY);
 
                 if (hovered) {
@@ -383,7 +383,7 @@ public class FieldGuideScreen extends BookScreen {
 
                 renderEntryInGrid(guiGraphics, entry, bounds.x_center(), bounds.y_center(), 30, unlocked);
 
-                if (FieldGuideDataManager.isNew(entry)) {
+                if (ClientFieldGuideManager.isNew(entry)) {
                     Component newText = Component.translatable("fieldguide.new");
                     int textWidth = this.font.width(newText);
                     int textX = bounds.x_center() - textWidth / 2;
@@ -403,7 +403,7 @@ public class FieldGuideScreen extends BookScreen {
                 Bounds bounds = getGridCellBounds(globalSlotIndex);
                 if (bounds.contains(mouseX, mouseY)) {
                     Object entry = currentEntries.get(itemIndex);
-                    boolean unlocked = FieldGuideDataManager.isUnlocked(entry);
+                    boolean unlocked = ClientFieldGuideManager.isUnlocked(entry);
 
                     if (unlocked || ModConfig.get().showUndiscoveredNames) {
                         Component name;

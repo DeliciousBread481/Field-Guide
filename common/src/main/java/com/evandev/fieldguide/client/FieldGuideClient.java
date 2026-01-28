@@ -3,7 +3,6 @@ package com.evandev.fieldguide.client;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideScreen;
 import com.evandev.fieldguide.data.Category;
-import com.evandev.fieldguide.data.FieldGuideDataManager;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -26,7 +25,7 @@ public class FieldGuideClient {
     public static void onClientTick(Minecraft minecraft) {
         if (OPEN_GUIDE_KEY.consumeClick()) {
             if (minecraft.screen == null && minecraft.player != null) {
-                FieldGuideDataManager manager = FieldGuideDataManager.getInstance();
+                ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
                 long lastTime = manager.getLastUnlockTime();
                 Object lastEntry = manager.getLastUnlockedEntry();
 
@@ -35,7 +34,7 @@ public class FieldGuideClient {
                 if (isRecent && lastEntry != null) {
                     Category targetCategory = manager.getCategoryForEntry(lastEntry);
                     if (targetCategory != null) {
-                        FieldGuideDataManager.markAsSeen(lastEntry);
+                        ClientFieldGuideManager.markAsSeen(lastEntry);
 
                         int page = FieldGuideScreen.getPageForEntry(targetCategory, lastEntry);
                         Screen mainScreen = new FieldGuideScreen(targetCategory, page);

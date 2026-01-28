@@ -2,7 +2,7 @@ package com.evandev.fieldguide;
 
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.config.ClothConfigIntegration;
-import com.evandev.fieldguide.data.FieldGuideDataManager;
+import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.network.GrantContentPacket;
 import com.evandev.fieldguide.network.RequestDropsPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
@@ -102,7 +102,7 @@ public class FieldGuideMod {
     public static void handleSyncDrops(SyncDropsPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
         NetworkEvent.Context context = contextSupplier.get();
         context.enqueueWork(() -> {
-            FieldGuideDataManager.getInstance().setDrops(packet.getEntryId(), packet.getDrops());
+            ClientFieldGuideManager.getInstance().setDrops(packet.getEntryId(), packet.getDrops());
         });
         context.setPacketHandled(true);
     }
@@ -110,7 +110,7 @@ public class FieldGuideMod {
     public static void handleSyncCategories(SyncCategoriesPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
         NetworkEvent.Context context = contextSupplier.get();
         context.enqueueWork(() -> {
-            FieldGuideDataManager.getInstance().updateCategoriesFromServer(packet.getCategories());
+            ClientFieldGuideManager.getInstance().updateCategoriesFromServer(packet.getCategories());
         });
         context.setPacketHandled(true);
     }
@@ -120,7 +120,7 @@ public class FieldGuideMod {
     }
 
     public void registerReloadListeners(RegisterClientReloadListenersEvent event) {
-        event.registerReloadListener(FieldGuideDataManager.getInstance());
+        event.registerReloadListener(ClientFieldGuideManager.getInstance());
     }
 
     public void registerKeyMappings(RegisterKeyMappingsEvent event) {
@@ -142,7 +142,7 @@ public class FieldGuideMod {
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
             Minecraft client = Minecraft.getInstance();
-            FieldGuideDataManager.getInstance().onClientTick(client);
+            ClientFieldGuideManager.getInstance().onClientTick(client);
             FieldGuideClient.onClientTick(client);
         }
     }
@@ -159,7 +159,7 @@ public class FieldGuideMod {
             saveDir = client.gameDirectory.toPath().resolve("fieldguide_saves").resolve(serverId);
         }
 
-        FieldGuideDataManager.getInstance().onWorldLoad(saveDir);
+        ClientFieldGuideManager.getInstance().onWorldLoad(saveDir);
     }
 
     @SubscribeEvent
@@ -171,6 +171,6 @@ public class FieldGuideMod {
 
     @SubscribeEvent
     public void onClientPlayerLogout(ClientPlayerNetworkEvent.LoggingOut event) {
-        FieldGuideDataManager.getInstance().onWorldUnload();
+        ClientFieldGuideManager.getInstance().onWorldUnload();
     }
 }

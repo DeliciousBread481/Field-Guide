@@ -201,21 +201,22 @@ To customize the icon and color of a category tab, create a JSON file at:
 
 ### Entry Configuration (Scaling & Offsets)
 
-Sometimes entities render too large, too small, or off-center in the book. You can adjust this by creating a JSON file
-at:
-`assets/fieldguide/visuals/entries/<entity_name>.json`
+Sometimes entities or blocks render too large, too small, or off-center in the book. You can adjust this by creating a
+JSON file at:
+`assets/<namespace>/fieldguide/visuals/entries/<entry_id>.json`
 
-*Note: The filename must match the path of the entity/block ID.*
+For example: `assets/minecraft/fieldguide/visuals/entries/pig.json` makes adjustments to `minecraft:pig`.
 
 #### JSON Structure
 
-| Field        | Type  | Description                                                         |
-|--------------|-------|---------------------------------------------------------------------|
-| `scale`      | Float | Base scale multiplier for the model.                                |
-| `y_offset`   | Float | Moves the model up/down globally.                                   |
-| `x_offset`   | Float | Moves the model left/right globally.                                |
-| `grid_scale` | Float | (Optional) Overrides scale specifically for the grid view.          |
-| `page_scale` | Float | (Optional) Overrides scale specifically for the detailed page view. |
+| Field        | Type   | Description                                                                                                                |
+|--------------|--------|----------------------------------------------------------------------------------------------------------------------------|
+| `id`         | String | (Optional) The ID of the entity/block to target (e.g., minecraft:cow). If omitted, the filename and path determine the ID. |
+| `scale`      | Float  | Base scale multiplier. 1.0 is default size, 0.5 is half size, 2.0 is double.                                               |
+| `y_offset`   | Float  | Moves the model up/down globally.                                                                                          |
+| `x_offset`   | Float  | Moves the model left/right globally.                                                                                       |
+| `grid_scale` | Float  | (Optional) Overrides scale specifically for the grid view.                                                                 |
+| `page_scale` | Float  | (Optional) Overrides scale specifically for the detailed page view.                                                        |
 
 #### Example: Adjusting a Creeper
 
@@ -223,6 +224,7 @@ at:
 
 ```json
 {
+  "id": "minecraft:creeper",
   "scale": 0.8,
   "y_offset": 10.0,
   "page_scale": 1.2

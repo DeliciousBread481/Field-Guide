@@ -1,6 +1,6 @@
 package com.evandev.fieldguide.mixin.client;
 
-import com.evandev.fieldguide.data.FieldGuideDataManager;
+import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
@@ -23,7 +23,7 @@ public class LevelRendererMixin {
 
     @Inject(method = "renderLevel", at = @At("RETURN"))
     private void renderScanOverlay(PoseStack poseStack, float partialTick, long finishTimeNano, boolean renderBlockOutline, Camera camera, net.minecraft.client.renderer.GameRenderer gameRenderer, net.minecraft.client.renderer.LightTexture lightTexture, Matrix4f projectionMatrix, CallbackInfo ci) {
-        FieldGuideDataManager manager = FieldGuideDataManager.getInstance();
+        ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
         BlockPos pos = null;
         boolean isScanning = false;
 
