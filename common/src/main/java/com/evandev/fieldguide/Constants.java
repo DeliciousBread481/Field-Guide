@@ -23,6 +23,7 @@ public class Constants {
     public static final ResourceLocation TAB_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/tab.png");
     public static final ResourceLocation TOAST_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/toast.png");
     public static final ResourceLocation SEARCH_ICON = new ResourceLocation(MOD_ID, "textures/gui/icons/search.png");
+    public static final ResourceLocation TOAST_ICON = new ResourceLocation(MOD_ID, "textures/gui/book_icon.png");
 
     public static final int TEXT_COLOR = 0x8A5E3B;
     public static final int TEXT_MUTED_COLOR = 0xAF8C5C;
