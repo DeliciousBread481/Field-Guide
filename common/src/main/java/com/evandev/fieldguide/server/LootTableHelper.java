@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.server;
 
+import com.evandev.fieldguide.config.ModConfig;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -114,6 +115,50 @@ public class LootTableHelper {
         }
 
         List<ItemStack> distinctDrops = processDrops(allDrops);
+
+        // Apply Config Modifications
+        ResourceLocation entryId = null;
+        if (entry instanceof EntityType<?> type) entryId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        else if (entry instanceof Block block) entryId = BuiltInRegistries.BLOCK.getKey(block);
+
+        if (entryId != null) {
+            ModConfig config = ModConfig.get();
+            String idStr = entryId.toString();
+
+            // Removals
+            Set<String> itemsToRemove = new HashSet<>();
+            for (String configLine : config.lootRemovals) {
+                String[] parts = configLine.split("\\|");
+                if (parts.length == 2 && parts[0].equals(idStr)) {
+                    itemsToRemove.add(parts[1]);
+                }
+            }
+            if (!itemsToRemove.isEmpty()) {
+                distinctDrops.removeIf(stack -> {
+                    ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
+                    return itemsToRemove.contains(itemId.toString());
+                });
+            }
+
+            // Additions
+            boolean added = false;
+            for (String configLine : config.lootAdditions) {
+                String[] parts = configLine.split("\\|");
+                if (parts.length == 2 && parts[0].equals(idStr)) {
+                    ResourceLocation itemId = new ResourceLocation(parts[1]);
+                    Item item = BuiltInRegistries.ITEM.get(itemId);
+                    if (item != Items.AIR) {
+                        distinctDrops.add(new ItemStack(item));
+                        added = true;
+                    }
+                }
+            }
+
+            if (added) {
+                distinctDrops.sort(Comparator.comparing(s -> s.getHoverName().getString()));
+            }
+        }
+
         SERVER_DROP_CACHE.put(entry, distinctDrops);
         return distinctDrops;
     }

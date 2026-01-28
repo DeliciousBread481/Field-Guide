@@ -8,6 +8,14 @@
 
   "category.fieldguide.main": "Field Guide",
   "category.fieldguide.general": "General Settings",
+  "category.fieldguide.interface": "Interface",
+  "category.fieldguide.content": "Content",
+
+  "option.fieldguide.loot_removals": "Loot Removals",
+  "option.fieldguide.loot_removals.tooltip": "Items to hide from the loot display.\nFormat: 'namespace:entity_id|namespace:item_id'",
+
+  "option.fieldguide.loot_additions": "Loot Additions",
+  "option.fieldguide.loot_additions.tooltip": "Items to add to the loot display.\nFormat: 'namespace:entity_id|namespace:item_id'",
 
   "option.fieldguide.blacklist": "Entry Blacklist",
   "option.fieldguide.blacklist.tooltip": "Entries that should not appear in the Field Guide.\nSupports 'modid:entity_id', 'modid:block_id', or 'modid:*' for wildcards.",

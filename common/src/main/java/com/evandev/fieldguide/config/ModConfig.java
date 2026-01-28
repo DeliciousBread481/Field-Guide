@@ -31,6 +31,9 @@ public class ModConfig {
     public double scanSpeed = 1.0D;
     public List<String> entityBlacklist = new ArrayList<>();
 
+    public List<String> lootRemovals = new ArrayList<>();
+    public List<String> lootAdditions = new ArrayList<>();
+
     public static ModConfig get() {
         if (INSTANCE == null) {
             load();

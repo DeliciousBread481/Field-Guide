@@ -32,6 +32,23 @@ The configuration file is located at `.minecraft/config/fieldguide.json`.
 | `showUndiscoveredNames`  | Boolean | `false`     | If true, shows names of locked entries instead of "???". |
 | `scanSpeed`              | Double  | `1.0`       | Time in seconds required to scan a target.               |
 | `entityBlacklist`        | List    | *See below* | List of IDs that cannot be scanned.                      |
+| `lootRemovals`           | List    | `[]`        | Items to hide from loot display (See Format below).      |
+| `lootAdditions`          | List    | `[]`        | Items to add to loot display (See Format below).         |
+
+### Entity Blacklist Format
+
+You can blacklist specific entities or entire mods.
+
+* **Specific ID:** `minecraft:armor_stand`
+* **Wildcard:** `mod_id:*` (Blacklists everything from that mod)
+
+### Loot Configuration Format
+
+For `lootRemovals` and `lootAdditions`, strings must be formatted as:
+`namespace:entity_id|namespace:item_id`
+
+* **Example Removal:** `minecraft:skeleton|minecraft:bone` (Hides Bones from Skeleton page)
+* **Example Addition:** `minecraft:cow|minecraft:milk_bucket` (Adds Milk Bucket to Cow page)
 
 ---
 
@@ -77,6 +94,22 @@ The filename becomes the ID of the category (e.g., `wetlands.json` becomes `<nam
 | `replace`    | Boolean | (Optional) If true, clears existing entries in this category before adding new ones. |
 | `contents`   | Array   | A list of entry objects.                                                             |
 
+#### Removing Default Categories
+
+To remove a category provided by the mod (or another datapack), create a file with the **same ID** and use
+`"replace": true` with an empty contents list. The Field Guide automatically hides empty categories.
+
+**Example:** Removing the default `monsters` category:
+
+`data/fieldguide/fieldguide/categories/monsters.json`
+
+```json
+{
+  "replace": true,
+  "contents": []
+}
+```
+
 #### Content Types
 
 1. **Manual Entry:** Adds a specific Entity or Block.
@@ -89,7 +122,7 @@ The filename becomes the ID of the category (e.g., `wetlands.json` becomes `<nam
 
 ```
 
-2. **Auto-Populate:** Automatically adds entities based on a preset strategy.
+2. **Auto-Populate:** Automatically adds entries based on a preset strategy.
 
 ```json
 {
@@ -99,7 +132,14 @@ The filename becomes the ID of the category (e.g., `wetlands.json` becomes `<nam
 
 ```
 
-*Available Strategies:* `passive`, `hostile`, `flora`.
+*Available Strategies*:
+
+* `passive`: All passive animals.
+* `hostile`: All hostile monsters.
+* `flora`: All vanilla-like plants.
+* `mod:<mod_id>`: All entities from a specific mod.
+* `mod_flora:<mod_id>`: All flora-like blocks from a specific mod.
+* `tag:<tag_id>`: All entities with a specific tag (e.g. tag:minecraft:raiders).
 
 #### Example: Custom Category
 

@@ -13,6 +13,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.tags.TagKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -244,7 +246,40 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
                     .filter(block -> isValidBlock(block, config))
                     .sorted(Comparator.comparing(block -> BuiltInRegistries.BLOCK.getKey(block).toString()))
                     .toList());
-        } else {
+        } else if (strategy.startsWith("mod:")) {
+            String modId = strategy.substring(4);
+            results.addAll(BuiltInRegistries.ENTITY_TYPE.stream()
+                    .filter(type -> BuiltInRegistries.ENTITY_TYPE.getKey(type).getNamespace().equals(modId))
+                    .filter(type -> isValidEntity(type, config))
+                    .sorted(Comparator.comparing(type -> BuiltInRegistries.ENTITY_TYPE.getKey(type).toString()))
+                    .toList());
+        } else if (strategy.startsWith("mod_flora:")) {
+            String modId = strategy.substring(10);
+            results.addAll(BuiltInRegistries.BLOCK.stream()
+                    .filter(block -> BuiltInRegistries.BLOCK.getKey(block).getNamespace().equals(modId))
+                    .filter(block -> block instanceof BushBlock || block instanceof LeavesBlock || block instanceof VineBlock || block instanceof CactusBlock || block instanceof SugarCaneBlock || block instanceof WaterlilyBlock || block instanceof StemBlock)
+                    .filter(block -> isValidBlock(block, config))
+                    .sorted(Comparator.comparing(block -> BuiltInRegistries.BLOCK.getKey(block).toString()))
+                    .toList());
+        } else if (strategy.startsWith("tag:")) {
+            String tagId = strategy.substring(4);
+            try {
+                ResourceLocation tagLoc = new ResourceLocation(tagId);
+                TagKey<EntityType<?>> tagKey = TagKey.create(Registries.ENTITY_TYPE, tagLoc);
+                for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
+                    var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type);
+                    if (key.isPresent()) {
+                        var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
+                        if (holder.isPresent() && holder.get().is(tagKey)) {
+                            if (isValidEntity(type, config)) results.add(type);
+                        }
+                    }
+                }
+                results.sort(Comparator.comparing(o -> BuiltInRegistries.ENTITY_TYPE.getKey((EntityType<?>)o).toString()));
+            } catch (Exception e) {
+                Constants.LOG.error("Invalid tag strategy: {}", strategy, e);
+            }
+        } else if ("hostile".equalsIgnoreCase(strategy) || "passive".equalsIgnoreCase(strategy)) {
             results.addAll(BuiltInRegistries.ENTITY_TYPE.stream()
                     .filter(type -> {
                         if ("hostile".equalsIgnoreCase(strategy))
