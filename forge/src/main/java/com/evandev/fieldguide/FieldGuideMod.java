@@ -3,6 +3,7 @@ package com.evandev.fieldguide;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.config.ClothConfigIntegration;
 import com.evandev.fieldguide.data.FieldGuideDataManager;
+import com.evandev.fieldguide.network.GrantContentPacket;
 import com.evandev.fieldguide.network.RequestDropsPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncDropsPacket;
@@ -85,10 +86,16 @@ public class FieldGuideMod {
             }
 
             if (entry != null) {
-                List<ItemStack> drops = LootTableHelper.getDrops(player.server.getResourceManager(), entry);
+                List<ItemStack> drops = LootTableHelper.getDrops(player, entry);
                 Services.NETWORK.sendToPlayer(new SyncDropsPacket(id, drops), player);
             }
         });
+        context.setPacketHandled(true);
+    }
+
+    public static void handleGrantContent(GrantContentPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
+        NetworkEvent.Context context = contextSupplier.get();
+        context.enqueueWork(packet::handleClient);
         context.setPacketHandled(true);
     }
 
@@ -123,7 +130,6 @@ public class FieldGuideMod {
 
     @SubscribeEvent
     public void onAddReloadListeners(AddReloadListenerEvent event) {
-        // Register server data loader
         event.addListener(ServerFieldGuideManager.getInstance());
     }
 
@@ -145,9 +151,14 @@ public class FieldGuideMod {
     public void onClientPlayerLogin(ClientPlayerNetworkEvent.LoggingIn event) {
         Minecraft client = Minecraft.getInstance();
         Path saveDir = null;
+
         if (client.hasSingleplayerServer() && client.getSingleplayerServer() != null) {
             saveDir = client.getSingleplayerServer().getWorldPath(LevelResource.ROOT);
+        } else if (client.getCurrentServer() != null) {
+            String serverId = client.getCurrentServer().ip.replaceAll("[^a-zA-Z0-9.-]", "_");
+            saveDir = client.gameDirectory.toPath().resolve("fieldguide_saves").resolve(serverId);
         }
+
         FieldGuideDataManager.getInstance().onWorldLoad(saveDir);
     }
 

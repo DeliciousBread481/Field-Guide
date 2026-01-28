@@ -1,7 +1,10 @@
 package com.evandev.fieldguide.server.command;
 
 import com.evandev.fieldguide.data.Category;
-import com.evandev.fieldguide.data.FieldGuideDataManager;
+import com.evandev.fieldguide.network.GrantContentPacket;
+import com.evandev.fieldguide.platform.Services;
+import com.evandev.fieldguide.server.ServerFieldGuideManager;
+import com.google.common.collect.Iterables;
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -11,10 +14,9 @@ import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.server.level.ServerPlayer;
 
-import java.util.Optional;
+import java.util.Collection;
 
 public class FieldGuideCommand {
 
@@ -24,20 +26,20 @@ public class FieldGuideCommand {
                 .then(Commands.literal("grant")
                         .then(Commands.argument("targets", EntityArgument.players())
                                 .then(Commands.literal("everything")
-                                        .executes(ctx -> grantEverything(ctx.getSource()))
+                                        .executes(ctx -> grantEverything(ctx.getSource(), EntityArgument.getPlayers(ctx, "targets")))
                                 )
                                 .then(Commands.literal("category")
                                         .then(Commands.argument("category", ResourceLocationArgument.id())
-                                                .suggests((ctx, builder) -> SharedSuggestionProvider.suggestResource(FieldGuideDataManager.getCategories().keySet(), builder))
-                                                .executes(ctx -> grantCategory(ctx.getSource(), ResourceLocationArgument.getId(ctx, "category")))
+                                                .suggests((ctx, builder) -> SharedSuggestionProvider.suggestResource(ServerFieldGuideManager.getInstance().getCategories().keySet(), builder))
+                                                .executes(ctx -> grantCategory(ctx.getSource(), EntityArgument.getPlayers(ctx, "targets"), ResourceLocationArgument.getId(ctx, "category")))
                                         )
                                 )
                                 .then(Commands.literal("only")
                                         .then(Commands.argument("entry", ResourceLocationArgument.id())
                                                 .suggests((ctx, builder) -> SharedSuggestionProvider.suggestResource(
-                                                        FieldGuideDataManager.getValidEntries().stream().map(FieldGuideDataManager::getEntryId),
+                                                        Iterables.concat(BuiltInRegistries.ENTITY_TYPE.keySet(), BuiltInRegistries.BLOCK.keySet()),
                                                         builder))
-                                                .executes(ctx -> grantEntry(ctx.getSource(), ResourceLocationArgument.getId(ctx, "entry")))
+                                                .executes(ctx -> grantEntry(ctx.getSource(), EntityArgument.getPlayers(ctx, "targets"), ResourceLocationArgument.getId(ctx, "entry")))
                                         )
                                 )
                         )
@@ -45,20 +47,20 @@ public class FieldGuideCommand {
                 .then(Commands.literal("revoke")
                         .then(Commands.argument("targets", EntityArgument.players())
                                 .then(Commands.literal("everything")
-                                        .executes(ctx -> revokeEverything(ctx.getSource()))
+                                        .executes(ctx -> revokeEverything(ctx.getSource(), EntityArgument.getPlayers(ctx, "targets")))
                                 )
                                 .then(Commands.literal("category")
                                         .then(Commands.argument("category", ResourceLocationArgument.id())
-                                                .suggests((ctx, builder) -> SharedSuggestionProvider.suggestResource(FieldGuideDataManager.getCategories().keySet(), builder))
-                                                .executes(ctx -> revokeCategory(ctx.getSource(), ResourceLocationArgument.getId(ctx, "category")))
+                                                .suggests((ctx, builder) -> SharedSuggestionProvider.suggestResource(ServerFieldGuideManager.getInstance().getCategories().keySet(), builder))
+                                                .executes(ctx -> revokeCategory(ctx.getSource(), EntityArgument.getPlayers(ctx, "targets"), ResourceLocationArgument.getId(ctx, "category")))
                                         )
                                 )
                                 .then(Commands.literal("only")
                                         .then(Commands.argument("entry", ResourceLocationArgument.id())
                                                 .suggests((ctx, builder) -> SharedSuggestionProvider.suggestResource(
-                                                        FieldGuideDataManager.getValidEntries().stream().map(FieldGuideDataManager::getEntryId),
+                                                        Iterables.concat(BuiltInRegistries.ENTITY_TYPE.keySet(), BuiltInRegistries.BLOCK.keySet()),
                                                         builder))
-                                                .executes(ctx -> revokeEntry(ctx.getSource(), ResourceLocationArgument.getId(ctx, "entry")))
+                                                .executes(ctx -> revokeEntry(ctx.getSource(), EntityArgument.getPlayers(ctx, "targets"), ResourceLocationArgument.getId(ctx, "entry")))
                                         )
                                 )
                         )
@@ -66,89 +68,56 @@ public class FieldGuideCommand {
         );
     }
 
-    private static int grantEverything(CommandSourceStack source) {
-        FieldGuideDataManager manager = FieldGuideDataManager.getInstance();
-        int count = 0;
-        for (Object entry : FieldGuideDataManager.getValidEntries()) {
-            manager.unlock(entry, false);
-            count++;
+    private static int grantEverything(CommandSourceStack source, Collection<ServerPlayer> targets) {
+        for (ServerPlayer player : targets) {
+            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.Type.EVERYTHING, null), player);
         }
-        int finalCount = count;
-        source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.everything.success", finalCount), true);
-        return count;
+        source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.everything.success", targets.size()), true);
+        return targets.size();
     }
 
-    private static int grantCategory(CommandSourceStack source, ResourceLocation categoryId) {
-        Category category = FieldGuideDataManager.getCategories().get(categoryId);
+    private static int grantCategory(CommandSourceStack source, Collection<ServerPlayer> targets, ResourceLocation categoryId) {
+        Category category = ServerFieldGuideManager.getInstance().getCategories().get(categoryId);
         if (category == null) {
             source.sendFailure(Component.translatable("commands.fieldguide.category.not_found", categoryId));
             return 0;
         }
-
-        int count = 0;
-        for (Object entry : FieldGuideDataManager.getInstance().getEntriesForCategory(category)) {
-            FieldGuideDataManager.getInstance().unlock(entry, false);
-            count++;
+        for (ServerPlayer player : targets) {
+            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.Type.CATEGORY, categoryId), player);
         }
-
-        int finalCount = count;
-        source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.category.success", categoryId, finalCount), true);
-        return count;
+        source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.category.success", categoryId, targets.size()), true);
+        return targets.size();
     }
 
-    private static int grantEntry(CommandSourceStack source, ResourceLocation entryId) {
-        Object entry = resolveEntry(entryId);
-        if (entry != null) {
-            FieldGuideDataManager.getInstance().unlock(entry, true);
-            source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.entry.success", entryId), true);
-            return 1;
-        } else {
-            source.sendFailure(Component.translatable("commands.fieldguide.entry.not_found", entryId));
-            return 0;
+    private static int grantEntry(CommandSourceStack source, Collection<ServerPlayer> targets, ResourceLocation entryId) {
+        for (ServerPlayer player : targets) {
+            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.Type.ENTRY, entryId), player);
         }
+        source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.entry.success", entryId), true);
+        return targets.size();
     }
 
-    private static int revokeEverything(CommandSourceStack source) {
-        FieldGuideDataManager.getInstance().revokeAll();
+    private static int revokeEverything(CommandSourceStack source, Collection<ServerPlayer> targets) {
+        for (ServerPlayer player : targets) {
+            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.REVOKE, GrantContentPacket.Type.EVERYTHING, null), player);
+        }
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.revoke.everything.success"), true);
-        return 1;
+        return targets.size();
     }
 
-    private static int revokeCategory(CommandSourceStack source, ResourceLocation categoryId) {
-        Category category = FieldGuideDataManager.getCategories().get(categoryId);
-        if (category == null) {
-            source.sendFailure(Component.translatable("commands.fieldguide.category.not_found", categoryId));
-            return 0;
+    private static int revokeCategory(CommandSourceStack source, Collection<ServerPlayer> targets, ResourceLocation categoryId) {
+        for (ServerPlayer player : targets) {
+            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.REVOKE, GrantContentPacket.Type.CATEGORY, categoryId), player);
         }
-
-        int count = 0;
-        for (Object entry : FieldGuideDataManager.getInstance().getEntriesForCategory(category)) {
-            FieldGuideDataManager.getInstance().revoke(entry);
-            count++;
-        }
-
-        int finalCount = count;
-        source.sendSuccess(() -> Component.translatable("commands.fieldguide.revoke.category.success", categoryId, finalCount), true);
-        return count;
+        source.sendSuccess(() -> Component.translatable("commands.fieldguide.revoke.category.success", categoryId, targets.size()), true);
+        return targets.size();
     }
 
-    private static int revokeEntry(CommandSourceStack source, ResourceLocation entryId) {
-        Object entry = resolveEntry(entryId);
-        if (entry != null) {
-            FieldGuideDataManager.getInstance().revoke(entry);
-            source.sendSuccess(() -> Component.translatable("commands.fieldguide.revoke.entry.success", entryId), true);
-            return 1;
-        } else {
-            source.sendFailure(Component.translatable("commands.fieldguide.entry.not_found", entryId));
-            return 0;
+    private static int revokeEntry(CommandSourceStack source, Collection<ServerPlayer> targets, ResourceLocation entryId) {
+        for (ServerPlayer player : targets) {
+            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.REVOKE, GrantContentPacket.Type.ENTRY, entryId), player);
         }
-    }
-
-    private static Object resolveEntry(ResourceLocation id) {
-        Optional<EntityType<?>> entityType = BuiltInRegistries.ENTITY_TYPE.getOptional(id);
-        if (entityType.isPresent()) return entityType.get();
-
-        Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(id);
-        return block.orElse(null);
+        source.sendSuccess(() -> Component.translatable("commands.fieldguide.revoke.entry.success", entryId), true);
+        return targets.size();
     }
 }

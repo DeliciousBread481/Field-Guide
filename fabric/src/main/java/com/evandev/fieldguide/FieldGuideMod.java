@@ -6,7 +6,9 @@ import com.evandev.fieldguide.platform.FabricNetworkHelper;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.LootTableHelper;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
+import com.evandev.fieldguide.server.command.FieldGuideCommand;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
@@ -32,6 +34,8 @@ public class FieldGuideMod implements ModInitializer {
     public void onInitialize() {
         CommonClass.init();
 
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> FieldGuideCommand.register(dispatcher));
+
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new IdentifiableResourceReloadListener() {
             @Override
             public ResourceLocation getFabricId() {
@@ -44,9 +48,7 @@ public class FieldGuideMod implements ModInitializer {
             }
         });
 
-        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            ServerFieldGuideManager.getInstance().syncToPlayer(handler.player);
-        });
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> ServerFieldGuideManager.getInstance().syncToPlayer(handler.player));
 
         ServerPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.REQUEST_DROPS_CHANNEL, (server, player, handler, buf, responseSender) -> {
             RequestDropsPacket packet = new RequestDropsPacket(buf);
@@ -61,7 +63,7 @@ public class FieldGuideMod implements ModInitializer {
                 }
 
                 if (entry != null) {
-                    List<ItemStack> drops = LootTableHelper.getDrops(server.getResourceManager(), entry);
+                    List<ItemStack> drops = LootTableHelper.getDrops(player, entry);
                     Services.NETWORK.sendToPlayer(new SyncDropsPacket(id, drops), player);
                 }
             });

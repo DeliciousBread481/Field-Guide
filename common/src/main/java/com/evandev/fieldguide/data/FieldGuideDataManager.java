@@ -318,9 +318,8 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
 
             while (blockHit.getType() == HitResult.Type.BLOCK) {
                 BlockState state = minecraft.level.getBlockState(blockHit.getBlockPos());
-                ResourceLocation id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
 
-                if (id.getNamespace().equals("minecraft") && (id.getPath().equals("grass") || id.getPath().equals("tall_grass"))) {
+                if (state.canBeReplaced()) {
                     Vec3 hitVec = blockHit.getLocation();
                     Vec3 nextStart = hitVec.add(viewVec.scale(0.01));
 

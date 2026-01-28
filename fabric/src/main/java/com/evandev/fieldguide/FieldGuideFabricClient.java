@@ -2,16 +2,15 @@ package com.evandev.fieldguide;
 
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.data.FieldGuideDataManager;
+import com.evandev.fieldguide.network.GrantContentPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncDropsPacket;
 import com.evandev.fieldguide.platform.FabricNetworkHelper;
-import com.evandev.fieldguide.server.command.FieldGuideCommand;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.resources.ResourceLocation;
@@ -45,10 +44,6 @@ public class FieldGuideFabricClient implements ClientModInitializer {
             FieldGuideClient.onClientTick(client);
         });
 
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
-            FieldGuideCommand.register(dispatcher);
-        });
-
         ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.SYNC_DROPS_CHANNEL, (client, handler, buf, responseSender) -> {
             SyncDropsPacket packet = new SyncDropsPacket(buf);
             client.execute(() -> FieldGuideDataManager.getInstance().setDrops(packet.getEntryId(), packet.getDrops()));
@@ -59,23 +54,25 @@ public class FieldGuideFabricClient implements ClientModInitializer {
             client.execute(() -> FieldGuideDataManager.getInstance().updateCategoriesFromServer(packet.getCategories()));
         });
 
+        ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.GRANT_CONTENT_CHANNEL, (client, handler, buf, responseSender) -> {
+            GrantContentPacket packet = new GrantContentPacket(buf);
+            client.execute(packet::handleClient);
+        });
+
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             Path saveDir = null;
             if (client.hasSingleplayerServer() && client.getSingleplayerServer() != null) {
                 saveDir = client.getSingleplayerServer().getWorldPath(LevelResource.ROOT);
+            } else if (client.getCurrentServer() != null) {
+                String serverId = client.getCurrentServer().ip.replaceAll("[^a-zA-Z0-9.-]", "_");
+                saveDir = client.gameDirectory.toPath().resolve("fieldguide_saves").resolve(serverId);
             }
+
             FieldGuideDataManager.getInstance().onWorldLoad(saveDir);
         });
 
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             FieldGuideDataManager.getInstance().onWorldUnload();
-        });
-
-        ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.SYNC_DROPS_CHANNEL, (client, handler, buf, responseSender) -> {
-            SyncDropsPacket packet = new SyncDropsPacket(buf);
-            client.execute(() -> {
-                FieldGuideDataManager.getInstance().setDrops(packet.getEntryId(), packet.getDrops());
-            });
         });
     }
 }

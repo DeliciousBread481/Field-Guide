@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.platform;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.network.GrantContentPacket;
 import com.evandev.fieldguide.network.RequestDropsPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncDropsPacket;
@@ -25,6 +26,7 @@ public class ForgeNetworkHelper implements INetworkHelper {
         CHANNEL.registerMessage(id++, RequestDropsPacket.class, RequestDropsPacket::encode, RequestDropsPacket::new, com.evandev.fieldguide.FieldGuideMod::handleRequest);
         CHANNEL.registerMessage(id++, SyncDropsPacket.class, SyncDropsPacket::encode, SyncDropsPacket::new, com.evandev.fieldguide.FieldGuideMod::handleSyncDrops);
         CHANNEL.registerMessage(id++, SyncCategoriesPacket.class, SyncCategoriesPacket::encode, SyncCategoriesPacket::new, com.evandev.fieldguide.FieldGuideMod::handleSyncCategories);
+        CHANNEL.registerMessage(id++, GrantContentPacket.class, GrantContentPacket::encode, GrantContentPacket::new, com.evandev.fieldguide.FieldGuideMod::handleGrantContent);
     }
 
     @Override

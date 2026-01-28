@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.platform;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.network.GrantContentPacket;
 import com.evandev.fieldguide.network.RequestDropsPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncDropsPacket;
@@ -16,6 +17,7 @@ public class FabricNetworkHelper implements INetworkHelper {
     public static final ResourceLocation REQUEST_DROPS_CHANNEL = new ResourceLocation(Constants.MOD_ID, "request_drops");
     public static final ResourceLocation SYNC_DROPS_CHANNEL = new ResourceLocation(Constants.MOD_ID, "sync_drops");
     public static final ResourceLocation SYNC_CATEGORIES_CHANNEL = new ResourceLocation(Constants.MOD_ID, "sync_categories");
+    public static final ResourceLocation GRANT_CONTENT_CHANNEL = new ResourceLocation(Constants.MOD_ID, "grant_content");
 
     @Override
     public void sendToServer(Object packet) {
@@ -35,6 +37,9 @@ public class FabricNetworkHelper implements INetworkHelper {
         } else if (packet instanceof SyncCategoriesPacket syncCat) {
             syncCat.encode(buf);
             ServerPlayNetworking.send(player, SYNC_CATEGORIES_CHANNEL, buf);
+        } else if (packet instanceof GrantContentPacket grant) {
+            grant.encode(buf);
+            ServerPlayNetworking.send(player, GRANT_CONTENT_CHANNEL, buf);
         }
     }
 }

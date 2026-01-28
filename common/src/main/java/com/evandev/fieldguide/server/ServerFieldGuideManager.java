@@ -31,6 +31,10 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
         return INSTANCE;
     }
 
+    public Map<ResourceLocation, Category> getCategories() {
+        return categories;
+    }
+
     public void syncToPlayer(ServerPlayer player) {
         List<Category> categoryList = new ArrayList<>(categories.values());
         Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(categoryList), player);
@@ -92,6 +96,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
     @Override
     protected void apply(@NotNull Map<ResourceLocation, Category> object, @NotNull ResourceManager resourceManager, @NotNull ProfilerFiller profiler) {
         this.categories = object;
+        LootTableHelper.clearCache();
         Constants.LOG.info("Server loaded {} Field Guide categories.", categories.size());
     }
 }

@@ -50,13 +50,13 @@ public class ClothConfigIntegration {
                 .build());
 
         general.addEntry(entryBuilder.startIntField(Component.translatable("option.fieldguide.inventory_button_x"), config.inventoryButtonXOffset)
-                .setDefaultValue(125)
+                .setDefaultValue(126)
                 .setTooltip(Component.translatable("option.fieldguide.inventory_button_x.tooltip"))
                 .setSaveConsumer(newValue -> config.inventoryButtonXOffset = newValue)
                 .build());
 
         general.addEntry(entryBuilder.startIntField(Component.translatable("option.fieldguide.inventory_button_y"), config.inventoryButtonYOffset)
-                .setDefaultValue(62)
+                .setDefaultValue(61)
                 .setTooltip(Component.translatable("option.fieldguide.inventory_button_y.tooltip"))
                 .setSaveConsumer(newValue -> config.inventoryButtonYOffset = newValue)
                 .build());
