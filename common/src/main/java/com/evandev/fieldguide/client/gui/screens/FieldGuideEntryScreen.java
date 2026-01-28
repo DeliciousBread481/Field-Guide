@@ -1,9 +1,10 @@
 package com.evandev.fieldguide.client.gui.screens;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
@@ -18,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class FieldGuideEntryScreen extends BookScreen {
     private final Screen parent;
@@ -64,8 +66,28 @@ public class FieldGuideEntryScreen extends BookScreen {
                 Constants.BACK_TEXTURE,
                 23,
                 23 * 2,
-                b -> this.minecraft.setScreen(parent)
+                b -> Objects.requireNonNull(this.minecraft).setScreen(parent)
         ));
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (super.mouseClicked(mouseX, mouseY, button)) return true;
+
+        if (button == 0 && renderedEntity != null) {
+            int xPos = leftPageBounds.left() + leftPageBounds.width() / 2;
+            int yPos = leftPageBounds.y_center();
+            int halfSize = 50;
+
+            if (mouseX >= xPos - halfSize && mouseX <= xPos + halfSize &&
+                    mouseY >= yPos - halfSize && mouseY <= yPos + halfSize) {
+                if (ClientFieldGuideManager.isUnlocked(entry)) {
+                    FieldGuideClient.playMobCry(this.renderedEntity);
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

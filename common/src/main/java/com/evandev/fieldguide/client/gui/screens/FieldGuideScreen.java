@@ -1,13 +1,14 @@
 package com.evandev.fieldguide.client.gui.screens;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.gui.widget.FieldGuideSearchBox;
 import com.evandev.fieldguide.client.gui.widget.TabButton;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
-import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -262,6 +263,20 @@ public class FieldGuideScreen extends BookScreen {
                     Object entry = currentEntries.get(itemIndex);
                     if (ClientFieldGuideManager.isNew(entry)) ClientFieldGuideManager.markAsSeen(entry);
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+
+                    if (entry instanceof EntityType<?> type) {
+                        Entity entity = entryCache.get(type);
+                        if (entity == null && Objects.requireNonNull(this.minecraft).level != null) {
+                            try {
+                                entity = type.create(this.minecraft.level);
+                            } catch (Exception ignored) {
+                            }
+                        }
+                        if (entity != null && ClientFieldGuideManager.isUnlocked(entry)) {
+                            FieldGuideClient.playMobCry(entity);
+                        }
+                    }
+
                     Minecraft.getInstance().setScreen(new FieldGuideEntryScreen(this, entry));
                     return true;
                 }
