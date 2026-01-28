@@ -117,8 +117,6 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         if (id != null && INSTANCE.seenEntries.add(id.toString())) INSTANCE.saveProgress();
     }
 
-    // --- Logic & Resolving ---
-
     public static String getEntryDescription(Object entry) {
         ResourceLocation id = getEntryId(entry);
         if (id == null) return "";
@@ -206,8 +204,6 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         }
     }
 
-    // --- Helper Accessors ---
-
     private void resolveAllEntries() {
         resolvedCategoryEntries.clear();
         for (Category cat : syncedCategories.values()) {
@@ -236,8 +232,6 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         resolvedCategoryEntries.put(category.getId(), new ArrayList<>(foundEntries));
     }
 
-    // --- Progression ---
-
     public List<Object> getEntriesForCategory(Category category) {
         return resolvedCategoryEntries.getOrDefault(category.getId(), Collections.emptyList());
     }
@@ -247,6 +241,7 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         if ("flora".equalsIgnoreCase(strategy)) {
             results.addAll(BuiltInRegistries.BLOCK.stream()
                     .filter(block -> block instanceof BushBlock || block instanceof LeavesBlock || block instanceof VineBlock || block instanceof CactusBlock || block instanceof SugarCaneBlock || block instanceof WaterlilyBlock || block instanceof StemBlock)
+                    .filter(block -> isValidBlock(block, config))
                     .sorted(Comparator.comparing(block -> BuiltInRegistries.BLOCK.getKey(block).toString()))
                     .toList());
         } else {
@@ -258,6 +253,7 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
                             return type.getCategory() != MobCategory.MONSTER && (type.getCategory() != MobCategory.MISC || SpawnEggItem.byId(type) != null);
                         return false;
                     })
+                    .filter(type -> isValidEntity(type, config))
                     .sorted(Comparator.comparing(type -> BuiltInRegistries.ENTITY_TYPE.getKey(type).toString()))
                     .toList());
         }
@@ -494,7 +490,6 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
         return lastUnlockedEntry;
     }
 
-    // Drops Logic
     public List<ItemStack> getDrops(Object entry) {
         if (dropCache.containsKey(entry)) return dropCache.get(entry);
         if (!requestedDrops.contains(entry)) {
@@ -512,7 +507,6 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
                 .findFirst().ifPresent(o -> dropCache.put(o, drops));
     }
 
-    // Save/Load
     public void onWorldLoad(Path worldSaveDir) {
         this.unlockedEntries.clear();
         this.seenEntries.clear();
