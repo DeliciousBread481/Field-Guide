@@ -22,6 +22,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.Property;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -55,7 +56,6 @@ public class EntryRenderHelper {
         }
 
         if (id != null) {
-            // Define paths to check
             ResourceLocation specificLoc = new ResourceLocation(id.getNamespace(),
                     "textures/fieldguide/entries/" + id.getPath() + (isPage ? "_page.png" : "_grid.png"));
 
@@ -98,7 +98,6 @@ public class EntryRenderHelper {
                 guiGraphics.flush();
 
                 VertexConsumer consumer = guiGraphics.bufferSource().getBuffer(RenderType.entityCutout(texture));
-
                 guiGraphics.pose().last();
 
                 consumer.vertex(drawX, drawY + height, 0)
@@ -242,7 +241,7 @@ public class EntryRenderHelper {
 
         pose.mulPose(cameraOrientation);
 
-        // Setup Entity rotations
+        // Setup entity rotations
         float normalizedBodyRot = 180.0F + bodyYAngle;
 
         entity.setYRot(normalizedBodyRot);
@@ -273,7 +272,6 @@ public class EntryRenderHelper {
 
         EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         dispatcher.setRenderShadow(false);
-
         dispatcher.render(entity, 0.0, 0.0, 0.0, 0.0F, 1.0F, pose, guiGraphics.bufferSource(), LightTexture.FULL_BRIGHT);
 
         guiGraphics.flush();
@@ -281,12 +279,10 @@ public class EntryRenderHelper {
         pose.popPose();
 
         RenderSystem.depthMask(false);
-
         if (silhouette) {
             RenderSystem.setShaderFogStart(Float.MAX_VALUE);
             RenderSystem.setShaderFogEnd(Float.MAX_VALUE);
         }
-
         Lighting.setupForFlatItems();
     }
 
@@ -306,10 +302,17 @@ public class EntryRenderHelper {
                 .findFirst()
                 .orElse(null);
 
-        // Set blockstates to max values
-        state = stateWithMaxPropertyValue(state, "age");
-        state = stateWithMaxPropertyValue(state, "flower_amount");
-        state = stateWithMaxPropertyValue(state, "pickles");
+        // Property maximizer
+        for (Property<?> prop : state.getProperties()) {
+            if (prop instanceof IntegerProperty intProp) {
+                String name = prop.getName();
+
+                if (!name.equals("bites") && !name.equals("level") && !name.equals("rotation")) {
+                    int max = intProp.getPossibleValues().stream().max(Integer::compareTo).orElse(0);
+                    state = state.setValue(intProp, max);
+                }
+            }
+        }
 
         float cameraXAngle = 30;
         float cameraYAngle = 210;
@@ -337,7 +340,6 @@ public class EntryRenderHelper {
         BlockRenderDispatcher dispatcher = Minecraft.getInstance().getBlockRenderer();
 
         if (verticalProp == null) {
-            // Render single block
             dispatcher.renderSingleBlock(state, pose, guiGraphics.bufferSource(), LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
         } else {
             // Render multiple blocks vertically
@@ -372,7 +374,6 @@ public class EntryRenderHelper {
         Lighting.setupForFlatItems();
     }
 
-    // There's definitely a better way of doing this
     private static void setupBlockLighting() {
         Vector3f light0 = new Vector3f(0.2F, -1.0F, -0.7F);
         light0.normalize();
@@ -393,39 +394,4 @@ public class EntryRenderHelper {
         RenderSystem.setShaderLights(light0, light1);
     }
 
-    public static BlockState stateWithMaxPropertyValue(BlockState state, String propertyName) {
-        if (state == null || propertyName == null) {
-            return state;
-        }
-
-        // Find the property by name
-        Optional<Property<?>> propertyOpt = state.getProperties().stream()
-                .filter(p -> p.getName().equals(propertyName))
-                .findFirst();
-
-        if (propertyOpt.isEmpty()) {
-            return state;
-        }
-
-        Property<?> property = propertyOpt.get();
-
-        // Find the maximum possible value
-        Comparable<?> maxValue = property.getPossibleValues().stream()
-                .max((a, b) -> {
-                    if (a instanceof Number && b instanceof Number) {
-                        return Double.compare(((Number) a).doubleValue(),
-                                ((Number) b).doubleValue());
-                    }
-                    return (a).compareTo(b);
-                })
-                .orElse(null);
-
-        if (maxValue == null) {
-            return state;
-        }
-
-        @SuppressWarnings({"unchecked", "rawtypes"})
-        BlockState newState = state.setValue((Property) property, (Comparable) maxValue);
-        return newState;
-    }
 }
