@@ -87,6 +87,12 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.entityBlacklist = newValue)
                 .build());
 
+        contentCat.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.discovery_redirects"), config.discoveryRedirects)
+                .setDefaultValue(new ArrayList<>())
+                .setTooltip(Component.translatable("option.fieldguide.discovery_redirects.tooltip"))
+                .setSaveConsumer(newValue -> config.discoveryRedirects = newValue)
+                .build());
+
         contentCat.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.loot_removals"), config.lootRemovals)
                 .setDefaultValue(new ArrayList<>())
                 .setTooltip(Component.translatable("option.fieldguide.loot_removals.tooltip"))

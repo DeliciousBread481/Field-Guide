@@ -42,6 +42,18 @@ You can blacklist specific entities or entire mods.
 * **Specific ID:** `minecraft:armor_stand`
 * **Wildcard:** `mod_id:*` (Blacklists everything from that mod)
 
+### Discovery Redirects
+
+Sometimes you may want scanning one entity to unlock the entry for a different one. This is useful for entities that
+have multiple variations or distinct parts (like multi-part bosses) where scanning any part should unlock the main
+entry.
+
+**Format**: `namespace:scanned_id|namespace:unlock_id`
+
+* **Example**: Scanning a Vampire Biter from Enemy Expansion unlocks the Vampire entry.
+
+`enemyexpansion:vampire_biter|enemyexpansion:vampire`
+
 ### Loot Configuration Format
 
 For `lootRemovals` and `lootAdditions`, strings must be formatted as:

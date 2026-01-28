@@ -33,6 +33,7 @@ public class ModConfig {
 
     public List<String> lootRemovals = new ArrayList<>();
     public List<String> lootAdditions = new ArrayList<>();
+    public List<String> discoveryRedirects = new ArrayList<>();
 
     public static ModConfig get() {
         if (INSTANCE == null) {
@@ -81,4 +82,16 @@ public class ModConfig {
         return entityBlacklist.contains(namespace + ":*");
     }
 
+    public ResourceLocation getRedirect(ResourceLocation source) {
+        String sourceStr = source.toString();
+        for (String line : discoveryRedirects) {
+            String[] parts = line.split("\\|");
+            if (parts.length == 2 && parts[0].equals(sourceStr)) {
+                try {
+                    return new ResourceLocation(parts[1]);
+                } catch (Exception ignored) {}
+            }
+        }
+        return null;
+    }
 }

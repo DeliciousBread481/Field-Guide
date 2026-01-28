@@ -14,12 +14,12 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.tags.TagKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -275,7 +275,7 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
                         }
                     }
                 }
-                results.sort(Comparator.comparing(o -> BuiltInRegistries.ENTITY_TYPE.getKey((EntityType<?>)o).toString()));
+                results.sort(Comparator.comparing(o -> BuiltInRegistries.ENTITY_TYPE.getKey((EntityType<?>) o).toString()));
             } catch (Exception e) {
                 Constants.LOG.error("Invalid tag strategy: {}", strategy, e);
             }
@@ -378,12 +378,22 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
                 EntityType<?> type = entityHit.getEntity().getType();
                 if (getValidEntries().contains(type) && !isUnlocked(type)) {
                     foundTarget = entityHit.getEntity();
+                } else if (!isUnlocked(type)) {
+                    ResourceLocation originalId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+                    if (ModConfig.get().getRedirect(originalId) != null) {
+                        foundTarget = entityHit.getEntity();
+                    }
                 }
             } else if (blockHit.getType() == HitResult.Type.BLOCK) {
                 BlockState state = minecraft.level.getBlockState(blockHit.getBlockPos());
                 Block block = state.getBlock();
                 if (getValidEntries().contains(block) && !isUnlocked(block)) {
                     foundTarget = block;
+                } else if (!isUnlocked(block)) {
+                    ResourceLocation originalId = BuiltInRegistries.BLOCK.getKey(block);
+                    if (ModConfig.get().getRedirect(originalId) != null) {
+                        foundTarget = block;
+                    }
                 }
             }
 
@@ -406,6 +416,22 @@ public class FieldGuideDataManager implements ResourceManagerReloadListener {
                     }
 
                     if (scanTicks >= (int) (ModConfig.get().scanSpeed * 20)) {
+                        ResourceLocation targetId = getEntryId(targetKey);
+                        if (targetId != null) {
+                            ResourceLocation redirectId = ModConfig.get().getRedirect(targetId);
+                            if (redirectId != null) {
+                                Optional<EntityType<?>> entityType = BuiltInRegistries.ENTITY_TYPE.getOptional(redirectId);
+                                if (entityType.isPresent()) {
+                                    targetKey = entityType.get();
+                                } else {
+                                    Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(redirectId);
+                                    if (block.isPresent()) {
+                                        targetKey = block.get();
+                                    }
+                                }
+                            }
+                        }
+
                         unlock(targetKey);
                         minecraft.player.playSound(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 1.0F, 1.0F);
                         minecraft.player.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
