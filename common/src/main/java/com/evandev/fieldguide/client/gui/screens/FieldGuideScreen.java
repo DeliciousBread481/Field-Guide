@@ -257,7 +257,9 @@ public class FieldGuideScreen extends BookScreen {
 
         for (int i = 0; i < ITEMS_PER_VIEW; i++) {
             int globalSlotIndex = currentPage * ITEMS_PER_VIEW + i;
-            if (getGridCellBounds(globalSlotIndex).contains((int) mouseX, (int) mouseY)) {
+            Bounds bounds = getGridCellBounds(globalSlotIndex);
+
+            if (bounds.contains((int) mouseX, (int) mouseY)) {
                 int itemIndex = getItemIndexForSlot(i);
                 if (itemIndex >= 0 && itemIndex < currentEntries.size()) {
                     Object entry = currentEntries.get(itemIndex);
@@ -269,6 +271,7 @@ public class FieldGuideScreen extends BookScreen {
                         if (entity == null && Objects.requireNonNull(this.minecraft).level != null) {
                             try {
                                 entity = type.create(this.minecraft.level);
+                                entryCache.put(type, entity);
                             } catch (Exception ignored) {
                             }
                         }
@@ -483,11 +486,11 @@ public class FieldGuideScreen extends BookScreen {
                 }
 
                 if (entity instanceof LivingEntity living) {
-                    EntryRenderHelper.renderEntityNormalized(guiGraphics, living, x, y, CELL_SIZE - 8, CELL_SIZE - 8, scale, !unlocked, Constants.LIST_SILHOUETTE_COLOR, false);
+                    EntryRenderHelper.renderEntityNormalized(guiGraphics, living, x, y, CELL_SIZE - 8, CELL_SIZE - 8, scale, !unlocked, Constants.LIST_SILHOUETTE_COLOR, false, 1.0F);
                 }
             }
         } else if (entry instanceof Block block) {
-            EntryRenderHelper.renderBlock(guiGraphics, block, x, y, 15.0F, !unlocked, false);
+            EntryRenderHelper.renderBlock(guiGraphics, block, x, y, 15.0F, !unlocked, false, 1.0F);
         }
     }
 }

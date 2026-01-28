@@ -1,8 +1,8 @@
 package com.evandev.fieldguide.client.gui.util;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.client.data.EntryVisual;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -76,13 +76,17 @@ public class EntryRenderHelper {
         return Optional.empty();
     }
 
-    private static boolean tryRenderOverride(GuiGraphics guiGraphics, Object entry, int x, int y, int width, int height, boolean silhouette, int color, boolean isPage) {
+    private static boolean tryRenderOverride(GuiGraphics guiGraphics, Object entry, int x, int y, int width, int height, boolean silhouette, int color, boolean isPage, float bounceScale) {
         Optional<ResourceLocation> override = getOverride(entry, isPage);
 
         if (override.isPresent()) {
             ResourceLocation texture = override.get();
-            int drawX = x - width / 2;
-            int drawY = y - height / 2;
+
+            int scaledWidth = (int) (width * bounceScale);
+            int scaledHeight = (int) (height * bounceScale);
+
+            int drawX = x - scaledWidth / 2;
+            int drawY = y - scaledHeight / 2;
 
             if (silhouette) {
                 Color rgb = new Color(color);
@@ -100,7 +104,7 @@ public class EntryRenderHelper {
                 VertexConsumer consumer = guiGraphics.bufferSource().getBuffer(RenderType.entityCutout(texture));
                 guiGraphics.pose().last();
 
-                consumer.vertex(drawX, drawY + height, 0)
+                consumer.vertex(drawX, drawY + scaledHeight, 0)
                         .color(255, 255, 255, 255)
                         .uv(0.0F, 1.0F)
                         .overlayCoords(OverlayTexture.NO_OVERLAY)
@@ -108,7 +112,7 @@ public class EntryRenderHelper {
                         .normal(0, 0, 1)
                         .endVertex();
 
-                consumer.vertex(drawX + width, drawY + height, 0)
+                consumer.vertex(drawX + scaledWidth, drawY + scaledHeight, 0)
                         .color(255, 255, 255, 255)
                         .uv(1.0F, 1.0F)
                         .overlayCoords(OverlayTexture.NO_OVERLAY)
@@ -116,7 +120,7 @@ public class EntryRenderHelper {
                         .normal(0, 0, 1)
                         .endVertex();
 
-                consumer.vertex(drawX + width, drawY, 0)
+                consumer.vertex(drawX + scaledWidth, drawY, 0)
                         .color(255, 255, 255, 255)
                         .uv(1.0F, 0.0F)
                         .overlayCoords(OverlayTexture.NO_OVERLAY)
@@ -140,7 +144,7 @@ public class EntryRenderHelper {
 
             } else {
                 guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-                guiGraphics.blit(texture, drawX, drawY, 0, 0, width, height, width, height);
+                guiGraphics.blit(texture, drawX, drawY, 0, 0, scaledWidth, scaledHeight, scaledWidth, scaledHeight);
                 guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
             }
 
@@ -177,8 +181,8 @@ public class EntryRenderHelper {
         }
     }
 
-    public static void renderEntityNormalized(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, int maxWidth, int maxHeight, float baseScale, boolean silhouette, int color, boolean isPage) {
-        if (tryRenderOverride(guiGraphics, entity.getType(), x, y, maxWidth, maxHeight, silhouette, color, isPage)) {
+    public static void renderEntityNormalized(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, int maxWidth, int maxHeight, float baseScale, boolean silhouette, int color, boolean isPage, float bounceScale) {
+        if (tryRenderOverride(guiGraphics, entity.getType(), x, y, maxWidth, maxHeight, silhouette, color, isPage, bounceScale)) {
             return;
         }
 
@@ -197,19 +201,23 @@ public class EntryRenderHelper {
 
         float dynamicFactor = getScaleFactorForEntity(entity);
         float standardScale = (baseScale * 0.32F) * dynamicFactor;
-        float finalScale = standardScale * visualScale;
+        float clampedScale = standardScale * visualScale;
 
         float entityHeight = entity.getBbHeight();
-        if (entityHeight * finalScale > maxHeight * 0.9f) {
-            finalScale = (maxHeight * 0.9f) / entityHeight;
+        if (entityHeight * clampedScale > maxHeight * 0.9f) {
+            clampedScale = (maxHeight * 0.9f) / entityHeight;
         }
 
-        int feetY = (int) (y + (entityHeight * finalScale / 2.0f) + yOff);
+        int expandedWidth = (int) (maxWidth * bounceScale);
+        int expandedHeight = (int) (maxHeight * bounceScale);
 
-        int minX = x - maxWidth / 2;
-        int minY = y - maxHeight / 2;
-        int maxX = x + maxWidth / 2;
-        int maxY = y + maxHeight / 2;
+        int minX = x - expandedWidth / 2;
+        int minY = y - expandedHeight / 2;
+        int maxX = x + expandedWidth / 2;
+        int maxY = y + expandedHeight / 2;
+
+        float finalScale = clampedScale * bounceScale;
+        int feetY = (int) (y + (entityHeight * finalScale / 2.0f) + yOff);
 
         guiGraphics.enableScissor(minX, minY, maxX, maxY);
         renderEntityStatic(guiGraphics, entity, x, feetY, finalScale, silhouette, color);
@@ -238,7 +246,6 @@ public class EntryRenderHelper {
 
         // Setup entity rotations
         float normalizedBodyRot = 180.0F + bodyYAngle;
-
         entity.setYRot(normalizedBodyRot);
         entity.setXRot(0.0F);
         entity.yHeadRot = entity.getYRot();
@@ -281,7 +288,7 @@ public class EntryRenderHelper {
         Lighting.setupForFlatItems();
     }
 
-    public static void renderBlock(GuiGraphics guiGraphics, Block block, int x, int y, float baseScale, boolean silhouette, boolean isPage) {
+    public static void renderBlock(GuiGraphics guiGraphics, Block block, int x, int y, float baseScale, boolean silhouette, boolean isPage, float bounceScale) {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(block);
         EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(id);
 
@@ -292,11 +299,10 @@ public class EntryRenderHelper {
             if (visual.gridScale != null) visualScale = visual.gridScale;
         }
 
-        float finalScale = baseScale * visualScale;
-
+        float finalScale = baseScale * visualScale * bounceScale;
         int estimatedSize = (int) (finalScale * 2);
 
-        if (tryRenderOverride(guiGraphics, block, x, y, estimatedSize, estimatedSize, silhouette, Constants.LIST_SILHOUETTE_COLOR, isPage)) {
+        if (tryRenderOverride(guiGraphics, block, x, y, estimatedSize, estimatedSize, silhouette, Constants.LIST_SILHOUETTE_COLOR, isPage, bounceScale)) {
             return;
         }
 

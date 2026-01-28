@@ -26,6 +26,8 @@ public class FieldGuideEntryScreen extends BookScreen {
     private final Object entry;
     private Entity renderedEntity;
 
+    private long lastClickTime = 0;
+
     public FieldGuideEntryScreen(Screen parent, Object entry) {
         super(getTitleForEntry(entry));
         this.parent = parent;
@@ -81,8 +83,11 @@ public class FieldGuideEntryScreen extends BookScreen {
 
             if (mouseX >= xPos - halfSize && mouseX <= xPos + halfSize &&
                     mouseY >= yPos - halfSize && mouseY <= yPos + halfSize) {
+
                 if (ClientFieldGuideManager.isUnlocked(entry)) {
                     FieldGuideClient.playMobCry(this.renderedEntity);
+
+                    this.lastClickTime = System.currentTimeMillis();
                 }
                 return true;
             }
@@ -109,6 +114,13 @@ public class FieldGuideEntryScreen extends BookScreen {
         guiGraphics.drawString(this.font, title, this.leftPageBounds.x_center() - font.width(title) / 2 + 1, this.leftPageBounds.top() + 14 + 1, Constants.TEXT_SHADOW_COLOR, false);
         guiGraphics.drawString(this.font, title, this.leftPageBounds.x_center() - font.width(title) / 2, this.leftPageBounds.top() + 14, Constants.TEXT_COLOR, false);
 
+        // Bounce
+        float bounce = 1.0f;
+        long elapsed = System.currentTimeMillis() - lastClickTime;
+        if (elapsed < 200) {
+            float t = elapsed / 200f;
+            bounce = 1.0f + 0.15f * (float) Math.sin(t * Math.PI);
+        }
 
         // Entry model
         int xPos = leftPageBounds.left() + leftPageBounds.width() / 2;
@@ -116,12 +128,12 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         if (entry instanceof EntityType && renderedEntity instanceof LivingEntity living) {
             if (unlocked) {
-                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, false, 0, true);
+                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, false, 0, true, bounce);
             } else {
-                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, true, Constants.DETAILS_SILHOUETTE_COLOR, true);
+                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, true, Constants.DETAILS_SILHOUETTE_COLOR, true, bounce);
             }
         } else if (entry instanceof Block block) {
-            EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 30.0F, !unlocked, true);
+            EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 30.0F, !unlocked, true, bounce);
         }
 
         // Description

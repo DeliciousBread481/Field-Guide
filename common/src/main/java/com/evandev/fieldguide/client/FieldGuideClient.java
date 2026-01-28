@@ -35,7 +35,7 @@ public class FieldGuideClient {
 
             SoundEvent sound = ((MobAccessor) mob).fieldguide$callGetAmbientSound();
             if (sound != null) {
-                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(sound, 1.0F));
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(sound, 1.0F, 1.5F));
                 lastCryTime = now;
             }
         }
