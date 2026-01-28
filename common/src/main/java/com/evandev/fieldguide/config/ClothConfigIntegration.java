@@ -34,7 +34,7 @@ public class ClothConfigIntegration {
                 .build());
 
         general.addEntry(entryBuilder.startDoubleField(Component.translatable("option.fieldguide.scan_speed"), config.scanSpeed)
-                .setDefaultValue(ModConfig.get().scanSpeed)
+                .setDefaultValue(1.0D)
                 .setMin(0.1D)
                 .setMax(10.0D)
                 .setTooltip(Component.translatable("option.fieldguide.scan_speed.tooltip"))

@@ -1,22 +1,29 @@
 package com.evandev.fieldguide.mixin.client;
 
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.client.gui.util.ScissorBox;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.Objects;
 
 @Mixin(LevelRenderer.class)
 public class LevelRendererMixin {
@@ -36,93 +43,95 @@ public class LevelRendererMixin {
 
         if (pos == null) return;
 
-        float progress = 1.0f;
-        float alpha = 0.4f;
+        float progress = isScanning ? manager.getScanProgress(partialTick) : manager.getFadeProgress();
+        if (progress <= 0.0f) return;
 
-        if (isScanning) {
-            progress = manager.getScanProgress(partialTick);
-        } else {
-            alpha *= manager.getFadeProgress();
-        }
+        float fillHeight = isScanning ? progress : 1.0f;
+        float alpha = isScanning ? 0.6f : 0.6f * progress;
+
+        if (alpha <= 0.01f) return;
+
+        Minecraft mc = Minecraft.getInstance();
+        BlockState state = Objects.requireNonNull(mc.level).getBlockState(pos);
+        if (state.isAir()) return;
 
         Vec3 camPos = camera.getPosition();
         double x = pos.getX() - camPos.x;
         double y = pos.getY() - camPos.y;
         double z = pos.getZ() - camPos.z;
 
-        float width = 1.0F;
-        float height = 1.0F;
-        float currentHeight = height * progress;
-        float inflation = 0.1F + (width * 0.25F);
-
-        float halfW = (width / 2.0F) + inflation;
-        float minH = -inflation;
-        float maxH = Math.min(height + inflation, currentHeight + inflation);
-
         poseStack.pushPose();
-        poseStack.translate(x + 0.5, y, z + 0.5);
+        poseStack.translate(x, y, z);
 
-        MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
-        VertexConsumer consumer = bufferSource.getBuffer(RenderType.lightning());
-        Matrix4f matrix = poseStack.last().pose();
+        boolean useScissor = fillHeight < 1.0f;
+        if (useScissor) {
+            double shapeHeight = state.getShape(mc.level, pos, CollisionContext.of(Objects.requireNonNull(mc.player))).max(net.minecraft.core.Direction.Axis.Y);
+            if (shapeHeight <= 0.001) shapeHeight = 1.0;
 
-        // Front
-        fieldguide$drawDoubleSidedQuad(consumer, matrix,
-                halfW, minH, halfW,
-                halfW, maxH, halfW,
-                -halfW, maxH, halfW,
-                -halfW, minH, halfW,
-                alpha);
+            double limitY = shapeHeight * fillHeight;
+            ScissorBox scissor = fieldguide$calculateScissor(poseStack, limitY);
 
-        // Back
-        fieldguide$drawDoubleSidedQuad(consumer, matrix,
-                -halfW, minH, -halfW,
-                -halfW, maxH, -halfW,
-                halfW, maxH, -halfW,
-                halfW, minH, -halfW,
-                alpha);
+            if (scissor != null) {
+                RenderSystem.enableScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
+            } else {
+                poseStack.popPose();
+                return;
+            }
+        }
 
-        // Left
-        fieldguide$drawDoubleSidedQuad(consumer, matrix,
-                -halfW, minH, halfW,
-                -halfW, maxH, halfW,
-                -halfW, maxH, -halfW,
-                -halfW, minH, -halfW,
-                alpha);
+        RenderSystem.enablePolygonOffset();
+        RenderSystem.polygonOffset(-1.0f, -1.0f);
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, alpha);
 
-        // Right
-        fieldguide$drawDoubleSidedQuad(consumer, matrix,
-                halfW, minH, -halfW,
-                halfW, maxH, -halfW,
-                halfW, maxH, halfW,
-                halfW, minH, halfW,
-                alpha);
+        try {
+            MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
+
+            mc.getBlockRenderer().renderSingleBlock(state, poseStack, bufferSource, 15728880, OverlayTexture.pack(15, 10));
+
+            bufferSource.endBatch();
+        } catch (Exception ignored) {
+        }
+
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+        RenderSystem.disableBlend();
+        RenderSystem.disablePolygonOffset();
+
+        if (useScissor) {
+            RenderSystem.disableScissor();
+        }
 
         poseStack.popPose();
-
-        bufferSource.endBatch(RenderType.lightning());
     }
 
-    /**
-     * Helper to draw a quad visible from both sides by drawing it twice with opposite winding orders.
-     */
     @Unique
-    private void fieldguide$drawDoubleSidedQuad(VertexConsumer consumer, Matrix4f matrix,
-                                                float x1, float y1, float z1,
-                                                float x2, float y2, float z2,
-                                                float x3, float y3, float z3,
-                                                float x4, float y4, float z4,
-                                                float alpha) {
-        // Outside face
-        consumer.vertex(matrix, x1, y1, z1).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
-        consumer.vertex(matrix, x2, y2, z2).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
-        consumer.vertex(matrix, x3, y3, z3).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
-        consumer.vertex(matrix, x4, y4, z4).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
+    private ScissorBox fieldguide$calculateScissor(PoseStack poseStack, double limitY) {
+        Minecraft mc = Minecraft.getInstance();
+        Matrix4f modelView = poseStack.last().pose();
+        Matrix4f projection = RenderSystem.getProjectionMatrix();
 
-        // Inside face
-        consumer.vertex(matrix, x4, y4, z4).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
-        consumer.vertex(matrix, x3, y3, z3).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
-        consumer.vertex(matrix, x2, y2, z2).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
-        consumer.vertex(matrix, x1, y1, z1).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
+        Vector4f bottomPos = new Vector4f(0, 0, 0, 1.0f);
+        Vector4f topPos = new Vector4f(0, (float) limitY, 0, 1.0f);
+
+        bottomPos.mul(modelView);
+        bottomPos.mul(projection);
+
+        topPos.mul(modelView);
+        topPos.mul(projection);
+
+        if (bottomPos.w() <= 0 && topPos.w() <= 0) return null;
+
+        Vector3f ndcTop = new Vector3f(topPos.x() / topPos.w(), topPos.y() / topPos.w(), topPos.z() / topPos.w());
+
+        int winWidth = mc.getWindow().getWidth();
+        int winHeight = mc.getWindow().getHeight();
+
+        int yEnd = (int) ((ndcTop.y() + 1) * 0.5f * winHeight);
+        int scissorHeight = Math.max(0, yEnd);
+
+        if (scissorHeight > winHeight) scissorHeight = winHeight;
+
+        return new ScissorBox(0, 0, winWidth, scissorHeight);
     }
 }

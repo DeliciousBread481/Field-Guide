@@ -1,13 +1,20 @@
 package com.evandev.fieldguide.mixin.client;
 
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.client.ScanRenderState;
+import com.evandev.fieldguide.client.gui.util.ScissorBox;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,92 +26,107 @@ public class EntityRenderDispatcherMixin {
 
     @Inject(method = "render", at = @At("RETURN"))
     private void renderScanOverlay(Entity entity, double x, double y, double z, float rotationYaw, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLight, CallbackInfo ci) {
+        if (ScanRenderState.isScanning() || !(entity instanceof LivingEntity)) return;
+
+        if (buffer instanceof MultiBufferSource.BufferSource bs) {
+            bs.endBatch();
+        }
+
         ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
         boolean isScanning = manager.getScanningEntity() == entity;
         boolean isFading = manager.getFadingEntity() == entity;
 
         if (!isScanning && !isFading) return;
 
-        float progress = 1.0f;
-        float alpha = 0.4f;
+        float progress = isScanning ? manager.getScanProgress(partialTicks) : manager.getFadeProgress();
+        if (progress <= 0.0f) return;
 
-        if (isScanning) {
-            progress = manager.getScanProgress(partialTicks);
-        } else {
-            alpha *= manager.getFadeProgress();
-        }
+        float fillHeight = isScanning ? progress : 1.0f;
+        float alpha = isScanning ? 0.8f : 0.8f * progress;
 
-        float width = entity.getBbWidth();
-        float height = entity.getBbHeight();
-        float currentHeight = height * progress;
+        if (alpha <= 0.01f) return;
 
-        float inflation = 0.1F + (width * 0.25F);
-
-        float halfW = (width / 2.0F) + inflation;
-        float minH = -inflation;
-        float maxH = Math.min(height + inflation, currentHeight + inflation);
-
+        ScanRenderState.setScanning(true);
         poseStack.pushPose();
         poseStack.translate(x, y, z);
 
-        VertexConsumer consumer = buffer.getBuffer(RenderType.lightning());
-        Matrix4f matrix = poseStack.last().pose();
-
-        // Front
-        fieldguide$drawDoubleSidedQuad(consumer, matrix,
-                halfW, minH, halfW,
-                halfW, maxH, halfW,
-                -halfW, maxH, halfW,
-                -halfW, minH, halfW,
-                alpha);
-
-        // Back
-        fieldguide$drawDoubleSidedQuad(consumer, matrix,
-                -halfW, minH, -halfW,
-                -halfW, maxH, -halfW,
-                halfW, maxH, -halfW,
-                halfW, minH, -halfW,
-                alpha);
-
-        // Left
-        fieldguide$drawDoubleSidedQuad(consumer, matrix,
-                -halfW, minH, halfW,
-                -halfW, maxH, halfW,
-                -halfW, maxH, -halfW,
-                -halfW, minH, -halfW,
-                alpha);
-
-        // Right
-        fieldguide$drawDoubleSidedQuad(consumer, matrix,
-                halfW, minH, -halfW,
-                halfW, maxH, -halfW,
-                halfW, maxH, halfW,
-                halfW, minH, halfW,
-                alpha);
-
-        poseStack.popPose();
+        try {
+            fieldguide$renderWhiteSilhouette(entity, partialTicks, poseStack, packedLight, fillHeight, alpha);
+        } finally {
+            poseStack.popPose();
+            ScanRenderState.setScanning(false);
+        }
     }
 
-    /**
-     * Helper to draw a quad visible from both sides by drawing it twice with opposite winding orders.
-     */
     @Unique
-    private void fieldguide$drawDoubleSidedQuad(VertexConsumer consumer, Matrix4f matrix,
-                                                float x1, float y1, float z1,
-                                                float x2, float y2, float z2,
-                                                float x3, float y3, float z3,
-                                                float x4, float y4, float z4,
-                                                float alpha) {
-        // Outside face
-        consumer.vertex(matrix, x1, y1, z1).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
-        consumer.vertex(matrix, x2, y2, z2).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
-        consumer.vertex(matrix, x3, y3, z3).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
-        consumer.vertex(matrix, x4, y4, z4).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
+    private void fieldguide$renderWhiteSilhouette(Entity entity, float partialTicks, PoseStack poseStack, int light, float fillPercent, float alpha) {
+        EntityRenderer<? super Entity> renderer = ((EntityRenderDispatcher) (Object) this).getRenderer(entity);
+        boolean useScissor = fillPercent < 1.0f;
 
-        // Inside face
-        consumer.vertex(matrix, x4, y4, z4).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
-        consumer.vertex(matrix, x3, y3, z3).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
-        consumer.vertex(matrix, x2, y2, z2).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
-        consumer.vertex(matrix, x1, y1, z1).color(1.0F, 1.0F, 1.0F, alpha).endVertex();
+        if (useScissor) {
+            double entityHeight = entity.getBoundingBox().maxY - entity.getBoundingBox().minY;
+            double limitY = entityHeight * fillPercent;
+            ScissorBox scissor = fieldguide$calculateScissor(poseStack, limitY);
+
+            if (scissor != null) {
+                RenderSystem.enableScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
+            } else {
+                return;
+            }
+        }
+
+        RenderSystem.enablePolygonOffset();
+        RenderSystem.polygonOffset(-1.0f, -1.0f);
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, alpha);
+
+        try {
+            MultiBufferSource.BufferSource immediate = Minecraft.getInstance().renderBuffers().bufferSource();
+            float yaw = Mth.lerp(partialTicks, entity.yRotO, entity.getYRot());
+
+            renderer.render(entity, yaw, partialTicks, poseStack, immediate, light);
+            immediate.endBatch();
+        } catch (Exception ignored) {
+        }
+
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+        RenderSystem.disableBlend();
+        RenderSystem.disablePolygonOffset();
+
+        if (useScissor) {
+            RenderSystem.disableScissor();
+        }
+    }
+
+    @Unique
+    private ScissorBox fieldguide$calculateScissor(PoseStack poseStack, double limitY) {
+        Minecraft mc = Minecraft.getInstance();
+        Matrix4f modelView = poseStack.last().pose();
+        Matrix4f projection = RenderSystem.getProjectionMatrix();
+
+        Vector4f bottomPos = new Vector4f(0, 0, 0, 1.0f);
+        Vector4f topPos = new Vector4f(0, (float) limitY, 0, 1.0f);
+
+        bottomPos.mul(modelView);
+        bottomPos.mul(projection);
+
+        topPos.mul(modelView);
+        topPos.mul(projection);
+
+        // Check if points are behind the camera
+        if (bottomPos.w() <= 0 && topPos.w() <= 0) return null;
+
+        Vector3f ndcTop = new Vector3f(topPos.x() / topPos.w(), topPos.y() / topPos.w(), topPos.z() / topPos.w());
+
+        int winWidth = mc.getWindow().getWidth();
+        int winHeight = mc.getWindow().getHeight();
+
+        int yEnd = (int) ((ndcTop.y() + 1) * 0.5f * winHeight);
+        int scissorHeight = Math.max(0, yEnd);
+
+        if (scissorHeight > winHeight) scissorHeight = winHeight;
+
+        return new ScissorBox(0, 0, winWidth, scissorHeight);
     }
 }

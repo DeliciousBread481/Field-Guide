@@ -11,6 +11,7 @@
     "client.EntityRenderDispatcherMixin",
     "client.InventoryScreenMixin",
     "client.LevelRendererMixin",
+    "client.LivingEntityRendererMixin",
     "client.PauseScreenMixin"
   ],
   "server": [
