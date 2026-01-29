@@ -129,9 +129,6 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         return I18n.exists(overrideKey) ? I18n.get(overrideKey) : (I18n.exists(fallbackKey) ? I18n.get(fallbackKey) : I18n.get("fieldguide.description.missing"));
     }
 
-    /**
-     * Called when the client receives the SyncCategoriesPacket from the server.
-     */
     public void updateCategoriesFromServer(List<Category> categories) {
         this.syncedCategories.clear();
         categories.sort(Comparator.comparingInt(Category::getSortIndex).thenComparing(Category::getId));
@@ -175,6 +172,8 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             }
 
             EntryVisual visual = new EntryVisual();
+
+            if (json.has("auto_rotate")) visual.autoRotate = GsonHelper.getAsBoolean(json, "auto_rotate");
 
             // Base
             if (json.has("scale")) visual.scale = GsonHelper.getAsFloat(json, "scale");
@@ -536,8 +535,9 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         return fadingTarget instanceof Entity ? (Entity) fadingTarget : null;
     }
 
-    public float getFadeProgress() {
-        return (float) fadeTicks / (float) FADE_DURATION;
+    public float getFadeProgress(float partialTicks) {
+        float currentFade = Math.max(0, fadeTicks - partialTicks);
+        return currentFade / (float) FADE_DURATION;
     }
 
     public void unlock(Object entry) {

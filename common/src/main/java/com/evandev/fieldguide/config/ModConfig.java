@@ -28,7 +28,12 @@ public class ModConfig {
     public int inventoryButtonYOffset = 61;
 
     public boolean showUndiscoveredNames = false;
+    public boolean autoRotateModels = false;
     public double scanSpeed = 1.0D;
+
+    public String scanOverlayColor = "#FFFFFF";
+    public double scanOverlayAlpha = 0.8D;
+
     public List<String> entityBlacklist = new ArrayList<>();
 
     public List<String> lootRemovals = new ArrayList<>();
@@ -93,5 +98,14 @@ public class ModConfig {
             }
         }
         return null;
+    }
+
+    public int getScanOverlayColorInt() {
+        try {
+            String hex = scanOverlayColor.startsWith("#") ? scanOverlayColor.substring(1) : scanOverlayColor;
+            return Integer.parseInt(hex, 16);
+        } catch (Exception e) {
+            return 0xFFFFFF;
+        }
     }
 }

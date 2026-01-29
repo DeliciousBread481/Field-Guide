@@ -37,8 +37,20 @@
   "option.fieldguide.show_undiscovered_names": "Show Undiscovered Names",
   "option.fieldguide.show_undiscovered_names.tooltip": "If enabled, names of undiscovered entries will be visible and searchable.",
 
+  "option.fieldguide.auto_rotate_models": "Auto Rotate Models",
+  "option.fieldguide.auto_rotate_models.tooltip": "If enabled, the 3D models in the Field Guide will rotate automatically.",
+
   "option.fieldguide.scan_speed": "Scanning Speed",
   "option.fieldguide.scan_speed.tooltip": "The time in seconds it takes to scan an entry.",
+
+  "option.fieldguide.scan_overlay_color": "Scan Overlay Color",
+  "option.fieldguide.scan_overlay_color.tooltip": "The hex color code for the scanning overlay (e.g. #FFFFFF).",
+
+  "option.fieldguide.scan_overlay_alpha": "Scan Overlay Opacity",
+  "option.fieldguide.scan_overlay_alpha.tooltip": "The opacity of the scanning overlay (0.0 - 1.0).",
+
+  "option.fieldguide.discovery_redirects": "Discovery Redirects",
+  "option.fieldguide.discovery_redirects.tooltip": "Redirect scanning of one entry to another.\nFormat: 'modid:scanned_id|modid:target_id'",
 
   "key.fieldguide.open": "Open Field Guide",
 

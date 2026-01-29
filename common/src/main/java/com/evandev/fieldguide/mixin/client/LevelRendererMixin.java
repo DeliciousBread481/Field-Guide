@@ -2,6 +2,7 @@ package com.evandev.fieldguide.mixin.client;
 
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.util.ScissorBox;
+import com.evandev.fieldguide.config.ModConfig;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
@@ -23,6 +24,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.awt.*;
 import java.util.Objects;
 
 @Mixin(LevelRenderer.class)
@@ -43,11 +45,12 @@ public class LevelRendererMixin {
 
         if (pos == null) return;
 
-        float progress = isScanning ? manager.getScanProgress(partialTick) : manager.getFadeProgress();
+        float progress = isScanning ? manager.getScanProgress(partialTick) : manager.getFadeProgress(partialTick);
         if (progress <= 0.0f) return;
 
+        double baseAlpha = ModConfig.get().scanOverlayAlpha;
         float fillHeight = isScanning ? progress : 1.0f;
-        float alpha = isScanning ? 0.6f : 0.6f * progress;
+        float alpha = (float) (isScanning ? baseAlpha : baseAlpha * progress);
 
         if (alpha <= 0.01f) return;
 
@@ -55,10 +58,12 @@ public class LevelRendererMixin {
         BlockState state = Objects.requireNonNull(mc.level).getBlockState(pos);
         if (state.isAir()) return;
 
+        Vec3 offset = state.getOffset(mc.level, pos);
+
         Vec3 camPos = camera.getPosition();
-        double x = pos.getX() - camPos.x;
-        double y = pos.getY() - camPos.y;
-        double z = pos.getZ() - camPos.z;
+        double x = pos.getX() - camPos.x + offset.x;
+        double y = pos.getY() - camPos.y + offset.y;
+        double z = pos.getZ() - camPos.z + offset.z;
 
         poseStack.pushPose();
         poseStack.translate(x, y, z);
@@ -83,7 +88,10 @@ public class LevelRendererMixin {
         RenderSystem.polygonOffset(-1.0f, -1.0f);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, alpha);
+
+        int colorInt = ModConfig.get().getScanOverlayColorInt();
+        Color c = new Color(colorInt);
+        RenderSystem.setShaderColor(c.getRed() / 255.0F, c.getGreen() / 255.0F, c.getBlue() / 255.0F, alpha);
 
         try {
             MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
