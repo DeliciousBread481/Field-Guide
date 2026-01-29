@@ -58,16 +58,16 @@ public class FieldGuideEntryScreen extends BookScreen {
         }
 
         this.addRenderableWidget(new ImageButton(
-                this.bounds.left() - 4,
-                this.bounds.top() + 84,
-                23,
-                23,
+                this.bounds.left() - 10,
+                this.bounds.top() + 31,
+                24,
+                24,
                 0,
                 0,
-                23,
+                24,
                 Constants.BACK_TEXTURE,
-                23,
-                23 * 2,
+                24,
+                24 * 2,
                 b -> Objects.requireNonNull(this.minecraft).setScreen(parent)
         ));
     }
