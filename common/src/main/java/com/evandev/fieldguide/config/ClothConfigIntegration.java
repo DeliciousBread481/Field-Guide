@@ -25,12 +25,19 @@ public class ClothConfigIntegration {
 
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
 
+        // General
         ConfigCategory general = builder.getOrCreateCategory(Component.translatable("category.fieldguide.general"));
 
         general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.show_undiscovered_names"), config.showUndiscoveredNames)
                 .setDefaultValue(false)
                 .setTooltip(Component.translatable("option.fieldguide.show_undiscovered_names.tooltip"))
                 .setSaveConsumer(newValue -> config.showUndiscoveredNames = newValue)
+                .build());
+
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.auto_rotate_models"), config.autoRotateModels)
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("option.fieldguide.auto_rotate_models.tooltip"))
+                .setSaveConsumer(newValue -> config.autoRotateModels = newValue)
                 .build());
 
         general.addEntry(entryBuilder.startDoubleField(Component.translatable("option.fieldguide.scan_speed"), config.scanSpeed)
@@ -41,7 +48,22 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.scanSpeed = newValue)
                 .build());
 
+        // Interface
         ConfigCategory interfaceCat = builder.getOrCreateCategory(Component.translatable("category.fieldguide.interface"));
+
+        interfaceCat.addEntry(entryBuilder.startStrField(Component.translatable("option.fieldguide.scan_overlay_color"), config.scanOverlayColor)
+                .setDefaultValue("#FFFFFF")
+                .setTooltip(Component.translatable("option.fieldguide.scan_overlay_color.tooltip"))
+                .setSaveConsumer(newValue -> config.scanOverlayColor = newValue)
+                .build());
+
+        interfaceCat.addEntry(entryBuilder.startDoubleField(Component.translatable("option.fieldguide.scan_overlay_alpha"), config.scanOverlayAlpha)
+                .setDefaultValue(0.8D)
+                .setMin(0.0D)
+                .setMax(1.0D)
+                .setTooltip(Component.translatable("option.fieldguide.scan_overlay_alpha.tooltip"))
+                .setSaveConsumer(newValue -> config.scanOverlayAlpha = newValue)
+                .build());
 
         interfaceCat.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.show_pause_button"), config.showPauseMenuButton)
                 .setDefaultValue(true)
@@ -78,6 +100,8 @@ public class ClothConfigIntegration {
                 .setTooltip(Component.translatable("option.fieldguide.inventory_button_y.tooltip"))
                 .setSaveConsumer(newValue -> config.inventoryButtonYOffset = newValue)
                 .build());
+
+        // Content
 
         ConfigCategory contentCat = builder.getOrCreateCategory(Component.translatable("category.fieldguide.content"));
 

@@ -172,6 +172,9 @@ public class FieldGuideEntryScreen extends BookScreen {
                 int startY = this.rightPageBounds.bottom() - 15 - totalBlockHeight;
                 int originalStartY = startY;
 
+                RenderSystem.enableDepthTest();
+                RenderSystem.depthMask(true);
+
                 for (List<ItemStack> line : lines) {
                     int lineWidth = line.size() * itemSize + (line.size() - 1) * spacing;
                     int startX = this.rightPageBounds.x_center() - (lineWidth / 2);

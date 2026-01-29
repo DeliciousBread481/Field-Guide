@@ -3,6 +3,7 @@ package com.evandev.fieldguide.client.gui.util;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.data.EntryVisual;
+import com.evandev.fieldguide.config.ModConfig;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -219,12 +220,15 @@ public class EntryRenderHelper {
         float finalScale = clampedScale * bounceScale;
         int feetY = (int) (y + (entityHeight * finalScale / 2.0f) + yOff);
 
+        boolean shouldRotate = visual.autoRotate != null ? visual.autoRotate : ModConfig.get().autoRotateModels;
+        float autoRotation = shouldRotate ? (float) ((System.currentTimeMillis() / 20.0) % 360.0) : 0.0F;
+
         guiGraphics.enableScissor(minX, minY, maxX, maxY);
-        renderEntityStatic(guiGraphics, entity, x, feetY, finalScale, silhouette, color);
+        renderEntityStatic(guiGraphics, entity, x, feetY, finalScale, silhouette, color, autoRotation);
         guiGraphics.disableScissor();
     }
 
-    public static void renderEntityStatic(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, float scale, boolean silhouette, int color) {
+    public static void renderEntityStatic(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, float scale, boolean silhouette, int color, float autoRotation) {
         guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
         PoseStack pose = guiGraphics.pose();
@@ -238,7 +242,7 @@ public class EntryRenderHelper {
         pose.mulPose(Axis.ZP.rotationDegrees(180.0F));
 
         float cameraXAngle = -30;
-        float bodyYAngle = 30;
+        float bodyYAngle = 30 + autoRotation;
 
         Quaternionf cameraOrientation = Axis.XP.rotationDegrees(cameraXAngle);
 
@@ -327,8 +331,11 @@ public class EntryRenderHelper {
             }
         }
 
+        boolean shouldRotate = visual.autoRotate != null ? visual.autoRotate : ModConfig.get().autoRotateModels;
+        float autoRotation = shouldRotate ? (float) ((System.currentTimeMillis() / 20.0) % 360.0) : 0.0F;
+
         float cameraXAngle = 30;
-        float cameraYAngle = 210;
+        float cameraYAngle = 210 + autoRotation;
 
         PoseStack pose = guiGraphics.pose();
         pose.pushPose();
@@ -408,5 +415,4 @@ public class EntryRenderHelper {
 
         RenderSystem.setShaderLights(light0, light1);
     }
-
 }
