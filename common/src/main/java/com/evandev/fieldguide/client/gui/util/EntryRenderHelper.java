@@ -220,8 +220,7 @@ public class EntryRenderHelper {
         float finalScale = clampedScale * bounceScale;
         int feetY = (int) (y + (entityHeight * finalScale / 2.0f) + yOff);
 
-        boolean shouldRotate = visual.autoRotate != null ? visual.autoRotate : ModConfig.get().autoRotateModels;
-        float autoRotation = shouldRotate ? (float) ((System.currentTimeMillis() / 20.0) % 360.0) : 0.0F;
+        float autoRotation = getAutoRotation(visual);
 
         guiGraphics.enableScissor(minX, minY, maxX, maxY);
         renderEntityStatic(guiGraphics, entity, x, feetY, finalScale, silhouette, color, autoRotation);
@@ -331,8 +330,7 @@ public class EntryRenderHelper {
             }
         }
 
-        boolean shouldRotate = visual.autoRotate != null ? visual.autoRotate : ModConfig.get().autoRotateModels;
-        float autoRotation = shouldRotate ? (float) ((System.currentTimeMillis() / 20.0) % 360.0) : 0.0F;
+        float autoRotation = getAutoRotation(visual);
 
         float cameraXAngle = 30;
         float cameraYAngle = 210 + autoRotation;
@@ -396,6 +394,20 @@ public class EntryRenderHelper {
         Lighting.setupForFlatItems();
     }
 
+    private static float getAutoRotation(EntryVisual visual) {
+        boolean shouldRotate = visual.autoRotate != null
+                ? visual.autoRotate
+                : ModConfig.get().autoRotateModels;
+
+        float speed = visual.rotationSpeed != null
+                ? visual.rotationSpeed
+                : ModConfig.get().rotationSpeed;
+
+        if (!shouldRotate) return 0.0F;
+
+        return (float) ((System.currentTimeMillis() / 1000.0 * speed) % 360.0);
+    }
+    
     private static void setupBlockLighting() {
         Vector3f light0 = new Vector3f(0.2F, -1.0F, -0.7F);
         light0.normalize();

@@ -29,6 +29,7 @@ public class ModConfig {
 
     public boolean showUndiscoveredNames = false;
     public boolean autoRotateModels = false;
+    public float rotationSpeed = 15.0F;
     public double scanSpeed = 1.0D;
 
     public String scanOverlayColor = "#FFFFFF";
@@ -94,7 +95,8 @@ public class ModConfig {
             if (parts.length == 2 && parts[0].equals(sourceStr)) {
                 try {
                     return new ResourceLocation(parts[1]);
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
         }
         return null;

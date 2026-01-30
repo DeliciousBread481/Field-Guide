@@ -40,6 +40,12 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.autoRotateModels = newValue)
                 .build());
 
+        general.addEntry(entryBuilder.startFloatField(Component.translatable("option.fieldguide.rotation_speed"), config.rotationSpeed)
+                .setDefaultValue(15.0F)
+                .setTooltip(Component.translatable("option.fieldguide.rotation_speed.tooltip"))
+                .setSaveConsumer(newValue -> config.rotationSpeed = newValue)
+                .build());
+
         general.addEntry(entryBuilder.startDoubleField(Component.translatable("option.fieldguide.scan_speed"), config.scanSpeed)
                 .setDefaultValue(1.0D)
                 .setMin(0.1D)

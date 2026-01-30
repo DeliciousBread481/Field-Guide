@@ -174,6 +174,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             EntryVisual visual = new EntryVisual();
 
             if (json.has("auto_rotate")) visual.autoRotate = GsonHelper.getAsBoolean(json, "auto_rotate");
+            if (json.has("rotation_speed")) visual.rotationSpeed = GsonHelper.getAsFloat(json, "rotation_speed");
 
             // Base
             if (json.has("scale")) visual.scale = GsonHelper.getAsFloat(json, "scale");

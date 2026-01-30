@@ -21,23 +21,6 @@ be unlocked.
 
 The configuration file is located at `.minecraft/config/fieldguide.json`.
 
-| Option                   | Type    | Default     | Description                                                |
-|--------------------------|---------|-------------|------------------------------------------------------------|
-| `showPauseMenuButton`    | Boolean | `true`      | Adds a Field Guide button to the pause menu.               |
-| `pauseButtonXOffset`     | Integer | `0`         | Adjusts X position of the pause menu button.               |
-| `pauseButtonYOffset`     | Integer | `0`         | Adjusts Y position of the pause menu button.               |
-| `showInventoryButton`    | Boolean | `true`      | Adds a Field Guide button to the player inventory.         |
-| `inventoryButtonXOffset` | Integer | `125`       | Adjusts X position of the inventory button.                |
-| `inventoryButtonYOffset` | Integer | `62`        | Adjusts Y position of the inventory button.                |
-| `showUndiscoveredNames`  | Boolean | `false`     | If true, shows names of locked entries instead of "???".   |
-| `autoRotateModels`       | Boolean | `false`     | If true, 3D models in the guide will rotate automatically. |
-| `scanSpeed`              | Double  | `1.0`       | Time in seconds required to scan a target.                 |
-| `scanOverlayColor`       | String  | `#FFFFFF`   | Hex code for the scanning overlay color.                   |
-| `scanOverlayAlpha`       | Double  | `0.8`       | Opacity of the scanning overlay (0.0 to 1.0).              |
-| `entityBlacklist`        | List    | *See below* | List of IDs that cannot be scanned.                        |
-| `lootRemovals`           | List    | `[]`        | Items to hide from loot display (See Format below).        |
-| `lootAdditions`          | List    | `[]`        | Items to add to loot display (See Format below).           |
-
 ### Entity Blacklist Format
 
 You can blacklist specific entities or entire mods.
@@ -212,15 +195,16 @@ For example: `assets/minecraft/fieldguide/visuals/entries/pig.json` makes adjust
 
 #### JSON Structure
 
-| Field         | Type    | Description                                                                                                                |
-|---------------|---------|----------------------------------------------------------------------------------------------------------------------------|
-| `id`          | String  | (Optional) The ID of the entity/block to target (e.g., minecraft:cow). If omitted, the filename and path determine the ID. |
-| `scale`       | Float   | Base scale multiplier. 1.0 is default size, 0.5 is half size, 2.0 is double.                                               |
-| `y_offset`    | Float   | Moves the model up/down globally.                                                                                          |
-| `x_offset`    | Float   | Moves the model left/right globally.                                                                                       |
-| `auto_rotate` | Boolean | (Optional) Overrides the global auto-rotate setting for this specific entry.                                               |
-| `grid_scale`  | Float   | (Optional) Overrides scale specifically for the grid view.                                                                 |
-| `page_scale`  | Float   | (Optional) Overrides scale specifically for the detailed page view.                                                        |
+| Field            | Type    | Description                                                                                                                |
+|------------------|---------|----------------------------------------------------------------------------------------------------------------------------|
+| `id`             | String  | (Optional) The ID of the entity/block to target (e.g., minecraft:cow). If omitted, the filename and path determine the ID. |
+| `scale`          | Float   | Base scale multiplier. 1.0 is default size, 0.5 is half size, 2.0 is double.                                               |
+| `y_offset`       | Float   | Moves the model up/down globally.                                                                                          |
+| `x_offset`       | Float   | Moves the model left/right globally.                                                                                       |
+| `auto_rotate`    | Boolean | (Optional) Overrides the global auto-rotate setting for this specific entry.                                               |
+| `rotation_speed` | Float   | (Optional) Overrides the global rotation speed setting for this specific entry.                                            |
+| `grid_scale`     | Float   | (Optional) Overrides scale specifically for the grid view.                                                                 |
+| `page_scale`     | Float   | (Optional) Overrides scale specifically for the detailed page view.                                                        |
 
 #### Example: Adjusting a Creeper
 
