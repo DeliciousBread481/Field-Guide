@@ -1,8 +1,9 @@
 package com.evandev.fieldguide;
 
-import com.evandev.fieldguide.client.FieldGuideClient;
-import com.evandev.fieldguide.config.ClothConfigIntegration;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.client.FieldGuideClient;
+import com.evandev.fieldguide.client.ModRenderTypes;
+import com.evandev.fieldguide.config.ClothConfigIntegration;
 import com.evandev.fieldguide.network.GrantContentPacket;
 import com.evandev.fieldguide.network.RequestDropsPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
@@ -24,6 +25,7 @@ import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.client.event.RegisterShadersEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -35,8 +37,10 @@ import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.network.NetworkEvent;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -51,8 +55,11 @@ public class FieldGuideMod {
 
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(this::commonSetup);
-        modEventBus.addListener(this::registerReloadListeners);
-        modEventBus.addListener(this::registerKeyMappings);
+        if (FMLEnvironment.dist.isClient()) {
+            modEventBus.addListener(this::registerReloadListeners);
+            modEventBus.addListener(this::registerKeyMappings);
+            modEventBus.addListener(this::registerShaders);
+        }
 
         if (ModList.get().isLoaded("cloth_config")) {
             FMLJavaModLoadingContext.get().getModEventBus().register(new Object() {
@@ -101,18 +108,26 @@ public class FieldGuideMod {
 
     public static void handleSyncDrops(SyncDropsPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
         NetworkEvent.Context context = contextSupplier.get();
-        context.enqueueWork(() -> {
-            ClientFieldGuideManager.getInstance().setDrops(packet.getEntryId(), packet.getDrops());
-        });
+        context.enqueueWork(() -> ClientFieldGuideManager.getInstance().setDrops(packet.getEntryId(), packet.getDrops()));
         context.setPacketHandled(true);
     }
 
     public static void handleSyncCategories(SyncCategoriesPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
         NetworkEvent.Context context = contextSupplier.get();
-        context.enqueueWork(() -> {
-            ClientFieldGuideManager.getInstance().updateCategoriesFromServer(packet.getCategories());
-        });
+        context.enqueueWork(() -> ClientFieldGuideManager.getInstance().updateCategoriesFromServer(packet.getCategories()));
         context.setPacketHandled(true);
+    }
+
+    public void registerShaders(RegisterShadersEvent event) {
+        try {
+            ModRenderTypes.registerShaders(instance -> {
+                event.registerShader(instance, loadedShader -> {
+                    ModRenderTypes.SCAN_SHADER_INSTANCE = loadedShader;
+                });
+            }, event.getResourceProvider());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to register Field Guide shaders", e);
+        }
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {

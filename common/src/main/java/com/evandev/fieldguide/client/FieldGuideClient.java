@@ -3,7 +3,7 @@ package com.evandev.fieldguide.client;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideScreen;
 import com.evandev.fieldguide.data.Category;
-import com.evandev.fieldguide.mixin.client.MobAccessor;
+import com.evandev.fieldguide.mixin.MobAccessor;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;

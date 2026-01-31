@@ -1,4 +1,4 @@
-package com.evandev.fieldguide.client.gui.util;
+package com.evandev.fieldguide.client.render;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import org.jetbrains.annotations.NotNull;
@@ -24,9 +24,9 @@ public class TintedVertexConsumer implements VertexConsumer {
     @Override
     public @NotNull VertexConsumer color(int red, int green, int blue, int alpha) {
         delegate.color(
-                (int) (red * tintR),
-                (int) (green * tintG),
-                (int) (blue * tintB),
+                (int) (255 * tintR),
+                (int) (255 * tintG),
+                (int) (255 * tintB),
                 (int) (alpha * tintA)
         );
         return this;
@@ -64,9 +64,9 @@ public class TintedVertexConsumer implements VertexConsumer {
     @Override
     public void defaultColor(int red, int green, int blue, int alpha) {
         delegate.defaultColor(
-                (int) (red * tintR),
-                (int) (green * tintG),
-                (int) (blue * tintB),
+                (int) (255 * tintR),
+                (int) (255 * tintG),
+                (int) (255 * tintB),
                 (int) (alpha * tintA)
         );
     }

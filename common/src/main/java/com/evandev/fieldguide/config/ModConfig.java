@@ -34,7 +34,7 @@ public class ModConfig {
     public double scanDistance = 64.0D;
 
     public String scanOverlayColor = "#FFFFFF";
-    public double scanOverlayAlpha = 0.8D;
+    public double scanOverlayAlpha = 0.5D;
 
     public List<String> entityBlacklist = new ArrayList<>();
 

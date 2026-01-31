@@ -3,7 +3,8 @@ package com.evandev.fieldguide.mixin.client;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.ScanRenderState;
 import com.evandev.fieldguide.client.gui.util.ScissorBox;
-import com.evandev.fieldguide.client.gui.util.TintedMultiBufferSource;
+import com.evandev.fieldguide.client.gui.util.ScissorBoxHelper;
+import com.evandev.fieldguide.client.render.TintedMultiBufferSource;
 import com.evandev.fieldguide.config.ModConfig;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -14,9 +15,6 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -54,8 +52,8 @@ public class EntityRenderDispatcherMixin {
 
         if (isOutOfRange) {
             fillHeight = 1.0f;
-            alpha = 0.6f + (float) (Math.sin(System.currentTimeMillis() / 200.0) * 0.15); // Pulse
-            colorInt = 0xFF5555; // Red visual for out of range
+            alpha = 0.6f + (float) (Math.sin(System.currentTimeMillis() / 200.0) * 0.15);
+            colorInt = 0xFF5555;
         }
 
         if (alpha <= 0.01f) return;
@@ -80,7 +78,7 @@ public class EntityRenderDispatcherMixin {
         if (useScissor) {
             double entityHeight = (entity.getBoundingBox().maxY - entity.getBoundingBox().minY) * 1.5;
             double limitY = entityHeight * fillPercent;
-            ScissorBox scissor = fieldguide$calculateScissor(poseStack, limitY);
+            ScissorBox scissor = ScissorBoxHelper.calculateScissor(poseStack, limitY);
 
             if (scissor != null) {
                 RenderSystem.enableScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
@@ -116,36 +114,5 @@ public class EntityRenderDispatcherMixin {
         if (useScissor) {
             RenderSystem.disableScissor();
         }
-    }
-
-    @Unique
-    private ScissorBox fieldguide$calculateScissor(PoseStack poseStack, double limitY) {
-        Minecraft mc = Minecraft.getInstance();
-        Matrix4f modelView = poseStack.last().pose();
-        Matrix4f projection = RenderSystem.getProjectionMatrix();
-
-        Vector4f bottomPos = new Vector4f(0, 0, 0, 1.0f);
-        Vector4f topPos = new Vector4f(0, (float) limitY, 0, 1.0f);
-
-        bottomPos.mul(modelView);
-        bottomPos.mul(projection);
-
-        topPos.mul(modelView);
-        topPos.mul(projection);
-
-        // Check if points are behind the camera
-        if (bottomPos.w() <= 0 && topPos.w() <= 0) return null;
-
-        Vector3f ndcTop = new Vector3f(topPos.x() / topPos.w(), topPos.y() / topPos.w(), topPos.z() / topPos.w());
-
-        int winWidth = mc.getWindow().getWidth();
-        int winHeight = mc.getWindow().getHeight();
-
-        int yEnd = (int) ((ndcTop.y() + 1) * 0.5f * winHeight);
-        int scissorHeight = Math.max(0, yEnd);
-
-        if (scissorHeight > winHeight) scissorHeight = winHeight;
-
-        return new ScissorBox(0, 0, winWidth, scissorHeight);
     }
 }

@@ -72,7 +72,7 @@ public class ClothConfigIntegration {
                 .build());
 
         interfaceCat.addEntry(entryBuilder.startDoubleField(Component.translatable("option.fieldguide.scan_overlay_alpha"), config.scanOverlayAlpha)
-                .setDefaultValue(0.8D)
+                .setDefaultValue(0.5D)
                 .setMin(0.0D)
                 .setMax(1.0D)
                 .setTooltip(Component.translatable("option.fieldguide.scan_overlay_alpha.tooltip"))

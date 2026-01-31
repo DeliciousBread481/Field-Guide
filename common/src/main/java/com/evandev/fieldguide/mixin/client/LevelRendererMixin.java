@@ -1,7 +1,10 @@
 package com.evandev.fieldguide.mixin.client;
 
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.client.ModRenderTypes;
 import com.evandev.fieldguide.client.gui.util.ScissorBox;
+import com.evandev.fieldguide.client.gui.util.ScissorBoxHelper;
+import com.evandev.fieldguide.client.render.TintedVertexConsumer;
 import com.evandev.fieldguide.config.ModConfig;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -9,17 +12,16 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -59,7 +61,6 @@ public class LevelRendererMixin {
         if (state.isAir()) return;
 
         Vec3 offset = state.getOffset(mc.level, pos);
-
         Vec3 camPos = camera.getPosition();
         double x = pos.getX() - camPos.x + offset.x;
         double y = pos.getY() - camPos.y + offset.y;
@@ -71,10 +72,11 @@ public class LevelRendererMixin {
         boolean useScissor = fillHeight < 1.0f;
         if (useScissor) {
             double shapeHeight = state.getShape(mc.level, pos, CollisionContext.of(Objects.requireNonNull(mc.player))).max(net.minecraft.core.Direction.Axis.Y);
-            if (shapeHeight <= 0.001) shapeHeight = 1.0;
 
-            double limitY = shapeHeight * fillHeight;
-            ScissorBox scissor = fieldguide$calculateScissor(poseStack, limitY);
+            double visualHeight = Math.max(shapeHeight, 1.0);
+
+            double limitY = visualHeight * fillHeight;
+            ScissorBox scissor = ScissorBoxHelper.calculateScissor(poseStack, limitY);
 
             if (scissor != null) {
                 RenderSystem.enableScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
@@ -84,62 +86,40 @@ public class LevelRendererMixin {
             }
         }
 
-        RenderSystem.enablePolygonOffset();
-        RenderSystem.polygonOffset(-1.0f, -1.0f);
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-
         int colorInt = ModConfig.get().getScanOverlayColorInt();
         Color c = new Color(colorInt);
-        RenderSystem.setShaderColor(c.getRed() / 255.0F, c.getGreen() / 255.0F, c.getBlue() / 255.0F, alpha);
+        float red = c.getRed() / 255.0F;
+        float green = c.getGreen() / 255.0F;
+        float blue = c.getBlue() / 255.0F;
+
+        RenderSystem.enablePolygonOffset();
+        RenderSystem.polygonOffset(-1.0f, -1.0f);
 
         try {
             MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
 
-            mc.getBlockRenderer().renderSingleBlock(state, poseStack, bufferSource, 15728880, OverlayTexture.pack(15, 10));
+            RenderType targetType;
+            targetType = ModRenderTypes.getScanRenderType(InventoryMenu.BLOCK_ATLAS);
+
+            MultiBufferSource tintedSource = requestedType -> new TintedVertexConsumer(
+                    bufferSource.getBuffer(targetType),
+                    red, green, blue, alpha
+            );
+
+            mc.getBlockRenderer().renderSingleBlock(
+                    state,
+                    poseStack,
+                    tintedSource,
+                    15728880,
+                    OverlayTexture.pack(0, 10)
+            );
 
             bufferSource.endBatch();
         } catch (Exception ignored) {
         }
 
-        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-        RenderSystem.disableBlend();
         RenderSystem.disablePolygonOffset();
-
-        if (useScissor) {
-            RenderSystem.disableScissor();
-        }
-
+        if (useScissor) RenderSystem.disableScissor();
         poseStack.popPose();
-    }
-
-    @Unique
-    private ScissorBox fieldguide$calculateScissor(PoseStack poseStack, double limitY) {
-        Minecraft mc = Minecraft.getInstance();
-        Matrix4f modelView = poseStack.last().pose();
-        Matrix4f projection = RenderSystem.getProjectionMatrix();
-
-        Vector4f bottomPos = new Vector4f(0, 0, 0, 1.0f);
-        Vector4f topPos = new Vector4f(0, (float) limitY, 0, 1.0f);
-
-        bottomPos.mul(modelView);
-        bottomPos.mul(projection);
-
-        topPos.mul(modelView);
-        topPos.mul(projection);
-
-        if (bottomPos.w() <= 0 && topPos.w() <= 0) return null;
-
-        Vector3f ndcTop = new Vector3f(topPos.x() / topPos.w(), topPos.y() / topPos.w(), topPos.z() / topPos.w());
-
-        int winWidth = mc.getWindow().getWidth();
-        int winHeight = mc.getWindow().getHeight();
-
-        int yEnd = (int) ((ndcTop.y() + 1) * 0.5f * winHeight);
-        int scissorHeight = Math.max(0, yEnd);
-
-        if (scissorHeight > winHeight) scissorHeight = winHeight;
-
-        return new ScissorBox(0, 0, winWidth, scissorHeight);
     }
 }

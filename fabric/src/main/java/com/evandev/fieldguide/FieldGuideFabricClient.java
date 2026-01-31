@@ -1,16 +1,19 @@
 package com.evandev.fieldguide;
 
-import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.client.FieldGuideClient;
+import com.evandev.fieldguide.client.ModRenderTypes;
 import com.evandev.fieldguide.network.GrantContentPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncDropsPacket;
 import com.evandev.fieldguide.platform.FabricNetworkHelper;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.CoreShaderRegistrationCallback;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.resources.ResourceLocation;
@@ -19,6 +22,7 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.level.storage.LevelResource;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.nio.file.Path;
 
 public class FieldGuideFabricClient implements ClientModInitializer {
@@ -59,6 +63,19 @@ public class FieldGuideFabricClient implements ClientModInitializer {
             client.execute(packet::handleClient);
         });
 
+        CoreShaderRegistrationCallback.EVENT.register(context -> {
+            try {
+                context.register(
+                        new ResourceLocation(Constants.MOD_ID, "fieldguide_scan"),
+                        DefaultVertexFormat.POSITION_COLOR_TEX,
+                        program -> ModRenderTypes.SCAN_SHADER_INSTANCE = program
+                );
+
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to register fieldguide shader", e);
+            }
+        });
+
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
             Path saveDir = null;
             if (client.hasSingleplayerServer() && client.getSingleplayerServer() != null) {
@@ -71,8 +88,6 @@ public class FieldGuideFabricClient implements ClientModInitializer {
             ClientFieldGuideManager.getInstance().onWorldLoad(saveDir);
         });
 
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
-            ClientFieldGuideManager.getInstance().onWorldUnload();
-        });
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ClientFieldGuideManager.getInstance().onWorldUnload());
     }
 }

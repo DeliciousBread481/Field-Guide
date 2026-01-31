@@ -1,4 +1,4 @@
-package com.evandev.fieldguide.mixin.client;
+package com.evandev.fieldguide.mixin;
 
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.Mob;
