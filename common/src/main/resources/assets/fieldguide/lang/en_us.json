@@ -52,6 +52,9 @@
   "option.fieldguide.scan_overlay_alpha": "Scan Overlay Opacity",
   "option.fieldguide.scan_overlay_alpha.tooltip": "The opacity of the scanning overlay (0.0 - 1.0).",
 
+  "option.fieldguide.scan_distance": "Scanning Distance",
+  "option.fieldguide.scan_distance.tooltip": "The maximum distance from which you can scan an entry with a Spyglass, in blocks.",
+
   "option.fieldguide.discovery_redirects": "Discovery Redirects",
   "option.fieldguide.discovery_redirects.tooltip": "Redirect scanning of one entry to another.\nFormat: 'modid:scanned_id|modid:target_id'",
 

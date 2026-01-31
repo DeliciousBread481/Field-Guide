@@ -54,6 +54,14 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.scanSpeed = newValue)
                 .build());
 
+        general.addEntry(entryBuilder.startDoubleField(Component.translatable("option.fieldguide.scan_distance"), config.scanDistance)
+                .setDefaultValue(20.0D)
+                .setMin(1.0D)
+                .setMax(64.0D)
+                .setTooltip(Component.translatable("option.fieldguide.scan_distance.tooltip"))
+                .setSaveConsumer(newValue -> config.scanDistance = newValue)
+                .build());
+
         // Interface
         ConfigCategory interfaceCat = builder.getOrCreateCategory(Component.translatable("category.fieldguide.interface"));
 

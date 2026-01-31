@@ -75,6 +75,8 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     private int prevScanTicks = 0;
     private BlockPos fadingPos = null;
 
+    private Object outOfRangeTarget = null;
+
     private ClientFieldGuideManager() {
     }
 
@@ -347,7 +349,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         boolean isUsingSpyglass = minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(Items.SPYGLASS);
 
         if (isUsingSpyglass) {
-            double range = 64.0D;
+            double range = 256.0D;
             Vec3 eyePos = minecraft.player.getEyePosition(1.0F);
             Vec3 viewVec = minecraft.player.getViewVector(1.0F);
             Vec3 endPos = eyePos.add(viewVec.scale(range));
@@ -385,6 +387,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             Object foundTarget = null;
             double entityDist = entityHit != null ? eyePos.distanceToSqr(entityHit.getLocation()) : Double.MAX_VALUE;
             double blockDist = blockHit.getType() != HitResult.Type.MISS ? eyePos.distanceToSqr(blockHit.getLocation()) : Double.MAX_VALUE;
+            double hitDistSq = Math.min(entityDist, blockDist);
 
             if (entityHit != null && entityDist < blockDist) {
                 EntityType<?> type = entityHit.getEntity().getType();
@@ -410,69 +413,84 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             }
 
             if (foundTarget != null) {
-                Object targetKey = (foundTarget instanceof Entity) ? ((Entity) foundTarget).getType() : foundTarget;
+                double activeScanDist = ModConfig.get().scanDistance;
+                boolean outOfRange = hitDistSq > (activeScanDist * activeScanDist);
 
-                boolean sameTarget;
-                if (scanningTarget instanceof Entity && foundTarget instanceof Entity) {
-                    sameTarget = scanningTarget == foundTarget;
+                if (outOfRange) {
+                    this.outOfRangeTarget = foundTarget;
+                    this.scanningTarget = null;
+                    this.scanningPos = null;
+                    this.scanTicks = 0;
+                    this.prevScanTicks = 0;
                 } else {
-                    sameTarget = Objects.equals(scanningTarget, foundTarget);
-                }
+                    this.outOfRangeTarget = null;
 
-                if (sameTarget) {
-                    this.prevScanTicks = this.scanTicks;
-                    scanTicks++;
+                    Object targetKey = (foundTarget instanceof Entity) ? ((Entity) foundTarget).getType() : foundTarget;
 
-                    if (foundTarget instanceof Block) {
-                        this.scanningPos = blockHit.getBlockPos();
+                    boolean sameTarget;
+                    if (scanningTarget instanceof Entity && foundTarget instanceof Entity) {
+                        sameTarget = scanningTarget == foundTarget;
+                    } else {
+                        sameTarget = Objects.equals(scanningTarget, foundTarget);
                     }
 
-                    if (scanTicks >= (int) (ModConfig.get().scanSpeed * 20)) {
-                        ResourceLocation targetId = getEntryId(targetKey);
-                        if (targetId != null) {
-                            ResourceLocation redirectId = ModConfig.get().getRedirect(targetId);
-                            if (redirectId != null) {
-                                Optional<EntityType<?>> entityType = BuiltInRegistries.ENTITY_TYPE.getOptional(redirectId);
-                                if (entityType.isPresent()) {
-                                    targetKey = entityType.get();
-                                } else {
-                                    Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(redirectId);
-                                    if (block.isPresent()) {
-                                        targetKey = block.get();
+                    if (sameTarget) {
+                        this.prevScanTicks = this.scanTicks;
+                        scanTicks++;
+
+                        if (foundTarget instanceof Block) {
+                            this.scanningPos = blockHit.getBlockPos();
+                        }
+
+                        if (scanTicks >= (int) (ModConfig.get().scanSpeed * 20)) {
+                            ResourceLocation targetId = getEntryId(targetKey);
+                            if (targetId != null) {
+                                ResourceLocation redirectId = ModConfig.get().getRedirect(targetId);
+                                if (redirectId != null) {
+                                    Optional<EntityType<?>> entityType = BuiltInRegistries.ENTITY_TYPE.getOptional(redirectId);
+                                    if (entityType.isPresent()) {
+                                        targetKey = entityType.get();
+                                    } else {
+                                        Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(redirectId);
+                                        if (block.isPresent()) {
+                                            targetKey = block.get();
+                                        }
                                     }
                                 }
                             }
+
+                            unlock(targetKey);
+                            minecraft.player.playSound(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 1.0F, 1.0F);
+                            minecraft.player.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
+
+                            fadingTarget = foundTarget;
+                            if (foundTarget instanceof Block) {
+                                fadingPos = scanningPos;
+                            } else {
+                                fadingPos = null;
+                            }
+                            fadeTicks = FADE_DURATION;
+
+                            scanningTarget = null;
+                            scanningPos = null;
+                            scanTicks = 0;
                         }
+                    } else {
+                        this.prevScanTicks = 0;
+                        scanningTarget = foundTarget;
 
-                        unlock(targetKey);
-                        minecraft.player.playSound(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 1.0F, 1.0F);
-                        minecraft.player.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
-
-                        fadingTarget = foundTarget;
-                        if (foundTarget instanceof Block) {
-                            fadingPos = scanningPos;
+                        if (scanningTarget instanceof Block) {
+                            this.scanningPos = blockHit.getBlockPos();
                         } else {
-                            fadingPos = null;
+                            this.scanningPos = null;
                         }
-                        fadeTicks = FADE_DURATION;
 
-                        scanningTarget = null;
-                        scanningPos = null;
                         scanTicks = 0;
                     }
-                } else {
-                    this.prevScanTicks = 0;
-                    scanningTarget = foundTarget;
-
-                    if (scanningTarget instanceof Block) {
-                        this.scanningPos = blockHit.getBlockPos();
-                    } else {
-                        this.scanningPos = null;
-                    }
-
-                    scanTicks = 0;
                 }
             } else {
+                this.outOfRangeTarget = null;
+
                 if (scanTicks > 0) {
                     this.prevScanTicks = this.scanTicks;
                     scanTicks -= 2;
@@ -496,6 +514,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             scanningTarget = null;
             scanningPos = null;
             scanTicks = 0;
+            outOfRangeTarget = null;
         }
 
         if (fadeTicks > 0) {
@@ -522,6 +541,10 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     public float getScanProgress(float partialTicks) {
         float lerped = (float) prevScanTicks + ((float) scanTicks - (float) prevScanTicks) * partialTicks;
         return Math.min(1.0F, lerped / (int) (ModConfig.get().scanSpeed * 20));
+    }
+
+    public Entity getOutOfRangeEntity() {
+        return outOfRangeTarget instanceof Entity ? (Entity) outOfRangeTarget : null;
     }
 
     public Object getFadingTarget() {

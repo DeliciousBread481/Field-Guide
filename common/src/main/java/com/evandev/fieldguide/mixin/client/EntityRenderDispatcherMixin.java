@@ -3,6 +3,7 @@ package com.evandev.fieldguide.mixin.client;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.ScanRenderState;
 import com.evandev.fieldguide.client.gui.util.ScissorBox;
+import com.evandev.fieldguide.client.gui.util.TintedMultiBufferSource;
 import com.evandev.fieldguide.config.ModConfig;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -38,15 +39,24 @@ public class EntityRenderDispatcherMixin {
         ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
         boolean isScanning = manager.getScanningEntity() == entity;
         boolean isFading = manager.getFadingEntity() == entity;
+        boolean isOutOfRange = manager.getOutOfRangeEntity() == entity;
 
-        if (!isScanning && !isFading) return;
+        if (!isScanning && !isFading && !isOutOfRange) return;
 
         float progress = isScanning ? manager.getScanProgress(partialTicks) : manager.getFadeProgress(partialTicks);
-        if (progress <= 0.0f) return;
+        if (progress <= 0.0f && !isOutOfRange) return;
 
         double baseAlpha = ModConfig.get().scanOverlayAlpha;
         float fillHeight = isScanning ? progress : 1.0f;
         float alpha = (float) (isScanning ? baseAlpha : baseAlpha * progress);
+
+        int colorInt = ModConfig.get().getScanOverlayColorInt();
+
+        if (isOutOfRange) {
+            fillHeight = 1.0f;
+            alpha = 0.6f + (float) (Math.sin(System.currentTimeMillis() / 200.0) * 0.15); // Pulse
+            colorInt = 0xFF5555; // Red visual for out of range
+        }
 
         if (alpha <= 0.01f) return;
 
@@ -55,7 +65,7 @@ public class EntityRenderDispatcherMixin {
         poseStack.translate(x, y, z);
 
         try {
-            fieldguide$renderWhiteSilhouette(entity, partialTicks, poseStack, packedLight, fillHeight, alpha);
+            fieldguide$renderWhiteSilhouette(entity, partialTicks, poseStack, packedLight, fillHeight, alpha, colorInt);
         } finally {
             poseStack.popPose();
             ScanRenderState.setScanning(false);
@@ -63,12 +73,12 @@ public class EntityRenderDispatcherMixin {
     }
 
     @Unique
-    private void fieldguide$renderWhiteSilhouette(Entity entity, float partialTicks, PoseStack poseStack, int light, float fillPercent, float alpha) {
+    private void fieldguide$renderWhiteSilhouette(Entity entity, float partialTicks, PoseStack poseStack, int light, float fillPercent, float alpha, int colorInt) {
         EntityRenderer<? super Entity> renderer = ((EntityRenderDispatcher) (Object) this).getRenderer(entity);
         boolean useScissor = fillPercent < 1.0f;
 
         if (useScissor) {
-            double entityHeight = entity.getBoundingBox().maxY - entity.getBoundingBox().minY;
+            double entityHeight = (entity.getBoundingBox().maxY - entity.getBoundingBox().minY) * 1.5;
             double limitY = entityHeight * fillPercent;
             ScissorBox scissor = fieldguide$calculateScissor(poseStack, limitY);
 
@@ -84,15 +94,17 @@ public class EntityRenderDispatcherMixin {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
 
-        int colorInt = ModConfig.get().getScanOverlayColorInt();
         Color c = new Color(colorInt);
-        RenderSystem.setShaderColor(c.getRed() / 255.0F, c.getGreen() / 255.0F, c.getBlue() / 255.0F, alpha);
+        float red = c.getRed() / 255.0F;
+        float green = c.getGreen() / 255.0F;
+        float blue = c.getBlue() / 255.0F;
+
+        MultiBufferSource.BufferSource immediate = Minecraft.getInstance().renderBuffers().bufferSource();
+        TintedMultiBufferSource tintedSource = new TintedMultiBufferSource(immediate, red, green, blue, alpha);
 
         try {
-            MultiBufferSource.BufferSource immediate = Minecraft.getInstance().renderBuffers().bufferSource();
             float yaw = Mth.lerp(partialTicks, entity.yRotO, entity.getYRot());
-
-            renderer.render(entity, yaw, partialTicks, poseStack, immediate, light);
+            renderer.render(entity, yaw, partialTicks, poseStack, tintedSource, light);
             immediate.endBatch();
         } catch (Exception ignored) {
         }
