@@ -55,6 +55,9 @@ dependencies {
     // Cloth Config
     modImplementation "me.shedaniel.cloth:cloth-config-forge:${cloth_config_version}"
 
+    // Immersive Overlays
+    modRuntimeOnly "maven.modrinth:immersive-overlays:${immersive_overlays_version}-forge"
+
     compileOnly project(":common")
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
 }

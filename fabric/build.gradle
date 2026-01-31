@@ -24,6 +24,9 @@ dependencies {
     modRuntimeOnly "folk.sisby:kaleido-config:${kaleido_config_version}"
     modRuntimeOnly "maven.modrinth:item-descriptions:${item_descriptions_version}-fabric"
 
+    // Immersive Overlays
+    modRuntimeOnly "maven.modrinth:immersive-overlays:${immersive_overlays_version}-fabric"
+
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
     implementation project(":common")
 }

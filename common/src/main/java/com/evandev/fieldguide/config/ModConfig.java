@@ -40,6 +40,10 @@ public class ModConfig {
 
     public List<String> lootRemovals = new ArrayList<>();
     public List<String> lootAdditions = new ArrayList<>();
+
+    public List<String> biomeRemovals = new ArrayList<>();
+    public List<String> biomeAdditions = getDefaultBiomeAdditions();
+
     public List<String> discoveryRedirects = new ArrayList<>();
 
     public static ModConfig get() {
@@ -77,6 +81,33 @@ public class ModConfig {
         defaults.add("minecraft:armor_stand");
         defaults.add("minecraft:grass");
         defaults.add("minecraft:tall_grass");
+        return defaults;
+    }
+
+    public static List<String> getDefaultBiomeAdditions() {
+        List<String> defaults = new ArrayList<>();
+        // Nether Fortress Mobs
+        defaults.add("minecraft:blaze|minecraft:nether_wastes");
+        defaults.add("minecraft:wither_skeleton|minecraft:nether_wastes");
+
+        // Bastion Remnant Mobs
+        defaults.add("minecraft:piglin_brute|minecraft:nether_wastes");
+
+        // Ocean Monument Mobs
+        defaults.add("minecraft:guardian|minecraft:deep_ocean");
+        defaults.add("minecraft:elder_guardian|minecraft:deep_ocean");
+
+        // Woodland Mansion Mobs
+        defaults.add("minecraft:evoker|minecraft:dark_forest");
+        defaults.add("minecraft:vindicator|minecraft:dark_forest");
+        defaults.add("minecraft:vex|minecraft:dark_forest");
+
+        // End City Mobs
+        defaults.add("minecraft:shulker|minecraft:end_highlands");
+
+        // Ancient City Mobs
+        defaults.add("minecraft:warden|minecraft:deep_dark");
+
         return defaults;
     }
 

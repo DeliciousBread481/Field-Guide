@@ -143,6 +143,18 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.lootAdditions = newValue)
                 .build());
 
+        contentCat.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.biome_removals"), config.biomeRemovals)
+                .setDefaultValue(new ArrayList<>())
+                .setTooltip(Component.translatable("option.fieldguide.biome_removals.tooltip"))
+                .setSaveConsumer(newValue -> config.biomeRemovals = newValue)
+                .build());
+
+        contentCat.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.biome_additions"), config.biomeAdditions)
+                .setDefaultValue(new ArrayList<>())
+                .setTooltip(Component.translatable("option.fieldguide.biome_additions.tooltip"))
+                .setSaveConsumer(newValue -> config.biomeAdditions = newValue)
+                .build());
+
         return builder.build();
     }
 }

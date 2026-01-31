@@ -17,6 +17,12 @@
   "option.fieldguide.loot_additions": "Loot Additions",
   "option.fieldguide.loot_additions.tooltip": "Items to add to the loot display.\nFormat: 'namespace:entity_id|namespace:item_id'",
 
+  "option.fieldguide.biome_removals": "Biome Removals",
+  "option.fieldguide.biome_removals.tooltip": "Biomes to hide from the display. Requires Immersive Overlays.\nFormat: 'namespace:entity_id|namespace:biome_id'",
+
+  "option.fieldguide.biome_additions": "Biome Additions",
+  "option.fieldguide.biome_additions.tooltip": "Biomes to add to the display. Requires Immersive Overlays.\nFormat: 'namespace:entity_id|namespace:biome_id'",
+
   "option.fieldguide.blacklist": "Entry Blacklist",
   "option.fieldguide.blacklist.tooltip": "Entries that should not appear in the Field Guide.\nSupports 'modid:entity_id', 'modid:block_id', or 'modid:*' for wildcards.",
 
@@ -57,6 +63,8 @@
 
   "option.fieldguide.discovery_redirects": "Discovery Redirects",
   "option.fieldguide.discovery_redirects.tooltip": "Redirect scanning of one entry to another.\nFormat: 'modid:scanned_id|modid:target_id'",
+
+  "fieldguide.tooltip.common_spawn": "Common Spawn",
 
   "key.fieldguide.open": "Open Field Guide",
 
