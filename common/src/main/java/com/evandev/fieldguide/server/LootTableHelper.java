@@ -2,6 +2,7 @@ package com.evandev.fieldguide.server;
 
 import com.evandev.fieldguide.config.ModConfig;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -205,6 +206,20 @@ public class LootTableHelper {
 
             if (displayStack.isDamageableItem()) {
                 displayStack.setDamageValue(0);
+            }
+
+            if (displayStack.hasTag()) {
+                CompoundTag tag = displayStack.getTag();
+
+                if (tag != null) {
+                    tag.remove("Enchantments");
+
+                    tag.remove("StoredEnchantments");
+
+                    if (tag.isEmpty()) {
+                        displayStack.setTag(null);
+                    }
+                }
             }
 
             String signature = BuiltInRegistries.ITEM.getKey(displayStack.getItem()).toString();
