@@ -17,6 +17,16 @@ be unlocked.
 
 ---
 
+## Searching
+
+The Field Guide supports various prefixes for refining your searches.
+
+* Use `#` to search by entity tags, ex. `#minecraft:skeletons`
+* Use `@` to search by mod id, ex. `@enemyexpansion`
+* Use `^` to search by drops, ex. `^bone`
+
+---
+
 ## Configuration
 
 The configuration file is located at `.minecraft/config/fieldguide.json`.
@@ -230,6 +240,9 @@ categories or descriptions to entries, add lines to your `en_us.json` (or other 
 |-------------------|-------------------------------------------|---------------------------------------------------------------------|
 | Category Name     | `category.fieldguide.<category_id>`       | `"category.fieldguide.swamp_life": "Swamp Life"`                    |
 | Entry Description | `fieldguide.<namespace>.<id>.description` | `"fieldguide.minecraft.pig.description": "A common farm animal..."` |
+
+If you write new entity descriptions and think others would find them helpful, feel free to make a pull request to
+the [Mod Descriptions GitHub](https://github.com/cassiancc/Mod-Descriptions/pulls)!
 
 ### Texture Overrides (2D Sprites)
 
