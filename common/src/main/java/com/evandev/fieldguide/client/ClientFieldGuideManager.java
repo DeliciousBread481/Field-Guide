@@ -14,6 +14,7 @@ import com.google.gson.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -330,6 +331,60 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         String processedQuery = query.toLowerCase(Locale.ROOT).trim();
         List<Object> results = new ArrayList<>();
         if (processedQuery.isEmpty()) return results;
+
+        // Search by Tag
+        if (processedQuery.startsWith("#")) {
+            String tagQuery = processedQuery.substring(1);
+            if (tagQuery.isEmpty()) return results;
+
+            for (Object entry : getValidEntries()) {
+                if (!isUnlocked(entry) && !ModConfig.get().showUndiscoveredNames) continue;
+
+                if (entry instanceof EntityType<?> type) {
+                    var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type);
+                    if (key.isPresent()) {
+                        Optional<Holder.Reference<EntityType<?>>> holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
+                        if (holder.isPresent()) {
+                            if (holder.get().tags().anyMatch(tag -> tag.location().toString().toLowerCase(Locale.ROOT).contains(tagQuery) || tag.location().getPath().toLowerCase(Locale.ROOT).contains(tagQuery))) {
+                                results.add(entry);
+                            }
+                        }
+                    }
+                } else if (entry instanceof Block block) {
+                    var key = BuiltInRegistries.BLOCK.getResourceKey(block);
+                    if (key.isPresent()) {
+                        Optional<Holder.Reference<Block>> holder = BuiltInRegistries.BLOCK.getHolder(key.get());
+                        if (holder.isPresent()) {
+                            if (holder.get().tags().anyMatch(tag -> tag.location().toString().toLowerCase(Locale.ROOT).contains(tagQuery) || tag.location().getPath().toLowerCase(Locale.ROOT).contains(tagQuery))) {
+                                results.add(entry);
+                            }
+                        }
+                    }
+                }
+            }
+            return results;
+        }
+
+        // Search by Drop
+        if (processedQuery.startsWith("^")) {
+            String dropQuery = processedQuery.substring(1);
+            if (dropQuery.isEmpty()) return results;
+
+            for (Object entry : getValidEntries()) {
+                if (!isUnlocked(entry) && !ModConfig.get().showUndiscoveredNames) continue;
+
+                if (dropCache.containsKey(entry)) {
+                    List<ItemStack> drops = dropCache.get(entry);
+                    boolean match = drops.stream().anyMatch(stack ->
+                            stack.getHoverName().getString().toLowerCase(Locale.ROOT).contains(dropQuery)
+                    );
+                    if (match) results.add(entry);
+                }
+            }
+            return results;
+        }
+
+        // Standard Name/ID Search
         for (Object entry : getValidEntries()) {
             if (!isUnlocked(entry) && !ModConfig.get().showUndiscoveredNames) continue;
             ResourceLocation id = getEntryId(entry);

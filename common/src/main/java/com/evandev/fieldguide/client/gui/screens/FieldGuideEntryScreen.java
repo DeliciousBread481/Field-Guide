@@ -10,6 +10,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -95,6 +96,86 @@ public class FieldGuideEntryScreen extends BookScreen {
         return false;
     }
 
+    private void renderAttributes(GuiGraphics guiGraphics, LivingEntity entity, int x, int y) {
+        RenderSystem.setShaderTexture(0, Constants.ATTRIBUTES_TEXTURE);
+
+        float maxHealth = entity.getMaxHealth();
+        int armor = entity.getArmorValue();
+
+        int iconSize = 9;
+        int spacing = 1;
+        int rowHeight = iconSize + 1;
+        int iconsPerRow = 10;
+        int healthPerRow = iconsPerRow * 2;
+
+
+        int totalHeartRows = Mth.ceil(maxHealth / (float) healthPerRow);
+        int visibleHeartRows = Math.min(totalHeartRows, 2);
+
+        int currentBottomY = y - iconSize;
+
+        int x1 = x + (iconsPerRow * (iconSize + spacing)) + 2;
+        for (int row = 0; row < visibleHeartRows; row++) {
+            int drawY = currentBottomY - (row * rowHeight);
+
+            boolean isOverflowRow = (row == visibleHeartRows - 1) && (totalHeartRows > visibleHeartRows);
+
+            int heartsToRender;
+            if (isOverflowRow) {
+                heartsToRender = iconsPerRow;
+            } else {
+                float healthInThisRowRange = maxHealth - (row * healthPerRow);
+                heartsToRender = Mth.ceil(Math.min(healthPerRow, Math.max(0, healthInThisRowRange)) / 2.0F);
+            }
+
+            for (int i = 0; i < heartsToRender; ++i) {
+                int drawX = x + i * (iconSize + spacing);
+                int u = 0;
+
+                if (!isOverflowRow) {
+                    double currentIconHp = (row * healthPerRow) + (i * 2) + 1;
+                    if (currentIconHp == (int) maxHealth) {
+                        u = iconSize;
+                    }
+                }
+
+                guiGraphics.blit(Constants.ATTRIBUTES_TEXTURE, drawX, drawY, u, 0, iconSize, iconSize, 32, 32);
+            }
+
+            if (isOverflowRow) {
+                String multiplier = "x" + totalHeartRows;
+                guiGraphics.drawString(this.font, multiplier, x1, drawY + 1, Constants.TEXT_COLOR, false);
+            }
+        }
+
+        if (armor > 0) {
+            int armorDrawY = currentBottomY - (visibleHeartRows * rowHeight);
+            int totalArmorRows = Mth.ceil(armor / 20.0f);
+
+            boolean isArmorOverflow = totalArmorRows > 1;
+            int armorIconsToRender = isArmorOverflow ? iconsPerRow : Mth.ceil(armor / 2.0F);
+
+            for (int i = 0; i < armorIconsToRender; ++i) {
+                int drawX = x + i * (iconSize + spacing);
+
+                int u = 0;
+
+                if (!isArmorOverflow) {
+                    if (i * 2 + 1 == armor) {
+                        u = iconSize;
+                    }
+                }
+
+                guiGraphics.blit(Constants.ATTRIBUTES_TEXTURE, drawX, armorDrawY, u, iconSize, iconSize, iconSize, 32, 32);
+            }
+
+            if (isArmorOverflow) {
+                String multiplier = "x" + totalArmorRows;
+                guiGraphics.drawString(this.font, multiplier, x1, armorDrawY + 1, Constants.TEXT_COLOR, false);
+            }
+        }
+    }
+
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(guiGraphics);
@@ -122,13 +203,13 @@ public class FieldGuideEntryScreen extends BookScreen {
             bounce = 1.0f + 0.15f * (float) Math.sin(t * Math.PI);
         }
 
-        // Entry model
         int xPos = leftPageBounds.left() + leftPageBounds.width() / 2;
         int yPos = leftPageBounds.y_center();
 
         if (entry instanceof EntityType && renderedEntity instanceof LivingEntity living) {
             if (unlocked) {
                 EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, false, 0, true, bounce);
+                renderAttributes(guiGraphics, living, leftPageBounds.left() + 15, leftPageBounds.bottom() - 14);
             } else {
                 EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, true, Constants.DETAILS_SILHOUETTE_COLOR, true, bounce);
             }
