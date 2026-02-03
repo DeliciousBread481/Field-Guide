@@ -32,6 +32,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.*;
@@ -379,6 +380,51 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
                             stack.getHoverName().getString().toLowerCase(Locale.ROOT).contains(dropQuery)
                     );
                     if (match) results.add(entry);
+                }
+            }
+            return results;
+        }
+
+        // Search by Biome
+        if (processedQuery.startsWith("!")) {
+            String biomeQuery = processedQuery.substring(1);
+            if (biomeQuery.isEmpty()) return results;
+
+            if (Minecraft.getInstance().level != null) {
+                var registryAccess = Minecraft.getInstance().level.registryAccess();
+                var biomeRegistry = registryAccess.registryOrThrow(Registries.BIOME);
+
+                for (var biomeEntry : biomeRegistry.entrySet()) {
+                    ResourceLocation biomeId = biomeEntry.getKey().location();
+                    if (biomeId.toString().contains(biomeQuery) || biomeId.getPath().contains(biomeQuery)) {
+                        Biome biome = biomeEntry.getValue();
+                        for (MobCategory cat : MobCategory.values()) {
+                            var spawns = biome.getMobSettings().getMobs(cat);
+                            for (var spawn : spawns.unwrap()) {
+                                if (isValidEntity(spawn.type, ModConfig.get())) {
+                                    if ((isUnlocked(spawn.type) || ModConfig.get().showUndiscoveredNames) && !results.contains(spawn.type)) {
+                                        results.add(spawn.type);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return results;
+        }
+
+        // Search by Mod ID
+        if (processedQuery.startsWith("@")) {
+            String modQuery = processedQuery.substring(1);
+            if (modQuery.isEmpty()) return results;
+
+            for (Object entry : getValidEntries()) {
+                if (!isUnlocked(entry) && !ModConfig.get().showUndiscoveredNames) continue;
+
+                ResourceLocation id = getEntryId(entry);
+                if (id != null && id.getNamespace().toLowerCase(Locale.ROOT).contains(modQuery)) {
+                    results.add(entry);
                 }
             }
             return results;

@@ -292,10 +292,19 @@ public class FieldGuideScreen extends BookScreen {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (this.searchBox.isFocused()) {
-            if (keyCode == GLFW.GLFW_KEY_ESCAPE) return super.keyPressed(keyCode, scanCode, modifiers);
+            if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+                this.searchBox.setFocused(false);
+                return true;
+            }
             if (this.searchBox.keyPressed(keyCode, scanCode, modifiers)) return true;
             return true;
         }
+
+        if (this.isSearching && keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            this.searchBox.setValue("");
+            return true;
+        }
+
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 

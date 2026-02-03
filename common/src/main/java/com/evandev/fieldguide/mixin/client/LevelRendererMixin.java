@@ -73,9 +73,7 @@ public class LevelRendererMixin {
         if (useScissor) {
             double shapeHeight = state.getShape(mc.level, pos, CollisionContext.of(Objects.requireNonNull(mc.player))).max(net.minecraft.core.Direction.Axis.Y);
 
-            double visualHeight = Math.max(shapeHeight, 1.0);
-
-            double limitY = visualHeight * fillHeight;
+            double limitY = shapeHeight * fillHeight;
             ScissorBox scissor = ScissorBoxHelper.calculateScissor(poseStack, limitY);
 
             if (scissor != null) {

@@ -24,6 +24,7 @@ The Field Guide supports various prefixes for refining your searches.
 * Use `#` to search by entity tags, ex. `#minecraft:skeletons`
 * Use `@` to search by mod id, ex. `@enemyexpansion`
 * Use `^` to search by drops, ex. `^bone`
+* Use `!` to search by biome, ex. `!plains`
 
 ---
 
