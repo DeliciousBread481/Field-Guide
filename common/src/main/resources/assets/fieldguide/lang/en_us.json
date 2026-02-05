@@ -87,7 +87,7 @@
   "commands.fieldguide.category.not_found": "Category %s not found",
   "commands.fieldguide.entry.not_found": "Entry %s not found",
 
-  "category.fieldguide.hostile": "Monsters",
-  "category.fieldguide.passive": "Creatures",
-  "category.fieldguide.flora": "Flora"
+  "category.fieldguide.monsters": "Monsters",
+  "category.fieldguide.animals": "Animals",
+  "category.fieldguide.plants": "Plants"
 }
