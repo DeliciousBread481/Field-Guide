@@ -6,7 +6,7 @@ in your Field Guide.
 
 ## Gameplay & Usage
 
-Using a standard Minecraft **Spyglass**, zoom in and look directly at a mob or specific blocks (like flora). A scanning
+Using a standard Minecraft **Spyglass**, zoom in and look directly at a mob or specific blocks (like plants). A scanning
 reticle will appear over the target, and after a set duration (default 1 second), a sound will play and the entry will
 be unlocked.
 
@@ -136,18 +136,18 @@ To remove a category provided by the mod (or another datapack), create a file wi
 ```json
 {
   "type": "auto_populate",
-  "strategy": "hostile"
+  "strategy": "monsters"
 }
 
 ```
 
 *Available Strategies*:
 
-* `passive`: All passive animals.
-* `hostile`: All hostile monsters.
-* `flora`: All vanilla-like plants.
+* `animals`: All animals.
+* `monsters`: All monsters.
+* `plants`: All vanilla-like plants.
 * `mod:<mod_id>`: All entities from a specific mod.
-* `mod_flora:<mod_id>`: All flora-like blocks from a specific mod.
+* `mod_plants:<mod_id>`: All plant-like blocks from a specific mod.
 * `tag:<tag_id>`: All entities with a specific tag (e.g. tag:minecraft:raiders).
 
 #### Example: Custom Category

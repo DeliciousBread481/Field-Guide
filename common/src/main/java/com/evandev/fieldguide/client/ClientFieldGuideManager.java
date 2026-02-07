@@ -272,7 +272,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
     private List<Object> getEntriesForStrategy(String strategy, ModConfig config) {
         List<Object> results = new ArrayList<>();
-        if ("flora".equalsIgnoreCase(strategy)) {
+        if ("plants".equalsIgnoreCase(strategy)) {
             results.addAll(BuiltInRegistries.BLOCK.stream()
                     .filter(block -> block instanceof BushBlock || block instanceof LeavesBlock || block instanceof VineBlock || block instanceof CactusBlock || block instanceof SugarCaneBlock || block instanceof WaterlilyBlock || block instanceof StemBlock)
                     .filter(block -> isValidBlock(block, config))
@@ -285,7 +285,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
                     .filter(type -> isValidEntity(type, config))
                     .sorted(Comparator.comparing(type -> BuiltInRegistries.ENTITY_TYPE.getKey(type).toString()))
                     .toList());
-        } else if (strategy.startsWith("mod_flora:")) {
+        } else if (strategy.startsWith("mod_plants:")) {
             String modId = strategy.substring(10);
             results.addAll(BuiltInRegistries.BLOCK.stream()
                     .filter(block -> BuiltInRegistries.BLOCK.getKey(block).getNamespace().equals(modId))
@@ -311,12 +311,12 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             } catch (Exception e) {
                 Constants.LOG.error("Invalid tag strategy: {}", strategy, e);
             }
-        } else if ("hostile".equalsIgnoreCase(strategy) || "passive".equalsIgnoreCase(strategy)) {
+        } else if ("monsters".equalsIgnoreCase(strategy) || "animals".equalsIgnoreCase(strategy)) {
             results.addAll(BuiltInRegistries.ENTITY_TYPE.stream()
                     .filter(type -> {
-                        if ("hostile".equalsIgnoreCase(strategy))
+                        if ("monsters".equalsIgnoreCase(strategy))
                             return type.getCategory() == MobCategory.MONSTER;
-                        if ("passive".equalsIgnoreCase(strategy))
+                        if ("animals".equalsIgnoreCase(strategy))
                             return type.getCategory() != MobCategory.MONSTER && (type.getCategory() != MobCategory.MISC || SpawnEggItem.byId(type) != null);
                         return false;
                     })
