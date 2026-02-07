@@ -42,6 +42,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.Reader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -62,6 +63,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     // Progress
     private final Set<String> unlockedEntries = new HashSet<>();
     private final Set<String> seenEntries = new HashSet<>();
+    private final Map<String, Long> discoveryTimes = new HashMap<>();
     private final Map<Object, List<ItemStack>> dropCache = new HashMap<>();
     private final Set<Object> requestedDrops = new HashSet<>();
     private Path currentSavePath = null;
@@ -252,6 +254,20 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
     public List<Object> getEntriesForCategory(Category category) {
         return resolvedCategoryEntries.getOrDefault(category.getId(), Collections.emptyList());
+    }
+
+    public List<Object> getRecentEntries(Category category, int limit) {
+        return getEntriesForCategory(category).stream()
+                .filter(ClientFieldGuideManager::isUnlocked)
+                .sorted((a, b) -> {
+                    ResourceLocation idA = getEntryId(a);
+                    ResourceLocation idB = getEntryId(b);
+                    long timeA = idA != null ? discoveryTimes.getOrDefault(idA.toString(), 0L) : 0L;
+                    long timeB = idB != null ? discoveryTimes.getOrDefault(idB.toString(), 0L) : 0L;
+                    return Long.compare(timeB, timeA);
+                })
+                .limit(limit)
+                .collect(Collectors.toList());
     }
 
     private List<Object> getEntriesForStrategy(String strategy, ModConfig config) {
@@ -674,6 +690,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         if (id != null && unlockedEntries.add(id.toString())) {
             this.lastUnlockedEntry = entry;
             this.lastUnlockTime = System.currentTimeMillis();
+            this.discoveryTimes.put(id.toString(), this.lastUnlockTime);
             if (showToast) Minecraft.getInstance().getToasts().addToast(new FieldGuideToast(entry));
             saveProgress();
         }
@@ -685,6 +702,14 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
     public Object getLastUnlockedEntry() {
         return lastUnlockedEntry;
+    }
+
+    public long getDiscoveryTime(Object entry) {
+        ResourceLocation id = getEntryId(entry);
+        if (id != null) {
+            return discoveryTimes.getOrDefault(id.toString(), 0L);
+        }
+        return 0L;
     }
 
     public List<ItemStack> getDrops(Object entry) {
@@ -704,10 +729,20 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
                 .findFirst().ifPresent(o -> dropCache.put(o, drops));
     }
 
-    public void onWorldLoad(Path worldSaveDir) {
+    public void onWorldLoad(String serverIdentifier) {
         this.unlockedEntries.clear();
         this.seenEntries.clear();
-        this.currentSavePath = worldSaveDir != null ? worldSaveDir.resolve("fieldguide.dat") : null;
+        this.discoveryTimes.clear();
+        Path gameDir = Minecraft.getInstance().gameDirectory.toPath();
+        Path dataDir = gameDir.resolve("config").resolve("fieldguide_data");
+
+        try {
+            Files.createDirectories(dataDir);
+        } catch (Exception ignored) {
+        }
+
+        String safeName = serverIdentifier.replaceAll("[^a-zA-Z0-9.-]", "_");
+        this.currentSavePath = dataDir.resolve(safeName + ".dat");
         loadProgress();
     }
 
@@ -716,6 +751,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         this.currentSavePath = null;
         this.unlockedEntries.clear();
         this.seenEntries.clear();
+        this.discoveryTimes.clear();
     }
 
     private void loadProgress() {
@@ -725,6 +761,12 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             if (json.has("unlocked"))
                 for (JsonElement e : json.getAsJsonArray("unlocked")) unlockedEntries.add(e.getAsString());
             if (json.has("seen")) for (JsonElement e : json.getAsJsonArray("seen")) seenEntries.add(e.getAsString());
+            if (json.has("times")) {
+                JsonObject times = json.getAsJsonObject("times");
+                for (Map.Entry<String, JsonElement> entry : times.entrySet()) {
+                    discoveryTimes.put(entry.getKey(), entry.getValue().getAsLong());
+                }
+            }
         } catch (Exception e) {
             Constants.LOG.error("Failed to load progress", e);
         }
@@ -740,6 +782,10 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             JsonArray sArr = new JsonArray();
             seenEntries.forEach(sArr::add);
             json.add("seen", sArr);
+            JsonObject timesObj = new JsonObject();
+            discoveryTimes.forEach(timesObj::addProperty);
+            json.add("times", timesObj);
+
             File file = currentSavePath.toFile();
             if (file.getParentFile() != null) file.getParentFile().mkdirs();
             try (FileWriter w = new FileWriter(file)) {
@@ -754,6 +800,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         ResourceLocation id = getEntryId(entry);
         if (id != null && unlockedEntries.remove(id.toString())) {
             seenEntries.remove(id.toString());
+            discoveryTimes.remove(id.toString());
             saveProgress();
         }
     }
@@ -761,6 +808,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     public void revokeAll() {
         unlockedEntries.clear();
         seenEntries.clear();
+        discoveryTimes.clear();
         saveProgress();
     }
 }

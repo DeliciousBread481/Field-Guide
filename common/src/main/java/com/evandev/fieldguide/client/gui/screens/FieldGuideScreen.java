@@ -52,6 +52,7 @@ public class FieldGuideScreen extends BookScreen {
     private final List<TabButton> tabs = new ArrayList<>();
     public boolean isSearching = false;
     private List<Object> currentEntries = new ArrayList<>();
+    private List<Object> recentEntries = new ArrayList<>();
     private Category selectedCategory;
     private int currentPage = 0;
     private String searchQuery = "";
@@ -82,8 +83,7 @@ public class FieldGuideScreen extends BookScreen {
         List<Object> entries = ClientFieldGuideManager.getInstance().getEntriesForCategory(category);
         int index = entries.indexOf(entry);
         if (index < 0) return 0;
-        if (index < ITEMS_PER_PAGE) return 0;
-        return 1 + (index - ITEMS_PER_PAGE) / ITEMS_PER_VIEW;
+        return 1 + index / ITEMS_PER_VIEW;
     }
 
     public static int getLastOpenedPage() {
@@ -120,6 +120,7 @@ public class FieldGuideScreen extends BookScreen {
 
         if (this.selectedCategory != null) {
             this.currentEntries = ClientFieldGuideManager.getInstance().getEntriesForCategory(this.selectedCategory);
+            this.recentEntries = ClientFieldGuideManager.getInstance().getRecentEntries(this.selectedCategory, 9);
             lastOpenedCategory = this.selectedCategory.getId();
 
             int totalSpreads = getTotalSpreads();
@@ -206,6 +207,7 @@ public class FieldGuideScreen extends BookScreen {
         this.selectedCategory = category;
         this.currentPage = 0;
         this.currentEntries = ClientFieldGuideManager.getInstance().getEntriesForCategory(category);
+        this.recentEntries = ClientFieldGuideManager.getInstance().getRecentEntries(category, 9);
         lastOpenedCategory = this.selectedCategory.getId();
         lastOpenedPage = this.currentPage;
 
@@ -224,8 +226,13 @@ public class FieldGuideScreen extends BookScreen {
 
     private int getTotalSpreads() {
         int count = currentEntries.size();
-        if (count <= ITEMS_PER_PAGE) return 1;
-        return 1 + (int) Math.ceil((double) (count - ITEMS_PER_PAGE) / ITEMS_PER_VIEW);
+        if (isSearching) {
+            if (count == 0) return 1;
+            return (int) Math.ceil((double) count / ITEMS_PER_VIEW);
+        }
+
+        if (count == 0) return 1;
+        return 1 + (int) Math.ceil((double) count / ITEMS_PER_VIEW);
     }
 
     private void updatePageButtons() {
@@ -256,37 +263,55 @@ public class FieldGuideScreen extends BookScreen {
         if (this.searchBox != null) this.searchBox.setFocused(this.searchBox.isMouseOver(mouseX, mouseY));
         if (super.mouseClicked(mouseX, mouseY, button)) return true;
 
-        for (int i = 0; i < ITEMS_PER_VIEW; i++) {
-            int globalSlotIndex = currentPage * ITEMS_PER_VIEW + i;
-            Bounds bounds = getGridCellBounds(globalSlotIndex);
+        if (!isSearching && currentPage == 0) {
+            for (int i = 0; i < recentEntries.size(); i++) {
+                int slotIndex = ITEMS_PER_PAGE + i;
+                Bounds bounds = getGridCellBounds(slotIndex);
 
-            if (bounds.contains((int) mouseX, (int) mouseY)) {
+                if (bounds.contains((int) mouseX, (int) mouseY)) {
+                    Object entry = recentEntries.get(i);
+                    handleEntryClick(entry);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        for (int i = 0; i < ITEMS_PER_VIEW; i++) {
+            if (!isSearching && currentPage == 0) continue;
+
+            Bounds cellBounds = getGridCellBoundsLocal(i);
+
+            if (cellBounds.contains((int) mouseX, (int) mouseY)) {
                 int itemIndex = getItemIndexForSlot(i);
                 if (itemIndex >= 0 && itemIndex < currentEntries.size()) {
-                    Object entry = currentEntries.get(itemIndex);
-                    if (ClientFieldGuideManager.isNew(entry)) ClientFieldGuideManager.markAsSeen(entry);
-                    Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-
-                    if (entry instanceof EntityType<?> type) {
-                        Entity entity = entryCache.get(type);
-                        if (entity == null && Objects.requireNonNull(this.minecraft).level != null) {
-                            try {
-                                entity = type.create(this.minecraft.level);
-                                entryCache.put(type, entity);
-                            } catch (Exception ignored) {
-                            }
-                        }
-                        if (entity != null && ClientFieldGuideManager.isUnlocked(entry)) {
-                            FieldGuideClient.playMobCry(entity);
-                        }
-                    }
-
-                    Minecraft.getInstance().setScreen(new FieldGuideEntryScreen(this, entry));
+                    handleEntryClick(currentEntries.get(itemIndex));
                     return true;
                 }
             }
         }
         return false;
+    }
+
+    private void handleEntryClick(Object entry) {
+        if (ClientFieldGuideManager.isNew(entry)) ClientFieldGuideManager.markAsSeen(entry);
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+
+        if (entry instanceof EntityType<?> type) {
+            Entity entity = entryCache.get(type);
+            if (entity == null && Objects.requireNonNull(this.minecraft).level != null) {
+                try {
+                    entity = type.create(this.minecraft.level);
+                    entryCache.put(type, entity);
+                } catch (Exception ignored) {
+                }
+            }
+            if (entity != null && ClientFieldGuideManager.isUnlocked(entry)) {
+                FieldGuideClient.playMobCry(entity);
+            }
+        }
+
+        Minecraft.getInstance().setScreen(new FieldGuideEntryScreen(this, entry));
     }
 
     @Override
@@ -316,27 +341,40 @@ public class FieldGuideScreen extends BookScreen {
 
         if (!isSearching && selectedCategory != null && currentPage == 0) {
             renderCategoryInfo(guiGraphics);
+            renderRecentDiscoveries(guiGraphics, mouseX, mouseY);
         } else if (isSearching) {
             renderSearchTab(guiGraphics);
             if (currentEntries.isEmpty()) {
                 Component noResults = Component.translatable("gui.fieldguide.no_results");
-                guiGraphics.drawString(this.font, noResults, this.leftPageBounds.x_center() - this.font.width(noResults) / 2, this.leftPageBounds.y_center() - (this.font.lineHeight/ 2), Constants.TEXT_MUTED_COLOR, false);
+                guiGraphics.drawString(this.font, noResults, this.leftPageBounds.x_center() - this.font.width(noResults) / 2, this.leftPageBounds.y_center() - (this.font.lineHeight / 2), Constants.TEXT_MUTED_COLOR, false);
             }
         }
 
-        int leftPageNum = (currentPage + 1) * 2 - 1;
-        int rightPageNum = (currentPage + 1) * 2;
-        int totalSpreads = getTotalSpreads();
-        int totalPagesStr = totalSpreads * 2;
+        // Page Numbers
+        int leftPageNum, rightPageNum;
+        leftPageNum = (currentPage + 1) * 2 - 1;
+        rightPageNum = (currentPage + 1) * 2;
 
-        if (leftPageNum > 1 || isSearching)
-            renderPageNumber(leftPageNum, totalPagesStr, this.leftPageBounds, guiGraphics);
-
-        if (currentEntries.size() > leftPageNum * ITEMS_PER_PAGE - (isSearching ? 0 : ITEMS_PER_PAGE)) {
-            renderPageNumber(rightPageNum, totalPagesStr, this.rightPageBounds, guiGraphics);
+        if (currentPage > 0 || isSearching) {
+            renderPageNumber(leftPageNum, this.leftPageBounds, guiGraphics);
         }
 
-        renderGrid(guiGraphics, mouseX, mouseY);
+        if (currentPage > 0 || isSearching) {
+            if (isSearching) {
+                if (currentEntries.size() > leftPageNum * ITEMS_PER_PAGE) {
+                    renderPageNumber(rightPageNum, this.rightPageBounds, guiGraphics);
+                }
+            } else {
+                int startIdx = (currentPage - 1) * ITEMS_PER_VIEW;
+                if (currentEntries.size() > startIdx + ITEMS_PER_PAGE) {
+                    renderPageNumber(rightPageNum, this.rightPageBounds, guiGraphics);
+                }
+            }
+        }
+
+        if (currentPage > 0 || isSearching) {
+            renderGrid(guiGraphics, mouseX, mouseY);
+        }
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
     }
@@ -383,15 +421,50 @@ public class FieldGuideScreen extends BookScreen {
         }
     }
 
+    private void renderRecentDiscoveries(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        // Title
+        Component title = Component.literal("Recent Discoveries"); // Fallback
+        int titleY = this.rightPageBounds.top() + 12;
+        guiGraphics.drawString(this.font, title, this.rightPageBounds.x_center() - font.width(title) / 2, titleY, Constants.TEXT_COLOR, false);
+
+        for (int i = 0; i < ITEMS_PER_PAGE; i++) {
+            if (i >= recentEntries.size()) break;
+            Object entry = recentEntries.get(i);
+            int slotIndex = ITEMS_PER_PAGE + i;
+            Bounds bounds = getGridCellBoundsLocal(slotIndex);
+
+            boolean hovered = bounds.contains(mouseX, mouseY);
+            if (hovered) {
+                guiGraphics.blit(Constants.CELL_BACKGROUND_HOVER_TEXTURE, bounds.x(), bounds.y(), 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE);
+            } else {
+                guiGraphics.blit(Constants.CELL_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE);
+            }
+
+            renderEntryInGrid(guiGraphics, entry, bounds.x_center(), bounds.y_center(), 30, true);
+
+            if (ClientFieldGuideManager.isNew(entry)) {
+                renderNewLabel(guiGraphics, bounds);
+            }
+        }
+
+        // Tooltips
+        for (int i = 0; i < ITEMS_PER_PAGE; i++) {
+            if (i >= recentEntries.size()) break;
+            Object entry = recentEntries.get(i);
+            int slotIndex = ITEMS_PER_PAGE + i;
+            Bounds bounds = getGridCellBoundsLocal(slotIndex);
+            if (bounds.contains(mouseX, mouseY)) {
+                renderEntryTooltip(guiGraphics, entry, mouseX, mouseY, true);
+            }
+        }
+    }
+
     private int getItemIndexForSlot(int slotIndex) {
         if (isSearching) return (currentPage * ITEMS_PER_VIEW) + slotIndex;
-        if (currentPage == 0) {
-            if (slotIndex < ITEMS_PER_PAGE) return -1;
-            return slotIndex - ITEMS_PER_PAGE;
-        } else {
-            int startItemIndex = ITEMS_PER_PAGE + (currentPage - 1) * ITEMS_PER_VIEW;
-            return startItemIndex + slotIndex;
-        }
+        if (currentPage == 0) return -1;
+
+        int startItemIndex = (currentPage - 1) * ITEMS_PER_VIEW;
+        return startItemIndex + slotIndex;
     }
 
     private void renderGrid(GuiGraphics guiGraphics, int mouseX, int mouseY) {
@@ -399,8 +472,7 @@ public class FieldGuideScreen extends BookScreen {
             int itemIndex = getItemIndexForSlot(i);
             if (itemIndex >= 0 && itemIndex < currentEntries.size()) {
                 Object entry = currentEntries.get(itemIndex);
-                int globalSlotIndex = currentPage * ITEMS_PER_VIEW + i;
-                Bounds bounds = getGridCellBounds(globalSlotIndex);
+                Bounds bounds = getGridCellBoundsLocal(i);
                 boolean unlocked = ClientFieldGuideManager.isUnlocked(entry);
                 boolean hovered = bounds.contains(mouseX, mouseY);
 
@@ -413,14 +485,7 @@ public class FieldGuideScreen extends BookScreen {
                 renderEntryInGrid(guiGraphics, entry, bounds.x_center(), bounds.y_center(), 30, unlocked);
 
                 if (ClientFieldGuideManager.isNew(entry)) {
-                    Component newText = Component.translatable("fieldguide.new");
-                    int textWidth = this.font.width(newText);
-                    int textX = bounds.x_center() - textWidth / 2;
-                    int textY = bounds.bottom() - 8;
-                    guiGraphics.pose().pushPose();
-                    guiGraphics.pose().translate(0, 0, 200);
-                    guiGraphics.drawString(this.font, newText, textX, textY, 0x63B40C, false);
-                    guiGraphics.pose().popPose();
+                    renderNewLabel(guiGraphics, bounds);
                 }
             }
         }
@@ -428,49 +493,65 @@ public class FieldGuideScreen extends BookScreen {
         for (int i = 0; i < ITEMS_PER_VIEW; i++) {
             int itemIndex = getItemIndexForSlot(i);
             if (itemIndex >= 0 && itemIndex < currentEntries.size()) {
-                int globalSlotIndex = currentPage * ITEMS_PER_VIEW + i;
-                Bounds bounds = getGridCellBounds(globalSlotIndex);
+                Bounds bounds = getGridCellBoundsLocal(i);
                 if (bounds.contains(mouseX, mouseY)) {
                     Object entry = currentEntries.get(itemIndex);
                     boolean unlocked = ClientFieldGuideManager.isUnlocked(entry);
-
-                    if (unlocked || ModConfig.get().showUndiscoveredNames) {
-                        Component name;
-                        if (entry instanceof EntityType<?> type) name = type.getDescription();
-                        else if (entry instanceof Block block) name = block.getName();
-                        else name = Component.translatable("fieldguide.unknown");
-
-                        List<Component> tooltip = new ArrayList<>();
-                        tooltip.add(name);
-
-                        if (this.minecraft != null && this.minecraft.options.advancedItemTooltips) {
-                            ResourceLocation id = null;
-                            if (entry instanceof EntityType<?> type) id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
-                            else if (entry instanceof Block block) id = BuiltInRegistries.BLOCK.getKey(block);
-
-                            if (id != null) {
-                                tooltip.add(Component.literal(id.toString()).withStyle(ChatFormatting.DARK_GRAY));
-                            }
-                        }
-
-                        guiGraphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
-                    } else {
-                        guiGraphics.renderTooltip(this.font, Component.translatable("fieldguide.unknown"), mouseX, mouseY);
-                    }
+                    renderEntryTooltip(guiGraphics, entry, mouseX, mouseY, unlocked);
                 }
             }
         }
     }
 
-    private Bounds getGridCellBounds(int i) {
+    private void renderNewLabel(GuiGraphics guiGraphics, Bounds bounds) {
+        Component newText = Component.translatable("fieldguide.new");
+        int textWidth = this.font.width(newText);
+        int textX = bounds.x_center() - textWidth / 2;
+        int textY = bounds.bottom() - 8;
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(0, 0, 200);
+        guiGraphics.drawString(this.font, newText, textX, textY, 0x63B40C, false);
+        guiGraphics.pose().popPose();
+    }
+
+    private void renderEntryTooltip(GuiGraphics guiGraphics, Object entry, int mouseX, int mouseY, boolean unlocked) {
+        if (unlocked || ModConfig.get().showUndiscoveredNames) {
+            Component name;
+            if (entry instanceof EntityType<?> type) name = type.getDescription();
+            else if (entry instanceof Block block) name = block.getName();
+            else name = Component.translatable("fieldguide.unknown");
+
+            List<Component> tooltip = new ArrayList<>();
+            tooltip.add(name);
+
+            if (this.minecraft != null && this.minecraft.options.advancedItemTooltips) {
+                ResourceLocation id = null;
+                if (entry instanceof EntityType<?> type) id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+                else if (entry instanceof Block block) id = BuiltInRegistries.BLOCK.getKey(block);
+
+                if (id != null) {
+                    tooltip.add(Component.literal(id.toString()).withStyle(ChatFormatting.DARK_GRAY));
+                }
+            }
+
+            guiGraphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
+        } else {
+            guiGraphics.renderTooltip(this.font, Component.translatable("fieldguide.unknown"), mouseX, mouseY);
+        }
+    }
+
+    private Bounds getGridCellBounds(int globalSlotIndex) {
+        return getGridCellBoundsLocal(globalSlotIndex % ITEMS_PER_VIEW);
+    }
+
+    private Bounds getGridCellBoundsLocal(int i) {
         Bounds pageBounds;
-        int startIndex = currentPage * ITEMS_PER_VIEW;
-        if (i < startIndex + ITEMS_PER_PAGE) pageBounds = this.leftPageBounds;
+        if (i < ITEMS_PER_PAGE) pageBounds = this.leftPageBounds;
         else pageBounds = this.rightPageBounds;
 
         int startX = pageBounds.left() + 6;
         int startY = pageBounds.top() + 11;
-        int localIndex = (i - startIndex) % ITEMS_PER_PAGE;
+        int localIndex = i % ITEMS_PER_PAGE;
         int col = localIndex % GRID_COLS;
         int row = localIndex / GRID_COLS;
         int x = startX + (col * (CELL_SIZE + GAP));
@@ -478,7 +559,7 @@ public class FieldGuideScreen extends BookScreen {
         return new Bounds(x, y, CELL_SIZE, CELL_SIZE);
     }
 
-    private void renderPageNumber(int page, int total, Bounds bounds, GuiGraphics guiGraphics) {
+    private void renderPageNumber(int page, Bounds bounds, GuiGraphics guiGraphics) {
         String str = page + "";
         guiGraphics.blit(Constants.LIST_PAGE_TEXTURE, bounds.left(), bounds.top(), 0, 0, bounds.width(), bounds.height(), bounds.width(), bounds.height());
         guiGraphics.drawString(this.font, str, bounds.x_center() - font.width(str) / 2, bounds.bottom() - 15, Constants.PAGE_NUMBER_COLOR, false);
@@ -489,12 +570,17 @@ public class FieldGuideScreen extends BookScreen {
             if (this.minecraft != null && this.minecraft.level != null) {
                 Entity entity = entryCache.get(type);
                 if (entity == null && !entryCache.containsKey(type)) {
-                    try {
-                        entity = type.create(this.minecraft.level);
-                    } catch (Exception e) {
-                        Constants.LOG.error("Failed to render entity in Field Guide: {}", type.getDescription().getString(), e);
+                    if (this.minecraft.level != null) {
+                        try {
+                            entity = type.create(this.minecraft.level);
+                            if (entity != null) {
+                                entryCache.put(type, entity);
+                            }
+                        } catch (Exception e) {
+                            Constants.LOG.error("Failed to create entity for guide: {}", type.getDescription().getString());
+                            entryCache.put(type, null);
+                        }
                     }
-                    entryCache.put(type, entity);
                 }
 
                 if (entity instanceof LivingEntity living) {

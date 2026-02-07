@@ -165,16 +165,16 @@ public class FieldGuideMod {
     @SubscribeEvent
     public void onClientPlayerLogin(ClientPlayerNetworkEvent.LoggingIn event) {
         Minecraft client = Minecraft.getInstance();
-        Path saveDir = null;
+        String serverId = "unknown_server";
 
         if (client.hasSingleplayerServer() && client.getSingleplayerServer() != null) {
-            saveDir = client.getSingleplayerServer().getWorldPath(LevelResource.ROOT);
+            Path levelDatPath = client.getSingleplayerServer().getWorldPath(LevelResource.LEVEL_DATA_FILE);
+            serverId = levelDatPath.getParent().getFileName().toString();
         } else if (client.getCurrentServer() != null) {
-            String serverId = client.getCurrentServer().ip.replaceAll("[^a-zA-Z0-9.-]", "_");
-            saveDir = client.gameDirectory.toPath().resolve("fieldguide_saves").resolve(serverId);
+            serverId = client.getCurrentServer().ip;
         }
 
-        ClientFieldGuideManager.getInstance().onWorldLoad(saveDir);
+        ClientFieldGuideManager.getInstance().onWorldLoad(serverId);
     }
 
     @SubscribeEvent
