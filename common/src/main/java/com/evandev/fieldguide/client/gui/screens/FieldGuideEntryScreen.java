@@ -3,6 +3,7 @@ package com.evandev.fieldguide.client.gui.screens;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
+import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.platform.Services;
@@ -14,7 +15,6 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -137,81 +137,31 @@ public class FieldGuideEntryScreen extends BookScreen {
         return false;
     }
 
-    private void renderAttributes(GuiGraphics guiGraphics, LivingEntity entity, int x, int y) {
+    private void renderAttributeTextAndIcon(GuiGraphics guiGraphics, int iconOffset, String text, Bounds bounds) {
+        int iconSize = 9;
+        int iconSpacing = 4;
+        int width = iconSize + iconSpacing + font.width(text);
+
+        // Center within given bounds
+        int y = bounds.y_center() - iconSize / 2;
+        int x = bounds.x_center() - width / 2;
+
+        guiGraphics.blit(Constants.ATTRIBUTES_TEXTURE, x, y, 0, iconOffset, iconSize, iconSize, 32, 32);
+        guiGraphics.drawString(this.font, text, x + iconSize + iconSpacing, y + 1, Constants.TEXT_COLOR, false);
+    }
+
+    private void renderAttributes(GuiGraphics guiGraphics, LivingEntity entity) {
         RenderSystem.setShaderTexture(0, Constants.ATTRIBUTES_TEXTURE);
 
-        float maxHealth = entity.getMaxHealth();
-        int armor = entity.getArmorValue();
+        // Health
+        String health = String.valueOf((int)entity.getMaxHealth() / 2);
+        Bounds healthBounds = new Bounds(leftPageBounds.left(), leftPageBounds.bottom() - 48, leftPageBounds.width() / 2, 20);
+        renderAttributeTextAndIcon(guiGraphics, 0, health, healthBounds);
 
-        int iconSize = 9;
-        int spacing = 1;
-        int rowHeight = iconSize + 1;
-        int iconsPerRow = 10;
-        int healthPerRow = iconsPerRow * 2;
-
-        int totalHeartRows = Mth.ceil(maxHealth / (float) healthPerRow);
-        int visibleHeartRows = Math.min(totalHeartRows, 2);
-
-        int currentBottomY = y - iconSize;
-
-        int x1 = x + (iconsPerRow * (iconSize + spacing)) + 2;
-        for (int row = 0; row < visibleHeartRows; row++) {
-            int drawY = currentBottomY - (row * rowHeight);
-            boolean isOverflowRow = (row == visibleHeartRows - 1) && (totalHeartRows > visibleHeartRows);
-
-            int heartsToRender;
-            if (isOverflowRow) {
-                heartsToRender = iconsPerRow;
-            } else {
-                float healthInThisRowRange = maxHealth - (row * healthPerRow);
-                heartsToRender = Mth.ceil(Math.min(healthPerRow, Math.max(0, healthInThisRowRange)) / 2.0F);
-            }
-
-            for (int i = 0; i < heartsToRender; ++i) {
-                int drawX = x + i * (iconSize + spacing);
-                int u = 0;
-
-                if (!isOverflowRow) {
-                    double currentIconHp = (row * healthPerRow) + (i * 2) + 1;
-                    if (currentIconHp == (int) maxHealth) {
-                        u = iconSize;
-                    }
-                }
-
-                guiGraphics.blit(Constants.ATTRIBUTES_TEXTURE, drawX, drawY, u, 0, iconSize, iconSize, 32, 32);
-            }
-
-            if (isOverflowRow) {
-                String multiplier = "x" + totalHeartRows;
-                guiGraphics.drawString(this.font, multiplier, x1, drawY + 1, Constants.TEXT_COLOR, false);
-            }
-        }
-
-        if (armor > 0) {
-            int armorDrawY = currentBottomY - (visibleHeartRows * rowHeight);
-            int totalArmorRows = Mth.ceil(armor / 20.0f);
-
-            boolean isArmorOverflow = totalArmorRows > 1;
-            int armorIconsToRender = isArmorOverflow ? iconsPerRow : Mth.ceil(armor / 2.0F);
-
-            for (int i = 0; i < armorIconsToRender; ++i) {
-                int drawX = x + i * (iconSize + spacing);
-                int u = 0;
-
-                if (!isArmorOverflow) {
-                    if (i * 2 + 1 == armor) {
-                        u = iconSize;
-                    }
-                }
-
-                guiGraphics.blit(Constants.ATTRIBUTES_TEXTURE, drawX, armorDrawY, u, iconSize, iconSize, iconSize, 32, 32);
-            }
-
-            if (isArmorOverflow) {
-                String multiplier = "x" + totalArmorRows;
-                guiGraphics.drawString(this.font, multiplier, x1, armorDrawY + 1, Constants.TEXT_COLOR, false);
-            }
-        }
+        // Armor
+        String armor = String.valueOf(entity.getArmorValue());
+        Bounds armorBounds = new Bounds(leftPageBounds.x_center(), leftPageBounds.bottom() - 48, leftPageBounds.width() / 2, 20);
+        renderAttributeTextAndIcon(guiGraphics, 9, armor, armorBounds);
     }
 
     @Override
@@ -221,7 +171,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         // Book Backgrounds
         RenderSystem.setShaderTexture(0, Constants.BOOK_TEXTURE);
         guiGraphics.blit(Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
-        guiGraphics.blit(Constants.PAGE_DETAILS_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
+        guiGraphics.blit(Constants.DETAILS_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
@@ -229,27 +179,40 @@ public class FieldGuideEntryScreen extends BookScreen {
         Component title = getTitleForEntry(entry);
         String description = unlocked ? ClientFieldGuideManager.getEntryDescription(entry) : Component.translatable("fieldguide.description.locked").getString();
 
+        ItemStack tooltipStack = null;
+        Component tooltipText = null;
+
         // Entry Name
-        int titleY = this.leftPageBounds.top() + 14;
-        guiGraphics.drawString(this.font, title, this.leftPageBounds.x_center() - font.width(title) / 2 + 1, titleY + 1, Constants.TEXT_SHADOW_COLOR, false);
-        guiGraphics.drawString(this.font, title, this.leftPageBounds.x_center() - font.width(title) / 2, titleY, Constants.TEXT_COLOR, false);
+        int titleY = this.leftPageBounds.top() + 8;
+//        guiGraphics.drawString(this.font, title, this.leftPageBounds.x_center() - font.width(title) / 2 + 1, titleY + 1, Constants.TEXT_SHADOW_COLOR, false);
+        guiGraphics.drawString(this.font, title, this.rightPageBounds.left() + 5, titleY, Constants.TEXT_COLOR, false);
 
         // Spawn Biomes
         int biomeIconSize = 16;
-        int biomeSpacing = 1;
-        int biomeStartY = titleY + 12;
+        int biomeSpacing = 0;
+        int biomeStartY = this.leftPageBounds.bottom() - 24;
 
         if (unlocked && !spawnBiomes.isEmpty()) {
             int maxIcons = 6;
             int count = Math.min(spawnBiomes.size(), maxIcons);
+            int totalWidth = count * (biomeIconSize + biomeSpacing);
 
-            int startX = this.leftPageBounds.left() + 15;
+            int startX = this.leftPageBounds.x_center() - totalWidth / 2;
 
             for (int i = 0; i < count; i++) {
                 ResourceLocation biomeId = spawnBiomes.get(i);
                 ResourceLocation texture = new ResourceLocation(biomeId.getNamespace(), "textures/immersiveoverlays/" + biomeId.getPath() + ".png");
+                int x = startX + (i * (biomeIconSize + biomeSpacing));
 
-                guiGraphics.blit(texture, startX + (i * (biomeIconSize + biomeSpacing)), biomeStartY, 0, 0, biomeIconSize, biomeIconSize, biomeIconSize, biomeIconSize);
+                guiGraphics.blit(texture, x, biomeStartY, 0, 0, biomeIconSize, biomeIconSize, biomeIconSize, biomeIconSize);
+
+                if (Bounds.isMouseOver(mouseX, mouseY, x, biomeStartY, biomeIconSize, biomeIconSize)) {
+                    if (isCommonSpawn) {
+                        tooltipText = Component.translatable("fieldguide.tooltip.common_spawn");
+                    } else {
+                        tooltipText = Component.translatable("biome." + biomeId.getNamespace() + "." + biomeId.getPath());
+                    }
+                }
             }
         }
 
@@ -261,13 +224,13 @@ public class FieldGuideEntryScreen extends BookScreen {
             bounce = 1.0f + 0.15f * (float) Math.sin(t * Math.PI);
         }
 
-        int xPos = leftPageBounds.left() + leftPageBounds.width() / 2;
-        int yPos = leftPageBounds.y_center() + 10;
+        int xPos = leftPageBounds.x_center();
+        int yPos = leftPageBounds.y_center() - 20;
 
         if (entry instanceof EntityType && renderedEntity instanceof LivingEntity living) {
             if (unlocked) {
                 EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, false, 0, true, bounce);
-                renderAttributes(guiGraphics, living, leftPageBounds.left() + 15, leftPageBounds.bottom() - 14);
+                renderAttributes(guiGraphics, living);
             } else {
                 EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, true, Constants.DETAILS_SILHOUETTE_COLOR, true, bounce);
             }
@@ -276,22 +239,22 @@ public class FieldGuideEntryScreen extends BookScreen {
         }
 
         // Description
-        int textX = this.rightPageBounds.left() + 11;
-        int textY = this.rightPageBounds.top() + 17;
-        int textAreaWidth = this.rightPageBounds.width() - 22;
+        int textX = this.rightPageBounds.left() + 5;
+        int textY = this.rightPageBounds.top() + 25;
+        int textAreaWidth = this.rightPageBounds.width();
         guiGraphics.drawWordWrap(font, Component.literal(description), textX, textY, textAreaWidth, Constants.TEXT_COLOR);
 
         // Drops
         List<List<ItemStack>> dropLines = new ArrayList<>();
-        int dropItemSize = 18;
-        int dropSpacing = 2;
+        int dropItemSize = 20;
+        int dropSpacing = 1;
         int dropStartY = 0;
 
         if (unlocked) {
             List<ItemStack> drops = ClientFieldGuideManager.getInstance().getDrops(entry);
 
             if (!drops.isEmpty()) {
-                int maxLineWidth = this.rightPageBounds.width() - 20;
+                int maxLineWidth = (dropItemSize + dropSpacing) * 6;
                 List<ItemStack> currentLine = new ArrayList<>();
                 int currentWidth = 0;
 
@@ -307,8 +270,8 @@ public class FieldGuideEntryScreen extends BookScreen {
                 }
                 dropLines.add(currentLine);
 
-                int dropsHeight = dropLines.size() * dropItemSize + (dropLines.size() - 1) * dropSpacing;
-                int bottomAnchor = this.rightPageBounds.bottom() - 15;
+                int dropsHeight = 2 * dropItemSize + (dropLines.size() - 1) * dropSpacing;
+                int bottomAnchor = this.rightPageBounds.bottom() - 6;
                 dropStartY = bottomAnchor - dropsHeight;
 
                 RenderSystem.enableDepthTest();
@@ -317,13 +280,16 @@ public class FieldGuideEntryScreen extends BookScreen {
                 // Backgrounds and Items
                 int currentY = dropStartY;
                 for (List<ItemStack> line : dropLines) {
-                    int lineWidth = line.size() * dropItemSize + (line.size() - 1) * dropSpacing;
-                    int startX = this.rightPageBounds.x_center() - (lineWidth / 2);
+                    int startX = this.rightPageBounds.left();
 
                     for (ItemStack stack : line) {
-                        guiGraphics.blit(Constants.ITEM_BACKGROUND_TEXTURE, startX, currentY, 0, 0, dropItemSize, dropItemSize, dropItemSize, dropItemSize);
-                        guiGraphics.renderItem(stack, startX + 1, currentY + 1);
-                        guiGraphics.renderItemDecorations(this.font, stack, startX + 1, currentY + 1);
+                        guiGraphics.renderItem(stack, startX + 2, currentY + 2);
+                        guiGraphics.renderItemDecorations(this.font, stack, startX + 2, currentY + 2);
+
+                        if (Bounds.isMouseOver(mouseX, mouseY, startX, currentY, dropItemSize, dropItemSize)) {
+                            tooltipStack = stack;
+                        }
+
                         startX += dropItemSize + dropSpacing;
                     }
                     currentY += dropItemSize + dropSpacing;
@@ -331,41 +297,11 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
         }
 
-        // Drop Tooltips
-        if (unlocked && !dropLines.isEmpty()) {
-            int currentY = dropStartY;
-            for (List<ItemStack> line : dropLines) {
-                int lineWidth = line.size() * dropItemSize + (line.size() - 1) * dropSpacing;
-                int startX = this.rightPageBounds.x_center() - (lineWidth / 2);
-
-                for (ItemStack stack : line) {
-                    if (mouseX >= startX && mouseX < startX + dropItemSize && mouseY >= currentY && mouseY < currentY + dropItemSize) {
-                        guiGraphics.renderTooltip(this.font, stack, mouseX, mouseY);
-                    }
-                    startX += dropItemSize + dropSpacing;
-                }
-                currentY += dropItemSize + dropSpacing;
-            }
-        }
-
-        // Biome Tooltips
-        if (unlocked && !spawnBiomes.isEmpty()) {
-            int maxIcons = 7;
-            int count = Math.min(spawnBiomes.size(), maxIcons);
-            int startX = this.leftPageBounds.left() + 15;
-
-            for (int i = 0; i < count; i++) {
-                int drawX = startX + (i * (biomeIconSize + biomeSpacing));
-
-                if (mouseX >= drawX && mouseX < drawX + biomeIconSize && mouseY >= biomeStartY && mouseY < biomeStartY + biomeIconSize) {
-                    if (isCommonSpawn) {
-                        guiGraphics.renderTooltip(this.font, Component.translatable("fieldguide.tooltip.common_spawn"), mouseX, mouseY);
-                    } else {
-                        ResourceLocation biomeId = spawnBiomes.get(i);
-                        guiGraphics.renderTooltip(this.font, Component.translatable("biome." + biomeId.getNamespace() + "." + biomeId.getPath()), mouseX, mouseY);
-                    }
-                }
-            }
+        // Render Tooltip
+        if (tooltipStack != null) {
+            guiGraphics.renderTooltip(this.font, tooltipStack, mouseX, mouseY);
+        } else if (tooltipText != null) {
+            guiGraphics.renderTooltip(this.font, tooltipText, mouseX, mouseY);
         }
     }
 }

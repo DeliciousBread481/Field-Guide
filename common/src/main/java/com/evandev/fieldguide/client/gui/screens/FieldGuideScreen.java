@@ -35,11 +35,12 @@ public class FieldGuideScreen extends BookScreen {
 
     private static final int GRID_COLS = 3;
     private static final int CELL_SIZE = 40;
-    private static final int GAP = 0;
+    private static final int GAP = 1;
 
     private static final int TAB_WIDTH = 24;
     private static final int TAB_HEIGHT = 24;
     private static final int TAB_GAP = 0;
+    private static final int TAB_Y_OFFSET = 43;
 
     private static final int SEARCH_WIDTH = 140;
     private static final int SEARCH_HEIGHT = 20;
@@ -132,7 +133,7 @@ public class FieldGuideScreen extends BookScreen {
 
 
         this.prevPageButton = new ImageButton(
-                this.leftPageBounds.left(),
+                this.bounds.left() + 15,
                 this.leftPageBounds.bottom() - 15,
                 16, 16, 0, 0, 16,
                 Constants.PREV_PAGE_TEXTURE, 16, 32,
@@ -140,7 +141,7 @@ public class FieldGuideScreen extends BookScreen {
         );
 
         this.nextPageButton = new ImageButton(
-                this.rightPageBounds.right() - 16,
+                this.bounds.right() - 14 - 16,
                 this.rightPageBounds.bottom() - 15,
                 16, 16, 0, 0, 16,
                 Constants.NEXT_PAGE_TEXTURE, 16, 32,
@@ -176,7 +177,7 @@ public class FieldGuideScreen extends BookScreen {
     }
 
     private void initTabs() {
-        int startY = this.bounds.top() + 31;
+        int startY = this.bounds.top() + TAB_Y_OFFSET;
         for (int i = 0; i < sortedCategories.size(); i++) {
             Category category = sortedCategories.get(i);
             int yPos = startY + (i * (TAB_HEIGHT + TAB_GAP));
@@ -189,8 +190,8 @@ public class FieldGuideScreen extends BookScreen {
     }
 
     private void renderSearchTab(GuiGraphics guiGraphics) {
+        int y = this.bounds.top() + TAB_Y_OFFSET;
         int x = this.bounds.left() - 6;
-        int y = this.bounds.top() + 31;
         guiGraphics.blit(Constants.TAB_TEXTURE, x, y, 0, 24, 24, 24, 24, 48);
 
         int iconX = x + 5;
@@ -339,27 +340,14 @@ public class FieldGuideScreen extends BookScreen {
         RenderSystem.setShaderTexture(0, Constants.BOOK_TEXTURE);
         guiGraphics.blit(Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
 
-        if (!isSearching && selectedCategory != null && currentPage == 0) {
-            renderCategoryInfo(guiGraphics);
-            renderRecentDiscoveries(guiGraphics, mouseX, mouseY);
-        } else if (isSearching) {
-            renderSearchTab(guiGraphics);
-            if (currentEntries.isEmpty()) {
-                Component noResults = Component.translatable("gui.fieldguide.no_results");
-                guiGraphics.drawString(this.font, noResults, this.leftPageBounds.x_center() - this.font.width(noResults) / 2, this.leftPageBounds.y_center() - (this.font.lineHeight / 2), Constants.TEXT_MUTED_COLOR, false);
-            }
-        }
-
         // Page Numbers
         int leftPageNum, rightPageNum;
         leftPageNum = (currentPage + 1) * 2 - 1;
         rightPageNum = (currentPage + 1) * 2;
 
         if (currentPage > 0 || isSearching) {
+            guiGraphics.blit(Constants.LIST_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
             renderPageNumber(leftPageNum, this.leftPageBounds, guiGraphics);
-        }
-
-        if (currentPage > 0 || isSearching) {
             if (isSearching) {
                 if (currentEntries.size() > leftPageNum * ITEMS_PER_PAGE) {
                     renderPageNumber(rightPageNum, this.rightPageBounds, guiGraphics);
@@ -372,6 +360,17 @@ public class FieldGuideScreen extends BookScreen {
             }
         }
 
+        if (!isSearching && selectedCategory != null && currentPage == 0) {
+            renderCategoryInfo(guiGraphics);
+            renderRecentDiscoveries(guiGraphics, mouseX, mouseY);
+        } else if (isSearching) {
+            renderSearchTab(guiGraphics);
+            if (currentEntries.isEmpty()) {
+                Component noResults = Component.translatable("gui.fieldguide.no_results");
+                guiGraphics.drawString(this.font, noResults, this.leftPageBounds.x_center() - this.font.width(noResults) / 2, this.leftPageBounds.y_center() - (Constants.LINE_HEIGHT / 2), Constants.TEXT_MUTED_COLOR, false);
+            }
+        }
+
         if (currentPage > 0 || isSearching) {
             renderGrid(guiGraphics, mouseX, mouseY);
         }
@@ -380,18 +379,17 @@ public class FieldGuideScreen extends BookScreen {
     }
 
     private void renderCategoryInfo(GuiGraphics guiGraphics) {
-        guiGraphics.blit(Constants.TITLE_PAGE_TEXTURE, this.leftPageBounds.left(), this.leftPageBounds.top(), 0, 0, this.leftPageBounds.width(), this.leftPageBounds.height(), this.leftPageBounds.width(), this.leftPageBounds.height());
+        guiGraphics.blit(Constants.TITLE_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
 
         Component title = Component.translatable("category.fieldguide." + selectedCategory.getId().getPath());
-        int titleY = this.leftPageBounds.top() + 60;
+        int titleY = this.leftPageBounds.top() + 39;
         List<FormattedCharSequence> lines = this.font.split(title, 70);
 
         for (FormattedCharSequence line : lines) {
             int lineWidth = this.font.width(line);
             int lineX = this.leftPageBounds.x_center() - lineWidth / 2;
-            guiGraphics.drawString(this.font, line, lineX + 1, titleY + 1, Constants.TEXT_SHADOW_COLOR, false);
             guiGraphics.drawString(this.font, line, lineX, titleY, Constants.TEXT_COLOR, false);
-            titleY += this.font.lineHeight;
+            titleY += Constants.LINE_HEIGHT;
         }
 
         int total = currentEntries.size();
@@ -424,7 +422,7 @@ public class FieldGuideScreen extends BookScreen {
     private void renderRecentDiscoveries(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         // Title
         Component title = Component.literal("Recent Discoveries"); // Fallback
-        int titleY = this.rightPageBounds.top() + 12;
+        int titleY = this.rightPageBounds.top() + 8;
         guiGraphics.drawString(this.font, title, this.rightPageBounds.x_center() - font.width(title) / 2, titleY, Constants.TEXT_COLOR, false);
 
         for (int i = 0; i < ITEMS_PER_PAGE; i++) {
@@ -549,8 +547,8 @@ public class FieldGuideScreen extends BookScreen {
         if (i < ITEMS_PER_PAGE) pageBounds = this.leftPageBounds;
         else pageBounds = this.rightPageBounds;
 
-        int startX = pageBounds.left() + 6;
-        int startY = pageBounds.top() + 11;
+        int startX = pageBounds.left();
+        int startY = pageBounds.top() + 24;
         int localIndex = i % ITEMS_PER_PAGE;
         int col = localIndex % GRID_COLS;
         int row = localIndex / GRID_COLS;
@@ -561,8 +559,7 @@ public class FieldGuideScreen extends BookScreen {
 
     private void renderPageNumber(int page, Bounds bounds, GuiGraphics guiGraphics) {
         String str = page + "";
-        guiGraphics.blit(Constants.LIST_PAGE_TEXTURE, bounds.left(), bounds.top(), 0, 0, bounds.width(), bounds.height(), bounds.width(), bounds.height());
-        guiGraphics.drawString(this.font, str, bounds.x_center() - font.width(str) / 2, bounds.bottom() - 15, Constants.PAGE_NUMBER_COLOR, false);
+        guiGraphics.drawString(this.font, str, bounds.x_center() - font.width(str) / 2, bounds.bottom() - 11, Constants.PAGE_NUMBER_COLOR, false);
     }
 
     private void renderEntryInGrid(GuiGraphics guiGraphics, Object entry, int x, int y, int scale, boolean unlocked) {
