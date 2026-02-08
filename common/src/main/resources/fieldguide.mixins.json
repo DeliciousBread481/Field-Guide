@@ -9,6 +9,7 @@
   ],
   "client": [
     "client.EntityRenderDispatcherMixin",
+    "client.GuiMixin",
     "client.InventoryScreenMixin",
     "client.LevelRendererMixin",
     "client.LivingEntityRendererMixin",
