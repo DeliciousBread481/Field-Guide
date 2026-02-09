@@ -20,6 +20,7 @@ public class Constants {
     // Buttons
     public static final ResourceLocation BUTTON_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/fieldguide_button.png");
     public static final ResourceLocation INVENTORY_BUTTON_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/fieldguide_inventory_button.png");
+    public static final ResourceLocation BIOME_PAGINATION_BUTTONS_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/arrows.png");
 
     // Elements
     public static final ResourceLocation NEXT_PAGE_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/next_page.png");

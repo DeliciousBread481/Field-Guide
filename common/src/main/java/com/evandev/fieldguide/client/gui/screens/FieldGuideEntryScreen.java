@@ -34,6 +34,10 @@ public class FieldGuideEntryScreen extends BookScreen {
     private Entity renderedEntity;
     private long lastClickTime = 0;
     private boolean isCommonSpawn = false;
+    private int currentBiomePage = 1;
+    private final int biomesPerPage = 6;
+    private ImageButton prevBiomePageButton;
+    private ImageButton nextBiomePageButton;
 
     public FieldGuideEntryScreen(Screen parent, Object entry) {
         super(getTitleForEntry(entry));
@@ -87,11 +91,12 @@ public class FieldGuideEntryScreen extends BookScreen {
                         }
                     }
 
-                    if (spawnBiomes.size() > 16) {
-                        this.isCommonSpawn = true;
-                        spawnBiomes.clear();
-                        spawnBiomes.add(new ResourceLocation("minecraft", "plains"));  // TODO: generic icon?
-                    }
+                    // Disabled while testing pagination. Does this still make sense to keep?
+//                    if (spawnBiomes.size() > 16) {
+//                        this.isCommonSpawn = true;
+//                        spawnBiomes.clear();
+//                        spawnBiomes.add(new ResourceLocation("minecraft", "plains"));  // TODO: generic icon?
+//                    }
 
                 } catch (Exception e) {
                     Constants.LOG.error("Failed to load spawn biomes for Field Guide", e);
@@ -112,6 +117,37 @@ public class FieldGuideEntryScreen extends BookScreen {
                 24 * 2,
                 b -> Objects.requireNonNull(this.minecraft).setScreen(parent)
         ));
+
+        this.nextBiomePageButton = new ImageButton(
+                this.leftPageBounds.right() - 13,
+                this.leftPageBounds.bottom() - 24,
+                16,
+                16,
+                16,
+                0,
+                16,
+                Constants.BIOME_PAGINATION_BUTTONS_TEXTURE,
+                32,
+                48,
+                b -> currentBiomePage = (int) Math.min(Math.ceil((double) spawnBiomes.size() / biomesPerPage), currentBiomePage + 1)
+        );
+        this.prevBiomePageButton = new ImageButton(
+                this.leftPageBounds.left() - 3,
+                this.leftPageBounds.bottom() - 24,
+                16,
+                16,
+                0,
+                0,
+                16,
+                Constants.BIOME_PAGINATION_BUTTONS_TEXTURE,
+                32,
+                48,
+                b -> currentBiomePage = Math.max(1, currentBiomePage - 1)
+        );
+        nextBiomePageButton.visible = false;
+        prevBiomePageButton.visible = false;
+        this.addRenderableWidget(nextBiomePageButton);
+        this.addRenderableWidget(prevBiomePageButton);
     }
 
     @Override
@@ -193,16 +229,16 @@ public class FieldGuideEntryScreen extends BookScreen {
         int biomeStartY = this.leftPageBounds.bottom() - 24;
 
         if (unlocked && !spawnBiomes.isEmpty()) {
-            int maxIcons = 6;
-            int count = Math.min(spawnBiomes.size(), maxIcons);
-            int totalWidth = count * (biomeIconSize + biomeSpacing);
+            int indexStart = biomesPerPage * (currentBiomePage - 1);
+            int indexEnd = Math.min(spawnBiomes.size(), biomesPerPage * currentBiomePage);
+            int totalWidth = (indexEnd - indexStart) * (biomeIconSize + biomeSpacing);
 
             int startX = this.leftPageBounds.x_center() - totalWidth / 2;
 
-            for (int i = 0; i < count; i++) {
+            for (int i = indexStart; i < indexEnd; i++) {
                 ResourceLocation biomeId = spawnBiomes.get(i);
                 ResourceLocation texture = new ResourceLocation(biomeId.getNamespace(), "textures/immersiveoverlays/" + biomeId.getPath() + ".png");
-                int x = startX + (i * (biomeIconSize + biomeSpacing));
+                int x = startX + ((i - indexStart) * (biomeIconSize + biomeSpacing));
 
                 guiGraphics.blit(texture, x, biomeStartY, 0, 0, biomeIconSize, biomeIconSize, biomeIconSize, biomeIconSize);
 
@@ -214,6 +250,15 @@ public class FieldGuideEntryScreen extends BookScreen {
                     }
                 }
             }
+
+            nextBiomePageButton.active = indexEnd < spawnBiomes.size();
+            prevBiomePageButton.active = currentBiomePage > 1;
+            nextBiomePageButton.visible = spawnBiomes.size() > biomesPerPage;
+            prevBiomePageButton.visible = spawnBiomes.size() > biomesPerPage;
+
+        } else {
+            nextBiomePageButton.visible = false;
+            prevBiomePageButton.visible = false;
         }
 
         // Entity
