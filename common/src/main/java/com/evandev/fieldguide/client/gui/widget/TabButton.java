@@ -44,7 +44,7 @@ public class TabButton extends ImageButton {
 
         int iconX = this.getX() + 3;
         int iconY = this.getY() + 3;
-        if (isSelected) iconX = iconX + 2;
+        if (isSelected) iconX = iconX + 1;
 
         guiGraphics.blit(visual.icon, iconX, iconY, 0, 0, 16, 16, 16, 16);
     }

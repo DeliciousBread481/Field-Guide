@@ -40,7 +40,7 @@ public class FieldGuideScreen extends BookScreen {
     private static final int TAB_WIDTH = 24;
     private static final int TAB_HEIGHT = 24;
     private static final int TAB_GAP = 0;
-    private static final int TAB_Y_OFFSET = 43;
+    private static final int TAB_Y_OFFSET = 29;
 
     private static final int SEARCH_WIDTH = 140;
     private static final int SEARCH_HEIGHT = 20;
@@ -181,7 +181,7 @@ public class FieldGuideScreen extends BookScreen {
         for (int i = 0; i < sortedCategories.size(); i++) {
             Category category = sortedCategories.get(i);
             int yPos = startY + (i * (TAB_HEIGHT + TAB_GAP));
-            int xPos = this.bounds.left() - 6;
+            int xPos = this.bounds.left() - 7;
 
             TabButton tab = new TabButton(xPos, yPos, TAB_WIDTH, TAB_HEIGHT, category, this);
             tabs.add(tab);

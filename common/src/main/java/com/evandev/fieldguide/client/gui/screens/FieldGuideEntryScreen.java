@@ -100,7 +100,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         }
 
         this.addRenderableWidget(new ImageButton(
-                this.bounds.left() - 10,
+                this.bounds.left() - 9,
                 this.bounds.top() + 31,
                 24,
                 24,

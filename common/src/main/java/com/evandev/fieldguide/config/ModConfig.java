@@ -30,7 +30,7 @@ public class ModConfig {
     public boolean showUndiscoveredNames = false;
     public boolean autoRotateModels = false;
     public float rotationSpeed = 15.0F;
-    public double scanSpeed = 1.0D;
+    public double scanSpeed = 1.5D;
     public double scanDistance = 64.0D;
 
     public String scanOverlayColor = "#FFFFFF";
