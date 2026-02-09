@@ -18,7 +18,6 @@ public class GuiMixin {
     private void renderScanningIcon(GuiGraphics guiGraphics, float scopeScale, CallbackInfo ci) {
         ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
         if (manager.getScanningTarget() != null || manager.getFadingTarget() != null|| manager.getOutOfRangeEntity() != null) {
-
             float progress = manager.getScanProgress(0);
 
             int screenWidth = guiGraphics.guiWidth();
@@ -30,6 +29,8 @@ public class GuiMixin {
             // Only show last frame after success
             if (manager.getFadingTarget() != null) {
                 frame = frames - 1;
+            } else if (manager.getIsTickingDown()) {
+                return;
             };
 
             int textureSize = 32;

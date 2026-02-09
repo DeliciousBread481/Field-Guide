@@ -681,6 +681,10 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         return currentFade / (float) FADE_DURATION;
     }
 
+    public boolean getIsTickingDown() {
+        return scanTicks < prevScanTicks;
+    }
+
     public void unlock(Object entry) {
         unlock(entry, true);
     }
