@@ -14,6 +14,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -56,6 +57,7 @@ public class FieldGuideScreen extends BookScreen {
     private List<Object> recentEntries = new ArrayList<>();
     private Category selectedCategory;
     private int currentPage = 0;
+    private Screen parent = null;
     private String searchQuery = "";
     private ImageButton prevPageButton;
     private ImageButton nextPageButton;
@@ -75,9 +77,10 @@ public class FieldGuideScreen extends BookScreen {
         this.currentPage = initialPage;
     }
 
-    public FieldGuideScreen(Category initialCategory, String searchQuery) {
-        this(initialCategory);
+    public FieldGuideScreen(String searchQuery, Screen parent) {
+        this();
         this.searchQuery = searchQuery;
+        this.parent = parent;
     }
 
     public static int getPageForEntry(Category category, Object entry) {
@@ -131,7 +134,6 @@ public class FieldGuideScreen extends BookScreen {
             lastOpenedPage = this.currentPage;
         }
 
-
         this.prevPageButton = new ImageButton(
                 this.bounds.left() + 15,
                 this.leftPageBounds.bottom() - 15,
@@ -151,14 +153,34 @@ public class FieldGuideScreen extends BookScreen {
         this.addRenderableWidget(prevPageButton);
         this.addRenderableWidget(nextPageButton);
 
-        initTabs();
+        if (parent != null) {
+            // Show Back Button
+            this.addRenderableWidget(new ImageButton(
+                this.bounds.left() - 9,
+                this.bounds.top() + 31,
+                24,
+                24,
+                0,
+                0,
+                24,
+                Constants.BACK_TEXTURE,
+                24,
+                24 * 2,
+                b -> Objects.requireNonNull(this.minecraft).setScreen(parent)
+            ));
+            if (!searchQuery.isEmpty()) {
+                onSearchChanged(searchQuery);
+            }
+        } else {
+            initTabs();
 
-        int searchX = this.width / 2 - SEARCH_WIDTH / 2;
-        int searchY = this.bounds.bottom() + 5;
+            int searchX = this.width / 2 - SEARCH_WIDTH / 2;
+            int searchY = this.bounds.bottom() + 5;
 
-        this.searchBox = new FieldGuideSearchBox(this.font, searchX, searchY, SEARCH_WIDTH, SEARCH_HEIGHT, this::onSearchChanged);
-        this.searchBox.setValue(this.searchQuery);
-        this.addRenderableWidget(this.searchBox);
+            this.searchBox = new FieldGuideSearchBox(this.font, searchX, searchY, SEARCH_WIDTH, SEARCH_HEIGHT, this::onSearchChanged);
+            this.searchBox.setValue(this.searchQuery);
+            this.addRenderableWidget(this.searchBox);
+        }
     }
 
     private void onSearchChanged(String query) {
@@ -194,9 +216,9 @@ public class FieldGuideScreen extends BookScreen {
         int x = this.bounds.left() - 7;
         guiGraphics.blit(Constants.TAB_TEXTURE, x, y, 0, 24, 24, 24, 24, 48);
 
-        int iconX = x + 5;
-        int iconY = y + 4;
-        guiGraphics.blit(Constants.SEARCH_ICON, iconX, iconY - 1, 0, 0, 16, 16, 16, 16);
+        int iconX = x + 4;
+        int iconY = y + 3;
+        guiGraphics.blit(Constants.SEARCH_ICON, iconX, iconY, 0, 0, 16, 16, 16, 16);
     }
 
     public Category getSelectedCategory() {
@@ -326,7 +348,11 @@ public class FieldGuideScreen extends BookScreen {
         }
 
         if (this.isSearching && keyCode == GLFW.GLFW_KEY_ESCAPE) {
-            this.searchBox.setValue("");
+            if (parent != null) {
+                Minecraft.getInstance().setScreen(parent);
+            } else {
+                this.searchBox.setValue("");
+            }
             return true;
         }
 
@@ -357,8 +383,27 @@ public class FieldGuideScreen extends BookScreen {
                 if (currentEntries.size() > leftPageNum * ITEMS_PER_PAGE) {
                     renderPageNumber(rightPageNum, this.rightPageBounds, guiGraphics);
                 }
+
                 // Render title
-                guiGraphics.drawString(this.font, searchQuery, this.leftPageBounds.left(), titleY, Constants.TEXT_MUTED_COLOR, false);
+
+                // Biome Title
+                if (searchQuery.startsWith("=!")) {
+                    ResourceLocation biomeId = ResourceLocation.tryParse(searchQuery.substring(2));
+                    if (biomeId != null) {
+                        ResourceLocation texture = new ResourceLocation(biomeId.getNamespace(), "textures/immersiveoverlays/" + biomeId.getPath() + ".png");
+                        int iconSize = 16;
+                        int iconY = titleY - 5;
+                        guiGraphics.blit(texture, this.leftPageBounds.left(), iconY, 0, 0, iconSize, iconSize, iconSize, iconSize);
+                        Component searchTitle = Component.translatable("biome." + biomeId.getNamespace() + "." + biomeId.getPath());
+                        guiGraphics.drawString(this.font, searchTitle, this.leftPageBounds.left() + iconSize + 4, titleY, Constants.TEXT_COLOR, false);
+                    }
+                } else if (searchQuery.startsWith("=^")) {
+                    guiGraphics.drawString(this.font, "Drops " + searchQuery.substring(2), this.leftPageBounds.left(), titleY, Constants.TEXT_COLOR, false);
+                } else {
+                    guiGraphics.drawString(this.font, searchQuery, this.leftPageBounds.left(), titleY, Constants.TEXT_MUTED_COLOR, false);
+                }
+
+
             } else {
                 int startIdx = (currentPage - 1) * ITEMS_PER_VIEW;
                 if (currentEntries.size() > startIdx + ITEMS_PER_PAGE) {
@@ -374,10 +419,12 @@ public class FieldGuideScreen extends BookScreen {
             renderCategoryInfo(guiGraphics);
             renderRecentDiscoveries(guiGraphics, mouseX, mouseY);
         } else if (isSearching) {
-            renderSearchTab(guiGraphics);
             if (currentEntries.isEmpty()) {
                 Component noResults = Component.translatable("gui.fieldguide.no_results");
                 guiGraphics.drawString(this.font, noResults, this.leftPageBounds.x_center() - this.font.width(noResults) / 2, this.leftPageBounds.y_center() - (font.lineHeight / 2), Constants.TEXT_MUTED_COLOR, false);
+            }
+            if (parent == null) {
+                renderSearchTab(guiGraphics);
             }
         }
 

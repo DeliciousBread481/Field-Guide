@@ -8,6 +8,7 @@ import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.platform.Services;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.Screen;
@@ -25,6 +26,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 public class FieldGuideEntryScreen extends BookScreen {
@@ -36,6 +38,8 @@ public class FieldGuideEntryScreen extends BookScreen {
     private boolean isCommonSpawn = false;
     private int currentBiomePage = 1;
     private final int biomesPerPage = 6;
+    private ResourceLocation hoveredBiome;
+    private ItemStack hoveredItem;
     private ImageButton prevBiomePageButton;
     private ImageButton nextBiomePageButton;
 
@@ -170,6 +174,12 @@ public class FieldGuideEntryScreen extends BookScreen {
                 return true;
             }
         }
+        if (button == 0 && hoveredItem != null) {
+            Minecraft.getInstance().setScreen(new FieldGuideScreen("=^" + hoveredItem.getHoverName().getString().toLowerCase(Locale.ROOT), this));
+        }
+        if (button == 0 && hoveredBiome != null) {
+            Minecraft.getInstance().setScreen(new FieldGuideScreen("=!" + hoveredBiome.toString(), this));
+        }
         return false;
     }
 
@@ -203,6 +213,9 @@ public class FieldGuideEntryScreen extends BookScreen {
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(guiGraphics);
+
+        hoveredBiome = null;
+        hoveredItem = null;
 
         // Book Backgrounds
         RenderSystem.setShaderTexture(0, Constants.BOOK_TEXTURE);
@@ -245,6 +258,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                     if (isCommonSpawn) {
                         tooltipText = Component.translatable("fieldguide.tooltip.common_spawn");
                     } else {
+                        hoveredBiome = biomeId;
                         tooltipText = Component.translatable("biome." + biomeId.getNamespace() + "." + biomeId.getPath());
                     }
                 }
@@ -332,6 +346,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
                         if (Bounds.isMouseOver(mouseX, mouseY, startX, currentY, dropItemSize, dropItemSize)) {
                             tooltipStack = stack;
+                            hoveredItem = stack;
                         }
 
                         startX += dropItemSize + dropSpacing;
