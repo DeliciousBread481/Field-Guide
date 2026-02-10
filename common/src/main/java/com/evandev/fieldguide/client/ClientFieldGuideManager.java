@@ -358,8 +358,17 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
     public List<Object> searchEntries(String query) {
         String processedQuery = query.toLowerCase(Locale.ROOT).trim();
+        boolean exactMatch;
         List<Object> results = new ArrayList<>();
         if (processedQuery.isEmpty()) return results;
+
+        // Exact Match
+        if (processedQuery.startsWith("=")) {
+            exactMatch = true;
+            processedQuery = processedQuery.substring(1);
+        } else {
+            exactMatch = false;
+        }
 
         // Search by Tag
         if (processedQuery.startsWith("#")) {
@@ -374,8 +383,14 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
                     if (key.isPresent()) {
                         Optional<Holder.Reference<EntityType<?>>> holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
                         if (holder.isPresent()) {
-                            if (holder.get().tags().anyMatch(tag -> tag.location().toString().toLowerCase(Locale.ROOT).contains(tagQuery) || tag.location().getPath().toLowerCase(Locale.ROOT).contains(tagQuery))) {
-                                results.add(entry);
+                            if (exactMatch) {
+                                if (holder.get().tags().anyMatch(tag -> tag.location().toString().toLowerCase(Locale.ROOT).equals(tagQuery) || tag.location().getPath().toLowerCase(Locale.ROOT).equals(tagQuery))) {
+                                    results.add(entry);
+                                }
+                            } else {
+                                if (holder.get().tags().anyMatch(tag -> tag.location().toString().toLowerCase(Locale.ROOT).contains(tagQuery) || tag.location().getPath().toLowerCase(Locale.ROOT).contains(tagQuery))) {
+                                    results.add(entry);
+                                }
                             }
                         }
                     }
@@ -404,8 +419,13 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
                 if (dropCache.containsKey(entry)) {
                     List<ItemStack> drops = dropCache.get(entry);
-                    boolean match = drops.stream().anyMatch(stack ->
-                            stack.getHoverName().getString().toLowerCase(Locale.ROOT).contains(dropQuery)
+                    boolean match = drops.stream().anyMatch(stack -> {
+                            if (exactMatch) {
+                                return stack.getHoverName().getString().toLowerCase(Locale.ROOT).equals(dropQuery);
+                            } else {
+                                return stack.getHoverName().getString().toLowerCase(Locale.ROOT).contains(dropQuery);
+                            }
+                        }
                     );
                     if (match) results.add(entry);
                 }
@@ -424,7 +444,13 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
                 for (var biomeEntry : biomeRegistry.entrySet()) {
                     ResourceLocation biomeId = biomeEntry.getKey().location();
-                    if (biomeId.toString().contains(biomeQuery) || biomeId.getPath().contains(biomeQuery)) {
+                    boolean biomeMatch;
+                    if (exactMatch) {
+                        biomeMatch = biomeId.toString().equals(biomeQuery) || biomeId.getPath().equals(biomeQuery);
+                    } else {
+                        biomeMatch = biomeId.toString().contains(biomeQuery) || biomeId.getPath().contains(biomeQuery);
+                    }
+                    if (biomeMatch) {
                         Biome biome = biomeEntry.getValue();
                         for (MobCategory cat : MobCategory.values()) {
                             var spawns = biome.getMobSettings().getMobs(cat);
@@ -451,8 +477,14 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
                 if (!isUnlocked(entry) && !ModConfig.get().showUndiscoveredNames) continue;
 
                 ResourceLocation id = getEntryId(entry);
-                if (id != null && id.getNamespace().toLowerCase(Locale.ROOT).contains(modQuery)) {
-                    results.add(entry);
+                if (id != null) {
+                    boolean match;
+                    if (exactMatch) {
+                        match = id.getNamespace().toLowerCase(Locale.ROOT).equals(modQuery);
+                    } else {
+                        match = id.getNamespace().toLowerCase(Locale.ROOT).contains(modQuery);
+                    }
+                    if (match) results.add(entry);
                 }
             }
             return results;
@@ -465,7 +497,12 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             if (id == null) continue;
 
             String name = (entry instanceof EntityType<?> type) ? type.getDescription().getString() : ((Block) entry).getName().getString();
-            boolean match = name.toLowerCase(Locale.ROOT).contains(processedQuery) || id.getPath().contains(processedQuery);
+            boolean match;
+            if (exactMatch) {
+                match = name.toLowerCase(Locale.ROOT).equals(processedQuery) || id.getPath().equals(processedQuery);
+            } else {
+                match = name.toLowerCase(Locale.ROOT).contains(processedQuery) || id.getPath().contains(processedQuery);
+            }
 
             if (match) results.add(entry);
         }
