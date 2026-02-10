@@ -39,7 +39,7 @@ public class ModConfig {
     public List<String> entityBlacklist = new ArrayList<>();
 
     public List<String> lootRemovals = new ArrayList<>();
-    public List<String> lootAdditions = new ArrayList<>();
+    public List<String> lootAdditions = getDefaultLootAdditions();
 
     public List<String> biomeRemovals = new ArrayList<>();
     public List<String> biomeAdditions = getDefaultBiomeAdditions();
@@ -81,6 +81,12 @@ public class ModConfig {
         defaults.add("minecraft:armor_stand");
         defaults.add("minecraft:grass");
         defaults.add("minecraft:tall_grass");
+        return defaults;
+    }
+
+    public static List<String> getDefaultLootAdditions() {
+        List<String> defaults = new ArrayList<>();
+        defaults.add("minecraft:wither|minecraft:nether_star");
         return defaults;
     }
 

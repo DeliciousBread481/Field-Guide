@@ -1,5 +1,8 @@
 package com.evandev.fieldguide.platform.services;
 
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+
 import java.nio.file.Path;
 
 public interface IPlatformHelper {
@@ -41,5 +44,10 @@ public interface IPlatformHelper {
      * @return The path to the config directory.
      */
     Path getConfigDirectory();
+
+    /**
+     * Gets a fake player for the given level to simulate player-only loot context.
+     */
+    ServerPlayer getFakePlayer(ServerLevel level);
 
 }

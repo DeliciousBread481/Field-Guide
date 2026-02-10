@@ -1,12 +1,20 @@
 package com.evandev.fieldguide.server;
 
+import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.platform.Services;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.monster.MagmaCube;
 import net.minecraft.world.entity.monster.Slime;
@@ -24,98 +32,205 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.Vec3;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class LootTableHelper {
 
-    private static final int TOTAL_ITERATIONS = 200;
+    private static final int TOTAL_ITERATIONS = 500;
     private static final Map<Object, List<ItemStack>> SERVER_DROP_CACHE = new ConcurrentHashMap<>();
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-    private static Mob cachedMockKiller;
+    private static File getCacheFile(ServerLevel level) {
+        return level.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.GENERATED_DIR)
+                .resolve("fieldguide").resolve("loot_cache.json").toFile();
+    }
+
+    public static boolean containsEntry(Object entry) {
+        return SERVER_DROP_CACHE.containsKey(entry);
+    }
 
     public static void clearCache() {
         SERVER_DROP_CACHE.clear();
-        if (cachedMockKiller != null) {
-            cachedMockKiller.discard();
-            cachedMockKiller = null;
+    }
+
+    /**
+     * Called on server startup to generate all loot.
+     */
+    public static void generateAll(ServerLevel level, List<Object> entries) {
+        Constants.LOG.info("FieldGuide: Generating loot cache for {} entries...", entries.size());
+        long start = System.currentTimeMillis();
+
+        File cacheFile = getCacheFile(level);
+
+        ServerPlayer fakePlayer = Services.PLATFORM.getFakePlayer(level);
+        ItemStack godTool = createGodTool();
+
+        fakePlayer.setItemInHand(InteractionHand.MAIN_HAND, godTool);
+
+        int processed = 0;
+        for (Object entry : entries) {
+            List<ItemStack> allDrops = new ArrayList<>();
+            if (entry instanceof EntityType<?> type) {
+                handleEntityDrops(level, fakePlayer, type, allDrops);
+            } else if (entry instanceof Block block) {
+                handleBlockDrops(level, fakePlayer, block, godTool, allDrops);
+            }
+
+            List<ItemStack> distinctDrops = processDrops(allDrops);
+            applyConfigModifications(entry, distinctDrops);
+            SERVER_DROP_CACHE.put(entry, distinctDrops);
+            processed++;
+        }
+
+        fakePlayer.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+
+        saveCacheToDisk(cacheFile);
+
+        Constants.LOG.info("FieldGuide: Generated loot for {} entries in {}ms", processed, System.currentTimeMillis() - start);
+    }
+
+    private static ItemStack createGodTool() {
+        ItemStack tool = new ItemStack(Items.NETHERITE_SWORD);
+        tool.enchant(Enchantments.MOB_LOOTING, 10);
+        tool.enchant(Enchantments.BLOCK_FORTUNE, 3);
+        return tool;
+    }
+
+    public static Map<ResourceLocation, List<ItemStack>> getCacheAsMap() {
+        Map<ResourceLocation, List<ItemStack>> map = new HashMap<>();
+        for (Map.Entry<Object, List<ItemStack>> entry : SERVER_DROP_CACHE.entrySet()) {
+            ResourceLocation id = getEntryId(entry.getKey());
+            if (id != null && !entry.getValue().isEmpty()) {
+                map.put(id, entry.getValue());
+            }
+        }
+        return map;
+    }
+
+    private static void saveCacheToDisk(File file) {
+        try {
+            if (file.getParentFile() != null) file.getParentFile().mkdirs();
+
+            JsonObject root = new JsonObject();
+            for (Map.Entry<Object, List<ItemStack>> entry : SERVER_DROP_CACHE.entrySet()) {
+                ResourceLocation id = getEntryId(entry.getKey());
+                if (id == null) continue;
+
+                JsonArray dropsArray = new JsonArray();
+                for (ItemStack stack : entry.getValue()) {
+                    JsonObject itemObj = new JsonObject();
+                    itemObj.addProperty("item", BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
+                    itemObj.addProperty("count", stack.getCount());
+                    if (stack.hasTag()) {
+                        itemObj.addProperty("nbt", Objects.requireNonNull(stack.getTag()).toString());
+                    }
+                    dropsArray.add(itemObj);
+                }
+                root.add(id.toString(), dropsArray);
+            }
+
+            try (FileWriter writer = new FileWriter(file)) {
+                GSON.toJson(root, writer);
+            }
+        } catch (Exception e) {
+            Constants.LOG.error("FieldGuide: Failed to save loot cache", e);
         }
     }
 
-    public static List<ItemStack> getDrops(ServerPlayer player, Object entry) {
-        if (SERVER_DROP_CACHE.containsKey(entry)) {
-            return SERVER_DROP_CACHE.get(entry);
+    public static void tryLoadCache(ServerLevel level) {
+        SERVER_DROP_CACHE.clear();
+        File file = getCacheFile(level);
+        if (!file.exists()) return;
+
+        try (FileReader reader = new FileReader(file)) {
+            JsonObject root = GSON.fromJson(reader, JsonObject.class);
+            SERVER_DROP_CACHE.clear();
+
+            for (String key : root.keySet()) {
+                ResourceLocation id = new ResourceLocation(key);
+                Object entry = resolveEntry(id);
+                if (entry == null) continue;
+
+                List<ItemStack> items = new ArrayList<>();
+                JsonArray dropsArray = root.getAsJsonArray(key);
+
+                for (var el : dropsArray) {
+                    JsonObject obj = el.getAsJsonObject();
+                    Item item = BuiltInRegistries.ITEM.get(new ResourceLocation(obj.get("item").getAsString()));
+                    if (item == Items.AIR) continue;
+
+                    ItemStack stack = new ItemStack(item);
+                    if (obj.has("count")) stack.setCount(obj.get("count").getAsInt());
+                    if (obj.has("nbt")) {
+                        stack.setTag(TagParser.parseTag(obj.get("nbt").getAsString()));
+                    }
+                    items.add(stack);
+                }
+                SERVER_DROP_CACHE.put(entry, items);
+            }
+            Constants.LOG.info("FieldGuide: Loaded {} entries from disk cache.", SERVER_DROP_CACHE.size());
+        } catch (Exception e) {
+            Constants.LOG.error("FieldGuide: Failed to load loot cache", e);
         }
-
-        ServerLevel level = player.serverLevel();
-        List<ItemStack> allDrops = new ArrayList<>();
-
-        ItemStack godTool = new ItemStack(Items.NETHERITE_SWORD);
-        godTool.enchant(Enchantments.MOB_LOOTING, 10);
-        godTool.enchant(Enchantments.BLOCK_FORTUNE, 3);
-
-        if (entry instanceof EntityType<?> type) {
-            handleEntityDrops(level, player, type, godTool, allDrops);
-        } else if (entry instanceof Block block) {
-            handleBlockDrops(level, player, block, godTool, allDrops);
-        }
-
-        List<ItemStack> distinctDrops = processDrops(allDrops);
-        applyConfigModifications(entry, distinctDrops);
-
-        SERVER_DROP_CACHE.put(entry, distinctDrops);
-        return distinctDrops;
     }
 
-    private static void handleEntityDrops(ServerLevel level, ServerPlayer player, EntityType<?> type, ItemStack tool, List<ItemStack> allDrops) {
+    private static ResourceLocation getEntryId(Object entry) {
+        if (entry instanceof EntityType<?> type) return BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        if (entry instanceof Block block) return BuiltInRegistries.BLOCK.getKey(block);
+        return null;
+    }
+
+    private static Object resolveEntry(ResourceLocation id) {
+        if (BuiltInRegistries.ENTITY_TYPE.containsKey(id)) return BuiltInRegistries.ENTITY_TYPE.get(id);
+        if (BuiltInRegistries.BLOCK.containsKey(id)) return BuiltInRegistries.BLOCK.get(id);
+        return null;
+    }
+
+    private static void handleEntityDrops(ServerLevel level, ServerPlayer player, EntityType<?> type, List<ItemStack> allDrops) {
         ResourceLocation lootTableId = type.getDefaultLootTable();
 
-        if (cachedMockKiller == null || !cachedMockKiller.isAlive()) {
-            cachedMockKiller = new Mob(EntityType.ZOMBIE, level) {
-            };
-        }
-        cachedMockKiller.setItemSlot(EquipmentSlot.MAINHAND, tool);
+        Entity dummy = type.create(level);
+        if (dummy == null) return;
 
-        boolean isComplex = isComplexMob(type);
-
-        int entityResets = isComplex ? 20 : 1;
-        int rollsPerEntity = TOTAL_ITERATIONS / entityResets;
-
-        for (int i = 0; i < entityResets; i++) {
-            Entity dummy = type.create(level);
-            if (dummy == null) continue;
-
-            try {
-                if (dummy instanceof Mob mob) {
-                    DifficultyInstance difficulty = level.getCurrentDifficultyAt(dummy.blockPosition());
+        try {
+            if (dummy instanceof Mob mob) {
+                DifficultyInstance difficulty = level.getCurrentDifficultyAt(dummy.blockPosition());
+                try {
                     mob.finalizeSpawn(level, difficulty, MobSpawnType.COMMAND, null, null);
-
-                    if (mob instanceof MagmaCube magmaCube) magmaCube.setSize(2, true);
-                    else if (mob instanceof Slime slime) slime.setSize(1, true);
+                } catch (Exception ignored) {
                 }
 
-                if (dummy instanceof LivingEntity living) {
-                    lootTableId = living.getLootTable();
-                }
-
-                LootParams.Builder paramsBuilder = new LootParams.Builder(level)
-                        .withParameter(LootContextParams.THIS_ENTITY, dummy)
-                        .withParameter(LootContextParams.ORIGIN, dummy.position())
-                        .withParameter(LootContextParams.DAMAGE_SOURCE, level.damageSources().playerAttack(player))
-                        .withParameter(LootContextParams.KILLER_ENTITY, cachedMockKiller)
-                        .withParameter(LootContextParams.LAST_DAMAGE_PLAYER, player);
-
-                LootTable table = level.getServer().getLootData().getLootTable(lootTableId);
-                LootParams params = paramsBuilder.create(LootContextParamSets.ENTITY);
-
-                for (int r = 0; r < rollsPerEntity; r++) {
-                    table.getRandomItems(params, allDrops::add);
-                }
-            } catch (Exception ignored) {
-                // Squelch errors from misbehaving mod entities
-            } finally {
-                dummy.discard();
+                if (mob instanceof MagmaCube magmaCube) magmaCube.setSize(2, true);
+                else if (mob instanceof Slime slime) slime.setSize(1, true);
             }
+
+            if (dummy instanceof LivingEntity living) {
+                lootTableId = living.getLootTable();
+            }
+
+            LootParams.Builder paramsBuilder = new LootParams.Builder(level)
+                    .withParameter(LootContextParams.THIS_ENTITY, dummy)
+                    .withParameter(LootContextParams.ORIGIN, dummy.position())
+                    .withParameter(LootContextParams.DAMAGE_SOURCE, level.damageSources().playerAttack(player))
+                    .withParameter(LootContextParams.KILLER_ENTITY, player)
+                    .withParameter(LootContextParams.DIRECT_KILLER_ENTITY, player)
+                    .withParameter(LootContextParams.LAST_DAMAGE_PLAYER, player);
+
+            LootTable table = level.getServer().getLootData().getLootTable(lootTableId);
+            LootParams params = paramsBuilder.create(LootContextParamSets.ENTITY);
+
+            for (int r = 0; r < TOTAL_ITERATIONS; r++) {
+                table.getRandomItems(params, allDrops::add);
+            }
+        } catch (Exception e) {
+            ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+            Constants.LOG.error("FieldGuide: Failed to generate loot for entity {}", id, e);
+        } finally {
+            dummy.discard();
         }
     }
 
@@ -145,15 +260,8 @@ public class LootTableHelper {
         }
     }
 
-    // TODO: make this a config option
-    private static boolean isComplexMob(EntityType<?> type) {
-        return type == EntityType.SHEEP || type == EntityType.MOOSHROOM;
-    }
-
     public static void applyConfigModifications(Object entry, List<ItemStack> distinctDrops) {
-        ResourceLocation entryId = null;
-        if (entry instanceof EntityType<?> type) entryId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
-        else if (entry instanceof Block block) entryId = BuiltInRegistries.BLOCK.getKey(block);
+        ResourceLocation entryId = getEntryId(entry);
 
         if (entryId != null) {
             ModConfig config = ModConfig.get();
@@ -210,15 +318,11 @@ public class LootTableHelper {
 
             if (displayStack.hasTag()) {
                 CompoundTag tag = displayStack.getTag();
-
                 if (tag != null) {
                     tag.remove("Enchantments");
-
                     tag.remove("StoredEnchantments");
-
-                    if (tag.isEmpty()) {
-                        displayStack.setTag(null);
-                    }
+                    tag.remove("Damage");
+                    if (tag.isEmpty()) displayStack.setTag(null);
                 }
             }
 

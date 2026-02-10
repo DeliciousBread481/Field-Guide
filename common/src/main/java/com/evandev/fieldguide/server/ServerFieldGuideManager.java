@@ -1,30 +1,37 @@
 package com.evandev.fieldguide.server;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CategoryEntry;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
+import com.evandev.fieldguide.network.SyncLootPacket;
 import com.evandev.fieldguide.platform.Services;
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.SpawnEggItem;
+import net.minecraft.world.level.block.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Reader;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<ResourceLocation, Category>> {
-    private static final Gson GSON = new GsonBuilder().create();
     private static final ServerFieldGuideManager INSTANCE = new ServerFieldGuideManager();
-
+    private final List<Object> resolvedEntries = new ArrayList<>();
     private Map<ResourceLocation, Category> categories = new LinkedHashMap<>();
 
     public static ServerFieldGuideManager getInstance() {
@@ -38,6 +45,114 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
     public void syncToPlayer(ServerPlayer player) {
         List<Category> categoryList = new ArrayList<>(categories.values());
         Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(categoryList), player);
+
+        Map<ResourceLocation, List<ItemStack>> lootCache = LootTableHelper.getCacheAsMap();
+        if (!lootCache.isEmpty()) {
+            Services.NETWORK.sendToPlayer(new SyncLootPacket(lootCache), player);
+        }
+    }
+
+    public void reload(MinecraftServer server) {
+        long start = System.currentTimeMillis();
+        Constants.LOG.info("FieldGuide: Starting manual reload...");
+
+        resolveAllCategories();
+        LootTableHelper.clearCache();
+
+        LootTableHelper.generateAll(server.overworld(), resolvedEntries);
+        syncToAll(server);
+
+        Constants.LOG.info("FieldGuide: Reload complete in {}ms", System.currentTimeMillis() - start);
+    }
+
+    public void syncToAll(MinecraftServer server) {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            syncToPlayer(player);
+        }
+    }
+
+    private void resolveAllCategories() {
+        resolvedEntries.clear();
+        for (Category cat : categories.values()) {
+            resolveCategory(cat);
+        }
+    }
+
+    public void onServerStarted(MinecraftServer server) {
+        resolveAllCategories();
+
+        server.overworld();
+        LootTableHelper.tryLoadCache(server.overworld());
+
+        List<Object> missingEntries = resolvedEntries.stream()
+                .filter(entry -> !LootTableHelper.containsEntry(entry))
+                .toList();
+
+        if (!missingEntries.isEmpty()) {
+            Constants.LOG.info("FieldGuide: Detected {} missing loot entries. Generating...", missingEntries.size());
+            LootTableHelper.generateAll(server.overworld(), missingEntries);
+        }
+    }
+
+    private void resolveCategory(Category category) {
+        Set<Object> foundEntries = new LinkedHashSet<>();
+
+        for (CategoryEntry entry : category.getEntries()) {
+            if (entry.type() == CategoryEntry.Type.ENTRY) {
+                if (entry.id() == null) continue;
+                Optional<EntityType<?>> entityType = BuiltInRegistries.ENTITY_TYPE.getOptional(entry.id());
+                if (entityType.isPresent()) {
+                    foundEntries.add(entityType.get());
+                } else {
+                    Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(entry.id());
+                    block.ifPresent(foundEntries::add);
+                }
+            } else if (entry.type() == CategoryEntry.Type.AUTO_POPULATE) {
+                foundEntries.addAll(getEntriesForStrategy(entry.strategy()));
+            }
+        }
+        resolvedEntries.addAll(foundEntries);
+    }
+
+    private List<Object> getEntriesForStrategy(String strategy) {
+        List<Object> results = new ArrayList<>();
+        ModConfig config = ModConfig.get();
+
+        if ("plants".equalsIgnoreCase(strategy)) {
+            results.addAll(BuiltInRegistries.BLOCK.stream()
+                    .filter(block -> block instanceof BushBlock || block instanceof LeavesBlock || block instanceof VineBlock || block instanceof CactusBlock || block instanceof SugarCaneBlock || block instanceof WaterlilyBlock || block instanceof StemBlock)
+                    .filter(block -> !config.isEntityBlacklisted(BuiltInRegistries.BLOCK.getKey(block)))
+                    .sorted(Comparator.comparing(block -> BuiltInRegistries.BLOCK.getKey(block).toString()))
+                    .toList());
+        } else if (strategy.startsWith("mod:")) {
+            String modId = strategy.substring(4);
+            results.addAll(BuiltInRegistries.ENTITY_TYPE.stream()
+                    .filter(type -> BuiltInRegistries.ENTITY_TYPE.getKey(type).getNamespace().equals(modId))
+                    .filter(type -> type.canSummon() && !config.isEntityBlacklisted(BuiltInRegistries.ENTITY_TYPE.getKey(type)))
+                    .sorted(Comparator.comparing(type -> BuiltInRegistries.ENTITY_TYPE.getKey(type).toString()))
+                    .toList());
+        } else if (strategy.startsWith("mod_plants:")) {
+            String modId = strategy.substring(10);
+            results.addAll(BuiltInRegistries.BLOCK.stream()
+                    .filter(block -> BuiltInRegistries.BLOCK.getKey(block).getNamespace().equals(modId))
+                    .filter(block -> block instanceof BushBlock || block instanceof LeavesBlock || block instanceof VineBlock || block instanceof CactusBlock || block instanceof SugarCaneBlock || block instanceof WaterlilyBlock || block instanceof StemBlock)
+                    .filter(block -> !config.isEntityBlacklisted(BuiltInRegistries.BLOCK.getKey(block)))
+                    .sorted(Comparator.comparing(block -> BuiltInRegistries.BLOCK.getKey(block).toString()))
+                    .toList());
+        } else if ("monsters".equalsIgnoreCase(strategy) || "animals".equalsIgnoreCase(strategy)) {
+            results.addAll(BuiltInRegistries.ENTITY_TYPE.stream()
+                    .filter(type -> {
+                        if ("monsters".equalsIgnoreCase(strategy))
+                            return type.getCategory() == MobCategory.MONSTER;
+                        if ("animals".equalsIgnoreCase(strategy))
+                            return type.getCategory() != MobCategory.MONSTER && (type.getCategory() != MobCategory.MISC || SpawnEggItem.byId(type) != null);
+                        return false;
+                    })
+                    .filter(type -> type.canSummon() && !config.isEntityBlacklisted(BuiltInRegistries.ENTITY_TYPE.getKey(type)))
+                    .sorted(Comparator.comparing(type -> BuiltInRegistries.ENTITY_TYPE.getKey(type).toString()))
+                    .toList());
+        }
+        return results;
     }
 
     @Override
@@ -54,7 +169,6 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
             String path = fileId.getPath();
             String idPath = path.substring("fieldguide/categories/".length(), path.length() - ".json".length());
             ResourceLocation categoryId = new ResourceLocation(fileId.getNamespace(), idPath);
-
             Category category = new Category(categoryId);
 
             for (Resource resource : entry.getValue()) {
@@ -89,14 +203,11 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
             }
             map.put(categoryId, category);
         }
-
         return map;
     }
 
     @Override
     protected void apply(@NotNull Map<ResourceLocation, Category> object, @NotNull ResourceManager resourceManager, @NotNull ProfilerFiller profiler) {
         this.categories = object;
-        LootTableHelper.clearCache();
-        Constants.LOG.info("Server loaded {} Field Guide categories.", categories.size());
     }
 }

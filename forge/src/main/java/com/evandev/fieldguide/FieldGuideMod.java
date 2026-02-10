@@ -5,21 +5,13 @@ import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.ModRenderTypes;
 import com.evandev.fieldguide.config.ClothConfigIntegration;
 import com.evandev.fieldguide.network.GrantContentPacket;
-import com.evandev.fieldguide.network.RequestDropsPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
-import com.evandev.fieldguide.network.SyncDropsPacket;
+import com.evandev.fieldguide.network.SyncLootPacket;
 import com.evandev.fieldguide.platform.ForgeNetworkHelper;
-import com.evandev.fieldguide.platform.Services;
-import com.evandev.fieldguide.server.LootTableHelper;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.command.FieldGuideCommand;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
@@ -31,6 +23,7 @@ import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
@@ -42,8 +35,6 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 @Mod(Constants.MOD_ID)
@@ -76,39 +67,15 @@ public class FieldGuideMod {
         }
     }
 
-    public static void handleRequest(RequestDropsPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();
-        context.enqueueWork(() -> {
-            ServerPlayer player = context.getSender();
-            if (player == null) return;
-
-            ResourceLocation id = packet.getEntryId();
-            Object entry = null;
-
-            Optional<EntityType<?>> type = BuiltInRegistries.ENTITY_TYPE.getOptional(id);
-            if (type.isPresent()) entry = type.get();
-            else {
-                Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(id);
-                if (block.isPresent()) entry = block.get();
-            }
-
-            if (entry != null) {
-                List<ItemStack> drops = LootTableHelper.getDrops(player, entry);
-                Services.NETWORK.sendToPlayer(new SyncDropsPacket(id, drops), player);
-            }
-        });
-        context.setPacketHandled(true);
-    }
-
     public static void handleGrantContent(GrantContentPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
         NetworkEvent.Context context = contextSupplier.get();
         context.enqueueWork(packet::handleClient);
         context.setPacketHandled(true);
     }
 
-    public static void handleSyncDrops(SyncDropsPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
+    public static void handleSyncLoot(SyncLootPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
         NetworkEvent.Context context = contextSupplier.get();
-        context.enqueueWork(() -> ClientFieldGuideManager.getInstance().setDrops(packet.getEntryId(), packet.getDrops()));
+        context.enqueueWork(() -> ClientFieldGuideManager.getInstance().updateLootCache(packet.getLootCache()));
         context.setPacketHandled(true);
     }
 
@@ -151,6 +118,11 @@ public class FieldGuideMod {
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
         FieldGuideCommand.register(event.getDispatcher());
+    }
+
+    @SubscribeEvent
+    public void onServerStarted(ServerStartedEvent event) {
+        ServerFieldGuideManager.getInstance().onServerStarted(event.getServer());
     }
 
     @SubscribeEvent

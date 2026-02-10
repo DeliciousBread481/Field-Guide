@@ -5,7 +5,7 @@ import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.ModRenderTypes;
 import com.evandev.fieldguide.network.GrantContentPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
-import com.evandev.fieldguide.network.SyncDropsPacket;
+import com.evandev.fieldguide.network.SyncLootPacket;
 import com.evandev.fieldguide.platform.FabricNetworkHelper;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.fabricmc.api.ClientModInitializer;
@@ -48,9 +48,9 @@ public class FieldGuideFabricClient implements ClientModInitializer {
             FieldGuideClient.onClientTick(client);
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.SYNC_DROPS_CHANNEL, (client, handler, buf, responseSender) -> {
-            SyncDropsPacket packet = new SyncDropsPacket(buf);
-            client.execute(() -> ClientFieldGuideManager.getInstance().setDrops(packet.getEntryId(), packet.getDrops()));
+        ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.SYNC_LOOT_CHANNEL, (client, handler, buf, responseSender) -> {
+            SyncLootPacket packet = new SyncLootPacket(buf);
+            client.execute(() -> ClientFieldGuideManager.getInstance().updateLootCache(packet.getLootCache()));
         });
 
         ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.SYNC_CATEGORIES_CHANNEL, (client, handler, buf, responseSender) -> {

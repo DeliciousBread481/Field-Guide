@@ -86,6 +86,8 @@
   "commands.fieldguide.revoke.entry.success": "Revoked entry %s from targets",
   "commands.fieldguide.category.not_found": "Category %s not found",
   "commands.fieldguide.entry.not_found": "Entry %s not found",
+  "commands.fieldguide.reload.started": "Reloading Field Guide data (this may lag slightly)...",
+  "commands.fieldguide.reload.success": "Field Guide reloaded and synced to online players.",
 
   "category.fieldguide.monsters": "Monsters",
   "category.fieldguide.animals": "Animals",

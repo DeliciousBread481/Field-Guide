@@ -8,8 +8,6 @@ import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CategoryEntry;
-import com.evandev.fieldguide.network.RequestDropsPacket;
-import com.evandev.fieldguide.platform.Services;
 import com.google.gson.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
@@ -65,7 +63,6 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     private final Set<String> seenEntries = new HashSet<>();
     private final Map<String, Long> discoveryTimes = new HashMap<>();
     private final Map<Object, List<ItemStack>> dropCache = new HashMap<>();
-    private final Set<Object> requestedDrops = new HashSet<>();
     private Path currentSavePath = null;
 
     // Scanning State
@@ -143,6 +140,21 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             this.syncedCategories.put(cat.getId(), cat);
         }
         resolveAllEntries();
+    }
+
+    public void updateLootCache(Map<ResourceLocation, List<ItemStack>> lootCache) {
+        for (Map.Entry<ResourceLocation, List<ItemStack>> entry : lootCache.entrySet()) {
+            ResourceLocation id = entry.getKey();
+            List<ItemStack> drops = entry.getValue();
+
+            Optional<EntityType<?>> type = BuiltInRegistries.ENTITY_TYPE.getOptional(id);
+            if (type.isPresent()) {
+                dropCache.put(type.get(), drops);
+            } else {
+                Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(id);
+                block.ifPresent(b -> dropCache.put(b, drops));
+            }
+        }
     }
 
     public CategoryVisual getCategoryVisual(ResourceLocation categoryId) {
@@ -717,20 +729,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public List<ItemStack> getDrops(Object entry) {
-        if (dropCache.containsKey(entry)) return dropCache.get(entry);
-        if (!requestedDrops.contains(entry)) {
-            ResourceLocation id = getEntryId(entry);
-            if (id != null) {
-                requestedDrops.add(entry);
-                Services.NETWORK.sendToServer(new RequestDropsPacket(id));
-            }
-        }
-        return Collections.emptyList();
-    }
-
-    public void setDrops(ResourceLocation entryId, List<ItemStack> drops) {
-        getValidEntries().stream().filter(e -> Objects.equals(getEntryId(e), entryId))
-                .findFirst().ifPresent(o -> dropCache.put(o, drops));
+        return dropCache.getOrDefault(entry, Collections.emptyList());
     }
 
     public void onWorldLoad(String serverIdentifier) {
