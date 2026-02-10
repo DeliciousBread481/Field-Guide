@@ -220,8 +220,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         // Entry Name
         int titleY = this.leftPageBounds.top() + 8;
-//        guiGraphics.drawString(this.font, title, this.leftPageBounds.x_center() - font.width(title) / 2 + 1, titleY + 1, Constants.TEXT_SHADOW_COLOR, false);
-        guiGraphics.drawString(this.font, title, this.rightPageBounds.left() + 5, titleY, Constants.TEXT_COLOR, false);
+        guiGraphics.drawString(this.font, title, this.rightPageBounds.left() + 5, titleY, Constants.TEXT_TITLE_COLOR, false);
 
         // Spawn Biomes
         int biomeIconSize = 16;

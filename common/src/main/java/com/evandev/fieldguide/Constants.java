@@ -8,7 +8,6 @@ public class Constants {
     public static final String MOD_ID = "fieldguide";
     public static final String MOD_NAME = "FieldGuide";
     public static final Logger LOG = LoggerFactory.getLogger(MOD_NAME);
-    public static final int LINE_HEIGHT = 10;
 
     // Backgrounds
     public static final ResourceLocation BOOK_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/book.png");
@@ -39,8 +38,8 @@ public class Constants {
 
     // Colors
     public static final int TEXT_COLOR = 0x8A5E3B;
-    public static final int TEXT_MUTED_COLOR = 0xAF8C5C;
-    public static final int TEXT_SHADOW_COLOR = 0xF6EACD;
+    public static final int TEXT_TITLE_COLOR = 0x704623;
+    public static final int TEXT_MUTED_COLOR = 0xC7A875;
     public static final int PAGE_NUMBER_COLOR = 0xC7A875;
     public static final int LIST_SILHOUETTE_COLOR = 0xddc69b;
     public static final int DETAILS_SILHOUETTE_COLOR = 0xddc69b;

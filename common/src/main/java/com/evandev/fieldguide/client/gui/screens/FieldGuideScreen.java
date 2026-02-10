@@ -191,7 +191,7 @@ public class FieldGuideScreen extends BookScreen {
 
     private void renderSearchTab(GuiGraphics guiGraphics) {
         int y = this.bounds.top() + TAB_Y_OFFSET;
-        int x = this.bounds.left() - 6;
+        int x = this.bounds.left() - 7;
         guiGraphics.blit(Constants.TAB_TEXTURE, x, y, 0, 24, 24, 24, 24, 48);
 
         int iconX = x + 5;
@@ -204,9 +204,8 @@ public class FieldGuideScreen extends BookScreen {
     }
 
     public void selectCategory(Category category) {
-        if (this.selectedCategory == category) return;
-        this.selectedCategory = category;
         this.currentPage = 0;
+        this.selectedCategory = category;
         this.currentEntries = ClientFieldGuideManager.getInstance().getEntriesForCategory(category);
         this.recentEntries = ClientFieldGuideManager.getInstance().getRecentEntries(category, 9);
         lastOpenedCategory = this.selectedCategory.getId();
@@ -345,18 +344,29 @@ public class FieldGuideScreen extends BookScreen {
         leftPageNum = (currentPage + 1) * 2 - 1;
         rightPageNum = (currentPage + 1) * 2;
 
+        if (!isSearching) {
+            leftPageNum -= 2;
+            rightPageNum -= 2;
+        }
+
         if (currentPage > 0 || isSearching) {
+            int titleY = this.rightPageBounds.top() + 8;
             guiGraphics.blit(Constants.LIST_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
             renderPageNumber(leftPageNum, this.leftPageBounds, guiGraphics);
             if (isSearching) {
                 if (currentEntries.size() > leftPageNum * ITEMS_PER_PAGE) {
                     renderPageNumber(rightPageNum, this.rightPageBounds, guiGraphics);
                 }
+                // Render title
+                guiGraphics.drawString(this.font, searchQuery, this.leftPageBounds.left(), titleY, Constants.TEXT_MUTED_COLOR, false);
             } else {
                 int startIdx = (currentPage - 1) * ITEMS_PER_VIEW;
                 if (currentEntries.size() > startIdx + ITEMS_PER_PAGE) {
                     renderPageNumber(rightPageNum, this.rightPageBounds, guiGraphics);
                 }
+                // Render title
+                Component title = Component.translatable("category.fieldguide." + selectedCategory.getId().getPath());
+                guiGraphics.drawString(this.font, title, this.leftPageBounds.left(), titleY, Constants.TEXT_MUTED_COLOR, false);
             }
         }
 
@@ -367,7 +377,7 @@ public class FieldGuideScreen extends BookScreen {
             renderSearchTab(guiGraphics);
             if (currentEntries.isEmpty()) {
                 Component noResults = Component.translatable("gui.fieldguide.no_results");
-                guiGraphics.drawString(this.font, noResults, this.leftPageBounds.x_center() - this.font.width(noResults) / 2, this.leftPageBounds.y_center() - (Constants.LINE_HEIGHT / 2), Constants.TEXT_MUTED_COLOR, false);
+                guiGraphics.drawString(this.font, noResults, this.leftPageBounds.x_center() - this.font.width(noResults) / 2, this.leftPageBounds.y_center() - (font.lineHeight / 2), Constants.TEXT_MUTED_COLOR, false);
             }
         }
 
@@ -382,40 +392,32 @@ public class FieldGuideScreen extends BookScreen {
         guiGraphics.blit(Constants.TITLE_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
 
         Component title = Component.translatable("category.fieldguide." + selectedCategory.getId().getPath());
-        int titleY = this.leftPageBounds.top() + 39;
+        int titleY = this.leftPageBounds.top() + 36;
         List<FormattedCharSequence> lines = this.font.split(title, 70);
+
+        if (lines.size() > 2) {
+            titleY -= font.lineHeight;
+        }
 
         for (FormattedCharSequence line : lines) {
             int lineWidth = this.font.width(line);
             int lineX = this.leftPageBounds.x_center() - lineWidth / 2;
-            guiGraphics.drawString(this.font, line, lineX, titleY, Constants.TEXT_COLOR, false);
-            titleY += Constants.LINE_HEIGHT;
+            guiGraphics.drawString(this.font, line, lineX, titleY, Constants.TEXT_TITLE_COLOR, false);
+            titleY += font.lineHeight;
         }
 
         int total = currentEntries.size();
         if (total > 0) {
             long unlocked = currentEntries.stream().filter(ClientFieldGuideManager::isUnlocked).count();
-            int barWidth = 92;
-            int barHeight = 2;
-            int x = this.leftPageBounds.x_center() - barWidth / 2;
-            int y = this.leftPageBounds.bottom() - 46;
-
-            int progressWidth = (int) ((float) unlocked / total * barWidth);
-            guiGraphics.fill(x, y, x + progressWidth, y + barHeight, 0xFF7A583C);
+            int y = this.leftPageBounds.bottom() - 27;
+            int x = this.leftPageBounds.x_center();
+            int xOffset = 18;
 
             String countText = String.valueOf(unlocked);
-            String ofText = " of ";
             String totalText = String.valueOf(total);
 
-            int totalWidth = font.width(countText) + font.width(ofText) + font.width(totalText);
-            int textX = this.leftPageBounds.x_center() - totalWidth / 2;
-            int textY = y + 10;
-
-            guiGraphics.drawString(this.font, countText, textX, textY, Constants.TEXT_COLOR, false);
-            textX += font.width(countText);
-            guiGraphics.drawString(this.font, ofText, textX, textY, Constants.TEXT_MUTED_COLOR, false);
-            textX += font.width(ofText);
-            guiGraphics.drawString(this.font, totalText, textX, textY, Constants.TEXT_COLOR, false);
+            guiGraphics.drawString(this.font, countText, x - xOffset - font.width(countText) / 2, y, Constants.TEXT_COLOR, false);
+            guiGraphics.drawString(this.font, totalText, x + xOffset - font.width(totalText) / 2, y, Constants.TEXT_COLOR, false);
         }
     }
 
@@ -423,7 +425,7 @@ public class FieldGuideScreen extends BookScreen {
         // Title
         Component title = Component.literal("Recent Discoveries"); // Fallback
         int titleY = this.rightPageBounds.top() + 8;
-        guiGraphics.drawString(this.font, title, this.rightPageBounds.x_center() - font.width(title) / 2, titleY, Constants.TEXT_COLOR, false);
+        guiGraphics.drawString(this.font, title, this.rightPageBounds.x_center() - font.width(title) / 2, titleY, Constants.TEXT_MUTED_COLOR, false);
 
         for (int i = 0; i < ITEMS_PER_PAGE; i++) {
             if (i >= recentEntries.size()) break;
