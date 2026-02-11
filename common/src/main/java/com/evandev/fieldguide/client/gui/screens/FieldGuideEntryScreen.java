@@ -110,8 +110,8 @@ public class FieldGuideEntryScreen extends BookScreen {
         }
 
         this.addRenderableWidget(new PageTurnButton(
-                this.bounds.left() - 9,
-                this.bounds.top() + 31,
+                this.bounds.right() + 9 - 24,
+                this.bounds.top() + 26,
                 24,
                 24,
                 0,
@@ -227,14 +227,13 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         boolean unlocked = ClientFieldGuideManager.isUnlocked(entry);
         Component title = getTitleForEntry(entry);
-        String description = unlocked ? ClientFieldGuideManager.getEntryDescription(entry) : Component.translatable("fieldguide.description.locked").getString();
 
         ItemStack tooltipStack = null;
         Component tooltipText = null;
 
         // Entry Name
         int titleY = this.leftPageBounds.top() + 8;
-        guiGraphics.drawString(this.font, title, this.rightPageBounds.left() + 5, titleY, Constants.TEXT_TITLE_COLOR, false);
+        guiGraphics.drawString(this.font, title, this.rightPageBounds.left() + 5, titleY, unlocked ? Constants.TEXT_TITLE_COLOR : Constants.TEXT_MUTED_COLOR, false);
 
         // Spawn Biomes
         int biomeIconSize = 16;
@@ -298,10 +297,15 @@ public class FieldGuideEntryScreen extends BookScreen {
         }
 
         // Description
+        // TODO: Add pagination for long descriptions
         int textX = this.rightPageBounds.left() + 5;
         int textY = this.rightPageBounds.top() + 25;
-        int textAreaWidth = this.rightPageBounds.width();
-        guiGraphics.drawWordWrap(font, Component.literal(description), textX, textY, textAreaWidth, Constants.TEXT_COLOR);
+        int textAreaWidth = this.rightPageBounds.width() - 10;
+        if (unlocked) {
+            guiGraphics.drawWordWrap(font, Component.literal(ClientFieldGuideManager.getEntryDescription(entry)), textX, textY, textAreaWidth, Constants.TEXT_COLOR);
+        } else {
+            guiGraphics.drawWordWrap(font, Component.literal(Component.translatable("fieldguide.description.locked").getString()), textX, textY, textAreaWidth, Constants.TEXT_MUTED_COLOR);
+        }
 
         // Drops
         List<List<ItemStack>> dropLines = new ArrayList<>();

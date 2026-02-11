@@ -61,6 +61,7 @@ public class FieldGuideScreen extends BookScreen {
     private String searchQuery = "";
     private PageTurnButton prevPageButton;
     private PageTurnButton nextPageButton;
+    private PageTurnButton backButton;
     private FieldGuideSearchBox searchBox;
 
     public FieldGuideScreen() {
@@ -155,34 +156,43 @@ public class FieldGuideScreen extends BookScreen {
         this.addRenderableWidget(prevPageButton);
         this.addRenderableWidget(nextPageButton);
 
-        if (parent != null) {
-            // Show Back Button
-            this.addRenderableWidget(new PageTurnButton(
-                this.bounds.left() - 9,
-                this.bounds.top() + 31,
-                24,
-                24,
-                0,
-                0,
-                24,
-                Constants.BACK_TEXTURE,
-                24,
-                24 * 2,
-                b -> Objects.requireNonNull(this.minecraft).setScreen(parent)
-            ));
+        initTabs();
+
+        // Show Back Button
+        this.backButton = new PageTurnButton(
+            this.bounds.right() + 9 - 24,
+            this.bounds.top() + 26,
+            24,
+            24,
+            0,
+            0,
+            24,
+            Constants.BACK_TEXTURE,
+            24,
+            24 * 2,
+            b -> {
+                if (parent != null) {
+                    Objects.requireNonNull(this.minecraft).setScreen(parent);
+                } else {
+                    this.searchBox.setValue("");
+                }
+            }
+        );
+        backButton.visible = false;
+        this.addRenderableWidget(backButton);
+
+        if (isSearching) {
             if (!searchQuery.isEmpty()) {
                 onSearchChanged(searchQuery);
             }
-        } else {
-            initTabs();
-
-            int searchX = this.width / 2 - SEARCH_WIDTH / 2;
-            int searchY = this.bounds.bottom() + 5;
-
-            this.searchBox = new FieldGuideSearchBox(this.font, searchX, searchY, SEARCH_WIDTH, SEARCH_HEIGHT, this::onSearchChanged);
-            this.searchBox.setValue(this.searchQuery);
-            this.addRenderableWidget(this.searchBox);
         }
+
+        int searchX = this.width / 2 - SEARCH_WIDTH / 2;
+        int searchY = this.bounds.bottom() + 5;
+
+        this.searchBox = new FieldGuideSearchBox(this.font, searchX, searchY, SEARCH_WIDTH, SEARCH_HEIGHT, this::onSearchChanged);
+        this.searchBox.setValue(this.searchQuery);
+        this.addRenderableWidget(this.searchBox);
     }
 
     private void onSearchChanged(String query) {
@@ -190,11 +200,15 @@ public class FieldGuideScreen extends BookScreen {
         this.searchQuery = query;
 
         if (!isSearching) {
+            this.backButton.visible = false;
+            this.selectedCategory = ClientFieldGuideManager.getCategories().get(lastOpenedCategory);
             if (this.selectedCategory != null) {
                 this.currentEntries = ClientFieldGuideManager.getInstance().getEntriesForCategory(this.selectedCategory);
             }
         } else {
+            this.backButton.visible = true;
             this.currentPage = 0;
+            this.selectedCategory = null;
             this.currentEntries = ClientFieldGuideManager.getInstance().searchEntries(query);
         }
         updatePageButtons();
@@ -263,7 +277,7 @@ public class FieldGuideScreen extends BookScreen {
         int totalSpreads = getTotalSpreads();
         this.prevPageButton.visible = currentPage > 0;
         this.nextPageButton.visible = currentPage < totalSpreads - 1;
-        this.tabs.forEach(tab -> tab.visible = !isSearching);
+        //this.tabs.forEach(tab -> tab.visible = !isSearching);
     }
 
     private void prevPage() {
@@ -425,9 +439,9 @@ public class FieldGuideScreen extends BookScreen {
                 Component noResults = Component.translatable("gui.fieldguide.no_results");
                 guiGraphics.drawString(this.font, noResults, this.leftPageBounds.x_center() - this.font.width(noResults) / 2, this.leftPageBounds.y_center() - (font.lineHeight / 2), Constants.TEXT_MUTED_COLOR, false);
             }
-            if (parent == null) {
-                renderSearchTab(guiGraphics);
-            }
+//            if (parent == null) {
+//                renderSearchTab(guiGraphics);
+//            }
         }
 
         if (currentPage > 0 || isSearching) {
