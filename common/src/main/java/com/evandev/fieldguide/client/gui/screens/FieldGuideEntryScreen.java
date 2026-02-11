@@ -5,6 +5,7 @@ import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
+import com.evandev.fieldguide.client.gui.widget.PageTurnButton;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.platform.Services;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -108,7 +109,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
         }
 
-        this.addRenderableWidget(new ImageButton(
+        this.addRenderableWidget(new PageTurnButton(
                 this.bounds.left() - 9,
                 this.bounds.top() + 31,
                 24,

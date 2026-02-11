@@ -651,6 +651,8 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
                             this.scanningPos = null;
                         }
 
+                        minecraft.player.playSound(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 1.0F, 1.0F);
+
                         scanTicks = 0;
                     }
                 }

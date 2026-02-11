@@ -8,7 +8,10 @@ import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
 
 public class TabButton extends ImageButton {
     private final Category category;
@@ -47,5 +50,10 @@ public class TabButton extends ImageButton {
         if (isSelected) iconX = iconX + 1;
 
         guiGraphics.blit(visual.icon, iconX, iconY, 0, 0, 16, 16, 16, 16);
+    }
+
+    @Override
+    public void playDownSound(SoundManager handler) {
+        handler.play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F));
     }
 }

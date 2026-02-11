@@ -2,8 +2,11 @@ package com.evandev.fieldguide.client.gui.screens;
 
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.gui.util.Bounds;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
 
 public abstract class BookScreen extends Screen {
     private static final int BG_WIDTH = 300;
@@ -24,6 +27,12 @@ public abstract class BookScreen extends Screen {
         this.bounds = new Bounds((this.width - BG_WIDTH) / 2,(this.height - BG_HEIGHT) / 2, BG_WIDTH, BG_HEIGHT);
         this.leftPageBounds = new Bounds(this.bounds.left() + 22,this.bounds.top() + 19, PAGE_WIDTH, PAGE_HEIGHT);
         this.rightPageBounds = new Bounds(this.leftPageBounds.right() + 13,leftPageBounds.top(), PAGE_WIDTH, PAGE_HEIGHT);
+    }
+
+    @Override
+    public void onClose() {
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PUT,1.0F,1.0F));
+        super.onClose();
     }
 
     @Override

@@ -6,6 +6,7 @@ import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.gui.widget.FieldGuideSearchBox;
+import com.evandev.fieldguide.client.gui.widget.PageTurnButton;
 import com.evandev.fieldguide.client.gui.widget.TabButton;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
@@ -13,7 +14,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -59,8 +59,8 @@ public class FieldGuideScreen extends BookScreen {
     private int currentPage = 0;
     private Screen parent = null;
     private String searchQuery = "";
-    private ImageButton prevPageButton;
-    private ImageButton nextPageButton;
+    private PageTurnButton prevPageButton;
+    private PageTurnButton nextPageButton;
     private FieldGuideSearchBox searchBox;
 
     public FieldGuideScreen() {
@@ -102,6 +102,8 @@ public class FieldGuideScreen extends BookScreen {
     protected void init() {
         super.init();
 
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN,1.0F, 1.0F));
+
         this.sortedCategories.clear();
         for (Category cat : ClientFieldGuideManager.getCategories().values()) {
             List<Object> entries = ClientFieldGuideManager.getInstance().getEntriesForCategory(cat);
@@ -134,7 +136,7 @@ public class FieldGuideScreen extends BookScreen {
             lastOpenedPage = this.currentPage;
         }
 
-        this.prevPageButton = new ImageButton(
+        this.prevPageButton = new PageTurnButton(
                 this.bounds.left() + 15,
                 this.leftPageBounds.bottom() - 15,
                 16, 16, 0, 0, 16,
@@ -142,7 +144,7 @@ public class FieldGuideScreen extends BookScreen {
                 b -> prevPage()
         );
 
-        this.nextPageButton = new ImageButton(
+        this.nextPageButton = new PageTurnButton(
                 this.bounds.right() - 14 - 16,
                 this.rightPageBounds.bottom() - 15,
                 16, 16, 0, 0, 16,
@@ -155,7 +157,7 @@ public class FieldGuideScreen extends BookScreen {
 
         if (parent != null) {
             // Show Back Button
-            this.addRenderableWidget(new ImageButton(
+            this.addRenderableWidget(new PageTurnButton(
                 this.bounds.left() - 9,
                 this.bounds.top() + 31,
                 24,
@@ -317,7 +319,7 @@ public class FieldGuideScreen extends BookScreen {
 
     private void handleEntryClick(Object entry) {
         if (ClientFieldGuideManager.isNew(entry)) ClientFieldGuideManager.markAsSeen(entry);
-        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F));
 
         if (entry instanceof EntityType<?> type) {
             Entity entity = entryCache.get(type);
