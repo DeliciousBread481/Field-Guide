@@ -34,6 +34,12 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.showUndiscoveredNames = newValue)
                 .build());
 
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.hide_undiscovered_from_search"), config.hideUndiscoveredFromSearch)
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("option.fieldguide.hide_undiscovered_from_search.tooltip"))
+                .setSaveConsumer(newValue -> config.hideUndiscoveredFromSearch = newValue)
+                .build());
+
         general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.auto_rotate_models"), config.autoRotateModels)
                 .setDefaultValue(false)
                 .setTooltip(Component.translatable("option.fieldguide.auto_rotate_models.tooltip"))

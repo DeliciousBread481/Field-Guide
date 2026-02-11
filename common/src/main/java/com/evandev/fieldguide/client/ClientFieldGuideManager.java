@@ -114,6 +114,10 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         return id != null && INSTANCE.unlockedEntries.contains(id.toString());
     }
 
+    public static boolean hideFromSearch(Object entry) {
+        return ModConfig.get().hideUndiscoveredFromSearch && !isUnlocked(entry);
+    }
+
     public static boolean isNew(Object entry) {
         ResourceLocation id = getEntryId(entry);
         return id != null && INSTANCE.unlockedEntries.contains(id.toString()) && !INSTANCE.seenEntries.contains(id.toString());
@@ -376,8 +380,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             if (tagQuery.isEmpty()) return results;
 
             for (Object entry : getValidEntries()) {
-                if (!isUnlocked(entry) && !ModConfig.get().showUndiscoveredNames) continue;
-
+                if (hideFromSearch(entry)) continue;
                 if (entry instanceof EntityType<?> type) {
                     var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type);
                     if (key.isPresent()) {
@@ -415,7 +418,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             if (dropQuery.isEmpty()) return results;
 
             for (Object entry : getValidEntries()) {
-                if (!isUnlocked(entry) && !ModConfig.get().showUndiscoveredNames) continue;
+                if (hideFromSearch(entry)) continue;
 
                 if (dropCache.containsKey(entry)) {
                     List<ItemStack> drops = dropCache.get(entry);
@@ -456,7 +459,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
                             var spawns = biome.getMobSettings().getMobs(cat);
                             for (var spawn : spawns.unwrap()) {
                                 if (isValidEntity(spawn.type, ModConfig.get())) {
-                                    if ((isUnlocked(spawn.type) || ModConfig.get().showUndiscoveredNames) && !results.contains(spawn.type)) {
+                                    if (!hideFromSearch(spawn.type) && !results.contains(spawn.type)) {
                                         results.add(spawn.type);
                                     }
                                 }
@@ -474,8 +477,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             if (modQuery.isEmpty()) return results;
 
             for (Object entry : getValidEntries()) {
-                if (!isUnlocked(entry) && !ModConfig.get().showUndiscoveredNames) continue;
-
+                if (hideFromSearch(entry)) continue;
                 ResourceLocation id = getEntryId(entry);
                 if (id != null) {
                     boolean match;
@@ -492,7 +494,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
         // Standard Name/ID Search
         for (Object entry : getValidEntries()) {
-            if (!isUnlocked(entry) && !ModConfig.get().showUndiscoveredNames) continue;
+            if (hideFromSearch(entry)) continue;
             ResourceLocation id = getEntryId(entry);
             if (id == null) continue;
 
@@ -626,7 +628,6 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
                             }
 
                             unlock(targetKey);
-                            minecraft.player.playSound(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 1.0F, 1.0F);
                             minecraft.player.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
 
                             fadingTarget = foundTarget;

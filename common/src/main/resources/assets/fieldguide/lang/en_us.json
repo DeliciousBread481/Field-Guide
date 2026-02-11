@@ -41,7 +41,10 @@
   "option.fieldguide.pause_button_y.tooltip": "Vertical position offset for the pause menu button.",
 
   "option.fieldguide.show_undiscovered_names": "Show Undiscovered Names",
-  "option.fieldguide.show_undiscovered_names.tooltip": "If enabled, names of undiscovered entries will be visible and searchable.",
+  "option.fieldguide.show_undiscovered_names.tooltip": "If enabled, names of undiscovered entries will be visible.",
+
+  "option.fieldguide.hide_undiscovered_from_search": "Hide Undiscovered From Search",
+  "option.fieldguide.hide_undiscovered_from_search.tooltip": "If enabled, undiscovered entries will be hidden from search results.",
 
   "option.fieldguide.auto_rotate_models": "Auto Rotate Models",
   "option.fieldguide.auto_rotate_models.tooltip": "If enabled, the 3D models in the Field Guide will rotate automatically.",
