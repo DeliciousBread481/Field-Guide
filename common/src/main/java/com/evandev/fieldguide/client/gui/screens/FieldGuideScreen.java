@@ -374,9 +374,10 @@ public class FieldGuideScreen extends BookScreen {
                         ResourceLocation texture = new ResourceLocation(biomeId.getNamespace(), "textures/immersiveoverlays/" + biomeId.getPath() + ".png");
                         int iconSize = 16;
                         int iconY = titleY - 5;
-                        guiGraphics.blit(texture, this.leftPageBounds.left(), iconY, 0, 0, iconSize, iconSize, iconSize, iconSize);
+                        int iconX = this.leftPageBounds.left() - 3;
+                        guiGraphics.blit(texture, iconX, iconY, 0, 0, iconSize, iconSize, iconSize, iconSize);
                         Component searchTitle = Component.translatable("biome." + biomeId.getNamespace() + "." + biomeId.getPath());
-                        guiGraphics.drawString(this.font, searchTitle, this.leftPageBounds.left() + iconSize + 4, titleY, Constants.TEXT_COLOR, false);
+                        guiGraphics.drawString(this.font, searchTitle, iconX + iconSize + 4, titleY, Constants.TEXT_COLOR, false);
                     }
                 } else if (searchQuery.startsWith("=^")) {
                     guiGraphics.drawString(this.font, "Drops " + searchQuery.substring(2), this.leftPageBounds.left(), titleY, Constants.TEXT_COLOR, false);
@@ -406,14 +407,15 @@ public class FieldGuideScreen extends BookScreen {
             }
         }
 
-        if (currentPage > 0 || isSearching) {
-            renderGrid(guiGraphics, mouseX, mouseY);
-        }
-
         // Back button
         this.backButton.visible = this.isSearching;
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
+
+        // Render grid
+        if (currentPage > 0 || isSearching) {
+            renderGrid(guiGraphics, mouseX, mouseY);
+        }
     }
 
     private void renderCategoryInfo(GuiGraphics guiGraphics) {

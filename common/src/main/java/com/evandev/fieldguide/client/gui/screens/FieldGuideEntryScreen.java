@@ -190,31 +190,38 @@ public class FieldGuideEntryScreen extends BookScreen {
         return false;
     }
 
-    private void renderAttributeTextAndIcon(GuiGraphics guiGraphics, int iconOffset, String text, Bounds bounds) {
-        int iconSize = 9;
-        int iconSpacing = 4;
-        int width = iconSize + iconSpacing + font.width(text);
-
-        // Center within given bounds
-        int y = bounds.y_center() - iconSize / 2;
-        int x = bounds.x_center() - width / 2;
-
-        guiGraphics.blit(Constants.ATTRIBUTES_TEXTURE, x, y, 0, iconOffset, iconSize, iconSize, 32, 32);
-        guiGraphics.drawString(this.font, text, x + iconSize + iconSpacing, y + 1, Constants.TEXT_COLOR, false);
-    }
-
     private void renderAttributes(GuiGraphics guiGraphics, LivingEntity entity) {
         RenderSystem.setShaderTexture(0, Constants.ATTRIBUTES_TEXTURE);
+        int iconSize = 9;
+        int iconSpacing = 2;
+        int gap = 8;
 
-        // Health
+        int yPos = leftPageBounds.top() + 13;
+
         String health = String.valueOf((int)entity.getMaxHealth() / 2);
-        Bounds healthBounds = new Bounds(leftPageBounds.left(), leftPageBounds.bottom() - 48, leftPageBounds.width() / 2, 20);
-        renderAttributeTextAndIcon(guiGraphics, 0, health, healthBounds);
-
-        // Armor
         String armor = String.valueOf(entity.getArmorValue());
-        Bounds armorBounds = new Bounds(leftPageBounds.x_center(), leftPageBounds.bottom() - 48, leftPageBounds.width() / 2, 20);
-        renderAttributeTextAndIcon(guiGraphics, 9, armor, armorBounds);
+        boolean showArmor = !armor.equals("0");
+
+        int healthWidth = this.font.width(health) + iconSpacing + iconSize;
+        int armorWidth = this.font.width(armor) + iconSpacing + iconSize;
+        int totalWidth = healthWidth + (showArmor ? gap + armorWidth : 0);
+
+        int xPos = this.leftPageBounds.x_center() - (totalWidth / 2);
+
+        // Draw Health
+        guiGraphics.blit(Constants.ATTRIBUTES_TEXTURE, xPos, yPos, 0, 0, iconSize, iconSize, 32, 32);
+        guiGraphics.drawString(this.font, health, xPos + iconSize + iconSpacing, yPos + 1, Constants.TEXT_COLOR, false);
+
+        // Draw Frame
+        guiGraphics.blit(Constants.HEALTH_FRAME_TEXTURE, xPos - 9, yPos - 4, 0, 0, 8, 16, 16, 16);
+        guiGraphics.blit(Constants.HEALTH_FRAME_TEXTURE, xPos + totalWidth + 1, yPos - 4, 8, 0, 8, 16, 16, 16);
+
+        if (showArmor) {
+            // Draw Armor
+            xPos = xPos + healthWidth + gap;
+            guiGraphics.blit(Constants.ATTRIBUTES_TEXTURE, xPos, yPos, 0, iconSize, iconSize, iconSize, 32, 32);
+            guiGraphics.drawString(this.font, armor, xPos + iconSize + iconSpacing, yPos + 1, Constants.TEXT_COLOR, false);
+        }
     }
 
     @Override
@@ -289,7 +296,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         }
 
         int xPos = leftPageBounds.x_center();
-        int yPos = leftPageBounds.y_center() - 20;
+        int yPos = leftPageBounds.y_center();
 
         if (entry instanceof EntityType && renderedEntity instanceof LivingEntity living) {
             if (unlocked) {
