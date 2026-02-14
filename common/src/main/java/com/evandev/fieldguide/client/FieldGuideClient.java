@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.client;
 
+import com.evandev.fieldguide.client.gui.screens.BookScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideScreen;
 import com.evandev.fieldguide.data.Category;
@@ -7,9 +8,9 @@ import com.evandev.fieldguide.mixin.MobAccessor;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import org.lwjgl.glfw.GLFW;
@@ -44,19 +45,19 @@ public class FieldGuideClient {
     public static void onClientTick(Minecraft minecraft) {
         if (OPEN_GUIDE_KEY.consumeClick()) {
             if (minecraft.screen == null && minecraft.player != null) {
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F, 1.0F));
                 ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
                 long lastTime = manager.getLastUnlockTime();
                 Object lastEntry = manager.getLastUnlockedEntry();
 
                 boolean isRecent = (System.currentTimeMillis() - lastTime) < AUTO_OPEN_THRESHOLD_MS;
-
                 if (isRecent && lastEntry != null) {
                     Category targetCategory = manager.getCategoryForEntry(lastEntry);
                     if (targetCategory != null) {
                         ClientFieldGuideManager.markAsSeen(lastEntry);
 
                         int page = FieldGuideScreen.getPageForEntry(targetCategory, lastEntry);
-                        Screen mainScreen = new FieldGuideScreen(targetCategory, page);
+                        BookScreen mainScreen = new FieldGuideScreen(targetCategory, page);
                         minecraft.setScreen(new FieldGuideEntryScreen(mainScreen, lastEntry));
                     }
                 } else {

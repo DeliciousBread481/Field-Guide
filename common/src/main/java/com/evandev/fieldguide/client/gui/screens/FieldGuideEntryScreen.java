@@ -7,12 +7,12 @@ import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.gui.widget.PageTurnButton;
 import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.platform.Services;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -31,7 +31,7 @@ import java.util.Locale;
 import java.util.Objects;
 
 public class FieldGuideEntryScreen extends BookScreen {
-    private final Screen parent;
+    private final BookScreen parent;
     private final Object entry;
     private final List<ResourceLocation> spawnBiomes = new ArrayList<>();
     private Entity renderedEntity;
@@ -44,7 +44,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     private ImageButton prevBiomePageButton;
     private ImageButton nextBiomePageButton;
 
-    public FieldGuideEntryScreen(Screen parent, Object entry) {
+    public FieldGuideEntryScreen(BookScreen parent, Object entry) {
         super(getTitleForEntry(entry));
         this.parent = parent;
         this.entry = entry;
@@ -153,6 +153,12 @@ public class FieldGuideEntryScreen extends BookScreen {
         prevBiomePageButton.visible = false;
         this.addRenderableWidget(nextBiomePageButton);
         this.addRenderableWidget(prevBiomePageButton);
+    }
+
+    @Override
+    public void onTabClick(Category category) {
+        Objects.requireNonNull(this.minecraft).setScreen(parent);
+        parent.onTabClick(category);
     }
 
     @Override

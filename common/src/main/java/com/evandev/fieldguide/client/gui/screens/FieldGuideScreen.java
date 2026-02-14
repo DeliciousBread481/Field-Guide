@@ -7,7 +7,6 @@ import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.gui.widget.FieldGuideSearchBox;
 import com.evandev.fieldguide.client.gui.widget.PageTurnButton;
-import com.evandev.fieldguide.client.gui.widget.TabButton;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -38,11 +37,6 @@ public class FieldGuideScreen extends BookScreen {
     private static final int CELL_SIZE = 40;
     private static final int GAP = 1;
 
-    private static final int TAB_WIDTH = 24;
-    private static final int TAB_HEIGHT = 24;
-    private static final int TAB_GAP = 0;
-    private static final int TAB_Y_OFFSET = 29;
-
     private static final int SEARCH_WIDTH = 140;
     private static final int SEARCH_HEIGHT = 20;
 
@@ -50,12 +44,9 @@ public class FieldGuideScreen extends BookScreen {
     private static int lastOpenedPage = 0;
 
     private final Map<EntityType<?>, Entity> entryCache = new HashMap<>();
-    private final List<Category> sortedCategories = new ArrayList<>();
-    private final List<TabButton> tabs = new ArrayList<>();
     public boolean isSearching = false;
     private List<Object> currentEntries = new ArrayList<>();
     private List<Object> recentEntries = new ArrayList<>();
-    private Category selectedCategory;
     private int currentPage = 0;
     private Screen parent = null;
     private String searchQuery = "";
@@ -70,7 +61,7 @@ public class FieldGuideScreen extends BookScreen {
 
     public FieldGuideScreen(Category initialCategory) {
         this();
-        this.selectedCategory = initialCategory;
+        this.setSelectedCategory(initialCategory);
     }
 
     public FieldGuideScreen(Category initialCategory, int initialPage) {
@@ -102,41 +93,21 @@ public class FieldGuideScreen extends BookScreen {
     @Override
     protected void init() {
         super.init();
-
-        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN,1.0F, 1.0F));
-
-        this.sortedCategories.clear();
-        for (Category cat : ClientFieldGuideManager.getCategories().values()) {
-            List<Object> entries = ClientFieldGuideManager.getInstance().getEntriesForCategory(cat);
-            if (entries != null && !entries.isEmpty()) {
-                this.sortedCategories.add(cat);
-            }
-        }
-        this.sortedCategories.sort(Comparator.comparingInt(Category::getSortIndex)
-                .thenComparing(c -> c.getId().getPath()));
-
-        if (this.selectedCategory == null) {
+        if (this.getSelectedCategory() == null) {
             if (lastOpenedCategory != null) {
-                this.selectedCategory = ClientFieldGuideManager.getCategories().get(lastOpenedCategory);
+                this.setSelectedCategory(ClientFieldGuideManager.getCategories().get(lastOpenedCategory));
             }
 
-            if (this.selectedCategory == null && !sortedCategories.isEmpty()) {
-                this.selectedCategory = sortedCategories.get(0);
+            if (this.getSelectedCategory() == null && !this.getSortedCategories().isEmpty()) {
+                this.setSelectedCategory(this.getSortedCategories().get(0));
             }
         }
 
-        if (this.selectedCategory != null) {
-            this.currentEntries = ClientFieldGuideManager.getInstance().getEntriesForCategory(this.selectedCategory);
-            this.recentEntries = ClientFieldGuideManager.getInstance().getRecentEntries(this.selectedCategory, 9);
-            lastOpenedCategory = this.selectedCategory.getId();
+        lastOpenedCategory = this.getSelectedCategory().getId();
 
-            int totalSpreads = getTotalSpreads();
-            if (this.currentPage >= totalSpreads) {
-                this.currentPage = Math.max(0, totalSpreads - 1);
-            }
-            lastOpenedPage = this.currentPage;
-        }
+        this.isSearching = !this.searchQuery.trim().isEmpty();
 
+        // Add Pagination Buttons
         this.prevPageButton = new PageTurnButton(
                 this.bounds.left() + 15,
                 this.leftPageBounds.bottom() - 15,
@@ -156,9 +127,7 @@ public class FieldGuideScreen extends BookScreen {
         this.addRenderableWidget(prevPageButton);
         this.addRenderableWidget(nextPageButton);
 
-        initTabs();
-
-        // Show Back Button
+        // Add Back Button
         this.backButton = new PageTurnButton(
             this.bounds.right() + 9 - 24,
             this.bounds.top() + 26,
@@ -181,73 +150,71 @@ public class FieldGuideScreen extends BookScreen {
         backButton.visible = false;
         this.addRenderableWidget(backButton);
 
-        if (isSearching) {
-            if (!searchQuery.isEmpty()) {
-                onSearchChanged(searchQuery);
-            }
-        }
-
+        // Add Search Bar
         int searchX = this.width / 2 - SEARCH_WIDTH / 2;
         int searchY = this.bounds.bottom() + 5;
 
-        this.searchBox = new FieldGuideSearchBox(this.font, searchX, searchY, SEARCH_WIDTH, SEARCH_HEIGHT, this::onSearchChanged);
-        this.searchBox.setValue(this.searchQuery);
+        this.searchBox = new FieldGuideSearchBox(this.font, searchX, searchY, SEARCH_WIDTH, SEARCH_HEIGHT, this.searchQuery, this::onSearchChanged);
         this.addRenderableWidget(this.searchBox);
+
+        // Get entries
+        if (this.isSearching) {
+            this.setSelectedCategory(null);
+            this.getEntriesForSearchQuery();
+        } else {
+            this.getEntriesForSelectedCategory();
+        }
+
+        int totalSpreads = getTotalSpreads();
+        if (this.currentPage >= totalSpreads) {
+            this.currentPage = Math.max(0, totalSpreads - 1);
+        }
+
+        goToPage(this.currentPage);
     }
 
     private void onSearchChanged(String query) {
+        if (query.equals(this.searchQuery)) return;
+
         this.isSearching = !query.trim().isEmpty();
         this.searchQuery = query;
 
         if (!isSearching) {
-            this.backButton.visible = false;
-            this.selectedCategory = ClientFieldGuideManager.getCategories().get(lastOpenedCategory);
-            if (this.selectedCategory != null) {
-                this.currentEntries = ClientFieldGuideManager.getInstance().getEntriesForCategory(this.selectedCategory);
+            Category category = ClientFieldGuideManager.getCategories().get(lastOpenedCategory);
+            this.setSelectedCategory(category);
+            if (category != null) {
+                this.getEntriesForSelectedCategory();
             }
         } else {
-            this.backButton.visible = true;
-            this.currentPage = 0;
-            this.selectedCategory = null;
-            this.currentEntries = ClientFieldGuideManager.getInstance().searchEntries(query);
+            this.setSelectedCategory(null);
+            this.getEntriesForSearchQuery();
         }
-        updatePageButtons();
+
+        this.goToPage(0);
     }
 
-    private void initTabs() {
-        int startY = this.bounds.top() + TAB_Y_OFFSET;
-        for (int i = 0; i < sortedCategories.size(); i++) {
-            Category category = sortedCategories.get(i);
-            int yPos = startY + (i * (TAB_HEIGHT + TAB_GAP));
-            int xPos = this.bounds.left() - 7;
-
-            TabButton tab = new TabButton(xPos, yPos, TAB_WIDTH, TAB_HEIGHT, category, this);
-            tabs.add(tab);
-            this.addRenderableWidget(tab);
+    private void getEntriesForSelectedCategory() {
+        Category category = this.getSelectedCategory();
+        if (category != null){
+            this.currentEntries = ClientFieldGuideManager.getInstance().getEntriesForCategory(category);
+            this.recentEntries = ClientFieldGuideManager.getInstance().getRecentEntries(category, 9);
+        } else {
+            this.currentEntries = null;
+            this.recentEntries = null;
         }
     }
 
-    private void renderSearchTab(GuiGraphics guiGraphics) {
-        int y = this.bounds.top() + TAB_Y_OFFSET;
-        int x = this.bounds.left() - 7;
-        guiGraphics.blit(Constants.TAB_TEXTURE, x, y, 0, 24, 24, 24, 24, 48);
-
-        int iconX = x + 4;
-        int iconY = y + 3;
-        guiGraphics.blit(Constants.SEARCH_ICON, iconX, iconY, 0, 0, 16, 16, 16, 16);
+    private void getEntriesForSearchQuery() {
+        this.currentEntries = ClientFieldGuideManager.getInstance().searchEntries(this.searchQuery);
+        this.recentEntries = null;
     }
 
-    public Category getSelectedCategory() {
-        return this.selectedCategory;
-    }
-
-    public void selectCategory(Category category) {
-        this.currentPage = 0;
-        this.selectedCategory = category;
-        this.currentEntries = ClientFieldGuideManager.getInstance().getEntriesForCategory(category);
-        this.recentEntries = ClientFieldGuideManager.getInstance().getRecentEntries(category, 9);
-        lastOpenedCategory = this.selectedCategory.getId();
-        lastOpenedPage = this.currentPage;
+    @Override
+    public void onTabClick(Category category) {
+        this.setSelectedCategory(category);
+        this.getEntriesForSelectedCategory();
+        this.goToPage(0);
+        lastOpenedCategory = category.getId();
 
         if (this.searchBox != null) {
             this.searchBox.setValue("");
@@ -256,9 +223,6 @@ public class FieldGuideScreen extends BookScreen {
 
         if (!this.children().isEmpty()) {
             this.rebuildWidgets();
-        }
-        if (this.prevPageButton != null) {
-            updatePageButtons();
         }
     }
 
@@ -277,22 +241,23 @@ public class FieldGuideScreen extends BookScreen {
         int totalSpreads = getTotalSpreads();
         this.prevPageButton.visible = currentPage > 0;
         this.nextPageButton.visible = currentPage < totalSpreads - 1;
-        //this.tabs.forEach(tab -> tab.visible = !isSearching);
+    }
+
+    private void goToPage(int page) {
+        this.currentPage = page;
+        lastOpenedPage = currentPage;
+        this.updatePageButtons();
     }
 
     private void prevPage() {
         if (currentPage > 0) {
-            currentPage--;
-            lastOpenedPage = currentPage;
-            updatePageButtons();
+            this.goToPage(currentPage - 1);
         }
     }
 
     private void nextPage() {
         if (currentPage < getTotalSpreads() - 1) {
-            currentPage++;
-            lastOpenedPage = currentPage;
-            updatePageButtons();
+            this.goToPage(currentPage + 1);
         }
     }
 
@@ -426,12 +391,12 @@ public class FieldGuideScreen extends BookScreen {
                     renderPageNumber(rightPageNum, this.rightPageBounds, guiGraphics);
                 }
                 // Render title
-                Component title = Component.translatable("category.fieldguide." + selectedCategory.getId().getPath());
+                Component title = Component.translatable("category.fieldguide." + this.getSelectedCategory().getId().getPath());
                 guiGraphics.drawString(this.font, title, this.leftPageBounds.left(), titleY, Constants.TEXT_MUTED_COLOR, false);
             }
         }
 
-        if (!isSearching && selectedCategory != null && currentPage == 0) {
+        if (!isSearching && this.getSelectedCategory() != null && currentPage == 0) {
             renderCategoryInfo(guiGraphics);
             renderRecentDiscoveries(guiGraphics, mouseX, mouseY);
         } else if (isSearching) {
@@ -439,14 +404,14 @@ public class FieldGuideScreen extends BookScreen {
                 Component noResults = Component.translatable("gui.fieldguide.no_results");
                 guiGraphics.drawString(this.font, noResults, this.leftPageBounds.x_center() - this.font.width(noResults) / 2, this.leftPageBounds.y_center() - (font.lineHeight / 2), Constants.TEXT_MUTED_COLOR, false);
             }
-//            if (parent == null) {
-//                renderSearchTab(guiGraphics);
-//            }
         }
 
         if (currentPage > 0 || isSearching) {
             renderGrid(guiGraphics, mouseX, mouseY);
         }
+
+        // Back button
+        this.backButton.visible = this.isSearching;
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
     }
@@ -454,7 +419,8 @@ public class FieldGuideScreen extends BookScreen {
     private void renderCategoryInfo(GuiGraphics guiGraphics) {
         guiGraphics.blit(Constants.TITLE_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
 
-        Component title = Component.translatable("category.fieldguide." + selectedCategory.getId().getPath());
+        Category category = this.getSelectedCategory();
+        Component title = Component.translatable("category.fieldguide." + category.getId().getPath());
         int titleY = this.leftPageBounds.top() + 36;
         List<FormattedCharSequence> lines = this.font.split(title, 70);
 

@@ -2,7 +2,7 @@ package com.evandev.fieldguide.client.gui.widget;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.data.CategoryVisual;
-import com.evandev.fieldguide.client.gui.screens.FieldGuideScreen;
+import com.evandev.fieldguide.client.gui.screens.BookScreen;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import net.minecraft.client.gui.GuiGraphics;
@@ -15,12 +15,12 @@ import net.minecraft.sounds.SoundEvents;
 
 public class TabButton extends ImageButton {
     private final Category category;
-    private final FieldGuideScreen parent;
+    private final BookScreen parent;
     private final float r, g, b;
     private final CategoryVisual visual;
 
-    public TabButton(int x, int y, int width, int height, Category category, FieldGuideScreen parent) {
-        super(x, y, width, height, 0, 0, 0, Constants.TAB_TEXTURE, 24, 40, (btn) -> parent.selectCategory(category));
+    public TabButton(int x, int y, int width, int height, Category category, BookScreen parent) {
+        super(x, y, width, height, 0, 0, 0, Constants.TAB_TEXTURE, 24, 40, (btn) -> parent.onTabClick(category));
         this.category = category;
         this.parent = parent;
 

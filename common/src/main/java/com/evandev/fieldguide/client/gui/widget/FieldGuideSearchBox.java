@@ -14,12 +14,13 @@ public class FieldGuideSearchBox extends EditBox {
     private static final int BACKGROUND_COLOR = 0xFF050302;
     private static final int PLACEHOLDER_COLOR = 0xC7A875;
 
-    public FieldGuideSearchBox(Font font, int x, int y, int width, int height, Consumer<String> onSearch) {
+    public FieldGuideSearchBox(Font font, int x, int y, int width, int height, String value, Consumer<String> onSearch) {
         super(font, x, y, width, height, Component.translatable("gui.fieldguide.search"));
         this.setMaxLength(50);
         this.setBordered(true);
         this.setVisible(true);
         this.setTextColor(0xFCF3DD);
+        this.setValue(value);
         this.setResponder(onSearch);
     }
 
