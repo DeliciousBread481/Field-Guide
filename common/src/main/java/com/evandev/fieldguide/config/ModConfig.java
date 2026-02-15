@@ -34,8 +34,8 @@ public class ModConfig {
     public float rotationSpeed = 15.0F;
     public double scanSpeed = 1.0D;
     public double scanDistance = 64.0D;
-    public int scanIconYOffset = 0;
-    public int scanIconXOffset = 0;
+    public int scanIconYOffset = 2;
+    public int scanIconXOffset = 30;
     public boolean showScanIcon = true;
 
     public boolean grantXpOnScan = true;

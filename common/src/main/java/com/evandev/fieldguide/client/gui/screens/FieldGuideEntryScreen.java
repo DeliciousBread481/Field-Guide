@@ -29,10 +29,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class FieldGuideEntryScreen extends BookScreen {
     private final BookScreen parent;
@@ -320,7 +318,16 @@ public class FieldGuideEntryScreen extends BookScreen {
         int textX = this.rightPageBounds.left() + 5;
         int textY = this.rightPageBounds.top() + 25;
         int textAreaWidth = this.rightPageBounds.width() - 10;
+
         if (unlocked) {
+            long discoveryTime = ClientFieldGuideManager.getInstance().getDiscoveryTime(entry);
+            if (discoveryTime > 0) {
+                String dateStr = new SimpleDateFormat("MMM dd, yyyy").format(new Date(discoveryTime));
+                Component dateComp = Component.literal("Discovered: " + dateStr);
+                guiGraphics.drawString(this.font, dateComp, textX, textY, Constants.TEXT_MUTED_COLOR, false);
+                textY += this.font.lineHeight + 5;
+            }
+
             guiGraphics.drawWordWrap(font, Component.literal(ClientFieldGuideManager.getEntryDescription(entry)), textX, textY, textAreaWidth, Constants.TEXT_COLOR);
         } else {
             guiGraphics.drawWordWrap(font, Component.literal(Component.translatable("fieldguide.description.locked").getString()), textX, textY, textAreaWidth, Constants.TEXT_MUTED_COLOR);

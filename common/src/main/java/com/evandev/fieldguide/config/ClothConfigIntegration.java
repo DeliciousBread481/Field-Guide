@@ -98,13 +98,13 @@ public class ClothConfigIntegration {
                 .build());
 
         interfaceCat.addEntry(entryBuilder.startIntField(Component.translatable("option.fieldguide.scan_icon_y_offset"), config.scanIconYOffset)
-                .setDefaultValue(0)
+                .setDefaultValue(2)
                 .setTooltip(Component.translatable("option.fieldguide.scan_icon_y_offset.tooltip"))
                 .setSaveConsumer(newValue -> config.scanIconYOffset = newValue)
                 .build());
 
         interfaceCat.addEntry(entryBuilder.startIntField(Component.translatable("option.fieldguide.scan_icon_x_offset"), config.scanIconXOffset)
-                .setDefaultValue(0)
+                .setDefaultValue(30)
                 .setTooltip(Component.translatable("option.fieldguide.scan_icon_x_offset.tooltip"))
                 .setSaveConsumer(newValue -> config.scanIconXOffset = newValue)
                 .build());
