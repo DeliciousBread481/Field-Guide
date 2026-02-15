@@ -313,9 +313,10 @@ public class FieldGuideEntryScreen extends BookScreen {
         // Entity
         float bounce = 1.0f;
         long elapsed = System.currentTimeMillis() - lastClickTime;
-        if (elapsed < 200) {
-            float t = elapsed / 200f;
-            bounce = 1.0f + 0.15f * (float) Math.sin(t * Math.PI);
+        float duration = 150;
+        if (elapsed < duration) {
+            float t = elapsed / duration;
+            bounce = 1.0f - 0.05f * (float) Math.sin(t * Math.PI);
         }
 
         int xPos = leftPageBounds.x_center();

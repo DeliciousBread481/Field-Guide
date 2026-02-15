@@ -209,25 +209,25 @@ public class EntryRenderHelper {
             clampedScale = (maxHeight * 0.9f) / entityHeight;
         }
 
-        int expandedWidth = (int) (maxWidth * bounceScale);
-        int expandedHeight = (int) (maxHeight * bounceScale);
+        double expandedWidth = maxWidth * bounceScale;
+        double expandedHeight = maxHeight * bounceScale;
 
-        int minX = x - expandedWidth / 2;
-        int minY = y - expandedHeight / 2;
-        int maxX = x + expandedWidth / 2;
-        int maxY = y + expandedHeight / 2;
+        double minX = x - expandedWidth / 2;
+        double minY = y - expandedHeight / 2;
+        double maxX = x + expandedWidth / 2;
+        double maxY = y + expandedHeight / 2;
 
         float finalScale = clampedScale * bounceScale;
         int feetY = (int) (y + (entityHeight * finalScale / 2.0f) + yOff);
 
         float autoRotation = getAutoRotation(visual);
 
-        guiGraphics.enableScissor(minX, minY, maxX, maxY);
+        guiGraphics.enableScissor((int) minX, (int) minY, (int) maxX, (int) maxY);
         renderEntityStatic(guiGraphics, entity, x, feetY, finalScale, silhouette, color, autoRotation);
         guiGraphics.disableScissor();
     }
 
-    public static void renderEntityStatic(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, float scale, boolean silhouette, int color, float autoRotation) {
+    public static void renderEntityStatic(GuiGraphics guiGraphics, LivingEntity entity, double x, double y, float scale, boolean silhouette, int color, float autoRotation) {
         guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
         PoseStack pose = guiGraphics.pose();
