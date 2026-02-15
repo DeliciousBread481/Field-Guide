@@ -4,7 +4,7 @@ import com.evandev.fieldguide.client.gui.screens.BookScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideScreen;
 import com.evandev.fieldguide.data.Category;
-import com.evandev.fieldguide.mixin.MobAccessor;
+import com.evandev.fieldguide.mixin.accessor.MobAccessor;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;

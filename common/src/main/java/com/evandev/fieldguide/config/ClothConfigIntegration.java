@@ -183,7 +183,7 @@ public class ClothConfigIntegration {
                 .build());
 
         contentCat.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.loot_additions"), config.lootAdditions)
-                .setDefaultValue(new ArrayList<>())
+                .setDefaultValue(ModConfig.getDefaultLootAdditions())
                 .setTooltip(Component.translatable("option.fieldguide.loot_additions.tooltip"))
                 .setSaveConsumer(newValue -> config.lootAdditions = newValue)
                 .build());
@@ -195,7 +195,7 @@ public class ClothConfigIntegration {
                 .build());
 
         contentCat.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.biome_additions"), config.biomeAdditions)
-                .setDefaultValue(new ArrayList<>())
+                .setDefaultValue(ModConfig.getDefaultBiomeAdditions())
                 .setTooltip(Component.translatable("option.fieldguide.biome_additions.tooltip"))
                 .setSaveConsumer(newValue -> config.biomeAdditions = newValue)
                 .build());
