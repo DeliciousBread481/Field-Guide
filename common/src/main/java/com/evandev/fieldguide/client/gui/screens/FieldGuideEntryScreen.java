@@ -283,8 +283,27 @@ public class FieldGuideEntryScreen extends BookScreen {
 
             nextBiomePageButton.active = indexEnd < spawnBiomes.size();
             prevBiomePageButton.active = currentBiomePage > 1;
-            nextBiomePageButton.visible = spawnBiomes.size() > biomesPerPage;
-            prevBiomePageButton.visible = spawnBiomes.size() > biomesPerPage;
+
+            if (spawnBiomes.size() > biomesPerPage) {
+                nextBiomePageButton.visible = true;
+                prevBiomePageButton.visible = true;
+
+                // Progress Bar
+                int pages = (spawnBiomes.size() + biomesPerPage - 1) / biomesPerPage;
+                int sideMargin = 13;
+                Bounds bounds = new Bounds(leftPageBounds.left() + sideMargin, biomeStartY + 18, leftPageBounds.width() - sideMargin * 2, 1);
+                float progressStart = (float) (currentBiomePage - 1) / pages;
+                float progressEnd = (float) currentBiomePage / pages;
+
+                int barStart = (int) (bounds.left() + bounds.width() * progressStart);
+                int barEnd = (int) (bounds.left() + bounds.width() * progressEnd);
+
+
+                // Render Background
+                guiGraphics.fill(bounds.left(), bounds.top(), bounds.right(), bounds.bottom(), 0xFFF9EED0);
+                // Render Bar
+                guiGraphics.fill(barStart, bounds.top(), barEnd, bounds.bottom(), 0xFFE0D2AE);
+            }
 
         } else {
             nextBiomePageButton.visible = false;
@@ -325,7 +344,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                 String dateStr = new SimpleDateFormat("MMM dd, yyyy").format(new Date(discoveryTime));
                 Component dateComp = Component.literal("Discovered: " + dateStr);
                 guiGraphics.drawString(this.font, dateComp, textX, textY, Constants.TEXT_MUTED_COLOR, false);
-                textY += this.font.lineHeight + 5;
+                textY += this.font.lineHeight;
             }
 
             guiGraphics.drawWordWrap(font, Component.literal(ClientFieldGuideManager.getEntryDescription(entry)), textX, textY, textAreaWidth, Constants.TEXT_COLOR);
