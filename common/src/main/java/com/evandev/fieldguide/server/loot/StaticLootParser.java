@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.server.loot;
 
 import com.evandev.fieldguide.mixin.accessor.*;
+import com.evandev.fieldguide.util.LootTableExpansion;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -22,7 +23,7 @@ public class StaticLootParser {
 
     public static List<ParsedDrop> parseTable(LootTable table) {
         List<ParsedDrop> allDrops = new ArrayList<>();
-        LootPool[] pools = ((LootTableAccessor) table).fieldguide$getPools();
+        List<LootPool> pools = ((LootTableExpansion) table).fieldguide$getPools();
 
         for (LootPool pool : pools) {
             float poolRolls = getExpectedRolls(((LootPoolAccessor) pool).fieldguide$getRolls());
