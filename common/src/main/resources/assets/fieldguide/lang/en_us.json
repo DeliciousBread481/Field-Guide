@@ -64,6 +64,15 @@
   "option.fieldguide.scan_overlay_alpha": "Scan Overlay Opacity",
   "option.fieldguide.scan_overlay_alpha.tooltip": "The opacity of the scanning overlay (0.0 - 1.0).",
 
+  "option.fieldguide.scan_icon_y_offset": "Scanning Icon Y Offset",
+  "option.fieldguide.scan_icon_y_offset.tooltip": "Adjusts the vertical position of the scanning crosshair. Positive moves it up, negative moves it down.",
+
+  "option.fieldguide.scan_icon_x_offset": "Scanning Icon X Offset",
+  "option.fieldguide.scan_icon_x_offset.tooltip": "Adjusts the horizontal position of the scanning crosshair. Positive moves it right, negative moves it left.",
+
+  "option.fieldguide.show_scan_icon": "Show Scanning Icon",
+  "option.fieldguide.show_scan_icon.tooltip": "Toggles the visibility of the scanning icon near the crosshair.",
+
   "option.fieldguide.scan_distance": "Scanning Distance",
   "option.fieldguide.scan_distance.tooltip": "The maximum distance from which you can scan an entry with a Spyglass, in blocks.",
 

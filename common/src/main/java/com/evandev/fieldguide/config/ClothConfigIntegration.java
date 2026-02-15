@@ -91,6 +91,25 @@ public class ClothConfigIntegration {
         // Interface
         ConfigCategory interfaceCat = builder.getOrCreateCategory(Component.translatable("category.fieldguide.interface"));
 
+        interfaceCat.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.show_scan_icon"), config.showScanIcon)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.fieldguide.show_scan_icon.tooltip"))
+                .setSaveConsumer(newValue -> config.showScanIcon = newValue)
+                .build());
+
+        interfaceCat.addEntry(entryBuilder.startIntField(Component.translatable("option.fieldguide.scan_icon_y_offset"), config.scanIconYOffset)
+                .setDefaultValue(0)
+                .setTooltip(Component.translatable("option.fieldguide.scan_icon_y_offset.tooltip"))
+                .setSaveConsumer(newValue -> config.scanIconYOffset = newValue)
+                .build());
+
+        interfaceCat.addEntry(entryBuilder.startIntField(Component.translatable("option.fieldguide.scan_icon_x_offset"), config.scanIconXOffset)
+                .setDefaultValue(0)
+                .setTooltip(Component.translatable("option.fieldguide.scan_icon_x_offset.tooltip"))
+                .setSaveConsumer(newValue -> config.scanIconXOffset = newValue)
+                .build());
+
+
         interfaceCat.addEntry(entryBuilder.startStrField(Component.translatable("option.fieldguide.scan_overlay_color"), config.scanOverlayColor)
                 .setDefaultValue("#FFFFFF")
                 .setTooltip(Component.translatable("option.fieldguide.scan_overlay_color.tooltip"))

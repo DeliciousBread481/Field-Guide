@@ -2,6 +2,7 @@ package com.evandev.fieldguide.mixin.client;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.config.ModConfig;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
 import org.spongepowered.asm.mixin.Mixin;
@@ -16,6 +17,12 @@ public class GuiMixin {
             at = @At("TAIL")
     )
     private void renderScanningIcon(GuiGraphics guiGraphics, float scopeScale, CallbackInfo ci) {
+        ModConfig config = ModConfig.get();
+
+        if (!config.showScanIcon) {
+            return;
+        }
+
         ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
 
         boolean outOfRange = manager.getOutOfRangeEntity() != null;
@@ -26,9 +33,12 @@ public class GuiMixin {
             int screenWidth = guiGraphics.guiWidth();
             int screenHeight = guiGraphics.guiHeight();
             int textureSize = 32;
-            int offset = 10;
-            int x = (screenWidth - textureSize) / 2;
-            int y = (screenHeight - textureSize) / 2 + offset;
+
+            int xOffset = config.scanIconXOffset;
+            int x = ((screenWidth - textureSize) / 2) + xOffset;
+
+            int yOffset = config.scanIconYOffset;
+            int y = ((screenHeight - textureSize) / 2) - yOffset;
 
             int frame;
             int totalFramesInTexture = 6;
