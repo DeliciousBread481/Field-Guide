@@ -52,6 +52,12 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.rotationSpeed = newValue)
                 .build());
 
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.require_spyglass"), config.requireSpyglass)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.fieldguide.require_spyglass.tooltip"))
+                .setSaveConsumer(newValue -> config.requireSpyglass = newValue)
+                .build());
+
         general.addEntry(entryBuilder.startDoubleField(Component.translatable("option.fieldguide.scan_speed"), config.scanSpeed)
                 .setDefaultValue(1.0D)
                 .setMin(0.1D)

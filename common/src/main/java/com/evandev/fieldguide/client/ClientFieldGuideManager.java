@@ -523,9 +523,10 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     public void onClientTick(Minecraft minecraft) {
         if (minecraft.player == null || minecraft.level == null) return;
 
-        boolean isUsingSpyglass = minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(Items.SPYGLASS);
+        boolean isScanningActive = (minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(Items.SPYGLASS))
+                || !ModConfig.get().requireSpyglass;
 
-        if (isUsingSpyglass) {
+        if (isScanningActive) {
             double range = 256.0D;
             Vec3 eyePos = minecraft.player.getEyePosition(1.0F);
             Vec3 viewVec = minecraft.player.getViewVector(1.0F);

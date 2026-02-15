@@ -52,6 +52,9 @@
   "option.fieldguide.rotation_speed": "Rotation Speed",
   "option.fieldguide.rotation_speed.tooltip": "Speed at which to rotate models in degrees per second, if model rotation is enabled.",
 
+  "option.fieldguide.require_spyglass": "Require Spyglass",
+  "option.fieldguide.require_spyglass.tooltip": "If disabled, you can scan entities and blocks simply by looking at them without needing to use a Spyglass.",
+
   "option.fieldguide.scan_speed": "Scanning Speed",
   "option.fieldguide.scan_speed.tooltip": "The time in seconds it takes to scan an entry.",
 

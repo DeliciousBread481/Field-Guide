@@ -27,6 +27,7 @@ public class ModConfig {
     public int inventoryButtonXOffset = 126;
     public int inventoryButtonYOffset = 61;
 
+    public boolean requireSpyglass = true;
     public boolean showUndiscoveredNames = false;
     public boolean hideUndiscoveredFromSearch = false;
     public boolean autoRotateModels = false;

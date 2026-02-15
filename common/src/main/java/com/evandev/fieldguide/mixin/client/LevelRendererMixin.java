@@ -41,7 +41,8 @@ public class LevelRendererMixin {
         ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
         Minecraft mc = Minecraft.getInstance();
 
-        Entity targetEntity = manager.getScanningEntity() != null ? manager.getScanningEntity() : manager.getFadingEntity();
+        Entity outOfRangeEntity = manager.getOutOfRangeEntity();
+        Entity targetEntity = manager.getScanningEntity() != null ? manager.getScanningEntity() : (manager.getFadingEntity() != null ? manager.getFadingEntity() : outOfRangeEntity);
         BlockPos targetBlock = (manager.getScanningTarget() instanceof Block && manager.getScanningPos() != null) ? manager.getScanningPos() : manager.getFadingPos();
 
         if (targetEntity == null && targetBlock == null) return;
@@ -50,90 +51,91 @@ public class LevelRendererMixin {
         Vec3 camPos = camera.getPosition();
         MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
 
-        int colorInt = ModConfig.get().getScanOverlayColorInt();
-        Color c = new Color(colorInt);
-        float red = c.getRed() / 255.0F;
-        float green = c.getGreen() / 255.0F;
-        float blue = c.getBlue() / 255.0F;
+        float red, green, blue, alpha;
+        if (outOfRangeEntity != null && targetEntity == outOfRangeEntity) {
+            red = 1.0F;
+            green = 0.0F;
+            blue = 0.0F;
+            float pulse = (float) (Math.sin(System.currentTimeMillis() / 200.0) * 0.5 + 0.5);
+            alpha = 0.2F + (pulse * 0.4F);
+        } else {
+            int colorInt = ModConfig.get().getScanOverlayColorInt();
+            Color c = new Color(colorInt);
+            red = c.getRed() / 255.0F;
+            green = c.getGreen() / 255.0F;
+            blue = c.getBlue() / 255.0F;
+            alpha = (float) (manager.getScanningEntity() != null || manager.getScanningTarget() != null ? ModConfig.get().scanOverlayAlpha : ModConfig.get().scanOverlayAlpha * manager.getFadeProgress(partialTick));
+        }
 
-        if (targetBlock != null) {
+        if (targetBlock != null && alpha > 0.01f) {
             float progress = manager.getScanningTarget() != null ? manager.getScanProgress(partialTick) : manager.getFadeProgress(partialTick);
             if (progress > 0.0f) {
                 float fillHeight = manager.getScanningTarget() != null ? progress : 1.0f;
-                float alpha = (float) (manager.getScanningTarget() != null ? ModConfig.get().scanOverlayAlpha : ModConfig.get().scanOverlayAlpha * progress);
 
-                if (alpha > 0.01f) {
-                    BlockState state = Objects.requireNonNull(mc.level).getBlockState(targetBlock);
-                    if (!state.isAir()) {
-                        Vec3 offset = state.getOffset(mc.level, targetBlock);
-                        double x = targetBlock.getX() - camPos.x + offset.x;
-                        double y = targetBlock.getY() - camPos.y + offset.y;
-                        double z = targetBlock.getZ() - camPos.z + offset.z;
-
-                        poseStack.pushPose();
-                        poseStack.translate(x, y, z);
-
-                        double shapeHeight = state.isCollisionShapeFullBlock(mc.level, targetBlock) ? 1.0 : Math.max(1.0, state.getShape(mc.level, targetBlock, CollisionContext.of(mc.player)).max(Direction.Axis.Y));
-                        float localScanLimitY = (float) (shapeHeight * fillHeight);
-
-                        if (ModRenderTypes.SCAN_BLOCK_SHADER != null) {
-                            ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("ScanLimitY").set(localScanLimitY);
-                            Matrix4f modelViewMat = new Matrix4f(poseStack.last().pose());
-                            ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("InverseModelViewMat").set(modelViewMat.invert());
-                        }
-
-                        MultiBufferSource depthSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForDepth(requestedType, false)), 1, 1, 1, 1);
-                        mc.getBlockRenderer().renderSingleBlock(state, poseStack, depthSource, 15728880, OverlayTexture.pack(0, 10));
-                        bufferSource.endBatch();
-
-                        MultiBufferSource tintedSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForScan(requestedType, false)), red, green, blue, alpha);
-                        mc.getBlockRenderer().renderSingleBlock(state, poseStack, tintedSource, 15728880, OverlayTexture.pack(0, 10));
-                        bufferSource.endBatch();
-
-                        poseStack.popPose();
-                    }
-                }
-            }
-        }
-
-        if (targetEntity != null) {
-            float progress = manager.getScanningEntity() != null ? manager.getScanProgress(partialTick) : manager.getFadeProgress(partialTick);
-            if (progress > 0.0f) {
-                float fillHeight = manager.getScanningEntity() != null ? progress : 1.0f;
-                float alpha = (float) (manager.getScanningEntity() != null ? ModConfig.get().scanOverlayAlpha : ModConfig.get().scanOverlayAlpha * progress);
-
-                if (alpha > 0.01f) {
-                    double x = Mth.lerp(partialTick, targetEntity.xOld, targetEntity.getX()) - camPos.x;
-                    double y = Mth.lerp(partialTick, targetEntity.yOld, targetEntity.getY()) - camPos.y;
-                    double z = Mth.lerp(partialTick, targetEntity.zOld, targetEntity.getZ()) - camPos.z;
+                BlockState state = Objects.requireNonNull(mc.level).getBlockState(targetBlock);
+                if (!state.isAir()) {
+                    Vec3 offset = state.getOffset(mc.level, targetBlock);
+                    double x = targetBlock.getX() - camPos.x + offset.x;
+                    double y = targetBlock.getY() - camPos.y + offset.y;
+                    double z = targetBlock.getZ() - camPos.z + offset.z;
 
                     poseStack.pushPose();
                     poseStack.translate(x, y, z);
 
-                    double entityHeight = targetEntity.getBbHeight();
-                    float localScanLimitY = (float) (entityHeight * fillHeight * 1.15f);
+                    double shapeHeight = state.isCollisionShapeFullBlock(mc.level, targetBlock) ? 1.0 : Math.max(1.0, state.getShape(mc.level, targetBlock, CollisionContext.of(mc.player)).max(Direction.Axis.Y));
+                    float localScanLimitY = (float) (shapeHeight * fillHeight);
 
-                    if (ModRenderTypes.SCAN_ENTITY_SHADER != null) {
-                        ModRenderTypes.SCAN_ENTITY_SHADER.getUniform("ScanLimitY").set(localScanLimitY);
+                    if (ModRenderTypes.SCAN_BLOCK_SHADER != null) {
+                        ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("ScanLimitY").set(localScanLimitY);
                         Matrix4f modelViewMat = new Matrix4f(poseStack.last().pose());
-                        ModRenderTypes.SCAN_ENTITY_SHADER.getUniform("InverseModelViewMat").set(modelViewMat.invert());
+                        ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("InverseModelViewMat").set(modelViewMat.invert());
                     }
 
-                    @SuppressWarnings("unchecked")
-                    EntityRenderer<Entity> renderer = (EntityRenderer<Entity>) mc.getEntityRenderDispatcher().getRenderer(targetEntity);
-                    float yaw = Mth.lerp(partialTick, targetEntity.yRotO, targetEntity.getYRot());
-
-                    MultiBufferSource depthSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForDepth(requestedType, true)), 1, 1, 1, 1);
-                    renderer.render(targetEntity, yaw, partialTick, poseStack, depthSource, 15728880);
+                    MultiBufferSource depthSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForDepth(requestedType, false)), 1, 1, 1, 1);
+                    mc.getBlockRenderer().renderSingleBlock(state, poseStack, depthSource, 15728880, OverlayTexture.pack(0, 10));
                     bufferSource.endBatch();
 
-                    MultiBufferSource forcedSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForScan(requestedType, true)), red, green, blue, alpha);
-                    renderer.render(targetEntity, yaw, partialTick, poseStack, forcedSource, 15728880);
+                    MultiBufferSource tintedSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForScan(requestedType, false)), red, green, blue, alpha);
+                    mc.getBlockRenderer().renderSingleBlock(state, poseStack, tintedSource, 15728880, OverlayTexture.pack(0, 10));
                     bufferSource.endBatch();
 
                     poseStack.popPose();
                 }
             }
+        }
+
+        if (targetEntity != null && alpha > 0.01f) {
+            float fillHeight = (outOfRangeEntity != null || manager.getScanningEntity() == null) ? 1.0f : manager.getScanProgress(partialTick);
+
+            double x = Mth.lerp(partialTick, targetEntity.xOld, targetEntity.getX()) - camPos.x;
+            double y = Mth.lerp(partialTick, targetEntity.yOld, targetEntity.getY()) - camPos.y;
+            double z = Mth.lerp(partialTick, targetEntity.zOld, targetEntity.getZ()) - camPos.z;
+
+            poseStack.pushPose();
+            poseStack.translate(x, y, z);
+
+            double entityHeight = targetEntity.getBbHeight();
+            float localScanLimitY = (float) (entityHeight * fillHeight * 1.15f);
+
+            if (ModRenderTypes.SCAN_ENTITY_SHADER != null) {
+                ModRenderTypes.SCAN_ENTITY_SHADER.getUniform("ScanLimitY").set(localScanLimitY);
+                Matrix4f modelViewMat = new Matrix4f(poseStack.last().pose());
+                ModRenderTypes.SCAN_ENTITY_SHADER.getUniform("InverseModelViewMat").set(modelViewMat.invert());
+            }
+
+            @SuppressWarnings("unchecked")
+            EntityRenderer<Entity> renderer = (EntityRenderer<Entity>) mc.getEntityRenderDispatcher().getRenderer(targetEntity);
+            float yaw = Mth.lerp(partialTick, targetEntity.yRotO, targetEntity.getYRot());
+
+            MultiBufferSource depthSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForDepth(requestedType, true)), 1, 1, 1, 1);
+            renderer.render(targetEntity, yaw, partialTick, poseStack, depthSource, 15728880);
+            bufferSource.endBatch();
+
+            MultiBufferSource forcedSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForScan(requestedType, true)), red, green, blue, alpha);
+            renderer.render(targetEntity, yaw, partialTick, poseStack, forcedSource, 15728880);
+            bufferSource.endBatch();
+
+            poseStack.popPose();
         }
     }
 }
