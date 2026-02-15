@@ -73,14 +73,13 @@ public class LevelRendererMixin {
                         poseStack.pushPose();
                         poseStack.translate(x, y, z);
 
-                        double shapeHeight = state.getShape(mc.level, targetBlock, CollisionContext.of(mc.player)).max(Direction.Axis.Y);
+                        double shapeHeight = state.isCollisionShapeFullBlock(mc.level, targetBlock) ? 1.0 : Math.max(1.0, state.getShape(mc.level, targetBlock, CollisionContext.of(mc.player)).max(Direction.Axis.Y));
                         float localScanLimitY = (float) (shapeHeight * fillHeight);
 
                         if (ModRenderTypes.SCAN_BLOCK_SHADER != null) {
                             ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("ScanLimitY").set(localScanLimitY);
-
-                            Matrix4f inverseMat = new Matrix4f(poseStack.last().pose()).invert();
-                            ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("InverseModelViewMat").set(inverseMat);
+                            Matrix4f modelViewMat = new Matrix4f(poseStack.last().pose());
+                            ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("InverseModelViewMat").set(modelViewMat.invert());
                         }
 
                         MultiBufferSource depthSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForDepth(requestedType, false)), 1, 1, 1, 1);
@@ -111,14 +110,13 @@ public class LevelRendererMixin {
                     poseStack.pushPose();
                     poseStack.translate(x, y, z);
 
-                    double entityHeight = targetEntity.getBoundingBox().maxY - targetEntity.getBoundingBox().minY;
-                    float localScanLimitY = (float) (entityHeight * fillHeight);
+                    double entityHeight = targetEntity.getBbHeight();
+                    float localScanLimitY = (float) (entityHeight * fillHeight * 1.15f);
 
                     if (ModRenderTypes.SCAN_ENTITY_SHADER != null) {
                         ModRenderTypes.SCAN_ENTITY_SHADER.getUniform("ScanLimitY").set(localScanLimitY);
-
-                        Matrix4f inverseMat = new Matrix4f(poseStack.last().pose()).invert();
-                        ModRenderTypes.SCAN_ENTITY_SHADER.getUniform("InverseModelViewMat").set(inverseMat);
+                        Matrix4f modelViewMat = new Matrix4f(poseStack.last().pose());
+                        ModRenderTypes.SCAN_ENTITY_SHADER.getUniform("InverseModelViewMat").set(modelViewMat.invert());
                     }
 
                     @SuppressWarnings("unchecked")

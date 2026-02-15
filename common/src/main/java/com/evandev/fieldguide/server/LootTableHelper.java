@@ -351,7 +351,8 @@ public class LootTableHelper {
 
         for (Map.Entry<String, ItemStack> entry : signatureToStack.entrySet()) {
             ItemStack stack = entry.getValue();
-            float chance = (signatureToDropCount.get(entry.getKey()) / (float) TOTAL_ITERATIONS) * 100.0f;
+            float rawChance = (signatureToDropCount.get(entry.getKey()) / (float) TOTAL_ITERATIONS) * 100.0f;
+            float chance = rawChance > 96.0f ? 100.0f : rawChance;
 
             CompoundTag tag = stack.getOrCreateTag();
             tag.putFloat("FieldGuideDropChance", chance);

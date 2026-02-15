@@ -15,9 +15,10 @@ out float viewRelY;
 void main() {
     vec4 viewPos = ModelViewMat * vec4(Position, 1.0);
     gl_Position = ProjMat * viewPos;
+
     vertexColor = Color;
     texCoord0 = UV0;
 
-    vec4 localPos = InverseModelViewMat * vec4(Position, 1.0);
+    vec4 localPos = InverseModelViewMat * viewPos;
     viewRelY = localPos.y;
 }
