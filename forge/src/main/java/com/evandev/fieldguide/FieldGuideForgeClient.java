@@ -1,0 +1,117 @@
+package com.evandev.fieldguide;
+
+import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.client.FieldGuideClient;
+import com.evandev.fieldguide.client.ModRenderTypes;
+import com.evandev.fieldguide.config.ClothConfigIntegration;
+import com.evandev.fieldguide.network.GrantContentPacket;
+import com.evandev.fieldguide.network.SyncCategoriesPacket;
+import com.evandev.fieldguide.network.SyncLootPacket;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.level.storage.LevelResource;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.ConfigScreenHandler;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
+import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.client.event.RegisterShadersEvent;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
+
+import java.io.IOException;
+import java.nio.file.Path;
+
+public class FieldGuideForgeClient {
+
+    public static void handleSyncLoot(SyncLootPacket packet) {
+        ClientFieldGuideManager.getInstance().updateLootCache(packet.getLootCache());
+    }
+
+    public static void handleSyncCategories(SyncCategoriesPacket packet) {
+        ClientFieldGuideManager.getInstance().updateCategoriesFromServer(packet.getCategories());
+    }
+
+    public static void handleGrantContent(GrantContentPacket packet) {
+        packet.handleClient();
+    }
+
+    @Mod.EventBusSubscriber(modid = Constants.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+    public static class ClientModEvents {
+        @SubscribeEvent
+        public static void registerShaders(RegisterShadersEvent event) {
+            try {
+                ModRenderTypes.registerShaders(instance -> {
+                    String shaderName = instance.getName();
+                    event.registerShader(instance, loadedShader -> {
+                        if (shaderName.contains("fieldguide_scan_block")) {
+                            ModRenderTypes.SCAN_BLOCK_SHADER = loadedShader;
+                        } else if (shaderName.contains("fieldguide_scan_entity")) {
+                            ModRenderTypes.SCAN_ENTITY_SHADER = loadedShader;
+                        }
+                    });
+                }, event.getResourceProvider());
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to register Field Guide shaders", e);
+            }
+        }
+
+        @SubscribeEvent
+        public static void registerReloadListeners(RegisterClientReloadListenersEvent event) {
+            event.registerReloadListener(ClientFieldGuideManager.getInstance());
+        }
+
+        @SubscribeEvent
+        public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
+            FieldGuideClient.init();
+            event.register(FieldGuideClient.OPEN_GUIDE_KEY);
+        }
+
+        @SubscribeEvent
+        public static void onConstructMod(FMLConstructModEvent event) {
+            if (ModList.get().isLoaded("cloth_config")) {
+                ModLoadingContext.get().registerExtensionPoint(
+                        ConfigScreenHandler.ConfigScreenFactory.class,
+                        () -> new ConfigScreenHandler.ConfigScreenFactory(
+                                (client, parent) -> ClothConfigIntegration.createScreen(parent)
+                        )
+                );
+            }
+        }
+    }
+
+    @Mod.EventBusSubscriber(modid = Constants.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
+    public static class ClientForgeEvents {
+        @SubscribeEvent
+        public static void onClientTick(TickEvent.ClientTickEvent event) {
+            if (event.phase == TickEvent.Phase.END) {
+                Minecraft client = Minecraft.getInstance();
+                ClientFieldGuideManager.getInstance().onClientTick(client);
+                FieldGuideClient.onClientTick(client);
+            }
+        }
+
+        @SubscribeEvent
+        public static void onClientPlayerLogin(ClientPlayerNetworkEvent.LoggingIn event) {
+            Minecraft client = Minecraft.getInstance();
+            String serverId = "unknown_server";
+
+            if (client.hasSingleplayerServer() && client.getSingleplayerServer() != null) {
+                Path levelDatPath = client.getSingleplayerServer().getWorldPath(LevelResource.LEVEL_DATA_FILE);
+                serverId = levelDatPath.getParent().getFileName().toString();
+            } else if (client.getCurrentServer() != null) {
+                serverId = client.getCurrentServer().ip;
+            }
+
+            ClientFieldGuideManager.getInstance().onWorldLoad(serverId);
+        }
+
+        @SubscribeEvent
+        public static void onClientPlayerLogout(ClientPlayerNetworkEvent.LoggingOut event) {
+            ClientFieldGuideManager.getInstance().onWorldUnload();
+        }
+    }
+}

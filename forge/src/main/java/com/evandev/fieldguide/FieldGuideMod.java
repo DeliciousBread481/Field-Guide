@@ -1,9 +1,5 @@
 package com.evandev.fieldguide;
 
-import com.evandev.fieldguide.client.ClientFieldGuideManager;
-import com.evandev.fieldguide.client.FieldGuideClient;
-import com.evandev.fieldguide.client.ModRenderTypes;
-import com.evandev.fieldguide.config.ClothConfigIntegration;
 import com.evandev.fieldguide.network.ClaimXpPacket;
 import com.evandev.fieldguide.network.GrantContentPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
@@ -11,31 +7,21 @@ import com.evandev.fieldguide.network.SyncLootPacket;
 import com.evandev.fieldguide.platform.ForgeNetworkHelper;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.command.FieldGuideCommand;
-import net.minecraft.client.Minecraft;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.storage.LevelResource;
-import net.minecraftforge.client.ConfigScreenHandler;
-import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
-import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
-import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
-import net.minecraftforge.client.event.RegisterShadersEvent;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.network.NetworkEvent;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.function.Supplier;
 
 @Mod(Constants.MOD_ID)
@@ -47,42 +33,23 @@ public class FieldGuideMod {
 
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(this::commonSetup);
-        if (FMLEnvironment.dist.isClient()) {
-            modEventBus.addListener(this::registerReloadListeners);
-            modEventBus.addListener(this::registerKeyMappings);
-            modEventBus.addListener(this::registerShaders);
-        }
-
-        if (ModList.get().isLoaded("cloth_config")) {
-            FMLJavaModLoadingContext.get().getModEventBus().register(new Object() {
-                @SubscribeEvent
-                public void onConstructMod(net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent event) {
-                    net.minecraftforge.fml.ModLoadingContext.get().registerExtensionPoint(
-                            ConfigScreenHandler.ConfigScreenFactory.class,
-                            () -> new ConfigScreenHandler.ConfigScreenFactory(
-                                    (client, parent) -> ClothConfigIntegration.createScreen(parent)
-                            )
-                    );
-                }
-            });
-        }
     }
 
     public static void handleGrantContent(GrantContentPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
         NetworkEvent.Context context = contextSupplier.get();
-        context.enqueueWork(packet::handleClient);
+        context.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> FieldGuideForgeClient.handleGrantContent(packet)));
         context.setPacketHandled(true);
     }
 
     public static void handleSyncLoot(SyncLootPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
         NetworkEvent.Context context = contextSupplier.get();
-        context.enqueueWork(() -> ClientFieldGuideManager.getInstance().updateLootCache(packet.getLootCache()));
+        context.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> FieldGuideForgeClient.handleSyncLoot(packet)));
         context.setPacketHandled(true);
     }
 
     public static void handleSyncCategories(SyncCategoriesPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
         NetworkEvent.Context context = contextSupplier.get();
-        context.enqueueWork(() -> ClientFieldGuideManager.getInstance().updateCategoriesFromServer(packet.getCategories()));
+        context.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> FieldGuideForgeClient.handleSyncCategories(packet)));
         context.setPacketHandled(true);
     }
 
@@ -90,40 +57,15 @@ public class FieldGuideMod {
         NetworkEvent.Context context = contextSupplier.get();
         context.enqueueWork(() -> {
             ServerPlayer player = context.getSender();
-            packet.handleServer(player);
+            if (player != null) {
+                packet.handleServer(player);
+            }
         });
         context.setPacketHandled(true);
     }
 
-    public void registerShaders(RegisterShadersEvent event) {
-        try {
-            ModRenderTypes.registerShaders(instance -> {
-                String shaderName = instance.getName();
-
-                event.registerShader(instance, loadedShader -> {
-                    if (shaderName.contains("fieldguide_scan_block")) {
-                        ModRenderTypes.SCAN_BLOCK_SHADER = loadedShader;
-                    } else if (shaderName.contains("fieldguide_scan_entity")) {
-                        ModRenderTypes.SCAN_ENTITY_SHADER = loadedShader;
-                    }
-                });
-            }, event.getResourceProvider());
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to register Field Guide shaders", e);
-        }
-    }
-
     private void commonSetup(final FMLCommonSetupEvent event) {
         ForgeNetworkHelper.register();
-    }
-
-    public void registerReloadListeners(RegisterClientReloadListenersEvent event) {
-        event.registerReloadListener(ClientFieldGuideManager.getInstance());
-    }
-
-    public void registerKeyMappings(RegisterKeyMappingsEvent event) {
-        FieldGuideClient.init();
-        event.register(FieldGuideClient.OPEN_GUIDE_KEY);
     }
 
     @SubscribeEvent
@@ -142,38 +84,9 @@ public class FieldGuideMod {
     }
 
     @SubscribeEvent
-    public void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase == TickEvent.Phase.END) {
-            Minecraft client = Minecraft.getInstance();
-            ClientFieldGuideManager.getInstance().onClientTick(client);
-            FieldGuideClient.onClientTick(client);
-        }
-    }
-
-    @SubscribeEvent
-    public void onClientPlayerLogin(ClientPlayerNetworkEvent.LoggingIn event) {
-        Minecraft client = Minecraft.getInstance();
-        String serverId = "unknown_server";
-
-        if (client.hasSingleplayerServer() && client.getSingleplayerServer() != null) {
-            Path levelDatPath = client.getSingleplayerServer().getWorldPath(LevelResource.LEVEL_DATA_FILE);
-            serverId = levelDatPath.getParent().getFileName().toString();
-        } else if (client.getCurrentServer() != null) {
-            serverId = client.getCurrentServer().ip;
-        }
-
-        ClientFieldGuideManager.getInstance().onWorldLoad(serverId);
-    }
-
-    @SubscribeEvent
     public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             ServerFieldGuideManager.getInstance().syncToPlayer(player);
         }
-    }
-
-    @SubscribeEvent
-    public void onClientPlayerLogout(ClientPlayerNetworkEvent.LoggingOut event) {
-        ClientFieldGuideManager.getInstance().onWorldUnload();
     }
 }
