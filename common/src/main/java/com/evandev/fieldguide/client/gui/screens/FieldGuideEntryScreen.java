@@ -342,10 +342,10 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (unlocked) {
             long discoveryTime = ClientFieldGuideManager.getInstance().getDiscoveryTime(entry);
             if (discoveryTime > 0) {
+                // TODO: Add config for date format?
                 String dateStr = new SimpleDateFormat("MMM dd, yyyy").format(new Date(discoveryTime));
-                Component dateComp = Component.literal("Discovered: " + dateStr);
-                guiGraphics.drawString(this.font, dateComp, textX, textY, Constants.TEXT_MUTED_COLOR, false);
-                textY += this.font.lineHeight;
+                Component dateComp = Component.literal(dateStr);
+                guiGraphics.drawString(this.font, dateComp, this.rightPageBounds.right() - this.font.width(dateComp), this.rightPageBounds.bottom() - 58, Constants.TEXT_MUTED_COLOR, false);
             }
 
             guiGraphics.drawWordWrap(font, Component.literal(ClientFieldGuideManager.getEntryDescription(entry)), textX, textY, textAreaWidth, Constants.TEXT_COLOR);

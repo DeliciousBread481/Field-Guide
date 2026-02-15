@@ -45,8 +45,8 @@ public class TabButton extends ImageButton {
         guiGraphics.blit(Constants.TAB_TEXTURE, this.getX(), this.getY(), 0, vOffset, this.width, this.height, 24, 48);
         guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
-        int iconX = this.getX() + 3;
-        int iconY = this.getY() + 3;
+        int iconX = this.getX() + 2;
+        int iconY = this.getY() + 4;
         if (isSelected) iconX = iconX + 1;
 
         guiGraphics.blit(visual.icon, iconX, iconY, 0, 0, 16, 16, 16, 16);
