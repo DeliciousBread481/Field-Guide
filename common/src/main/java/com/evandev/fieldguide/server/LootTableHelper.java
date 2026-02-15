@@ -21,7 +21,6 @@ import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
@@ -41,7 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class LootTableHelper {
 
-    private static final int TOTAL_ITERATIONS = 500;
+    private static final int TOTAL_ITERATIONS = 2000;
     private static final Map<Object, List<ItemStack>> SERVER_DROP_CACHE = new ConcurrentHashMap<>();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
@@ -68,9 +67,9 @@ public class LootTableHelper {
         File cacheFile = getCacheFile(level);
 
         ServerPlayer fakePlayer = Services.PLATFORM.getFakePlayer(level);
-        ItemStack godTool = createGodTool();
+        ItemStack sword = new ItemStack(Items.IRON_SWORD);
 
-        fakePlayer.setItemInHand(InteractionHand.MAIN_HAND, godTool);
+        fakePlayer.setItemInHand(InteractionHand.MAIN_HAND, sword);
 
         int processed = 0;
         for (Object entry : entries) {
@@ -78,7 +77,7 @@ public class LootTableHelper {
             if (entry instanceof EntityType<?> type) {
                 handleEntityDrops(level, fakePlayer, type, allDrops);
             } else if (entry instanceof Block block) {
-                handleBlockDrops(level, fakePlayer, block, godTool, allDrops);
+                handleBlockDrops(level, fakePlayer, block, sword, allDrops);
             }
 
             List<ItemStack> distinctDrops = processDrops(allDrops);
@@ -92,13 +91,6 @@ public class LootTableHelper {
         saveCacheToDisk(cacheFile);
 
         Constants.LOG.info("FieldGuide: Generated loot for {} entries in {}ms", processed, System.currentTimeMillis() - start);
-    }
-
-    private static ItemStack createGodTool() {
-        ItemStack tool = new ItemStack(Items.NETHERITE_SWORD);
-        tool.enchant(Enchantments.MOB_LOOTING, 10);
-        tool.enchant(Enchantments.BLOCK_FORTUNE, 3);
-        return tool;
     }
 
     public static Map<ResourceLocation, List<ItemStack>> getCacheAsMap() {
@@ -351,8 +343,7 @@ public class LootTableHelper {
 
         for (Map.Entry<String, ItemStack> entry : signatureToStack.entrySet()) {
             ItemStack stack = entry.getValue();
-            float rawChance = (signatureToDropCount.get(entry.getKey()) / (float) TOTAL_ITERATIONS) * 100.0f;
-            float chance = rawChance > 96.0f ? 100.0f : rawChance;
+            float chance = (signatureToDropCount.get(entry.getKey()) / (float) TOTAL_ITERATIONS) * 100.0f;
 
             CompoundTag tag = stack.getOrCreateTag();
             tag.putFloat("FieldGuideDropChance", chance);

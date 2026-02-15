@@ -20,6 +20,7 @@ public class SyncCategoriesPacket {
             ResourceLocation id = b.readResourceLocation();
             Category cat = new Category(id);
             cat.setSortIndex(b.readInt());
+            cat.setScannable(b.readBoolean());
 
             int entryCount = b.readInt();
             for (int i = 0; i < entryCount; i++) {
@@ -36,6 +37,7 @@ public class SyncCategoriesPacket {
         buf.writeCollection(categories, (b, cat) -> {
             b.writeResourceLocation(cat.getId());
             b.writeInt(cat.getSortIndex());
+            b.writeBoolean(cat.isScannable());
 
             b.writeInt(cat.getEntries().size());
             for (CategoryEntry entry : cat.getEntries()) {

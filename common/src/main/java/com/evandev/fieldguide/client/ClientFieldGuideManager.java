@@ -27,6 +27,7 @@ import net.minecraft.util.GsonHelper;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.boss.EnderDragonPart;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -337,12 +338,23 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
                 Constants.LOG.error("Invalid tag strategy: {}", strategy, e);
             }
         } else if ("monsters".equalsIgnoreCase(strategy) || "animals".equalsIgnoreCase(strategy)) {
+            TagKey<EntityType<?>> bossesTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation("fieldguide", "bosses"));
+
             results.addAll(BuiltInRegistries.ENTITY_TYPE.stream()
                     .filter(type -> {
+                        boolean isBoss = false;
+                        var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type);
+                        if (key.isPresent()) {
+                            var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
+                            if (holder.isPresent() && holder.get().is(bossesTag)) {
+                                isBoss = true;
+                            }
+                        }
+
                         if ("monsters".equalsIgnoreCase(strategy))
-                            return type.getCategory() == MobCategory.MONSTER;
+                            return type.getCategory() == MobCategory.MONSTER && !isBoss;
                         if ("animals".equalsIgnoreCase(strategy))
-                            return type.getCategory() != MobCategory.MONSTER && (type.getCategory() != MobCategory.MISC || SpawnEggItem.byId(type) != null);
+                            return type.getCategory() != MobCategory.MONSTER && (type.getCategory() != MobCategory.MISC || SpawnEggItem.byId(type) != null) && !isBoss;
                         return false;
                     })
                     .filter(type -> isValidEntity(type, config))
@@ -568,13 +580,22 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             double hitDistSq = Math.min(entityDist, blockDist);
 
             if (entityHit != null && entityDist < blockDist) {
-                EntityType<?> type = entityHit.getEntity().getType();
-                if (getValidEntries().contains(type) && !isUnlocked(type)) {
-                    foundTarget = entityHit.getEntity();
-                } else if (!isUnlocked(type)) {
+                Entity hitEntity = entityHit.getEntity();
+
+                if (hitEntity instanceof EnderDragonPart part) {
+                    hitEntity = part.parentMob;
+                }
+
+                EntityType<?> type = hitEntity.getType();
+                Category cat = getCategoryForEntry(type);
+                boolean isScannable = cat == null || cat.isScannable();
+
+                if (getValidEntries().contains(type) && !isUnlocked(type) && isScannable) {
+                    foundTarget = hitEntity;
+                } else if (!isUnlocked(type) && isScannable) {
                     ResourceLocation originalId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
                     if (ModConfig.get().getRedirect(originalId) != null) {
-                        foundTarget = entityHit.getEntity();
+                        foundTarget = hitEntity;
                     }
                 }
             } else if (blockHit.getType() == HitResult.Type.BLOCK) {

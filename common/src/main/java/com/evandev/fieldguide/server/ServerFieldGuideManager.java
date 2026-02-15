@@ -11,12 +11,14 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.EntityType;
@@ -32,6 +34,7 @@ import java.util.*;
 public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<ResourceLocation, Category>> {
     private static final ServerFieldGuideManager INSTANCE = new ServerFieldGuideManager();
     private final List<Object> resolvedEntries = new ArrayList<>();
+    private final Map<ResourceLocation, List<Object>> resolvedCategoryEntries = new HashMap<>();
     private Map<ResourceLocation, Category> categories = new LinkedHashMap<>();
 
     public static ServerFieldGuideManager getInstance() {
@@ -73,6 +76,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
 
     private void resolveAllCategories() {
         resolvedEntries.clear();
+        resolvedCategoryEntries.clear();
         for (Category cat : categories.values()) {
             resolveCategory(cat);
         }
@@ -112,6 +116,14 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
             }
         }
         resolvedEntries.addAll(foundEntries);
+        resolvedCategoryEntries.put(category.getId(), new ArrayList<>(foundEntries));
+    }
+
+    public Category getCategoryForEntry(Object entry) {
+        for (Map.Entry<ResourceLocation, List<Object>> cat : resolvedCategoryEntries.entrySet()) {
+            if (cat.getValue().contains(entry)) return categories.get(cat.getKey());
+        }
+        return null;
     }
 
     private List<Object> getEntriesForStrategy(String strategy) {
@@ -140,12 +152,23 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
                     .sorted(Comparator.comparing(block -> BuiltInRegistries.BLOCK.getKey(block).toString()))
                     .toList());
         } else if ("monsters".equalsIgnoreCase(strategy) || "animals".equalsIgnoreCase(strategy)) {
+            TagKey<EntityType<?>> bossesTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation("fieldguide", "bosses"));
+
             results.addAll(BuiltInRegistries.ENTITY_TYPE.stream()
                     .filter(type -> {
+                        boolean isBoss = false;
+                        var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type);
+                        if (key.isPresent()) {
+                            var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
+                            if (holder.isPresent() && holder.get().is(bossesTag)) {
+                                isBoss = true;
+                            }
+                        }
+
                         if ("monsters".equalsIgnoreCase(strategy))
-                            return type.getCategory() == MobCategory.MONSTER;
+                            return type.getCategory() == MobCategory.MONSTER && !isBoss;
                         if ("animals".equalsIgnoreCase(strategy))
-                            return type.getCategory() != MobCategory.MONSTER && (type.getCategory() != MobCategory.MISC || SpawnEggItem.byId(type) != null);
+                            return type.getCategory() != MobCategory.MONSTER && (type.getCategory() != MobCategory.MISC || SpawnEggItem.byId(type) != null) && !isBoss;
                         return false;
                     })
                     .filter(type -> type.canSummon() && !config.isEntityBlacklisted(BuiltInRegistries.ENTITY_TYPE.getKey(type)))
@@ -180,6 +203,10 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
 
                     if (json.has("sort_index")) {
                         category.setSortIndex(GsonHelper.getAsInt(json, "sort_index"));
+                    }
+
+                    if (json.has("scannable")) {
+                        category.setScannable(GsonHelper.getAsBoolean(json, "scannable"));
                     }
 
                     if (json.has("contents")) {
