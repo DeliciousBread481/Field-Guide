@@ -407,7 +407,7 @@ public class EntryRenderHelper {
 
         return (float) ((System.currentTimeMillis() / 1000.0 * speed) % 360.0);
     }
-    
+
     private static void setupBlockLighting() {
         Vector3f light0 = new Vector3f(0.2F, -1.0F, -0.7F);
         light0.normalize();

@@ -66,13 +66,19 @@ public class FieldGuideFabricClient implements ClientModInitializer {
         CoreShaderRegistrationCallback.EVENT.register(context -> {
             try {
                 context.register(
-                        new ResourceLocation(Constants.MOD_ID, "fieldguide_scan"),
-                        DefaultVertexFormat.POSITION_COLOR_TEX,
-                        program -> ModRenderTypes.SCAN_SHADER_INSTANCE = program
+                        new ResourceLocation(Constants.MOD_ID, "fieldguide_scan_block"),
+                        DefaultVertexFormat.BLOCK,
+                        program -> ModRenderTypes.SCAN_BLOCK_SHADER = program
+                );
+
+                context.register(
+                        new ResourceLocation(Constants.MOD_ID, "fieldguide_scan_entity"),
+                        DefaultVertexFormat.NEW_ENTITY,
+                        program -> ModRenderTypes.SCAN_ENTITY_SHADER = program
                 );
 
             } catch (IOException e) {
-                throw new RuntimeException("Failed to register fieldguide shader", e);
+                throw new RuntimeException("Failed to register fieldguide shaders", e);
             }
         });
 

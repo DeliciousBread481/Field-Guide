@@ -40,6 +40,21 @@ For example: `assets/minecraft/fieldguide/visuals/entries/pig.json` makes adjust
 | `rotation_speed` | Float   | (Optional) Overrides the global rotation speed setting for this specific entry.                                            |
 | `grid_scale`     | Float   | (Optional) Overrides scale specifically for the grid view.                                                                 |
 | `page_scale`     | Float   | (Optional) Overrides scale specifically for the detailed page view.                                                        |
+| `spawn_biomes`   | Array   | (Optional) List of biome IDs where this entry can be found. Useful for blocks or overriding entity biomes.                 |
+
+#### Example: Defining Biomes for a Block
+
+`assets/minecraft/fieldguide/visuals/entries/lily_pad.json`
+
+```json
+{
+  "id": "minecraft:lily_pad",
+  "spawn_biomes": [
+    "minecraft:swamp",
+    "minecraft:mangrove_swamp"
+  ]
+}
+```
 
 #### Example: Adjusting a Creeper
 

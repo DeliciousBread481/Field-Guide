@@ -1,5 +1,9 @@
 package com.evandev.fieldguide.client.data;
 
+import net.minecraft.resources.ResourceLocation;
+
+import java.util.List;
+
 public class EntryVisual {
     // Global defaults
     public float scale = 1.0f;
@@ -7,6 +11,7 @@ public class EntryVisual {
     public float xOffset = 0.0f;
     public Boolean autoRotate = null;
     public Float rotationSpeed = null;
+    public List<ResourceLocation> spawnBiomes = null;
 
     // Grid Overrides
     public Float gridScale = null;

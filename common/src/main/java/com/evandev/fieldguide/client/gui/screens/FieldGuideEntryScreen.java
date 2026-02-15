@@ -3,6 +3,7 @@ package com.evandev.fieldguide.client.gui.screens;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
+import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.gui.widget.PageTurnButton;
@@ -13,6 +14,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -23,6 +26,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -34,11 +38,10 @@ public class FieldGuideEntryScreen extends BookScreen {
     private final BookScreen parent;
     private final Object entry;
     private final List<ResourceLocation> spawnBiomes = new ArrayList<>();
+    private final int biomesPerPage = 6;
     private Entity renderedEntity;
     private long lastClickTime = 0;
-    private boolean isCommonSpawn = false;
     private int currentBiomePage = 1;
-    private final int biomesPerPage = 6;
     private ResourceLocation hoveredBiome;
     private ItemStack hoveredItem;
     private ImageButton prevBiomePageButton;
@@ -61,6 +64,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     @Override
     protected void init() {
         super.init();
+        spawnBiomes.clear();
 
         if (entry instanceof EntityType<?> type) {
             if (this.minecraft != null && this.minecraft.level != null) {
@@ -71,9 +75,15 @@ public class FieldGuideEntryScreen extends BookScreen {
                     this.renderedEntity = null;
                 }
             }
+        }
 
+        ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
+        EntryVisual visual = entryId != null ? ClientFieldGuideManager.getInstance().getEntryVisual(entryId) : null;
+
+        if (visual != null && visual.spawnBiomes != null) {
+            spawnBiomes.addAll(visual.spawnBiomes);
+        } else if (entry instanceof EntityType<?> entityType) {
             if (Services.PLATFORM.isModLoaded("immersiveoverlays")) {
-                spawnBiomes.clear();
                 Registry<Biome> biomeRegistry = null;
                 if (this.minecraft.level != null) {
                     biomeRegistry = this.minecraft.level.registryAccess().registryOrThrow(Registries.BIOME);
@@ -81,13 +91,13 @@ public class FieldGuideEntryScreen extends BookScreen {
 
                 try {
                     if (biomeRegistry != null) {
-                        for (var entry : biomeRegistry.entrySet()) {
-                            ResourceLocation id = entry.getKey().location();
-                            Biome biome = entry.getValue();
+                        for (var biomeEntry : biomeRegistry.entrySet()) {
+                            ResourceLocation id = biomeEntry.getKey().location();
+                            Biome biome = biomeEntry.getValue();
 
-                            var spawns = biome.getMobSettings().getMobs(type.getCategory());
+                            var spawns = biome.getMobSettings().getMobs(entityType.getCategory());
 
-                            if (spawns.unwrap().stream().anyMatch(s -> s.type == type)) {
+                            if (spawns.unwrap().stream().anyMatch(s -> s.type == entityType)) {
                                 ResourceLocation texture = new ResourceLocation(id.getNamespace(), "textures/immersiveoverlays/" + id.getPath() + ".png");
                                 if (this.minecraft.getResourceManager().getResource(texture).isPresent()) {
                                     spawnBiomes.add(id);
@@ -95,20 +105,13 @@ public class FieldGuideEntryScreen extends BookScreen {
                             }
                         }
                     }
-
-                    // Disabled while testing pagination. Does this still make sense to keep?
-//                    if (spawnBiomes.size() > 16) {
-//                        this.isCommonSpawn = true;
-//                        spawnBiomes.clear();
-//                        spawnBiomes.add(new ResourceLocation("minecraft", "plains"));  // TODO: generic icon?
-//                    }
-
                 } catch (Exception e) {
                     Constants.LOG.error("Failed to load spawn biomes for Field Guide", e);
                 }
             }
         }
 
+        // Add Navigation Buttons
         this.addRenderableWidget(new PageTurnButton(
                 this.bounds.right() + 9 - 24,
                 this.bounds.top() + 26,
@@ -149,6 +152,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                 48,
                 b -> currentBiomePage = Math.max(1, currentBiomePage - 1)
         );
+
         nextBiomePageButton.visible = false;
         prevBiomePageButton.visible = false;
         this.addRenderableWidget(nextBiomePageButton);
@@ -165,7 +169,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (super.mouseClicked(mouseX, mouseY, button)) return true;
 
-        if (button == 0 && renderedEntity != null) {
+        if (button == 0 && (renderedEntity != null || entry instanceof Block)) {
             int xPos = leftPageBounds.left() + leftPageBounds.width() / 2;
             int yPos = leftPageBounds.y_center();
             int halfSize = 50;
@@ -174,8 +178,14 @@ public class FieldGuideEntryScreen extends BookScreen {
                     mouseY >= yPos - halfSize && mouseY <= yPos + halfSize) {
 
                 if (ClientFieldGuideManager.isUnlocked(entry)) {
-                    FieldGuideClient.playMobCry(this.renderedEntity);
-
+                    if (entry instanceof EntityType<?> && renderedEntity != null) {
+                        FieldGuideClient.playMobCry(this.renderedEntity);
+                    } else if (entry instanceof Block block) {
+                        if (this.minecraft != null) {
+                            SoundType soundType = block.defaultBlockState().getSoundType();
+                            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(soundType.getBreakSound(), 1.0F, 1.0F));
+                        }
+                    }
                     this.lastClickTime = System.currentTimeMillis();
                 }
                 return true;
@@ -185,7 +195,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             Minecraft.getInstance().setScreen(new FieldGuideScreen("=^" + hoveredItem.getHoverName().getString().toLowerCase(Locale.ROOT), this));
         }
         if (button == 0 && hoveredBiome != null) {
-            Minecraft.getInstance().setScreen(new FieldGuideScreen("=!" + hoveredBiome.toString(), this));
+            Minecraft.getInstance().setScreen(new FieldGuideScreen("=!" + hoveredBiome, this));
         }
         return false;
     }
@@ -198,7 +208,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         int yPos = leftPageBounds.top() + 13;
 
-        String health = String.valueOf((int)entity.getMaxHealth() / 2);
+        String health = String.valueOf((int) entity.getMaxHealth() / 2);
         String armor = String.valueOf(entity.getArmorValue());
         boolean showArmor = !armor.equals("0");
 
@@ -268,12 +278,8 @@ public class FieldGuideEntryScreen extends BookScreen {
                 guiGraphics.blit(texture, x, biomeStartY, 0, 0, biomeIconSize, biomeIconSize, biomeIconSize, biomeIconSize);
 
                 if (Bounds.isMouseOver(mouseX, mouseY, x, biomeStartY, biomeIconSize, biomeIconSize)) {
-                    if (isCommonSpawn) {
-                        tooltipText = Component.translatable("fieldguide.tooltip.common_spawn");
-                    } else {
-                        hoveredBiome = biomeId;
-                        tooltipText = Component.translatable("biome." + biomeId.getNamespace() + "." + biomeId.getPath());
-                    }
+                    hoveredBiome = biomeId;
+                    tooltipText = Component.translatable("biome." + biomeId.getNamespace() + "." + biomeId.getPath());
                 }
             }
 
@@ -324,7 +330,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         List<List<ItemStack>> dropLines = new ArrayList<>();
         int dropItemSize = 20;
         int dropSpacing = 1;
-        int dropStartY = 0;
+        int dropStartY;
 
         if (unlocked) {
             List<ItemStack> drops = ClientFieldGuideManager.getInstance().getDrops(entry);
@@ -376,7 +382,14 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         // Render Tooltip
         if (tooltipStack != null) {
-            guiGraphics.renderTooltip(this.font, tooltipStack, mouseX, mouseY);
+            List<Component> tooltip = new ArrayList<>(Screen.getTooltipFromItem(Objects.requireNonNull(this.minecraft), tooltipStack));
+
+            if (tooltipStack.hasTag() && Objects.requireNonNull(tooltipStack.getTag()).contains("FieldGuideDropChance")) {
+                float chance = tooltipStack.getTag().getFloat("FieldGuideDropChance");
+                tooltip.add(Component.literal(String.format(Locale.ROOT, "Drop Chance: %.1f%%", chance)).withStyle(net.minecraft.ChatFormatting.GRAY));
+            }
+
+            guiGraphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
         } else if (tooltipText != null) {
             guiGraphics.renderTooltip(this.font, tooltipText, mouseX, mouseY);
         }

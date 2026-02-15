@@ -34,6 +34,9 @@ public class ModConfig {
     public double scanSpeed = 1.0D;
     public double scanDistance = 64.0D;
 
+    public boolean grantXpOnScan = true;
+    public int xpAmountOnScan = 5;
+
     public String scanOverlayColor = "#FFFFFF";
     public double scanOverlayAlpha = 0.5D;
 

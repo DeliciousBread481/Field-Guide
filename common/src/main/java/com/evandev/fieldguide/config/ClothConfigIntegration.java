@@ -68,6 +68,20 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.scanDistance = newValue)
                 .build());
 
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.grant_xp_on_scan"), config.grantXpOnScan)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.fieldguide.grant_xp_on_scan.tooltip"))
+                .setSaveConsumer(newValue -> config.grantXpOnScan = newValue)
+                .build());
+
+        general.addEntry(entryBuilder.startIntField(Component.translatable("option.fieldguide.xp_amount_on_scan"), config.xpAmountOnScan)
+                .setDefaultValue(5)
+                .setMin(0)
+                .setMax(1000)
+                .setTooltip(Component.translatable("option.fieldguide.xp_amount_on_scan.tooltip"))
+                .setSaveConsumer(newValue -> config.xpAmountOnScan = newValue)
+                .build());
+
         // Interface
         ConfigCategory interfaceCat = builder.getOrCreateCategory(Component.translatable("category.fieldguide.interface"));
 

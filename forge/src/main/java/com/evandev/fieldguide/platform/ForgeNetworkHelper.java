@@ -1,6 +1,8 @@
 package com.evandev.fieldguide.platform;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.FieldGuideMod;
+import com.evandev.fieldguide.network.ClaimXpPacket;
 import com.evandev.fieldguide.network.GrantContentPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
@@ -22,9 +24,10 @@ public class ForgeNetworkHelper implements INetworkHelper {
 
     public static void register() {
         int id = 0;
-        CHANNEL.registerMessage(id++, SyncLootPacket.class, SyncLootPacket::encode, SyncLootPacket::new, com.evandev.fieldguide.FieldGuideMod::handleSyncLoot);
-        CHANNEL.registerMessage(id++, SyncCategoriesPacket.class, SyncCategoriesPacket::encode, SyncCategoriesPacket::new, com.evandev.fieldguide.FieldGuideMod::handleSyncCategories);
-        CHANNEL.registerMessage(id++, GrantContentPacket.class, GrantContentPacket::encode, GrantContentPacket::new, com.evandev.fieldguide.FieldGuideMod::handleGrantContent);
+        CHANNEL.registerMessage(id++, SyncLootPacket.class, SyncLootPacket::encode, SyncLootPacket::new, FieldGuideMod::handleSyncLoot);
+        CHANNEL.registerMessage(id++, SyncCategoriesPacket.class, SyncCategoriesPacket::encode, SyncCategoriesPacket::new, FieldGuideMod::handleSyncCategories);
+        CHANNEL.registerMessage(id++, GrantContentPacket.class, GrantContentPacket::encode, GrantContentPacket::new, FieldGuideMod::handleGrantContent);
+        CHANNEL.registerMessage(id++, ClaimXpPacket.class, ClaimXpPacket::encode, ClaimXpPacket::new, FieldGuideMod::handleClaimXp);
     }
 
     @Override

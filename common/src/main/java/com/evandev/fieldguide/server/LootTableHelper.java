@@ -26,6 +26,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
@@ -45,7 +46,7 @@ public class LootTableHelper {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     private static File getCacheFile(ServerLevel level) {
-        return level.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.GENERATED_DIR)
+        return level.getServer().getWorldPath(LevelResource.GENERATED_DIR)
                 .resolve("fieldguide").resolve("loot_cache.json").toFile();
     }
 
@@ -73,7 +74,7 @@ public class LootTableHelper {
 
         int processed = 0;
         for (Object entry : entries) {
-            List<ItemStack> allDrops = new ArrayList<>();
+            List<List<ItemStack>> allDrops = new ArrayList<>();
             if (entry instanceof EntityType<?> type) {
                 handleEntityDrops(level, fakePlayer, type, allDrops);
             } else if (entry instanceof Block block) {
@@ -190,7 +191,7 @@ public class LootTableHelper {
         return null;
     }
 
-    private static void handleEntityDrops(ServerLevel level, ServerPlayer player, EntityType<?> type, List<ItemStack> allDrops) {
+    private static void handleEntityDrops(ServerLevel level, ServerPlayer player, EntityType<?> type, List<List<ItemStack>> allDrops) {
         ResourceLocation lootTableId = type.getDefaultLootTable();
 
         Entity dummy = type.create(level);
@@ -224,7 +225,9 @@ public class LootTableHelper {
             LootParams params = paramsBuilder.create(LootContextParamSets.ENTITY);
 
             for (int r = 0; r < TOTAL_ITERATIONS; r++) {
-                table.getRandomItems(params, allDrops::add);
+                List<ItemStack> iterDrops = new ArrayList<>();
+                table.getRandomItems(params, iterDrops::add);
+                allDrops.add(iterDrops);
             }
         } catch (Exception e) {
             ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
@@ -234,7 +237,7 @@ public class LootTableHelper {
         }
     }
 
-    private static void handleBlockDrops(ServerLevel level, ServerPlayer player, Block block, ItemStack tool, List<ItemStack> allDrops) {
+    private static void handleBlockDrops(ServerLevel level, ServerPlayer player, Block block, ItemStack tool, List<List<ItemStack>> allDrops) {
         ResourceLocation lootTableId = block.getLootTable();
         if (lootTableId.toString().equals("minecraft:empty")) return;
 
@@ -256,7 +259,9 @@ public class LootTableHelper {
         LootParams params = paramsBuilder.create(LootContextParamSets.BLOCK);
 
         for (int i = 0; i < TOTAL_ITERATIONS; i++) {
-            table.getRandomItems(params, allDrops::add);
+            List<ItemStack> iterDrops = new ArrayList<>();
+            table.getRandomItems(params, iterDrops::add);
+            allDrops.add(iterDrops);
         }
     }
 
@@ -302,38 +307,56 @@ public class LootTableHelper {
         }
     }
 
-    private static List<ItemStack> processDrops(List<ItemStack> allDrops) {
+    private static List<ItemStack> processDrops(List<List<ItemStack>> allDrops) {
         List<ItemStack> distinctDrops = new ArrayList<>();
-        Set<String> seenSignatures = new HashSet<>();
+        Map<String, ItemStack> signatureToStack = new HashMap<>();
+        Map<String, Integer> signatureToDropCount = new HashMap<>();
 
-        for (ItemStack stack : allDrops) {
-            if (stack.isEmpty()) continue;
+        for (List<ItemStack> iterDrops : allDrops) {
+            Set<String> seenThisIter = new HashSet<>();
+            for (ItemStack stack : iterDrops) {
+                if (stack.isEmpty()) continue;
 
-            ItemStack displayStack = stack.copy();
-            displayStack.setCount(1);
+                ItemStack displayStack = stack.copy();
+                displayStack.setCount(1);
 
-            if (displayStack.isDamageableItem()) {
-                displayStack.setDamageValue(0);
-            }
-
-            if (displayStack.hasTag()) {
-                CompoundTag tag = displayStack.getTag();
-                if (tag != null) {
-                    tag.remove("Enchantments");
-                    tag.remove("StoredEnchantments");
-                    tag.remove("Damage");
-                    if (tag.isEmpty()) displayStack.setTag(null);
+                if (displayStack.isDamageableItem()) {
+                    displayStack.setDamageValue(0);
                 }
-            }
 
-            String signature = BuiltInRegistries.ITEM.getKey(displayStack.getItem()).toString();
-            if (displayStack.hasTag()) {
-                signature += Objects.requireNonNull(displayStack.getTag()).toString();
-            }
+                if (displayStack.hasTag()) {
+                    CompoundTag tag = displayStack.getTag();
+                    if (tag != null) {
+                        tag.remove("Enchantments");
+                        tag.remove("StoredEnchantments");
+                        tag.remove("Damage");
+                        if (tag.isEmpty()) displayStack.setTag(null);
+                    }
+                }
 
-            if (seenSignatures.add(signature)) {
-                distinctDrops.add(displayStack);
+                String signature = BuiltInRegistries.ITEM.getKey(displayStack.getItem()).toString();
+                if (displayStack.hasTag()) {
+                    signature += Objects.requireNonNull(displayStack.getTag()).toString();
+                }
+
+                if (!signatureToStack.containsKey(signature)) {
+                    signatureToStack.put(signature, displayStack);
+                }
+                seenThisIter.add(signature);
             }
+            for (String sig : seenThisIter) {
+                signatureToDropCount.put(sig, signatureToDropCount.getOrDefault(sig, 0) + 1);
+            }
+        }
+
+        for (Map.Entry<String, ItemStack> entry : signatureToStack.entrySet()) {
+            ItemStack stack = entry.getValue();
+            float chance = (signatureToDropCount.get(entry.getKey()) / (float) TOTAL_ITERATIONS) * 100.0f;
+
+            CompoundTag tag = stack.getOrCreateTag();
+            tag.putFloat("FieldGuideDropChance", chance);
+
+            distinctDrops.add(stack);
         }
 
         distinctDrops.sort(Comparator.comparing(s -> s.getHoverName().getString()));

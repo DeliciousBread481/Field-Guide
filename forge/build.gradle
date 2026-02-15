@@ -50,7 +50,7 @@ dependencies {
     modRuntimeOnly "maven.modrinth:item-descriptions:${item_descriptions_version}-forge"
 
     // EMI
-    modRuntimeOnly "dev.emi:emi-forge:${emi_version}"
+    modImplementation "dev.emi:emi-forge:${emi_version}"
 
     // Cloth Config
     modImplementation "me.shedaniel.cloth:cloth-config-forge:${cloth_config_version}"

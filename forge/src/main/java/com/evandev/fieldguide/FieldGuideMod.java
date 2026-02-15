@@ -4,6 +4,7 @@ import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.ModRenderTypes;
 import com.evandev.fieldguide.config.ClothConfigIntegration;
+import com.evandev.fieldguide.network.ClaimXpPacket;
 import com.evandev.fieldguide.network.GrantContentPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
@@ -85,11 +86,26 @@ public class FieldGuideMod {
         context.setPacketHandled(true);
     }
 
+    public static void handleClaimXp(ClaimXpPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
+        NetworkEvent.Context context = contextSupplier.get();
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            packet.handleServer(player);
+        });
+        context.setPacketHandled(true);
+    }
+
     public void registerShaders(RegisterShadersEvent event) {
         try {
             ModRenderTypes.registerShaders(instance -> {
+                String shaderName = instance.getName();
+
                 event.registerShader(instance, loadedShader -> {
-                    ModRenderTypes.SCAN_SHADER_INSTANCE = loadedShader;
+                    if (shaderName.contains("fieldguide_scan_block")) {
+                        ModRenderTypes.SCAN_BLOCK_SHADER = loadedShader;
+                    } else if (shaderName.contains("fieldguide_scan_entity")) {
+                        ModRenderTypes.SCAN_ENTITY_SHADER = loadedShader;
+                    }
                 });
             }, event.getResourceProvider());
         } catch (IOException e) {

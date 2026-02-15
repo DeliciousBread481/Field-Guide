@@ -8,12 +8,11 @@
     "MobAccessor"
   ],
   "client": [
-    "client.EntityRenderDispatcherMixin",
     "client.GuiMixin",
     "client.InventoryScreenMixin",
     "client.LevelRendererMixin",
-    "client.LivingEntityRendererMixin",
-    "client.PauseScreenMixin"
+    "client.PauseScreenMixin",
+    "client.ScreenMixin"
   ],
   "server": [
   ],

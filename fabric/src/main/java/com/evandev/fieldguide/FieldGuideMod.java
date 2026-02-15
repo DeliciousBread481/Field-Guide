@@ -1,11 +1,14 @@
 package com.evandev.fieldguide;
 
+import com.evandev.fieldguide.network.ClaimXpPacket;
+import com.evandev.fieldguide.platform.FabricNetworkHelper;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.command.FieldGuideCommand;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.minecraft.resources.ResourceLocation;
@@ -39,9 +42,12 @@ public class FieldGuideMod implements ModInitializer {
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> ServerFieldGuideManager.getInstance().syncToPlayer(handler.player));
 
-        ServerLifecycleEvents.SERVER_STARTED.register(server ->
-                ServerFieldGuideManager.getInstance().onServerStarted(server)
-        );
+        ServerLifecycleEvents.SERVER_STARTED.register(server -> ServerFieldGuideManager.getInstance().onServerStarted(server));
+
+        ServerPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.CLAIM_XP_CHANNEL, (server, player, handler, buf, responseSender) -> {
+            ClaimXpPacket packet = new ClaimXpPacket(buf);
+            server.execute(() -> packet.handleServer(player));
+        });
 
     }
 }

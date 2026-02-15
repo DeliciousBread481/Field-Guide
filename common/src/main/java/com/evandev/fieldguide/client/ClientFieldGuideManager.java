@@ -8,6 +8,8 @@ import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CategoryEntry;
+import com.evandev.fieldguide.network.ClaimXpPacket;
+import com.evandev.fieldguide.platform.Services;
 import com.google.gson.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
@@ -212,6 +214,13 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             if (json.has("page_scale")) visual.pageScale = GsonHelper.getAsFloat(json, "page_scale");
             if (json.has("page_y_offset")) visual.pageYOffset = GsonHelper.getAsFloat(json, "page_y_offset");
             if (json.has("page_x_offset")) visual.pageXOffset = GsonHelper.getAsFloat(json, "page_x_offset");
+
+            if (json.has("spawn_biomes")) {
+                visual.spawnBiomes = new ArrayList<>();
+                for (JsonElement el : GsonHelper.getAsJsonArray(json, "spawn_biomes")) {
+                    visual.spawnBiomes.add(new ResourceLocation(el.getAsString()));
+                }
+            }
 
             entryVisuals.put(targetId, visual);
         });
@@ -423,12 +432,12 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
                 if (dropCache.containsKey(entry)) {
                     List<ItemStack> drops = dropCache.get(entry);
                     boolean match = drops.stream().anyMatch(stack -> {
-                            if (exactMatch) {
-                                return stack.getHoverName().getString().toLowerCase(Locale.ROOT).equals(dropQuery);
-                            } else {
-                                return stack.getHoverName().getString().toLowerCase(Locale.ROOT).contains(dropQuery);
+                                if (exactMatch) {
+                                    return stack.getHoverName().getString().toLowerCase(Locale.ROOT).equals(dropQuery);
+                                } else {
+                                    return stack.getHoverName().getString().toLowerCase(Locale.ROOT).contains(dropQuery);
+                                }
                             }
-                        }
                     );
                     if (match) results.add(entry);
                 }
@@ -629,6 +638,12 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
                             unlock(targetKey);
                             minecraft.player.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
+
+                            if (ModConfig.get().grantXpOnScan && ModConfig.get().xpAmountOnScan > 0) {
+                                Services.NETWORK.sendToServer(
+                                        new ClaimXpPacket(ModConfig.get().xpAmountOnScan)
+                                );
+                            }
 
                             fadingTarget = foundTarget;
                             if (foundTarget instanceof Block) {
