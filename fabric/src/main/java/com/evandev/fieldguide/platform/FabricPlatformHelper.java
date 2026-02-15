@@ -28,9 +28,4 @@ public class FabricPlatformHelper implements IPlatformHelper {
     public Path getConfigDirectory() {
         return FabricLoader.getInstance().getConfigDir();
     }
-
-    @Override
-    public ServerPlayer getFakePlayer(ServerLevel level) {
-        return FakePlayer.get(level);
-    }
 }

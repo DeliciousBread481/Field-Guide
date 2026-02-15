@@ -33,9 +33,9 @@ import java.util.*;
 
 public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<ResourceLocation, Category>> {
     private static final ServerFieldGuideManager INSTANCE = new ServerFieldGuideManager();
-    private final List<Object> resolvedEntries = new ArrayList<>();
     private final Map<ResourceLocation, List<Object>> resolvedCategoryEntries = new HashMap<>();
     private Map<ResourceLocation, Category> categories = new LinkedHashMap<>();
+    private Map<ResourceLocation, List<ItemStack>> serverLootCache = new HashMap<>();
 
     public static ServerFieldGuideManager getInstance() {
         return INSTANCE;
@@ -49,33 +49,12 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
         List<Category> categoryList = new ArrayList<>(categories.values());
         Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(categoryList), player);
 
-        Map<ResourceLocation, List<ItemStack>> lootCache = LootTableHelper.getCacheAsMap();
-        if (!lootCache.isEmpty()) {
-            Services.NETWORK.sendToPlayer(new SyncLootPacket(lootCache), player);
-        }
-    }
-
-    public void reload(MinecraftServer server) {
-        long start = System.currentTimeMillis();
-        Constants.LOG.info("FieldGuide: Starting manual reload...");
-
-        resolveAllCategories();
-        LootTableHelper.clearCache();
-
-        LootTableHelper.generateAll(server.overworld(), resolvedEntries);
-        syncToAll(server);
-
-        Constants.LOG.info("FieldGuide: Reload complete in {}ms", System.currentTimeMillis() - start);
-    }
-
-    public void syncToAll(MinecraftServer server) {
-        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            syncToPlayer(player);
+        if (!serverLootCache.isEmpty()) {
+            Services.NETWORK.sendToPlayer(new SyncLootPacket(serverLootCache), player);
         }
     }
 
     private void resolveAllCategories() {
-        resolvedEntries.clear();
         resolvedCategoryEntries.clear();
         for (Category cat : categories.values()) {
             resolveCategory(cat);
@@ -84,18 +63,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
 
     public void onServerStarted(MinecraftServer server) {
         resolveAllCategories();
-
-        server.overworld();
-        LootTableHelper.tryLoadCache(server.overworld());
-
-        List<Object> missingEntries = resolvedEntries.stream()
-                .filter(entry -> !LootTableHelper.containsEntry(entry))
-                .toList();
-
-        if (!missingEntries.isEmpty()) {
-            Constants.LOG.info("FieldGuide: Detected {} missing loot entries. Generating...", missingEntries.size());
-            LootTableHelper.generateAll(server.overworld(), missingEntries);
-        }
+        this.serverLootCache = LootTableHelper.generateLootMap(server.overworld());
     }
 
     private void resolveCategory(Category category) {
@@ -115,7 +83,6 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
                 foundEntries.addAll(getEntriesForStrategy(entry.strategy()));
             }
         }
-        resolvedEntries.addAll(foundEntries);
         resolvedCategoryEntries.put(category.getId(), new ArrayList<>(foundEntries));
     }
 
@@ -231,6 +198,18 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
             map.put(categoryId, category);
         }
         return map;
+    }
+
+    public void syncToAll(MinecraftServer server) {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            syncToPlayer(player);
+        }
+    }
+
+    public void reload(MinecraftServer server) {
+        resolveAllCategories();
+        this.serverLootCache = LootTableHelper.generateLootMap(server.overworld());
+        syncToAll(server);
     }
 
     @Override

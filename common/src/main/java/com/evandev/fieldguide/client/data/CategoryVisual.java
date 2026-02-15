@@ -6,7 +6,7 @@ public class CategoryVisual {
     public static final CategoryVisual DEFAULT = new CategoryVisual();
 
     public String color = "#FFFFFF";
-    public ResourceLocation icon = new ResourceLocation("minecraft:book");
+    public ResourceLocation icon = new ResourceLocation("minecraft:textures/item/book.png");
 
     public int getColorInt() {
         try {
