@@ -1,9 +1,11 @@
 package com.evandev.fieldguide.config;
 
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -21,6 +23,10 @@ public class ClothConfigIntegration {
         builder.setSavingRunnable(() -> {
             ModConfig.save();
             ClientFieldGuideManager.clearCache();
+
+            if (Minecraft.getInstance().hasSingleplayerServer() && Minecraft.getInstance().getSingleplayerServer() != null) {
+                Minecraft.getInstance().getSingleplayerServer().execute(() -> ServerFieldGuideManager.getInstance().reload(Minecraft.getInstance().getSingleplayerServer()));
+            }
         });
 
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();

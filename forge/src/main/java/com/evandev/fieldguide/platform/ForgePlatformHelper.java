@@ -1,9 +1,6 @@
 package com.evandev.fieldguide.platform;
 
 import com.evandev.fieldguide.platform.services.IPlatformHelper;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -30,10 +27,5 @@ public class ForgePlatformHelper implements IPlatformHelper {
     @Override
     public Path getConfigDirectory() {
         return FMLPaths.CONFIGDIR.get();
-    }
-
-    @Override
-    public ServerPlayer getFakePlayer(ServerLevel level) {
-        return FakePlayerFactory.getMinecraft(level);
     }
 }

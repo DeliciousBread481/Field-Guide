@@ -23,9 +23,6 @@ public class FieldGuideCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("fieldguide")
                 .requires(source -> source.hasPermission(2))
-                .then(Commands.literal("reload")
-                        .executes(ctx -> reload(ctx.getSource()))
-                )
                 .then(Commands.literal("grant")
                         .then(Commands.argument("targets", EntityArgument.players())
                                 .then(Commands.literal("everything")
@@ -98,17 +95,6 @@ public class FieldGuideCommand {
         }
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.entry.success", entryId), true);
         return targets.size();
-    }
-
-    private static int reload(CommandSourceStack source) {
-        source.sendSuccess(() -> Component.translatable("commands.fieldguide.reload.started"), true);
-
-        source.getServer().execute(() -> {
-            ServerFieldGuideManager.getInstance().reload(source.getServer());
-            source.sendSuccess(() -> Component.translatable("commands.fieldguide.reload.success"), true);
-        });
-
-        return 1;
     }
 
     private static int revokeEverything(CommandSourceStack source, Collection<ServerPlayer> targets) {
