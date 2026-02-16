@@ -172,10 +172,6 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
                         category.setSortIndex(GsonHelper.getAsInt(json, "sort_index"));
                     }
 
-                    if (json.has("scannable")) {
-                        category.setScannable(GsonHelper.getAsBoolean(json, "scannable"));
-                    }
-
                     if (json.has("contents")) {
                         JsonArray contents = GsonHelper.getAsJsonArray(json, "contents");
                         for (JsonElement el : contents) {

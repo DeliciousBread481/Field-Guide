@@ -647,7 +647,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
                 EntityType<?> type = hitEntity.getType();
                 Category cat = getCategoryForEntry(type);
-                boolean isScannable = cat == null || cat.isScannable();
+                boolean isScannable = cat == null;
 
                 TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation("fieldguide", "kill_to_unlock"));
                 boolean requiresKill = false;

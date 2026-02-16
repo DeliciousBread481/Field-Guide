@@ -9,7 +9,6 @@ public class Category {
     private final ResourceLocation id;
     private final List<CategoryEntry> entries = new ArrayList<>();
     private int sortIndex = 0;
-    private boolean scannable = true;
 
     public Category(ResourceLocation id) {
         this.id = id;
@@ -35,11 +34,4 @@ public class Category {
         this.entries.add(entry);
     }
 
-    public boolean isScannable() {
-        return scannable;
-    }
-
-    public void setScannable(boolean scannable) {
-        this.scannable = scannable;
-    }
 }

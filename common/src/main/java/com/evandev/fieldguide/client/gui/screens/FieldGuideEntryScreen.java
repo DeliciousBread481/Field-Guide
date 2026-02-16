@@ -19,9 +19,11 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -529,7 +531,39 @@ public class FieldGuideEntryScreen extends BookScreen {
                 guiGraphics.drawString(this.font, cursorChar, cursorX, cursorY, ModConfig.get().getTextColorInt(), false);
             }
         } else {
-            guiGraphics.drawWordWrap(font, Component.literal(Component.translatable("fieldguide.description.locked").getString()), textX, textY, textAreaWidth, ModConfig.get().getTextMutedColorInt());
+            ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+            String lockedKey = "fieldguide.description.locked"; // Generic fallback
+
+            if (id != null) {
+                String specificKey = "fieldguide.description.locked." + id.getNamespace() + "." + id.getPath();
+                String shortKey = "fieldguide.description.locked." + id.getPath();
+
+                if (I18n.exists(specificKey)) {
+                    lockedKey = specificKey;
+                } else if (I18n.exists(shortKey)) {
+                    lockedKey = shortKey;
+                } else if (entry instanceof EntityType<?> type) {
+                    var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type);
+                    boolean requiresKill = false;
+                    if (key.isPresent()) {
+                        var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
+                        TagKey<EntityType<?>> killTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation("fieldguide", "kill_to_unlock"));
+                        if (holder.isPresent() && holder.get().is(killTag)) {
+                            requiresKill = true;
+                        }
+                    }
+
+                    if (requiresKill) {
+                        lockedKey = "fieldguide.description.locked.kill";
+                    } else if (!ModConfig.get().requireSpyglass) {
+                        lockedKey = "fieldguide.description.locked.no_spyglass";
+                    }
+                } else if (!ModConfig.get().requireSpyglass) {
+                    lockedKey = "fieldguide.description.locked.no_spyglass";
+                }
+            }
+
+            guiGraphics.drawWordWrap(font, Component.translatable(lockedKey), textX, textY, textAreaWidth, ModConfig.get().getTextMutedColorInt());
         }
 
         // Drops
