@@ -11,6 +11,7 @@ import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.platform.Services;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
@@ -218,7 +219,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         // Draw Health
         guiGraphics.blit(Constants.ATTRIBUTES_TEXTURE, xPos, yPos, 0, 0, iconSize, iconSize, 32, 32);
-        guiGraphics.drawString(this.font, health, xPos + iconSize + iconSpacing, yPos + 1, Constants.TEXT_COLOR, false);
+        guiGraphics.drawString(this.font, health, xPos + iconSize + iconSpacing, yPos + 1, ModConfig.get().getTextColorInt(), false);
 
         // Draw Frame
         guiGraphics.blit(Constants.HEALTH_FRAME_TEXTURE, xPos - 9, yPos - 4, 0, 0, 8, 16, 16, 16);
@@ -228,7 +229,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             // Draw Armor
             xPos = xPos + healthWidth + gap;
             guiGraphics.blit(Constants.ATTRIBUTES_TEXTURE, xPos, yPos, 0, iconSize, iconSize, iconSize, 32, 32);
-            guiGraphics.drawString(this.font, armor, xPos + iconSize + iconSpacing, yPos + 1, Constants.TEXT_COLOR, false);
+            guiGraphics.drawString(this.font, armor, xPos + iconSize + iconSpacing, yPos + 1, ModConfig.get().getTextColorInt(), false);
         }
     }
 
@@ -254,7 +255,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         // Entry Name
         int titleY = this.leftPageBounds.top() + 8;
-        guiGraphics.drawString(this.font, title, this.rightPageBounds.left() + 5, titleY, unlocked ? Constants.TEXT_TITLE_COLOR : Constants.TEXT_MUTED_COLOR, false);
+        guiGraphics.drawString(this.font, title, this.rightPageBounds.left() + 5, titleY, unlocked ? ModConfig.get().getTextTitleColorInt() : ModConfig.get().getTextMutedColorInt(), false);
 
         // Spawn Biomes
         int biomeIconSize = 16;
@@ -301,6 +302,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
                 // Render Background
                 guiGraphics.fill(bounds.left(), bounds.top(), bounds.right(), bounds.bottom(), 0xFFF9EED0);
+
                 // Render Bar
                 guiGraphics.fill(barStart, bounds.top(), barEnd, bounds.bottom(), 0xFFE0D2AE);
             }
@@ -327,7 +329,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                 EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, false, 0, true, bounce);
                 renderAttributes(guiGraphics, living);
             } else {
-                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, true, Constants.DETAILS_SILHOUETTE_COLOR, true, bounce);
+                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, true, ModConfig.get().getDetailsSilhouetteColorInt(), true, bounce);
             }
         } else if (entry instanceof Block block) {
             EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 30.0F, !unlocked, true, bounce);
@@ -345,12 +347,12 @@ public class FieldGuideEntryScreen extends BookScreen {
                 // TODO: Add config for date format?
                 String dateStr = new SimpleDateFormat("MMM dd, yyyy").format(new Date(discoveryTime));
                 Component dateComp = Component.literal(dateStr);
-                guiGraphics.drawString(this.font, dateComp, this.rightPageBounds.right() - this.font.width(dateComp), this.rightPageBounds.bottom() - 58, Constants.TEXT_MUTED_COLOR, false);
+                guiGraphics.drawString(this.font, dateComp, this.rightPageBounds.right() - this.font.width(dateComp), this.rightPageBounds.bottom() - 58, ModConfig.get().getTextMutedColorInt(), false);
             }
 
-            guiGraphics.drawWordWrap(font, Component.literal(ClientFieldGuideManager.getEntryDescription(entry)), textX, textY, textAreaWidth, Constants.TEXT_COLOR);
+            guiGraphics.drawWordWrap(font, Component.literal(ClientFieldGuideManager.getEntryDescription(entry)), textX, textY, textAreaWidth, ModConfig.get().getTextColorInt());
         } else {
-            guiGraphics.drawWordWrap(font, Component.literal(Component.translatable("fieldguide.description.locked").getString()), textX, textY, textAreaWidth, Constants.TEXT_MUTED_COLOR);
+            guiGraphics.drawWordWrap(font, Component.literal(Component.translatable("fieldguide.description.locked").getString()), textX, textY, textAreaWidth, ModConfig.get().getTextMutedColorInt());
         }
 
         // Drops
@@ -413,7 +415,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
             if (tooltipStack.hasTag() && Objects.requireNonNull(tooltipStack.getTag()).contains("FieldGuideDropChance")) {
                 float chance = tooltipStack.getTag().getFloat("FieldGuideDropChance");
-                tooltip.add(Component.literal(String.format(Locale.ROOT, "%.1f%%", chance)).withStyle(net.minecraft.ChatFormatting.GRAY));
+                tooltip.add(Component.literal(String.format(Locale.ROOT, "%.1f%%", chance)).withStyle(ChatFormatting.GRAY));
             }
 
             guiGraphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);

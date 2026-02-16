@@ -36,6 +36,7 @@ import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.world.phys.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -46,6 +47,7 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 public class ClientFieldGuideManager implements ResourceManagerReloadListener {
@@ -230,7 +232,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         Constants.LOG.info("Loaded {} category visuals and {} entry visuals.", categoryVisuals.size(), entryVisuals.size());
     }
 
-    private void loadVisuals(ResourceManager mgr, String folder, java.util.function.BiConsumer<ResourceLocation, JsonObject> processor) {
+    private void loadVisuals(ResourceManager mgr, String folder, BiConsumer<ResourceLocation, JsonObject> processor) {
         Map<ResourceLocation, List<Resource>> resources = mgr.listResourceStacks("fieldguide/" + folder,
                 id -> id.getPath().endsWith(".json"));
 
@@ -817,16 +819,29 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         this.unlockedEntries.clear();
         this.seenEntries.clear();
         this.discoveryTimes.clear();
-        Path gameDir = Minecraft.getInstance().gameDirectory.toPath();
-        Path dataDir = gameDir.resolve("config").resolve("fieldguide_data");
+
+        Minecraft minecraft = Minecraft.getInstance();
 
         try {
-            Files.createDirectories(dataDir);
-        } catch (Exception ignored) {
+            if (minecraft.hasSingleplayerServer() && minecraft.getSingleplayerServer() != null) {
+                // Singleplayer: Save directly in the world's save folder
+                Path worldDir = minecraft.getSingleplayerServer().getWorldPath(LevelResource.ROOT);
+                Path dataDir = worldDir.resolve("fieldguide_data");
+                Files.createDirectories(dataDir);
+                this.currentSavePath = dataDir.resolve("progress.dat");
+            } else {
+                // Multiplayer: Save in the global config folder using the server identifier
+                Path gameDir = minecraft.gameDirectory.toPath();
+                Path dataDir = gameDir.resolve("config").resolve("fieldguide_data");
+                Files.createDirectories(dataDir);
+
+                String safeName = serverIdentifier.replaceAll("[^a-zA-Z0-9.-]", "_");
+                this.currentSavePath = dataDir.resolve(safeName + ".dat");
+            }
+        } catch (Exception e) {
+            Constants.LOG.error("Failed to setup save directory for Field Guide", e);
         }
 
-        String safeName = serverIdentifier.replaceAll("[^a-zA-Z0-9.-]", "_");
-        this.currentSavePath = dataDir.resolve(safeName + ".dat");
         loadProgress();
     }
 

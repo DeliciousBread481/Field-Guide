@@ -37,12 +37,4 @@ public class Constants {
     public static final ResourceLocation ATTRIBUTES_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/attributes.png");
     public static final ResourceLocation SCANNING_ICON_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/scanning.png");
 
-    // Colors
-    public static final int TEXT_COLOR = 0x8A5E3B;
-    public static final int TEXT_TITLE_COLOR = 0x704623;
-    public static final int TEXT_MUTED_COLOR = 0xC7A875;
-    public static final int PAGE_NUMBER_COLOR = 0xC7A875;
-    public static final int LIST_SILHOUETTE_COLOR = 0xddc69b;
-    public static final int DETAILS_SILHOUETTE_COLOR = 0xddc69b;
-
 }

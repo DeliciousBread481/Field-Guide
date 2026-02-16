@@ -166,6 +166,42 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.inventoryButtonYOffset = newValue)
                 .build());
 
+        interfaceCat.addEntry(entryBuilder.startStrField(Component.translatable("option.fieldguide.text_color"), config.textColor)
+                .setDefaultValue("#8A5E3B")
+                .setTooltip(Component.translatable("option.fieldguide.text_color.tooltip"))
+                .setSaveConsumer(newValue -> config.textColor = newValue)
+                .build());
+
+        interfaceCat.addEntry(entryBuilder.startStrField(Component.translatable("option.fieldguide.text_title_color"), config.textTitleColor)
+                .setDefaultValue("#704623")
+                .setTooltip(Component.translatable("option.fieldguide.text_title_color.tooltip"))
+                .setSaveConsumer(newValue -> config.textTitleColor = newValue)
+                .build());
+
+        interfaceCat.addEntry(entryBuilder.startStrField(Component.translatable("option.fieldguide.text_muted_color"), config.textMutedColor)
+                .setDefaultValue("#C7A875")
+                .setTooltip(Component.translatable("option.fieldguide.text_muted_color.tooltip"))
+                .setSaveConsumer(newValue -> config.textMutedColor = newValue)
+                .build());
+
+        interfaceCat.addEntry(entryBuilder.startStrField(Component.translatable("option.fieldguide.page_number_color"), config.pageNumberColor)
+                .setDefaultValue("#C7A875")
+                .setTooltip(Component.translatable("option.fieldguide.page_number_color.tooltip"))
+                .setSaveConsumer(newValue -> config.pageNumberColor = newValue)
+                .build());
+
+        interfaceCat.addEntry(entryBuilder.startStrField(Component.translatable("option.fieldguide.list_silhouette_color"), config.listSilhouetteColor)
+                .setDefaultValue("#DDC69B")
+                .setTooltip(Component.translatable("option.fieldguide.list_silhouette_color.tooltip"))
+                .setSaveConsumer(newValue -> config.listSilhouetteColor = newValue)
+                .build());
+
+        interfaceCat.addEntry(entryBuilder.startStrField(Component.translatable("option.fieldguide.details_silhouette_color"), config.detailsSilhouetteColor)
+                .setDefaultValue("#DDC69B")
+                .setTooltip(Component.translatable("option.fieldguide.details_silhouette_color.tooltip"))
+                .setSaveConsumer(newValue -> config.detailsSilhouetteColor = newValue)
+                .build());
+
         // Content
 
         ConfigCategory contentCat = builder.getOrCreateCategory(Component.translatable("category.fieldguide.content"));

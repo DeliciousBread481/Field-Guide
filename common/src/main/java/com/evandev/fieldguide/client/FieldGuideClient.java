@@ -4,11 +4,14 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.gui.screens.BookScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideScreen;
+import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.mixin.accessor.MobAccessor;
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -68,8 +71,8 @@ public class FieldGuideClient {
         }
     }
 
-    public static void renderScanningIcon(net.minecraft.client.gui.GuiGraphics guiGraphics, float partialTick) {
-        com.evandev.fieldguide.config.ModConfig config = com.evandev.fieldguide.config.ModConfig.get();
+    public static void renderScanningIcon(GuiGraphics guiGraphics, float partialTick) {
+        ModConfig config = ModConfig.get();
         if (!config.showScanIcon) return;
 
         ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
@@ -104,7 +107,7 @@ public class FieldGuideClient {
             guiGraphics.pose().pushPose();
             guiGraphics.pose().translate(0, 0, 100);
             guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-            com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+            RenderSystem.enableBlend();
 
             guiGraphics.blit(Constants.SCANNING_ICON_TEXTURE, x, y, 0, textureSize * frame, textureSize, textureSize, textureSize, textureSize * totalFramesInTexture);
 

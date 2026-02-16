@@ -51,7 +51,9 @@ public class LevelRendererMixin {
         Vec3 camPos = camera.getPosition();
         MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
 
+        final float VERTICAL_BUFFER = 1.3f;  // TODO: surely no mobs have models this much bigger than their hitboxes
         float red, green, blue, alpha;
+
         if (outOfRangeEntity != null && targetEntity == outOfRangeEntity) {
             red = 1.0F;
             green = 0.0F;
@@ -83,7 +85,7 @@ public class LevelRendererMixin {
                     poseStack.translate(x, y, z);
 
                     double shapeHeight = state.isCollisionShapeFullBlock(mc.level, targetBlock) ? 1.0 : Math.max(1.0, state.getShape(mc.level, targetBlock, CollisionContext.of(mc.player)).max(Direction.Axis.Y));
-                    float localScanLimitY = (float) (shapeHeight * fillHeight);
+                    float localScanLimitY = fillHeight >= 1.0f ? 10000.0f : (float) (shapeHeight * fillHeight);
 
                     if (ModRenderTypes.SCAN_BLOCK_SHADER != null) {
                         ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("ScanLimitY").set(localScanLimitY);
@@ -115,7 +117,7 @@ public class LevelRendererMixin {
             poseStack.translate(x, y, z);
 
             double entityHeight = targetEntity.getBbHeight();
-            float localScanLimitY = (float) (entityHeight * fillHeight * 1.3f); // TODO: surely no mobs have models this much bigger than their hitboxes right
+            float localScanLimitY = fillHeight >= 1.0f ? 10000.0f : (float) (entityHeight * fillHeight * VERTICAL_BUFFER);
 
             if (ModRenderTypes.SCAN_ENTITY_SHADER != null) {
                 ModRenderTypes.SCAN_ENTITY_SHADER.getUniform("ScanLimitY").set(localScanLimitY);

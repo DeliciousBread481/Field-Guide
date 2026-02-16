@@ -85,6 +85,24 @@
   "option.fieldguide.discovery_redirects": "Discovery Redirects",
   "option.fieldguide.discovery_redirects.tooltip": "Redirect scanning of one entry to another.\nFormat: 'modid:scanned_id|modid:target_id'",
 
+  "option.fieldguide.text_color": "Text Color",
+  "option.fieldguide.text_color.tooltip": "The hex color code used for standard text in the field guide.",
+
+  "option.fieldguide.text_title_color": "Text Title Color",
+  "option.fieldguide.text_title_color.tooltip": "The hex color code used for titles in the field guide.",
+
+  "option.fieldguide.text_muted_color": "Muted Text Color",
+  "option.fieldguide.text_muted_color.tooltip": "The hex color code used for muted/secondary text.",
+
+  "option.fieldguide.page_number_color": "Page Number Color",
+  "option.fieldguide.page_number_color.tooltip": "The hex color code used for the page numbers.",
+
+  "option.fieldguide.list_silhouette_color": "List Silhouette Color",
+  "option.fieldguide.list_silhouette_color.tooltip": "The hex color code for undiscovered entity silhouettes within the list pages.",
+
+  "option.fieldguide.details_silhouette_color": "Details Silhouette Color",
+  "option.fieldguide.details_silhouette_color.tooltip": "The hex color code for undiscovered entity silhouettes on details pages.",
+
   "fieldguide.tooltip.common_spawn": "Common Spawn",
 
   "key.fieldguide.open": "Open Field Guide",

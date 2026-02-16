@@ -44,6 +44,13 @@ public class ModConfig {
     public String scanOverlayColor = "#FFFFFF";
     public double scanOverlayAlpha = 0.5D;
 
+    public String textColor = "#8A5E3B";
+    public String textTitleColor = "#704623";
+    public String textMutedColor = "#C7A875";
+    public String pageNumberColor = "#C7A875";
+    public String listSilhouetteColor = "#DDC69B";
+    public String detailsSilhouetteColor = "#DDC69B";
+
     public List<String> entityBlacklist = new ArrayList<>();
 
     public List<String> lootRemovals = new ArrayList<>();
@@ -149,11 +156,39 @@ public class ModConfig {
     }
 
     public int getScanOverlayColorInt() {
+        return parseColor(scanOverlayColor, 0xFFFFFF);
+    }
+
+    public int getTextColorInt() {
+        return parseColor(textColor, 0x8A5E3B);
+    }
+
+    public int getTextTitleColorInt() {
+        return parseColor(textTitleColor, 0x704623);
+    }
+
+    public int getTextMutedColorInt() {
+        return parseColor(textMutedColor, 0xC7A875);
+    }
+
+    public int getPageNumberColorInt() {
+        return parseColor(pageNumberColor, 0xC7A875);
+    }
+
+    public int getListSilhouetteColorInt() {
+        return parseColor(listSilhouetteColor, 0xDDC69B);
+    }
+
+    public int getDetailsSilhouetteColorInt() {
+        return parseColor(detailsSilhouetteColor, 0xDDC69B);
+    }
+
+    private int parseColor(String colorStr, int fallback) {
         try {
-            String hex = scanOverlayColor.startsWith("#") ? scanOverlayColor.substring(1) : scanOverlayColor;
+            String hex = colorStr.startsWith("#") ? colorStr.substring(1) : colorStr;
             return Integer.parseInt(hex, 16);
         } catch (Exception e) {
-            return 0xFFFFFF;
+            return fallback;
         }
     }
 }

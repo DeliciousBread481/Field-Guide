@@ -1,7 +1,7 @@
 package com.evandev.fieldguide.client.gui.toasts;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.client.FieldGuideClient;
+import com.evandev.fieldguide.config.ModConfig;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastComponent;
@@ -31,7 +31,7 @@ public class FieldGuideToast implements Toast {
         Component discovered = Component.translatable("fieldguide.toast.discovered");
         //Component hint = Component.translatable("fieldguide.toast.view_hint", FieldGuideClient.OPEN_GUIDE_KEY.getTranslatedKeyMessage());
 
-        guiGraphics.drawString(toastComponent.getMinecraft().font, name, 30, 7, 0x704623, false);
+        guiGraphics.drawString(toastComponent.getMinecraft().font, name, 30, 7, ModConfig.get().getTextTitleColorInt(), false);
         guiGraphics.drawString(toastComponent.getMinecraft().font, discovered, 30, 17, 0xAF8C5C, false);
 
         guiGraphics.blit(Constants.TOAST_ICON, 9, 7, 0, 0, 16, 16, 16, 16);

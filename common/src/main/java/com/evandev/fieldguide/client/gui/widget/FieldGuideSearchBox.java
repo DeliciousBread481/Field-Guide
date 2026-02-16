@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.client.gui.widget;
 
+import com.evandev.fieldguide.config.ModConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -12,7 +13,6 @@ public class FieldGuideSearchBox extends EditBox {
     private static final int BORDER_COLOR_NORMAL = 0xFF51291D;
     private static final int BORDER_COLOR_FOCUSED = 0xFFDDC69B;
     private static final int BACKGROUND_COLOR = 0xFF050302;
-    private static final int PLACEHOLDER_COLOR = 0xC7A875;
 
     public FieldGuideSearchBox(Font font, int x, int y, int width, int height, String value, Consumer<String> onSearch) {
         super(font, x, y, width, height, Component.translatable("gui.fieldguide.search"));
@@ -38,7 +38,7 @@ public class FieldGuideSearchBox extends EditBox {
         super.renderWidget(guiGraphics, mouseX, mouseY, partialTick);
 
         if (this.getValue().isEmpty()) {
-            guiGraphics.drawString(Minecraft.getInstance().font, Component.translatable("gui.fieldguide.search"), this.getX() + 4, this.getY() + 6, PLACEHOLDER_COLOR, false);
+            guiGraphics.drawString(Minecraft.getInstance().font, Component.translatable("gui.fieldguide.search"), this.getX() + 4, this.getY() + 6, ModConfig.get().getTextMutedColorInt(), false);
         }
 
         guiGraphics.renderOutline(this.getX() - 1, this.getY() - 1, this.width + 2, this.height + 2, borderColor);

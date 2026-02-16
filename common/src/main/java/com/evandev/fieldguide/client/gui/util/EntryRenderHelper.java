@@ -305,7 +305,7 @@ public class EntryRenderHelper {
         float finalScale = baseScale * visualScale * bounceScale;
         int estimatedSize = (int) (finalScale * 2);
 
-        if (tryRenderOverride(guiGraphics, block, x, y, estimatedSize, estimatedSize, silhouette, Constants.LIST_SILHOUETTE_COLOR, isPage, bounceScale)) {
+        if (tryRenderOverride(guiGraphics, block, x, y, estimatedSize, estimatedSize, silhouette, ModConfig.get().getListSilhouetteColorInt(), isPage, bounceScale)) {
             return;
         }
 
@@ -346,7 +346,7 @@ public class EntryRenderHelper {
         pose.translate(-0.5, -0.5, -0.5);
 
         if (silhouette) {
-            Color rgb = new Color(Constants.LIST_SILHOUETTE_COLOR);
+            Color rgb = new Color(ModConfig.get().getListSilhouetteColorInt());
             float r = rgb.getRed() / 255F;
             float g = rgb.getGreen() / 255F;
             float b = rgb.getBlue() / 255F;
