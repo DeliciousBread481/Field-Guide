@@ -647,7 +647,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
                 EntityType<?> type = hitEntity.getType();
                 Category cat = getCategoryForEntry(type);
-                boolean isScannable = cat == null;
+                boolean isScannable = cat != null;
 
                 TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation("fieldguide", "kill_to_unlock"));
                 boolean requiresKill = false;
@@ -864,7 +864,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             this.lastUnlockTime = System.currentTimeMillis();
             this.discoveryTimes.put(id.toString(), this.lastUnlockTime);
             if (Minecraft.getInstance().level != null) {
-                this.discoveryGameTimes.put(id.toString(), Minecraft.getInstance().level.getGameTime());
+                this.discoveryGameTimes.put(id.toString(), Minecraft.getInstance().level.dayTime());
             }
             if (showToast) Minecraft.getInstance().getToasts().addToast(new FieldGuideToast(entry));
             saveProgress();

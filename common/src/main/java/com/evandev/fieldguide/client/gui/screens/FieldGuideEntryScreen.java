@@ -463,26 +463,23 @@ public class FieldGuideEntryScreen extends BookScreen {
             long discoveryTime = ClientFieldGuideManager.getInstance().getDiscoveryTime(entry);
             long gameTime = ClientFieldGuideManager.getInstance().getDiscoveryGameTime(entry);
 
-            if (ModConfig.get().useRealWorldDate || (gameTime == 0 && discoveryTime > 0)) {
-                if (discoveryTime > 0) {
-                    dateStr = new SimpleDateFormat("MMM dd, yyyy").format(new Date(discoveryTime));
-                }
+            if (ModConfig.get().useRealWorldDate && discoveryTime > 0) {
+                dateStr = new SimpleDateFormat("MMM dd, yyyy").format(new Date(discoveryTime));
             } else if (gameTime > 0) {
                 long day = gameTime / 24000L + 1;
-                long timeOfDay = gameTime % 24000L;
-                String timeStr;
+                int timeOfDay = (int) (gameTime % 24000L);
 
-                if (timeOfDay < 2000)
-                    timeStr = I18n.get("fieldguide.time.morning");
-                else if (timeOfDay < 10000)
-                    timeStr = I18n.get("fieldguide.time.noon");
-                else if (timeOfDay < 14000)
-                    timeStr = I18n.get("fieldguide.time.evening");
-                else if (timeOfDay < 22000)
-                    timeStr = I18n.get("fieldguide.time.midnight");
-                else timeStr = I18n.get("fieldguide.time.morning");
+                String timeKey;
+                if (timeOfDay >= 23000 || timeOfDay < 2000) timeKey = "morning";
+                else if (timeOfDay < 9000) timeKey = "noon";
+                else if (timeOfDay < 13000) timeKey = "evening";
+                else if (timeOfDay < 22000) timeKey = "midnight";
+                else timeKey = "morning";
 
+                String timeStr = I18n.get("fieldguide.time." + timeKey);
                 dateStr = I18n.get("fieldguide.date.in_game", timeStr, day);
+            } else if (discoveryTime > 0) {
+                dateStr = new SimpleDateFormat("MMM dd, yyyy").format(new Date(discoveryTime));
             }
 
             if (!dateStr.isEmpty()) {
@@ -498,33 +495,11 @@ public class FieldGuideEntryScreen extends BookScreen {
                 int cursorY = textY;
 
                 if (!beforeCursor.isEmpty()) {
-                    String measurable = beforeCursor;
-                    int trailingSpaces = 0;
+                    List<FormattedCharSequence> lines = this.font.split(Component.literal(beforeCursor), textAreaWidth);
+                    int lineCount = lines.size();
 
-                    while (measurable.endsWith(" ")) {
-                        trailingSpaces++;
-                        measurable = measurable.substring(0, measurable.length() - 1);
-                    }
-
-                    List<FormattedCharSequence> linesBefore = this.font.split(Component.literal(measurable), textAreaWidth);
-
-                    if (!linesBefore.isEmpty()) {
-                        cursorY += (linesBefore.size() - 1) * this.font.lineHeight;
-                        cursorX += this.font.width(linesBefore.get(linesBefore.size() - 1));
-                    }
-
-                    cursorX += trailingSpaces * this.font.width(" ");
-
-                    int trailingNewlines = 0;
-                    for (int i = beforeCursor.length() - 1; i >= 0; i--) {
-                        if (beforeCursor.charAt(i) == '\n') trailingNewlines++;
-                        else break;
-                    }
-
-                    if (trailingNewlines > 0) {
-                        cursorX = textX;
-                        cursorY += trailingNewlines * this.font.lineHeight;
-                    }
+                    cursorY += (lineCount - 1) * this.font.lineHeight;
+                    cursorX += this.font.width(lines.get(lineCount - 1));
                 }
 
                 String cursorChar = (cursorPos == editableDescription.length()) ? "_" : "|";
