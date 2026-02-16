@@ -1,6 +1,5 @@
 package com.evandev.fieldguide;
 
-import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.network.ClaimXpPacket;
 import com.evandev.fieldguide.network.GrantContentPacket;
 import com.evandev.fieldguide.platform.FabricNetworkHelper;
@@ -16,11 +15,14 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.entity.EntityType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
@@ -57,10 +59,15 @@ public class FieldGuideMod implements ModInitializer {
 
         ServerEntityCombatEvents.AFTER_KILLED_OTHER_ENTITY.register((world, entity, killedEntity) -> {
             if (entity instanceof ServerPlayer player) {
-                Category cat = ServerFieldGuideManager.getInstance().getCategoryForEntry(killedEntity.getType());
-                if (cat != null && !cat.isScannable()) {
-                    ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(killedEntity.getType());
-                    Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.Type.ENTRY, entityId), player);
+                TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(Constants.MOD_ID, "kill_to_unlock"));
+
+                var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(killedEntity.getType());
+                if (key.isPresent()) {
+                    var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
+                    if (holder.isPresent() && holder.get().is(killToUnlockTag)) {
+                        ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(killedEntity.getType());
+                        Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.Type.ENTRY, entityId), player);
+                    }
                 }
             }
         });

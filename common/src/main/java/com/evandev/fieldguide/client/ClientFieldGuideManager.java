@@ -401,8 +401,8 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
                         var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type);
                         if (key.isPresent()) {
                             var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
-                            if (holder.isPresent() && holder.get().is(bossesTag)) {
-                                isBoss = true;
+                            if (holder.isPresent()) {
+                                isBoss = holder.get().is(bossesTag);
                             }
                         }
 
@@ -649,9 +649,19 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
                 Category cat = getCategoryForEntry(type);
                 boolean isScannable = cat == null || cat.isScannable();
 
-                if (getValidEntries().contains(type) && !isUnlocked(type) && isScannable) {
+                TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation("fieldguide", "kill_to_unlock"));
+                boolean requiresKill = false;
+                var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type);
+                if (key.isPresent()) {
+                    var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
+                    if (holder.isPresent() && holder.get().is(killToUnlockTag)) {
+                        requiresKill = true;
+                    }
+                }
+
+                if (getValidEntries().contains(type) && !isUnlocked(type) && isScannable && !requiresKill) {
                     foundTarget = hitEntity;
-                } else if (!isUnlocked(type) && isScannable) {
+                } else if (!isUnlocked(type) && isScannable && !requiresKill) {
                     ResourceLocation originalId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
                     if (ModConfig.get().getRedirect(originalId) != null) {
                         foundTarget = hitEntity;

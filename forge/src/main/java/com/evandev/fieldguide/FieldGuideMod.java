@@ -1,6 +1,5 @@
 package com.evandev.fieldguide;
 
-import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.network.ClaimXpPacket;
 import com.evandev.fieldguide.network.GrantContentPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
@@ -10,8 +9,11 @@ import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.command.FieldGuideCommand;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.EntityType;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
@@ -98,10 +100,15 @@ public class FieldGuideMod {
     @SubscribeEvent
     public void onLivingDeath(LivingDeathEvent event) {
         if (event.getSource().getEntity() instanceof ServerPlayer player) {
-            Category cat = ServerFieldGuideManager.getInstance().getCategoryForEntry(event.getEntity().getType());
-            if (cat != null && !cat.isScannable()) {
-                ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType());
-                Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.Type.ENTRY, entityId), player);
+            TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(Constants.MOD_ID, "kill_to_unlock"));
+
+            var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(event.getEntity().getType());
+            if (key.isPresent()) {
+                var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
+                if (holder.isPresent() && holder.get().is(killToUnlockTag)) {
+                    ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType());
+                    Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.Type.ENTRY, entityId), player);
+                }
             }
         }
     }
