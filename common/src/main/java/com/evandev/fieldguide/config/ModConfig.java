@@ -37,7 +37,7 @@ public class ModConfig {
     public int scanIconYOffset = 2;
     public int scanIconXOffset = 30;
     public boolean showScanIcon = true;
-
+    public boolean playScanningSound = true;
     public boolean grantXpOnScan = true;
     public int xpAmountOnScan = 5;
 
@@ -50,6 +50,7 @@ public class ModConfig {
     public String pageNumberColor = "#C7A875";
     public String listSilhouetteColor = "#DDC69B";
     public String detailsSilhouetteColor = "#DDC69B";
+    public boolean useRealWorldDate = false;
 
     public List<String> entityBlacklist = new ArrayList<>();
 

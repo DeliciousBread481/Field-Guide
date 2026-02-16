@@ -214,6 +214,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
 
     @Override
     protected void apply(@NotNull Map<ResourceLocation, Category> object, @NotNull ResourceManager resourceManager, @NotNull ProfilerFiller profiler) {
+        ModConfig.load();
         this.categories = object;
     }
 }

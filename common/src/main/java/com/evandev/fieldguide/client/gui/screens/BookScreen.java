@@ -26,14 +26,11 @@ public abstract class BookScreen extends Screen {
     private static final int TAB_GAP = 0;
     private static final int TAB_Y_OFFSET = 29;
 
-    private final List<TabButton> tabs = new ArrayList<>();
-
     private final List<Category> sortedCategories = new ArrayList<>();
-    private Category selectedCategory;
-
     protected Bounds bounds;
     protected Bounds leftPageBounds;
     protected Bounds rightPageBounds;
+    private Category selectedCategory;
 
     protected BookScreen(Component title) {
         super(title);
@@ -41,9 +38,9 @@ public abstract class BookScreen extends Screen {
 
     @Override
     protected void init() {
-        this.bounds = new Bounds((this.width - BG_WIDTH) / 2,(this.height - BG_HEIGHT) / 2, BG_WIDTH, BG_HEIGHT);
-        this.leftPageBounds = new Bounds(this.bounds.left() + 22,this.bounds.top() + 19, PAGE_WIDTH, PAGE_HEIGHT);
-        this.rightPageBounds = new Bounds(this.leftPageBounds.right() + 13,leftPageBounds.top(), PAGE_WIDTH, PAGE_HEIGHT);
+        this.bounds = new Bounds((this.width - BG_WIDTH) / 2, (this.height - BG_HEIGHT) / 2, BG_WIDTH, BG_HEIGHT);
+        this.leftPageBounds = new Bounds(this.bounds.left() + 22, this.bounds.top() + 19, PAGE_WIDTH, PAGE_HEIGHT);
+        this.rightPageBounds = new Bounds(this.leftPageBounds.right() + 13, leftPageBounds.top(), PAGE_WIDTH, PAGE_HEIGHT);
 
         initCategories();
     }
@@ -68,7 +65,6 @@ public abstract class BookScreen extends Screen {
             int yPos = startY + (i * (TAB_HEIGHT + TAB_GAP));
 
             TabButton tab = new TabButton(xPos, yPos, TAB_WIDTH, TAB_HEIGHT, category, this);
-            tabs.add(tab);
             this.addRenderableWidget(tab);
         }
     }
@@ -77,7 +73,7 @@ public abstract class BookScreen extends Screen {
 
     @Override
     public void onClose() {
-        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PUT,1.0F,1.0F));
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PUT, 1.0F, 1.0F));
         super.onClose();
     }
 
@@ -89,12 +85,15 @@ public abstract class BookScreen extends Screen {
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
+
     public List<Category> getSortedCategories() {
         return this.sortedCategories;
     }
+
     public Category getSelectedCategory() {
         return this.selectedCategory;
     }
+
     public void setSelectedCategory(Category category) {
         this.selectedCategory = category;
     }

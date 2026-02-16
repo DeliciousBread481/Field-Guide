@@ -22,7 +22,6 @@ import org.lwjgl.glfw.GLFW;
 public class FieldGuideClient {
     private static final long AUTO_OPEN_THRESHOLD_MS = 5000;
     public static KeyMapping OPEN_GUIDE_KEY;
-    private static long lastCryTime = 0;
 
     public static void init() {
         OPEN_GUIDE_KEY = new KeyMapping(
@@ -35,13 +34,9 @@ public class FieldGuideClient {
 
     public static void playMobCry(Entity entity) {
         if (entity instanceof Mob mob) {
-            long now = System.currentTimeMillis();
-            if (now - lastCryTime < 1000) return;
-
             SoundEvent sound = ((MobAccessor) mob).fieldguide$callGetAmbientSound();
             if (sound != null) {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(sound, 1.0F, 1.5F));
-                lastCryTime = now;
             }
         }
     }

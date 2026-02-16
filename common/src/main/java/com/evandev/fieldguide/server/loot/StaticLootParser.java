@@ -8,8 +8,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.entries.*;
-import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
-import net.minecraft.world.level.storage.loot.predicates.LootItemRandomChanceCondition;
+import net.minecraft.world.level.storage.loot.predicates.*;
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 import net.minecraft.world.level.storage.loot.providers.number.NumberProvider;
 import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
@@ -68,11 +67,8 @@ public class StaticLootParser {
             }
         } else if (entry instanceof AlternativesEntry altEntry) {
             LootPoolEntryContainer[] children = ((CompositeEntryBaseAccessor) altEntry).fieldguide$getChildren();
-            float remainingChance = branchChance;
             for (LootPoolEntryContainer child : children) {
-                float childCondition = getConditionChance(((LootPoolEntryContainerAccessor) child).fieldguide$getConditions());
-                parseEntry(child, drops, remainingChance, 1);
-                remainingChance *= (1f - childCondition);
+                parseEntry(child, drops, branchChance, 1);
             }
         } else if (entry instanceof CompositeEntryBase composite) {
             LootPoolEntryContainer[] children = ((CompositeEntryBaseAccessor) composite).fieldguide$getChildren();
@@ -105,6 +101,15 @@ public class StaticLootParser {
         for (LootItemCondition condition : conditions) {
             if (condition instanceof LootItemRandomChanceCondition randomCondition) {
                 chance *= ((RandomChanceConditionAccessor) randomCondition).fieldguide$getProbability();
+            } else if (condition instanceof LootItemRandomChanceWithLootingCondition lootingCondition) {
+                chance *= ((RandomChanceWithLootingConditionAccessor) lootingCondition).fieldguide$getPercent();
+            } else if (condition instanceof BonusLevelTableCondition tableCondition) {
+                float[] values = ((BonusLevelTableConditionAccessor) tableCondition).fieldguide$getValues();
+                if (values.length > 0) {
+                    chance *= values[0];
+                }
+            } else if (condition instanceof DamageSourceCondition || condition instanceof LootItemEntityPropertyCondition) {
+                return 0.0f;
             }
         }
         return chance;

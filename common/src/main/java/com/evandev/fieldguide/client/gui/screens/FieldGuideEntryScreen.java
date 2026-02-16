@@ -16,11 +16,13 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -29,6 +31,7 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import org.jetbrains.annotations.NotNull;
+import org.lwjgl.glfw.GLFW;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -45,6 +48,11 @@ public class FieldGuideEntryScreen extends BookScreen {
     private ItemStack hoveredItem;
     private ImageButton prevBiomePageButton;
     private ImageButton nextBiomePageButton;
+
+    private String editableDescription = "";
+    private boolean isEditingDescription = false;
+    private int cursorPos = 0;
+    private int textX, textY, textAreaWidth, textAreaHeight;
 
     public FieldGuideEntryScreen(BookScreen parent, Object entry) {
         super(getTitleForEntry(entry));
@@ -64,6 +72,16 @@ public class FieldGuideEntryScreen extends BookScreen {
     protected void init() {
         super.init();
         spawnBiomes.clear();
+
+        if (ClientFieldGuideManager.isUnlocked(entry)) {
+            editableDescription = ClientFieldGuideManager.getEntryDescription(entry);
+            cursorPos = editableDescription.length();
+        }
+
+        textX = this.rightPageBounds.left() + 5;
+        textY = this.rightPageBounds.top() + 25;
+        textAreaWidth = this.rightPageBounds.width() - 10;
+        textAreaHeight = this.rightPageBounds.height() - 85;
 
         if (entry instanceof EntityType<?> type) {
             if (this.minecraft != null && this.minecraft.level != null) {
@@ -158,15 +176,45 @@ public class FieldGuideEntryScreen extends BookScreen {
         this.addRenderableWidget(prevBiomePageButton);
     }
 
+    private void saveDescriptionIfChanged() {
+        if (ClientFieldGuideManager.isUnlocked(entry)) {
+            String originalDescription = ClientFieldGuideManager.getEntryDescription(entry);
+            if (originalDescription == null) originalDescription = "";
+            if (!editableDescription.equals(originalDescription)) {
+                ClientFieldGuideManager.setCustomDescription(entry, editableDescription);
+            }
+        }
+    }
+
+    @Override
+    public void removed() {
+        if (isEditingDescription) {
+            saveDescriptionIfChanged();
+            isEditingDescription = false;
+        }
+    }
+
     @Override
     public void onTabClick(Category category) {
-        Objects.requireNonNull(this.minecraft).setScreen(parent);
-        parent.onTabClick(category);
+        if (this.minecraft != null) {
+            this.minecraft.setScreen(parent);
+            parent.onTabClick(category);
+        }
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (super.mouseClicked(mouseX, mouseY, button)) return true;
+
+        if (ClientFieldGuideManager.isUnlocked(entry)) {
+            if (mouseX >= textX && mouseX <= textX + textAreaWidth && mouseY >= textY && mouseY <= textY + textAreaHeight) {
+                isEditingDescription = true;
+                return true;
+            } else if (isEditingDescription) {
+                isEditingDescription = false;
+                saveDescriptionIfChanged();
+            }
+        }
 
         if (button == 0 && (renderedEntity != null || entry instanceof Block)) {
             int xPos = leftPageBounds.left() + leftPageBounds.width() / 2;
@@ -197,6 +245,79 @@ public class FieldGuideEntryScreen extends BookScreen {
             Minecraft.getInstance().setScreen(new FieldGuideScreen("=!" + hoveredBiome, this));
         }
         return false;
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (isEditingDescription) {
+            String proposedText = editableDescription.substring(0, cursorPos) + codePoint + editableDescription.substring(cursorPos);
+
+            if (this.font.split(Component.literal(proposedText), textAreaWidth).size() <= 9) {
+                editableDescription = proposedText;
+                cursorPos++;
+            }
+            return true;
+        }
+        return super.charTyped(codePoint, modifiers);
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (isEditingDescription) {
+            if (Screen.isPaste(keyCode)) {
+                String clipboard = Minecraft.getInstance().keyboardHandler.getClipboard();
+                if (!clipboard.isEmpty()) {
+                    String proposedText = editableDescription.substring(0, cursorPos) + clipboard + editableDescription.substring(cursorPos);
+
+                    while (!clipboard.isEmpty() && this.font.split(Component.literal(proposedText), textAreaWidth).size() > 9) {
+                        clipboard = clipboard.substring(0, clipboard.length() - 1);
+                        proposedText = editableDescription.substring(0, cursorPos) + clipboard + editableDescription.substring(cursorPos);
+                    }
+
+                    if (!clipboard.isEmpty()) {
+                        editableDescription = proposedText;
+                        cursorPos += clipboard.length();
+                    }
+                }
+                return true;
+            }
+
+            if (keyCode == GLFW.GLFW_KEY_BACKSPACE && cursorPos > 0) {
+                editableDescription = editableDescription.substring(0, cursorPos - 1) + editableDescription.substring(cursorPos);
+                cursorPos--;
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_DELETE && cursorPos < editableDescription.length()) {
+                editableDescription = editableDescription.substring(0, cursorPos) + editableDescription.substring(cursorPos + 1);
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_LEFT && cursorPos > 0) {
+                cursorPos--;
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_RIGHT && cursorPos < editableDescription.length()) {
+                cursorPos++;
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
+                String proposedText = editableDescription.substring(0, cursorPos) + "\n" + editableDescription.substring(cursorPos);
+
+                if (this.font.split(Component.literal(proposedText), textAreaWidth).size() <= 9) {
+                    editableDescription = proposedText;
+                    cursorPos++;
+                }
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+                this.onClose();
+                return true;
+            }
+
+            if (FieldGuideClient.OPEN_GUIDE_KEY.matches(keyCode, scanCode) || (this.minecraft != null && this.minecraft.options.keyInventory.matches(keyCode, scanCode))) {
+                return false;
+            }
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     private void renderAttributes(GuiGraphics guiGraphics, LivingEntity entity) {
@@ -299,7 +420,6 @@ public class FieldGuideEntryScreen extends BookScreen {
                 int barStart = (int) (bounds.left() + bounds.width() * progressStart);
                 int barEnd = (int) (bounds.left() + bounds.width() * progressEnd);
 
-
                 // Render Background
                 guiGraphics.fill(bounds.left(), bounds.top(), bounds.right(), bounds.bottom(), 0xFFF9EED0);
 
@@ -336,21 +456,78 @@ public class FieldGuideEntryScreen extends BookScreen {
         }
 
         // Description
-        // TODO: Add pagination for long descriptions
-        int textX = this.rightPageBounds.left() + 5;
-        int textY = this.rightPageBounds.top() + 25;
-        int textAreaWidth = this.rightPageBounds.width() - 10;
-
         if (unlocked) {
+            String dateStr = "";
             long discoveryTime = ClientFieldGuideManager.getInstance().getDiscoveryTime(entry);
-            if (discoveryTime > 0) {
-                // TODO: Add config for date format?
-                String dateStr = new SimpleDateFormat("MMM dd, yyyy").format(new Date(discoveryTime));
+            long gameTime = ClientFieldGuideManager.getInstance().getDiscoveryGameTime(entry);
+
+            if (ModConfig.get().useRealWorldDate || (gameTime == 0 && discoveryTime > 0)) {
+                if (discoveryTime > 0) {
+                    dateStr = new SimpleDateFormat("MMM dd, yyyy").format(new Date(discoveryTime));
+                }
+            } else if (gameTime > 0) {
+                long day = gameTime / 24000L + 1;
+                long timeOfDay = gameTime % 24000L;
+                String timeStr;
+
+                if (timeOfDay < 2000)
+                    timeStr = I18n.get("fieldguide.time.morning");
+                else if (timeOfDay < 10000)
+                    timeStr = I18n.get("fieldguide.time.noon");
+                else if (timeOfDay < 14000)
+                    timeStr = I18n.get("fieldguide.time.evening");
+                else if (timeOfDay < 22000)
+                    timeStr = I18n.get("fieldguide.time.midnight");
+                else timeStr = I18n.get("fieldguide.time.morning");
+
+                dateStr = I18n.get("fieldguide.date.in_game", timeStr, day);
+            }
+
+            if (!dateStr.isEmpty()) {
                 Component dateComp = Component.literal(dateStr);
                 guiGraphics.drawString(this.font, dateComp, this.rightPageBounds.right() - this.font.width(dateComp), this.rightPageBounds.bottom() - 58, ModConfig.get().getTextMutedColorInt(), false);
             }
 
-            guiGraphics.drawWordWrap(font, Component.literal(ClientFieldGuideManager.getEntryDescription(entry)), textX, textY, textAreaWidth, ModConfig.get().getTextColorInt());
+            guiGraphics.drawWordWrap(font, Component.literal(editableDescription), textX, textY, textAreaWidth, ModConfig.get().getTextColorInt());
+
+            if (isEditingDescription && (System.currentTimeMillis() / 500) % 2 == 0) {
+                String beforeCursor = editableDescription.substring(0, cursorPos);
+                int cursorX = textX;
+                int cursorY = textY;
+
+                if (!beforeCursor.isEmpty()) {
+                    String measurable = beforeCursor;
+                    int trailingSpaces = 0;
+
+                    while (measurable.endsWith(" ")) {
+                        trailingSpaces++;
+                        measurable = measurable.substring(0, measurable.length() - 1);
+                    }
+
+                    List<FormattedCharSequence> linesBefore = this.font.split(Component.literal(measurable), textAreaWidth);
+
+                    if (!linesBefore.isEmpty()) {
+                        cursorY += (linesBefore.size() - 1) * this.font.lineHeight;
+                        cursorX += this.font.width(linesBefore.get(linesBefore.size() - 1));
+                    }
+
+                    cursorX += trailingSpaces * this.font.width(" ");
+
+                    int trailingNewlines = 0;
+                    for (int i = beforeCursor.length() - 1; i >= 0; i--) {
+                        if (beforeCursor.charAt(i) == '\n') trailingNewlines++;
+                        else break;
+                    }
+
+                    if (trailingNewlines > 0) {
+                        cursorX = textX;
+                        cursorY += trailingNewlines * this.font.lineHeight;
+                    }
+                }
+
+                String cursorChar = (cursorPos == editableDescription.length()) ? "_" : "|";
+                guiGraphics.drawString(this.font, cursorChar, cursorX, cursorY, ModConfig.get().getTextColorInt(), false);
+            }
         } else {
             guiGraphics.drawWordWrap(font, Component.literal(Component.translatable("fieldguide.description.locked").getString()), textX, textY, textAreaWidth, ModConfig.get().getTextMutedColorInt());
         }

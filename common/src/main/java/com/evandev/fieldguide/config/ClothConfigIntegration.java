@@ -97,6 +97,18 @@ public class ClothConfigIntegration {
         // Interface
         ConfigCategory interfaceCat = builder.getOrCreateCategory(Component.translatable("category.fieldguide.interface"));
 
+        interfaceCat.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.use_real_world_date"), config.useRealWorldDate)
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("option.fieldguide.use_real_world_date.tooltip"))
+                .setSaveConsumer(newValue -> config.useRealWorldDate = newValue)
+                .build());
+
+        interfaceCat.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.play_scanning_sound"), config.playScanningSound)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.fieldguide.play_scanning_sound.tooltip"))
+                .setSaveConsumer(newValue -> config.playScanningSound = newValue)
+                .build());
+
         interfaceCat.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.show_scan_icon"), config.showScanIcon)
                 .setDefaultValue(true)
                 .setTooltip(Component.translatable("option.fieldguide.show_scan_icon.tooltip"))
@@ -203,7 +215,6 @@ public class ClothConfigIntegration {
                 .build());
 
         // Content
-
         ConfigCategory contentCat = builder.getOrCreateCategory(Component.translatable("category.fieldguide.content"));
 
         contentCat.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.blacklist"), config.entityBlacklist)

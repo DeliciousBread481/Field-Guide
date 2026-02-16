@@ -129,23 +129,23 @@ public class FieldGuideScreen extends BookScreen {
 
         // Add Back Button
         this.backButton = new PageTurnButton(
-            this.bounds.right() + 9 - 24,
-            this.bounds.top() + 26,
-            24,
-            24,
-            0,
-            0,
-            24,
-            Constants.BACK_TEXTURE,
-            24,
-            24 * 2,
-            b -> {
-                if (parent != null) {
-                    Objects.requireNonNull(this.minecraft).setScreen(parent);
-                } else {
-                    this.searchBox.setValue("");
+                this.bounds.right() + 9 - 24,
+                this.bounds.top() + 26,
+                24,
+                24,
+                0,
+                0,
+                24,
+                Constants.BACK_TEXTURE,
+                24,
+                24 * 2,
+                b -> {
+                    if (parent != null) {
+                        Objects.requireNonNull(this.minecraft).setScreen(parent);
+                    } else {
+                        this.searchBox.setValue("");
+                    }
                 }
-            }
         );
         backButton.visible = false;
         this.addRenderableWidget(backButton);
@@ -195,7 +195,7 @@ public class FieldGuideScreen extends BookScreen {
 
     private void getEntriesForSelectedCategory() {
         Category category = this.getSelectedCategory();
-        if (category != null){
+        if (category != null) {
             this.currentEntries = ClientFieldGuideManager.getInstance().getEntriesForCategory(category);
             this.recentEntries = ClientFieldGuideManager.getInstance().getRecentEntries(category, 9);
         } else {
