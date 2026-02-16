@@ -374,6 +374,10 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         return !config.isEntityBlacklisted(id);
     }
 
+    public Object getOutOfRangeTarget() {
+        return outOfRangeTarget;
+    }
+
     public Category getCategoryForEntry(Object entry) {
         for (Map.Entry<ResourceLocation, List<Object>> cat : resolvedCategoryEntries.entrySet()) {
             if (cat.getValue().contains(entry)) return syncedCategories.get(cat.getKey());

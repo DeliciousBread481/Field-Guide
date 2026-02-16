@@ -413,7 +413,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
             if (tooltipStack.hasTag() && Objects.requireNonNull(tooltipStack.getTag()).contains("FieldGuideDropChance")) {
                 float chance = tooltipStack.getTag().getFloat("FieldGuideDropChance");
-                tooltip.add(Component.literal(String.format(Locale.ROOT, "Drop Chance: %.1f%%", chance)).withStyle(net.minecraft.ChatFormatting.GRAY));
+                tooltip.add(Component.literal(String.format(Locale.ROOT, "%.1f%%", chance)).withStyle(net.minecraft.ChatFormatting.GRAY));
             }
 
             guiGraphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);

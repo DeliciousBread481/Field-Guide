@@ -115,7 +115,7 @@ public class LevelRendererMixin {
             poseStack.translate(x, y, z);
 
             double entityHeight = targetEntity.getBbHeight();
-            float localScanLimitY = (float) (entityHeight * fillHeight * 1.15f);
+            float localScanLimitY = (float) (entityHeight * fillHeight * 1.3f); // TODO: surely no mobs have models this much bigger than their hitboxes right
 
             if (ModRenderTypes.SCAN_ENTITY_SHADER != null) {
                 ModRenderTypes.SCAN_ENTITY_SHADER.getUniform("ScanLimitY").set(localScanLimitY);

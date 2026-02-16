@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.client;
 
+import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.gui.screens.BookScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideScreen;
@@ -64,6 +65,51 @@ public class FieldGuideClient {
                     minecraft.setScreen(new FieldGuideScreen());
                 }
             }
+        }
+    }
+
+    public static void renderScanningIcon(net.minecraft.client.gui.GuiGraphics guiGraphics, float partialTick) {
+        com.evandev.fieldguide.config.ModConfig config = com.evandev.fieldguide.config.ModConfig.get();
+        if (!config.showScanIcon) return;
+
+        ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
+        boolean outOfRange = manager.getOutOfRangeTarget() != null;
+        boolean isFading = manager.getFadingTarget() != null;
+        boolean hasTarget = manager.getScanningTarget() != null;
+
+        if (hasTarget || isFading || outOfRange) {
+            int screenWidth = guiGraphics.guiWidth();
+            int screenHeight = guiGraphics.guiHeight();
+            int textureSize = 32;
+
+            int xOffset = config.scanIconXOffset;
+            int x = ((screenWidth - textureSize) / 2) + xOffset;
+            int yOffset = config.scanIconYOffset;
+            int y = ((screenHeight - textureSize) / 2) - yOffset;
+
+            int frame;
+            int totalFramesInTexture = 6;
+
+            if (outOfRange) {
+                frame = 5;
+            } else if (isFading) {
+                frame = 4;
+            } else {
+                float progress = manager.getScanProgress(partialTick);
+                if (manager.getIsTickingDown()) return;
+                int animationFrames = 4;
+                frame = (int) Math.min(Math.floor(progress * animationFrames), animationFrames - 1);
+            }
+
+            guiGraphics.pose().pushPose();
+            guiGraphics.pose().translate(0, 0, 100);
+            guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+            com.mojang.blaze3d.systems.RenderSystem.enableBlend();
+
+            guiGraphics.blit(Constants.SCANNING_ICON_TEXTURE, x, y, 0, textureSize * frame, textureSize, textureSize, textureSize, textureSize * totalFramesInTexture);
+
+            guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+            guiGraphics.pose().popPose();
         }
     }
 }

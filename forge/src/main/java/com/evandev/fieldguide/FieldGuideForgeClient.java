@@ -11,10 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.ConfigScreenHandler;
-import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
-import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
-import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
-import net.minecraftforge.client.event.RegisterShadersEvent;
+import net.minecraftforge.client.event.*;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
@@ -91,6 +88,13 @@ public class FieldGuideForgeClient {
                 Minecraft client = Minecraft.getInstance();
                 ClientFieldGuideManager.getInstance().onClientTick(client);
                 FieldGuideClient.onClientTick(client);
+            }
+        }
+
+        @SubscribeEvent
+        public static void onRenderGuiOverlay(RenderGuiOverlayEvent.Post event) {
+            if (event.getOverlay().id().getPath().equals("crosshair")) {
+                FieldGuideClient.renderScanningIcon(event.getGuiGraphics(), event.getPartialTick());
             }
         }
 
