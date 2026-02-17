@@ -44,6 +44,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     private final Object entry;
     private final List<ResourceLocation> spawnBiomes = new ArrayList<>();
     private final int biomesPerPage = 6;
+    private final int maxVisibleLines = 9;
     private Entity renderedEntity;
     private long lastClickTime = 0;
     private int currentBiomePage = 1;
@@ -52,7 +53,8 @@ public class FieldGuideEntryScreen extends BookScreen {
     private ImageButton prevBiomePageButton;
     private ImageButton nextBiomePageButton;
     private FieldGuideSearchBox searchBox;
-
+    private int scrollOffset = 0;
+    private boolean isDraggingScrollbar = false;
     private String editableDescription = "";
     private boolean isEditingDescription = false;
     private int cursorPos = 0;
@@ -141,7 +143,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
         }
 
-        // Add Navigation Buttons
+        // Navigation Buttons
         this.addRenderableWidget(new PageTurnButton(
                 this.bounds.right() + 9 - 24,
                 this.bounds.top() + 26,
@@ -156,7 +158,6 @@ public class FieldGuideEntryScreen extends BookScreen {
                 b -> Objects.requireNonNull(this.minecraft).setScreen(parent)
         ));
 
-        // Entry Page Navigation Buttons
         PageTurnButton prevEntryButton = new PageTurnButton(
                 this.bounds.left() + 15,
                 this.leftPageBounds.bottom() - 15,
@@ -227,6 +228,20 @@ public class FieldGuideEntryScreen extends BookScreen {
         this.addRenderableWidget(this.searchBox);
     }
 
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (isEditingDescription || (mouseX >= textX && mouseX <= textX + textAreaWidth && mouseY >= textY && mouseY <= textY + textAreaHeight)) {
+            List<FormattedCharSequence> lines = this.font.split(Component.literal(editableDescription), textAreaWidth);
+            int totalLines = lines.size();
+
+            if (totalLines > maxVisibleLines) {
+                scrollOffset = Math.max(0, Math.min(scrollOffset - (int) Math.signum(delta), totalLines - maxVisibleLines));
+                return true;
+            }
+        }
+        return super.mouseScrolled(mouseX, mouseY, delta);
+    }
+
     private void onSearchChanged(String query) {
         if (!query.isEmpty() && this.minecraft != null) {
             FieldGuideScreen searchScreen = new FieldGuideScreen(query, this);
@@ -256,6 +271,14 @@ public class FieldGuideEntryScreen extends BookScreen {
         int index = entries.indexOf(this.entry);
         if (index >= 0 && index < entries.size() - 1 && this.minecraft != null) {
             this.minecraft.setScreen(new FieldGuideEntryScreen(parent, entries.get(index + 1)));
+        }
+    }
+
+    private void scrollToCursor(int targetLine) {
+        if (targetLine < scrollOffset) {
+            scrollOffset = targetLine;
+        } else if (targetLine >= scrollOffset + maxVisibleLines) {
+            scrollOffset = targetLine - maxVisibleLines + 1;
         }
     }
 
@@ -349,7 +372,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
     private void setCursorPosFromMouse(double mouseX, double mouseY) {
         int relativeY = (int) (mouseY - textY);
-        int targetLine = relativeY / this.font.lineHeight;
+        int targetLine = (relativeY / this.font.lineHeight) + scrollOffset;
         if (targetLine < 0) targetLine = 0;
 
         List<FormattedCharSequence> allLines = this.font.split(Component.literal(editableDescription), textAreaWidth);
@@ -389,7 +412,40 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (isDraggingScrollbar) {
+            updateScrollFromMouse(mouseY);
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (isDraggingScrollbar) {
+            isDraggingScrollbar = false;
+            return true;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        List<FormattedCharSequence> lines = this.font.split(Component.literal(editableDescription), textAreaWidth);
+        if (lines.size() > maxVisibleLines && button == 0) {
+            int scrollbarX = textX + textAreaWidth + 2;
+            int scrollbarY = textY;
+            int scrollbarHeight = (maxVisibleLines * this.font.lineHeight) - 2;
+            int hitPadding = 4;
+
+            if (mouseX >= scrollbarX - hitPadding && mouseX <= scrollbarX + 2 + hitPadding &&
+                    mouseY >= scrollbarY && mouseY <= scrollbarY + scrollbarHeight) {
+                isDraggingScrollbar = true;
+                updateScrollFromMouse(mouseY);
+                return true;
+            }
+        }
+
         if (this.searchBox != null) {
             if (this.searchBox.isMouseOver(mouseX, mouseY)) {
                 this.searchBox.setFocused(true);
@@ -459,15 +515,14 @@ public class FieldGuideEntryScreen extends BookScreen {
                 proposedText = editableDescription.substring(0, cursorPos) + codePoint + editableDescription.substring(cursorPos);
             }
 
-            if (this.font.split(Component.literal(proposedText), textAreaWidth).size() <= 9) {
-                editableDescription = proposedText;
-                if (selectionPos != cursorPos) {
-                    cursorPos = Math.min(cursorPos, selectionPos) + 1;
-                } else {
-                    cursorPos++;
-                }
-                selectionPos = cursorPos;
+            editableDescription = proposedText;
+            if (selectionPos != cursorPos) {
+                cursorPos = Math.min(cursorPos, selectionPos) + 1;
+            } else {
+                cursorPos++;
             }
+            selectionPos = cursorPos;
+            scrollToCursor(getCoordsForIndex(cursorPos)[2]);
             return true;
         }
         return super.charTyped(codePoint, modifiers);
@@ -512,18 +567,11 @@ public class FieldGuideEntryScreen extends BookScreen {
                 if (!clipboard.isEmpty()) {
                     int start = Math.min(cursorPos, selectionPos);
                     int end = Math.max(cursorPos, selectionPos);
-                    String proposedText = editableDescription.substring(0, start) + clipboard + editableDescription.substring(end);
 
-                    while (!clipboard.isEmpty() && this.font.split(Component.literal(proposedText), textAreaWidth).size() > 9) {
-                        clipboard = clipboard.substring(0, clipboard.length() - 1);
-                        proposedText = editableDescription.substring(0, start) + clipboard + editableDescription.substring(end);
-                    }
-
-                    if (!clipboard.isEmpty() || selectionPos != cursorPos) {
-                        editableDescription = proposedText;
-                        cursorPos = start + clipboard.length();
-                        selectionPos = cursorPos;
-                    }
+                    editableDescription = editableDescription.substring(0, start) + clipboard + editableDescription.substring(end);
+                    cursorPos = start + clipboard.length();
+                    selectionPos = cursorPos;
+                    scrollToCursor(getCoordsForIndex(cursorPos)[2]);
                 }
                 return true;
             }
@@ -535,12 +583,14 @@ public class FieldGuideEntryScreen extends BookScreen {
                     editableDescription = editableDescription.substring(0, cursorPos - 1) + editableDescription.substring(cursorPos);
                     cursorPos--;
                     selectionPos = cursorPos;
+                    scrollToCursor(getCoordsForIndex(cursorPos)[2]);
                 }
                 return true;
             }
             if (keyCode == GLFW.GLFW_KEY_DELETE) {
                 if (selectionPos != cursorPos) {
                     deleteSelection();
+                    scrollToCursor(getCoordsForIndex(cursorPos)[2]);
                 } else if (cursorPos < editableDescription.length()) {
                     editableDescription = editableDescription.substring(0, cursorPos) + editableDescription.substring(cursorPos + 1);
                 }
@@ -552,6 +602,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                 } else if (cursorPos > 0) {
                     cursorPos--;
                 }
+                scrollToCursor(getCoordsForIndex(cursorPos)[2]);
                 if (!Screen.hasShiftDown()) selectionPos = cursorPos;
                 return true;
             }
@@ -561,28 +612,28 @@ public class FieldGuideEntryScreen extends BookScreen {
                 } else if (cursorPos < editableDescription.length()) {
                     cursorPos++;
                 }
+                scrollToCursor(getCoordsForIndex(cursorPos)[2]);
                 if (!Screen.hasShiftDown()) selectionPos = cursorPos;
                 return true;
             }
             if (keyCode == GLFW.GLFW_KEY_UP) {
                 moveCursorLine(-1);
+                scrollToCursor(getCoordsForIndex(cursorPos)[2]);
                 return true;
             }
             if (keyCode == GLFW.GLFW_KEY_DOWN) {
                 moveCursorLine(1);
+                scrollToCursor(getCoordsForIndex(cursorPos)[2]);
                 return true;
             }
             if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
                 int start = Math.min(cursorPos, selectionPos);
                 int end = Math.max(cursorPos, selectionPos);
-                String proposedText = editableDescription.substring(0, start) + "\n" + editableDescription.substring(end);
 
-                if (this.font.split(Component.literal(proposedText), textAreaWidth).size() <= 9) {
-                    editableDescription = proposedText;
-                    cursorPos = start + 1;
-                    selectionPos = cursorPos;
-                }
-                return true;
+                editableDescription = editableDescription.substring(0, start) + "\n" + editableDescription.substring(end);
+                cursorPos = start + 1;
+                selectionPos = cursorPos;
+                scrollToCursor(getCoordsForIndex(cursorPos)[2]);
             }
             if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
                 this.onClose();
@@ -627,6 +678,24 @@ public class FieldGuideEntryScreen extends BookScreen {
             xPos = xPos + healthWidth + gap;
             guiGraphics.blit(Constants.ATTRIBUTES_TEXTURE, xPos, yPos, 0, iconSize, iconSize, iconSize, 32, 32);
             guiGraphics.drawString(this.font, armor, xPos + iconSize + iconSpacing, yPos + 1, ModConfig.get().getTextColorInt(), false);
+        }
+    }
+
+    private void updateScrollFromMouse(double mouseY) {
+        List<FormattedCharSequence> lines = this.font.split(Component.literal(editableDescription), textAreaWidth);
+        int totalLines = lines.size();
+
+        if (totalLines > maxVisibleLines) {
+            int scrollbarY = textY;
+            int scrollbarHeight = (maxVisibleLines * this.font.lineHeight) - 2;
+
+            int thumbHeight = Math.max(4, (int) ((float) maxVisibleLines / totalLines * scrollbarHeight));
+
+            float progress = (float) (mouseY - scrollbarY - (thumbHeight / 2.0f)) / (scrollbarHeight - thumbHeight);
+            progress = Math.max(0.0f, Math.min(1.0f, progress));
+
+            scrollOffset = (int) (progress * (totalLines - maxVisibleLines) + 0.5f);
+            scrollOffset = Math.max(0, Math.min(scrollOffset, totalLines - maxVisibleLines));
         }
     }
 
@@ -761,7 +830,35 @@ public class FieldGuideEntryScreen extends BookScreen {
                 guiGraphics.drawString(this.font, dateComp, this.rightPageBounds.right() - this.font.width(dateComp), this.rightPageBounds.bottom() - 58, ModConfig.get().getTextMutedColorInt(), false);
             }
 
-            guiGraphics.drawWordWrap(font, Component.literal(editableDescription), textX, textY, textAreaWidth, ModConfig.get().getTextColorInt());
+            List<FormattedCharSequence> lines = this.font.split(Component.literal(editableDescription), textAreaWidth);
+            int totalLines = lines.size();
+            scrollOffset = Math.max(0, Math.min(scrollOffset, Math.max(0, totalLines - maxVisibleLines)));
+
+            // Render Text
+            for (int i = 0; i < maxVisibleLines && (i + scrollOffset) < totalLines; i++) {
+                guiGraphics.drawString(this.font, lines.get(i + scrollOffset), textX, textY + i * this.font.lineHeight, ModConfig.get().getTextColorInt(), false);
+            }
+
+            // Render Scrollbar
+            if (totalLines > maxVisibleLines) {
+                int scrollbarX = textX + textAreaWidth + 2;
+                int scrollbarY = textY;
+                int scrollbarHeight = (maxVisibleLines * this.font.lineHeight) - 2;
+                int scrollbarWidth = 2;
+
+                float progress = (float) scrollOffset / (totalLines - maxVisibleLines);
+                int thumbHeight = Math.max(4, (int) ((float) maxVisibleLines / totalLines * scrollbarHeight));
+                int thumbY = scrollbarY + (int) (progress * (scrollbarHeight - thumbHeight));
+
+                int hitPadding = 4;
+                boolean isHovered = (mouseX >= scrollbarX - hitPadding && mouseX <= scrollbarX + scrollbarWidth + hitPadding &&
+                        mouseY >= scrollbarY && mouseY <= scrollbarY + scrollbarHeight);
+
+                int thumbColor = (isDraggingScrollbar || isHovered) ? 0xFF8B5A2B : 0xFFBC986A;
+
+                guiGraphics.fill(scrollbarX, scrollbarY, scrollbarX + scrollbarWidth, scrollbarY + scrollbarHeight, 0xFFF9EED0);
+                guiGraphics.fill(scrollbarX, thumbY, scrollbarX + scrollbarWidth, thumbY + thumbHeight, thumbColor);
+            }
 
             if (isEditingDescription) {
                 // Render selection highlight
@@ -772,24 +869,29 @@ public class FieldGuideEntryScreen extends BookScreen {
                     int[] startCoords = getCoordsForIndex(start);
                     int[] endCoords = getCoordsForIndex(end);
 
-                    List<FormattedCharSequence> allLines = this.font.split(Component.literal(editableDescription), textAreaWidth);
-
                     for (int line = startCoords[2]; line <= endCoords[2]; line++) {
-                        if (line >= allLines.size()) break;
+                        if (line < scrollOffset || line >= scrollOffset + maxVisibleLines) continue;
+
+                        int visibleLine = line - scrollOffset;
                         int lineStartX = textX;
                         if (line == startCoords[2]) lineStartX = startCoords[0];
 
-                        int lineEndX = textX + this.font.width(allLines.get(line));
+                        int lineEndX = textX + this.font.width(lines.get(line));
                         if (line == endCoords[2]) lineEndX = endCoords[0];
 
-                        guiGraphics.fill(lineStartX, textY + line * this.font.lineHeight, lineEndX, textY + (line + 1) * this.font.lineHeight, 0x550000FF);
+                        guiGraphics.fill(lineStartX, textY + visibleLine * this.font.lineHeight, lineEndX, textY + (visibleLine + 1) * this.font.lineHeight, 0x550000FF);
                     }
                 }
 
+                // Render caret
                 if ((System.currentTimeMillis() / 500) % 2 == 0) {
                     int[] coords = getCoordsForIndex(cursorPos);
-                    String cursorChar = (cursorPos == editableDescription.length()) ? "_" : "|";
-                    guiGraphics.drawString(this.font, cursorChar, coords[0], coords[2] * this.font.lineHeight + textY, ModConfig.get().getTextColorInt(), false);
+                    int cursorLine = coords[2];
+                    if (cursorLine >= scrollOffset && cursorLine < scrollOffset + maxVisibleLines) {
+                        int visibleLine = cursorLine - scrollOffset;
+                        String cursorChar = (cursorPos == editableDescription.length()) ? "_" : "|";
+                        guiGraphics.drawString(this.font, cursorChar, coords[0], textY + visibleLine * this.font.lineHeight, ModConfig.get().getTextColorInt(), false);
+                    }
                 }
             }
         } else {
