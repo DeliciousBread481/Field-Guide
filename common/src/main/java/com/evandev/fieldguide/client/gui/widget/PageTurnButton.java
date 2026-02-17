@@ -18,9 +18,4 @@ public class PageTurnButton extends ImageButton {
     public void playDownSound(SoundManager handler) {
         handler.play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F));
     }
-
-    @Override
-    public void setFocused(boolean focused) {
-        super.setFocused(false);
-    }
 }

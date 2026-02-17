@@ -89,24 +89,14 @@ public abstract class BookScreen extends Screen {
                 0, 0, ARROW_HEIGHT,
                 Constants.SCROLL_UP_TEXTURE, ARROW_WIDTH, ARROW_HEIGHT * 2,
                 b -> scrollTabs(-1)
-        ) {
-            @Override
-            public void setFocused(boolean focused) {
-                super.setFocused(false);
-            }
-        };
+        );
 
         this.tabDownButton = new ImageButton(
                 xPos, downY, ARROW_WIDTH, ARROW_HEIGHT,
                 0, 0, ARROW_HEIGHT,
                 Constants.SCROLL_DOWN_TEXTURE, ARROW_WIDTH, ARROW_HEIGHT * 2,
                 b -> scrollTabs(1)
-        ) {
-            @Override
-            public void setFocused(boolean focused) {
-                super.setFocused(false);
-            }
-        };
+        );
 
         this.addRenderableWidget(tabUpButton);
         this.addRenderableWidget(tabDownButton);

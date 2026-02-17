@@ -200,12 +200,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                 32,
                 48,
                 b -> currentBiomePage = (int) Math.min(Math.ceil((double) spawnBiomes.size() / biomesPerPage), currentBiomePage + 1)
-        ) {
-            @Override
-            public void setFocused(boolean focused) {
-                super.setFocused(false);
-            }
-        };
+        );
 
         this.prevBiomePageButton = new ImageButton(
                 this.leftPageBounds.left() - 3,
@@ -219,12 +214,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                 32,
                 48,
                 b -> currentBiomePage = Math.max(1, currentBiomePage - 1)
-        ) {
-            @Override
-            public void setFocused(boolean focused) {
-                super.setFocused(false);
-            }
-        };
+        );
 
         nextBiomePageButton.visible = false;
         prevBiomePageButton.visible = false;
