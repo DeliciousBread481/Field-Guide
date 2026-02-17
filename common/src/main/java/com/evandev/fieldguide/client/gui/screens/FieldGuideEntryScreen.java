@@ -51,12 +51,20 @@ public class FieldGuideEntryScreen extends BookScreen {
     private ImageButton prevBiomePageButton;
     private ImageButton nextBiomePageButton;
     private FieldGuideSearchBox searchBox;
+
     private int scrollOffset = 0;
     private boolean isDraggingScrollbar = false;
     private String editableDescription = "";
     private boolean isEditingDescription = false;
     private int cursorPos = 0;
     private int selectionPos = 0;
+
+    private int lootScrollOffset = 0;
+    private String editableName = "";
+    private boolean isEditingName = false;
+    private int nameCursorPos = 0;
+    private int nameSelectionPos = 0;
+
     private int textX, textY, textAreaWidth, textAreaHeight;
 
     public FieldGuideEntryScreen(BookScreen parent, Object entry) {
@@ -67,8 +75,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
     private static Component getTitleForEntry(Object entry) {
         if (ClientFieldGuideManager.isUnlocked(entry) || ModConfig.get().showUndiscoveredNames) {
-            if (entry instanceof EntityType<?> type) return type.getDescription();
-            if (entry instanceof Block block) return block.getName();
+            return ClientFieldGuideManager.getEntryName(entry);
         }
         return Component.translatable("fieldguide.undiscovered");
     }
@@ -89,6 +96,10 @@ public class FieldGuideEntryScreen extends BookScreen {
             editableDescription = ClientFieldGuideManager.getEntryDescription(entry);
             cursorPos = editableDescription.length();
             selectionPos = cursorPos;
+
+            editableName = ClientFieldGuideManager.getEntryName(entry).getString();
+            nameCursorPos = editableName.length();
+            nameSelectionPos = nameCursorPos;
         }
 
         textX = this.rightPageBounds.left() + 5;
@@ -228,6 +239,16 @@ public class FieldGuideEntryScreen extends BookScreen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        int dropItemSize = 20;
+        int maxVisibleDropLines = 2;
+        int dropsAreaHeight = maxVisibleDropLines * dropItemSize + (maxVisibleDropLines - 1);
+        int dropsAreaY = this.rightPageBounds.bottom() - 6 - dropsAreaHeight;
+
+        if (mouseX >= this.rightPageBounds.left() && mouseX <= this.rightPageBounds.right() && mouseY >= dropsAreaY && mouseY <= this.rightPageBounds.bottom() - 6) {
+            lootScrollOffset = Math.max(0, lootScrollOffset - (int) Math.signum(delta));
+            return true;
+        }
+
         if (isEditingDescription || (mouseX >= textX && mouseX <= textX + textAreaWidth && mouseY >= textY && mouseY <= textY + textAreaHeight)) {
             List<FormattedCharSequence> lines = this.font.split(Component.literal(editableDescription), textAreaWidth);
             int totalLines = lines.size();
@@ -290,11 +311,21 @@ public class FieldGuideEntryScreen extends BookScreen {
         }
     }
 
+    private void saveNameIfChanged() {
+        if (ClientFieldGuideManager.isUnlocked(entry)) {
+            ClientFieldGuideManager.setCustomName(entry, editableName);
+        }
+    }
+
     @Override
     public void removed() {
         if (isEditingDescription) {
             saveDescriptionIfChanged();
             isEditingDescription = false;
+        }
+        if (isEditingName) {
+            saveNameIfChanged();
+            isEditingName = false;
         }
     }
 
@@ -319,15 +350,15 @@ public class FieldGuideEntryScreen extends BookScreen {
         return new int[]{cx, textY + lineIdx * this.font.lineHeight, lineIdx};
     }
 
-    private int getWordPosition(int dir) {
-        int pos = cursorPos;
+    private int getWordPosition(String text, int cursor, int dir) {
+        int pos = cursor;
         if (dir < 0) {
-            while (pos > 0 && Character.isWhitespace(editableDescription.charAt(pos - 1))) pos--;
-            while (pos > 0 && !Character.isWhitespace(editableDescription.charAt(pos - 1))) pos--;
+            while (pos > 0 && Character.isWhitespace(text.charAt(pos - 1))) pos--;
+            while (pos > 0 && !Character.isWhitespace(text.charAt(pos - 1))) pos--;
         } else {
-            int len = editableDescription.length();
-            while (pos < len && Character.isWhitespace(editableDescription.charAt(pos))) pos++;
-            while (pos < len && !Character.isWhitespace(editableDescription.charAt(pos))) pos++;
+            int len = text.length();
+            while (pos < len && Character.isWhitespace(text.charAt(pos))) pos++;
+            while (pos < len && !Character.isWhitespace(text.charAt(pos))) pos++;
         }
         return pos;
     }
@@ -409,6 +440,16 @@ public class FieldGuideEntryScreen extends BookScreen {
         }
     }
 
+    private void deleteNameSelection() {
+        if (nameSelectionPos != nameCursorPos) {
+            int start = Math.min(nameCursorPos, nameSelectionPos);
+            int end = Math.max(nameCursorPos, nameSelectionPos);
+            editableName = editableName.substring(0, start) + editableName.substring(end);
+            nameCursorPos = start;
+            nameSelectionPos = start;
+        }
+    }
+
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (isDraggingScrollbar) {
@@ -451,6 +492,10 @@ public class FieldGuideEntryScreen extends BookScreen {
                     isEditingDescription = false;
                     saveDescriptionIfChanged();
                 }
+                if (isEditingName) {
+                    isEditingName = false;
+                    saveNameIfChanged();
+                }
             } else {
                 this.searchBox.setFocused(false);
             }
@@ -459,6 +504,27 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (super.mouseClicked(mouseX, mouseY, button)) return true;
 
         if (ClientFieldGuideManager.isUnlocked(entry)) {
+            int titleY = this.leftPageBounds.top() + 8;
+            int titleX = this.rightPageBounds.left() + 5;
+            int titleWidth = this.font.width(editableName.isEmpty() ? getTitleForEntry(entry).getString() : editableName);
+
+            if (mouseX >= titleX && mouseX <= titleX + Math.max(titleWidth, 50) && mouseY >= titleY && mouseY <= titleY + this.font.lineHeight) {
+                isEditingName = true;
+                if (isEditingDescription) {
+                    isEditingDescription = false;
+                    saveDescriptionIfChanged();
+                }
+                if (this.searchBox != null) this.searchBox.setFocused(false);
+
+                int relativeX = (int) (mouseX - titleX);
+                nameCursorPos = this.font.plainSubstrByWidth(editableName, relativeX).length();
+                if (!Screen.hasShiftDown()) nameSelectionPos = nameCursorPos;
+                return true;
+            } else if (isEditingName) {
+                isEditingName = false;
+                saveNameIfChanged();
+            }
+
             if (mouseX >= textX && mouseX <= textX + textAreaWidth && mouseY >= textY && mouseY <= textY + textAreaHeight) {
                 isEditingDescription = true;
                 if (this.searchBox != null) this.searchBox.setFocused(false);
@@ -523,6 +589,27 @@ public class FieldGuideEntryScreen extends BookScreen {
             scrollToCursor(getCoordsForIndex(cursorPos)[2]);
             return true;
         }
+
+        if (isEditingName) {
+            String proposedText;
+            if (nameSelectionPos != nameCursorPos) {
+                int start = Math.min(nameCursorPos, nameSelectionPos);
+                int end = Math.max(nameCursorPos, nameSelectionPos);
+                proposedText = editableName.substring(0, start) + codePoint + editableName.substring(end);
+            } else {
+                proposedText = editableName.substring(0, nameCursorPos) + codePoint + editableName.substring(nameCursorPos);
+            }
+
+            editableName = proposedText;
+            if (nameSelectionPos != nameCursorPos) {
+                nameCursorPos = Math.min(nameCursorPos, nameSelectionPos) + 1;
+            } else {
+                nameCursorPos++;
+            }
+            nameSelectionPos = nameCursorPos;
+            return true;
+        }
+
         return super.charTyped(codePoint, modifiers);
     }
 
@@ -535,6 +622,92 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
             if (this.searchBox.keyPressed(keyCode, scanCode, modifiers)) return true;
             return true;
+        }
+
+        if (isEditingName) {
+            if (Screen.isSelectAll(keyCode)) {
+                nameSelectionPos = 0;
+                nameCursorPos = editableName.length();
+                return true;
+            }
+            if (Screen.isCopy(keyCode)) {
+                if (nameSelectionPos != nameCursorPos) {
+                    int start = Math.min(nameCursorPos, nameSelectionPos);
+                    int end = Math.max(nameCursorPos, nameSelectionPos);
+                    Minecraft.getInstance().keyboardHandler.setClipboard(editableName.substring(start, end));
+                }
+                return true;
+            }
+            if (Screen.isCut(keyCode)) {
+                if (nameSelectionPos != nameCursorPos) {
+                    int start = Math.min(nameCursorPos, nameSelectionPos);
+                    int end = Math.max(nameCursorPos, nameSelectionPos);
+                    Minecraft.getInstance().keyboardHandler.setClipboard(editableName.substring(start, end));
+                    deleteNameSelection();
+                }
+                return true;
+            }
+            if (Screen.isPaste(keyCode)) {
+                String clipboard = Minecraft.getInstance().keyboardHandler.getClipboard();
+                if (!clipboard.isEmpty()) {
+                    int start = Math.min(nameCursorPos, nameSelectionPos);
+                    int end = Math.max(nameCursorPos, nameSelectionPos);
+                    editableName = editableName.substring(0, start) + clipboard + editableName.substring(end);
+                    nameCursorPos = start + clipboard.length();
+                    nameSelectionPos = nameCursorPos;
+                }
+                return true;
+            }
+
+            if (keyCode == GLFW.GLFW_KEY_BACKSPACE) {
+                if (nameSelectionPos != nameCursorPos) {
+                    deleteNameSelection();
+                } else if (nameCursorPos > 0) {
+                    editableName = editableName.substring(0, nameCursorPos - 1) + editableName.substring(nameCursorPos);
+                    nameCursorPos--;
+                    nameSelectionPos = nameCursorPos;
+                }
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_DELETE) {
+                if (nameSelectionPos != nameCursorPos) {
+                    deleteNameSelection();
+                } else if (nameCursorPos < editableName.length()) {
+                    editableName = editableName.substring(0, nameCursorPos) + editableName.substring(nameCursorPos + 1);
+                }
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_LEFT) {
+                if (Screen.hasControlDown()) {
+                    nameCursorPos = getWordPosition(editableName, nameCursorPos, -1);
+                } else if (nameCursorPos > 0) {
+                    nameCursorPos--;
+                }
+                if (!Screen.hasShiftDown()) nameSelectionPos = nameCursorPos;
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_RIGHT) {
+                if (Screen.hasControlDown()) {
+                    nameCursorPos = getWordPosition(editableName, nameCursorPos, 1);
+                } else if (nameCursorPos < editableName.length()) {
+                    nameCursorPos++;
+                }
+                if (!Screen.hasShiftDown()) nameSelectionPos = nameCursorPos;
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER || keyCode == GLFW.GLFW_KEY_ESCAPE) {
+                isEditingName = false;
+                saveNameIfChanged();
+                if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+                    this.onClose();
+                }
+                return true;
+            }
+
+            if (FieldGuideClient.OPEN_GUIDE_KEY.matches(keyCode, scanCode) || (this.minecraft != null && this.minecraft.options.keyInventory.matches(keyCode, scanCode))) {
+                return false;
+            }
+            return super.keyPressed(keyCode, scanCode, modifiers);
         }
 
         if (isEditingDescription) {
@@ -596,7 +769,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
             if (keyCode == GLFW.GLFW_KEY_LEFT) {
                 if (Screen.hasControlDown()) {
-                    cursorPos = getWordPosition(-1);
+                    cursorPos = getWordPosition(editableDescription, cursorPos, -1);
                 } else if (cursorPos > 0) {
                     cursorPos--;
                 }
@@ -606,7 +779,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
             if (keyCode == GLFW.GLFW_KEY_RIGHT) {
                 if (Screen.hasControlDown()) {
-                    cursorPos = getWordPosition(1);
+                    cursorPos = getWordPosition(editableDescription, cursorPos, 1);
                 } else if (cursorPos < editableDescription.length()) {
                     cursorPos++;
                 }
@@ -719,7 +892,28 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         // Entry Name
         int titleY = this.leftPageBounds.top() + 8;
-        guiGraphics.drawString(this.font, title, this.rightPageBounds.left() + 5, titleY, unlocked ? ModConfig.get().getTextTitleColorInt() : ModConfig.get().getTextMutedColorInt(), false);
+        int titleX = this.rightPageBounds.left() + 5;
+        if (unlocked) {
+            if (isEditingName) {
+                if (nameSelectionPos != nameCursorPos) {
+                    int start = Math.min(nameCursorPos, nameSelectionPos);
+                    int end = Math.max(nameCursorPos, nameSelectionPos);
+                    int selStartX = titleX + this.font.width(editableName.substring(0, start));
+                    int selEndX = titleX + this.font.width(editableName.substring(0, end));
+                    guiGraphics.fill(selStartX, titleY, selEndX, titleY + this.font.lineHeight, 0x550000FF);
+                }
+                guiGraphics.drawString(this.font, editableName, titleX, titleY, ModConfig.get().getTextTitleColorInt(), false);
+                if ((System.currentTimeMillis() / 500) % 2 == 0) {
+                    int cursorX = titleX + this.font.width(editableName.substring(0, nameCursorPos));
+                    String cursorChar = (nameCursorPos == editableName.length()) ? "_" : "|";
+                    guiGraphics.drawString(this.font, cursorChar, cursorX, titleY, ModConfig.get().getTextTitleColorInt(), false);
+                }
+            } else {
+                guiGraphics.drawString(this.font, editableName.isEmpty() ? title : Component.literal(editableName), titleX, titleY, ModConfig.get().getTextTitleColorInt(), false);
+            }
+        } else {
+            guiGraphics.drawString(this.font, title, titleX, titleY, ModConfig.get().getTextMutedColorInt(), false);
+        }
 
         // Mob Alignment Icons
         if ((unlocked || ModConfig.get().showUndiscoveredNames) && entry instanceof EntityType<?> type && renderedEntity instanceof LivingEntity) {
@@ -960,7 +1154,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         List<List<ItemStack>> dropLines = new ArrayList<>();
         int dropItemSize = 20;
         int dropSpacing = 1;
-        int dropStartY;
+        int scrollbarY;
 
         if (unlocked) {
             List<ItemStack> drops = ClientFieldGuideManager.getInstance().getDrops(entry);
@@ -982,16 +1176,20 @@ public class FieldGuideEntryScreen extends BookScreen {
                 }
                 dropLines.add(currentLine);
 
-                int dropsHeight = 2 * dropItemSize + (dropLines.size() - 1) * dropSpacing;
+                int maxVisibleDropLines = 2;
+                lootScrollOffset = Math.max(0, Math.min(lootScrollOffset, Math.max(0, dropLines.size() - maxVisibleDropLines)));
+
+                int maxDropsAreaHeight = maxVisibleDropLines * dropItemSize + Math.max(0, maxVisibleDropLines - 1) * dropSpacing;
                 int bottomAnchor = this.rightPageBounds.bottom() - 6;
-                dropStartY = bottomAnchor - dropsHeight;
+                scrollbarY = bottomAnchor - maxDropsAreaHeight;
 
                 RenderSystem.enableDepthTest();
                 RenderSystem.depthMask(true);
 
                 // Backgrounds and Items
-                int currentY = dropStartY;
-                for (List<ItemStack> line : dropLines) {
+                int currentY = scrollbarY;
+                for (int i = lootScrollOffset; i < Math.min(lootScrollOffset + maxVisibleDropLines, dropLines.size()); i++) {
+                    List<ItemStack> line = dropLines.get(i);
                     int startX = this.rightPageBounds.left();
 
                     for (ItemStack stack : line) {

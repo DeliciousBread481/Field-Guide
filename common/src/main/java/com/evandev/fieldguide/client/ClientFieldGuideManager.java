@@ -17,6 +17,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -68,8 +69,12 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     private final Set<String> seenEntries = new HashSet<>();
     private final Map<String, Long> discoveryTimes = new HashMap<>();
     private final Map<Object, List<ItemStack>> dropCache = new HashMap<>();
+
     private final Map<String, String> customDescriptions = new HashMap<>();
+    private final Map<String, String> customNames = new HashMap<>();
     private final Map<String, Long> discoveryGameTimes = new HashMap<>();
+    private Path customDescriptionsPath = null;
+    private Path customNamesPath = null;
     private Path currentSavePath = null;
 
     // Scanning State
@@ -83,7 +88,6 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     private int prevScanTicks = 0;
     private BlockPos fadingPos = null;
     private Object outOfRangeTarget = null;
-    private Path customDescriptionsPath = null;
 
     private ClientFieldGuideManager() {
     }
@@ -156,6 +160,40 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         }
     }
 
+    public static Component getEntryName(Object entry) {
+        ResourceLocation id = getEntryId(entry);
+        if (id != null && INSTANCE.customNames.containsKey(id.toString())) {
+            return Component.literal(INSTANCE.customNames.get(id.toString()));
+        }
+        if (entry instanceof EntityType<?> type) return type.getDescription();
+        if (entry instanceof Block block) return block.getName();
+        return Component.translatable("fieldguide.unknown");
+    }
+
+    public static String getCustomName(Object entry) {
+        ResourceLocation id = getEntryId(entry);
+        if (id != null) return INSTANCE.customNames.get(id.toString());
+        return null;
+    }
+
+    public static void setCustomName(Object entry, String name) {
+        ResourceLocation id = getEntryId(entry);
+        if (id != null) {
+            if (name == null || name.isEmpty() || name.equals(getDefaultName(entry))) {
+                INSTANCE.customNames.remove(id.toString());
+            } else {
+                INSTANCE.customNames.put(id.toString(), name);
+            }
+            INSTANCE.saveCustomNames();
+        }
+    }
+
+    public static String getDefaultName(Object entry) {
+        if (entry instanceof EntityType<?> type) return type.getDescription().getString();
+        if (entry instanceof Block block) return block.getName().getString();
+        return I18n.get("fieldguide.unknown");
+    }
+
     private void loadCustomDescriptions() {
         if (customDescriptionsPath == null || !customDescriptionsPath.toFile().exists()) return;
         try (FileReader reader = new FileReader(customDescriptionsPath.toFile())) {
@@ -184,6 +222,37 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             }
         } catch (Exception e) {
             Constants.LOG.error("Failed to save custom descriptions", e);
+        }
+    }
+
+    private void loadCustomNames() {
+        if (customNamesPath == null || !customNamesPath.toFile().exists()) return;
+        try (FileReader reader = new FileReader(customNamesPath.toFile())) {
+            JsonObject json = GSON.fromJson(reader, JsonObject.class);
+            customNames.clear();
+            for (Map.Entry<String, JsonElement> entry : json.entrySet()) {
+                customNames.put(entry.getKey(), entry.getValue().getAsString());
+            }
+        } catch (Exception e) {
+            Constants.LOG.error("Failed to load custom names", e);
+        }
+    }
+
+    private void saveCustomNames() {
+        if (customNamesPath == null) return;
+        try {
+            JsonObject json = new JsonObject();
+            for (Map.Entry<String, String> entry : customNames.entrySet()) {
+                json.addProperty(entry.getKey(), entry.getValue());
+            }
+
+            File file = customNamesPath.toFile();
+            if (file.getParentFile() != null) file.getParentFile().mkdirs();
+            try (FileWriter w = new FileWriter(file)) {
+                GSON.toJson(json, w);
+            }
+        } catch (Exception e) {
+            Constants.LOG.error("Failed to save custom names", e);
         }
     }
 
@@ -279,6 +348,12 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
                     .resolve("config").resolve("fieldguide_descriptions.json");
         }
         loadCustomDescriptions();
+
+        if (customNamesPath == null) {
+            customNamesPath = Minecraft.getInstance().gameDirectory.toPath()
+                    .resolve("config").resolve("fieldguide_names.json");
+        }
+        loadCustomNames();
 
         resolveAllEntries();
         Constants.LOG.info("Loaded {} category visuals and {} entry visuals.", categoryVisuals.size(), entryVisuals.size());

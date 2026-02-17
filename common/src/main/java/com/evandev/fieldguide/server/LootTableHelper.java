@@ -5,8 +5,10 @@ import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.server.loot.ParsedDrop;
 import com.evandev.fieldguide.server.loot.StaticLootParser;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -73,25 +75,67 @@ public class LootTableHelper {
         return null;
     }
 
+    private static boolean matchesTarget(Object entry, String targetStr) {
+        ResourceLocation entryId = getEntryId(entry);
+        if (entryId == null) return false;
+
+        if (targetStr.startsWith("#")) {
+            try {
+                ResourceLocation tagId = new ResourceLocation(targetStr.substring(1));
+                if (entry instanceof EntityType<?> type) {
+                    TagKey<EntityType<?>> tagKey = TagKey.create(Registries.ENTITY_TYPE, tagId);
+                    var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type);
+                    if (key.isPresent()) {
+                        var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
+                        return holder.isPresent() && holder.get().is(tagKey);
+                    }
+                } else if (entry instanceof Block block) {
+                    TagKey<Block> tagKey = TagKey.create(Registries.BLOCK, tagId);
+                    var key = BuiltInRegistries.BLOCK.getResourceKey(block);
+                    if (key.isPresent()) {
+                        var holder = BuiltInRegistries.BLOCK.getHolder(key.get());
+                        return holder.isPresent() && holder.get().is(tagKey);
+                    }
+                }
+            } catch (Exception e) {
+                Constants.LOG.error("FieldGuide: Failed to parse tag {}", targetStr, e);
+            }
+            return false;
+        } else {
+            return entryId.toString().equals(targetStr);
+        }
+    }
+
     public static void applyConfigModifications(Object entry, List<ItemStack> distinctDrops) {
         ResourceLocation entryId = getEntryId(entry);
 
         if (entryId != null) {
             ModConfig config = ModConfig.get();
-            String idStr = entryId.toString();
 
             // Removals
             Set<String> itemsToRemove = new HashSet<>();
             for (String configLine : config.lootRemovals) {
                 String[] parts = configLine.split("\\|");
-                if (parts.length == 2 && parts[0].equals(idStr)) {
+                if (parts.length == 2 && matchesTarget(entry, parts[0])) {
                     itemsToRemove.add(parts[1]);
                 }
             }
             if (!itemsToRemove.isEmpty()) {
                 distinctDrops.removeIf(stack -> {
                     ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
-                    return itemsToRemove.contains(itemId.toString());
+                    for (String target : itemsToRemove) {
+                        if (target.startsWith("#")) {
+                            try {
+                                ResourceLocation tagId = new ResourceLocation(target.substring(1));
+                                TagKey<Item> tagKey = TagKey.create(Registries.ITEM, tagId);
+                                if (stack.is(tagKey)) return true;
+                            } catch (Exception ignored) {
+                            }
+                        } else {
+                            if (itemId.toString().equals(target)) return true;
+                        }
+                    }
+                    return false;
                 });
             }
 
@@ -99,18 +143,38 @@ public class LootTableHelper {
             boolean added = false;
             for (String configLine : config.lootAdditions) {
                 String[] parts = configLine.split("\\|");
-                if (parts.length == 2 && parts[0].equals(idStr)) {
-                    try {
-                        ResourceLocation itemId = new ResourceLocation(parts[1]);
-                        Item item = BuiltInRegistries.ITEM.get(itemId);
-                        if (item != Items.AIR) {
-                            ItemStack addition = new ItemStack(item);
-                            addition.getOrCreateTag().putFloat("FieldGuideDropChance", 100.0f);
-                            distinctDrops.add(addition);
-                            added = true;
+                if (parts.length == 2 && matchesTarget(entry, parts[0])) {
+                    String itemTarget = parts[1];
+                    if (itemTarget.startsWith("#")) {
+                        try {
+                            ResourceLocation tagId = new ResourceLocation(itemTarget.substring(1));
+                            TagKey<Item> tagKey = TagKey.create(Registries.ITEM, tagId);
+                            var items = BuiltInRegistries.ITEM.getTagOrEmpty(tagKey);
+                            for (var holder : items) {
+                                Item item = holder.value();
+                                if (item != Items.AIR) {
+                                    ItemStack addition = new ItemStack(item);
+                                    addition.getOrCreateTag().putFloat("FieldGuideDropChance", 100.0f);
+                                    distinctDrops.add(addition);
+                                    added = true;
+                                }
+                            }
+                        } catch (Exception e) {
+                            Constants.LOG.error("FieldGuide: Failed to add loot tag override for {}", itemTarget, e);
                         }
-                    } catch (Exception e) {
-                        Constants.LOG.error("FieldGuide: Failed to add loot override for {}", idStr, e);
+                    } else {
+                        try {
+                            ResourceLocation itemId = new ResourceLocation(itemTarget);
+                            Item item = BuiltInRegistries.ITEM.get(itemId);
+                            if (item != Items.AIR) {
+                                ItemStack addition = new ItemStack(item);
+                                addition.getOrCreateTag().putFloat("FieldGuideDropChance", 100.0f);
+                                distinctDrops.add(addition);
+                                added = true;
+                            }
+                        } catch (Exception e) {
+                            Constants.LOG.error("FieldGuide: Failed to add loot override for {}", itemTarget, e);
+                        }
                     }
                 }
             }

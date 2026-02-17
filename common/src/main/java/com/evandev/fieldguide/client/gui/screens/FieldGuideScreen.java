@@ -594,8 +594,8 @@ public class FieldGuideScreen extends BookScreen {
     private void renderEntryTooltip(GuiGraphics guiGraphics, Object entry, int mouseX, int mouseY, boolean unlocked) {
         if (unlocked || ModConfig.get().showUndiscoveredNames) {
             Component name;
-            if (entry instanceof EntityType<?> type) name = type.getDescription();
-            else if (entry instanceof Block block) name = block.getName();
+            if (entry instanceof EntityType<?>) name = ClientFieldGuideManager.getEntryName(entry);
+            else if (entry instanceof Block) name = ClientFieldGuideManager.getEntryName(entry);
             else name = Component.translatable("fieldguide.unknown");
 
             List<Component> tooltip = new ArrayList<>();
