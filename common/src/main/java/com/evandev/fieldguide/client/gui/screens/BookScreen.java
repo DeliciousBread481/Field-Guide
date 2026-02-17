@@ -1,11 +1,14 @@
 package com.evandev.fieldguide.client.gui.screens;
 
+import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.widget.TabButton;
 import com.evandev.fieldguide.data.Category;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
@@ -21,15 +24,23 @@ public abstract class BookScreen extends Screen {
     private static final int PAGE_WIDTH = 122;
     private static final int PAGE_HEIGHT = 164;
 
+    private static final int ARROW_WIDTH = 24;
+    private static final int ARROW_HEIGHT = 12;
+
     private static final int TAB_WIDTH = 24;
     private static final int TAB_HEIGHT = 24;
-    private static final int TAB_GAP = 0;
-    private static final int TAB_Y_OFFSET = 29;
+    private static final int TAB_GAP = -1;
+    private static final int TAB_Y_OFFSET = 32;
+    private static final int MAX_TABS = 6;
 
+    private final List<TabButton> tabButtons = new ArrayList<>();
     private final List<Category> sortedCategories = new ArrayList<>();
     protected Bounds bounds;
     protected Bounds leftPageBounds;
     protected Bounds rightPageBounds;
+    private int tabStartIndex = 0;
+    private Button tabUpButton;
+    private Button tabDownButton;
     private Category selectedCategory;
 
     protected BookScreen(Component title) {
@@ -57,15 +68,70 @@ public abstract class BookScreen extends Screen {
         this.sortedCategories.sort(Comparator.comparingInt(Category::getSortIndex)
                 .thenComparing(c -> c.getId().getPath()));
 
-        // Add tabs
-        int startY = this.bounds.top() + TAB_Y_OFFSET;
-        int xPos = this.bounds.left() - 7;
-        for (int i = 0; i < sortedCategories.size(); i++) {
-            Category category = sortedCategories.get(i);
-            int yPos = startY + (i * (TAB_HEIGHT + TAB_GAP));
+        int maxStart = Math.max(0, this.sortedCategories.size() - MAX_TABS);
+        this.tabStartIndex = Math.max(0, Math.min(this.tabStartIndex, maxStart));
 
-            TabButton tab = new TabButton(xPos, yPos, TAB_WIDTH, TAB_HEIGHT, category, this);
+        this.tabButtons.clear();
+        int xPos = this.bounds.left() - 7;
+        int startY = this.bounds.top() + TAB_Y_OFFSET;
+
+        // Generate all tab widgets
+        for (Category category : sortedCategories) {
+            TabButton tab = new TabButton(xPos, 0, TAB_WIDTH, TAB_HEIGHT, category, this);
+            this.tabButtons.add(tab);
             this.addRenderableWidget(tab);
+        }
+
+        int upY = startY - ARROW_HEIGHT;
+        int downY = startY + (MAX_TABS * (TAB_HEIGHT + TAB_GAP)) + 1;
+
+        this.tabUpButton = new ImageButton(
+                xPos, upY, ARROW_WIDTH, ARROW_HEIGHT,
+                0, 0, ARROW_HEIGHT,
+                Constants.SCROLL_UP_TEXTURE, ARROW_WIDTH, ARROW_HEIGHT * 2,
+                b -> scrollTabs(-1)
+        );
+
+        this.tabDownButton = new ImageButton(
+                xPos, downY, ARROW_WIDTH, ARROW_HEIGHT,
+                0, 0, ARROW_HEIGHT,
+                Constants.SCROLL_DOWN_TEXTURE, ARROW_WIDTH, ARROW_HEIGHT * 2,
+                b -> scrollTabs(1)
+        );
+
+        this.addRenderableWidget(tabUpButton);
+        this.addRenderableWidget(tabDownButton);
+        updateTabVisibility();
+    }
+
+    private void scrollTabs(int direction) {
+        this.tabStartIndex += direction;
+        int maxStart = Math.max(0, this.sortedCategories.size() - MAX_TABS);
+        this.tabStartIndex = Math.max(0, Math.min(this.tabStartIndex, maxStart));
+        updateTabVisibility();
+    }
+
+    private void updateTabVisibility() {
+        boolean needsPagination = this.sortedCategories.size() > MAX_TABS;
+
+        this.tabUpButton.visible = needsPagination && this.tabStartIndex > 0;
+        this.tabDownButton.visible = needsPagination && this.tabStartIndex < this.sortedCategories.size() - MAX_TABS;
+
+        int startY = this.bounds.top() + TAB_Y_OFFSET;
+
+        for (int i = 0; i < this.tabButtons.size(); i++) {
+            TabButton tab = this.tabButtons.get(i);
+
+            if (i >= this.tabStartIndex && i < this.tabStartIndex + MAX_TABS) {
+                tab.visible = true;
+                tab.active = true;
+
+                int relativeIndex = i - this.tabStartIndex;
+                tab.setY(startY + (relativeIndex * (TAB_HEIGHT + TAB_GAP)));
+            } else {
+                tab.visible = false;
+                tab.active = false;
+            }
         }
     }
 

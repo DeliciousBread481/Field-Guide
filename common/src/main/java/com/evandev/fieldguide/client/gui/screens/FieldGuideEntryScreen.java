@@ -507,7 +507,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
         } else {
             ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-            String lockedKey = "fieldguide.description.locked"; // Generic fallback
+            String lockedKey = "fieldguide.description.locked";
 
             if (id != null) {
                 String specificKey = "fieldguide.description.locked." + id.getNamespace() + "." + id.getPath();

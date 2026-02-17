@@ -26,6 +26,9 @@ public class Constants {
     public static final ResourceLocation PREV_PAGE_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/prev_page.png");
     public static final ResourceLocation BACK_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/back.png");
     public static final ResourceLocation TAB_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/tab.png");
+    public static final ResourceLocation SCROLL_UP_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/scroll_up.png");
+    public static final ResourceLocation SCROLL_DOWN_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/scroll_down.png");
+
     public static final ResourceLocation CELL_BACKGROUND_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/cell_background.png");
     public static final ResourceLocation ITEM_BACKGROUND_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/item_background.png");
     public static final ResourceLocation CELL_BACKGROUND_HOVER_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/cell_background_hover.png");

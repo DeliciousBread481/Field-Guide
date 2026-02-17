@@ -229,7 +229,6 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
         loadVisuals(resourceManager, "visuals/categories", (id, json) -> {
             CategoryVisual visual = new CategoryVisual();
-            if (json.has("color")) visual.color = GsonHelper.getAsString(json, "color");
             if (json.has("icon")) visual.icon = new ResourceLocation(GsonHelper.getAsString(json, "icon"));
             categoryVisuals.put(id, visual);
         });
