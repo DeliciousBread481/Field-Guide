@@ -23,6 +23,7 @@ import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
@@ -39,12 +40,11 @@ public class FieldGuideScreen extends BookScreen {
 
     private static final int SEARCH_WIDTH = 140;
     private static final int SEARCH_HEIGHT = 20;
-
     private static ResourceLocation lastOpenedCategory = null;
     private static int lastOpenedPage = 0;
-
     private final Map<EntityType<?>, Entity> entryCache = new HashMap<>();
     public boolean isSearching = false;
+    private boolean initialSearchFocus = false;
     private List<Object> currentEntries = new ArrayList<>();
     private List<Object> recentEntries = new ArrayList<>();
     private int currentPage = 0;
@@ -88,6 +88,10 @@ public class FieldGuideScreen extends BookScreen {
 
     public static void setLastOpenedPage(int lastOpenedPage) {
         FieldGuideScreen.lastOpenedPage = lastOpenedPage;
+    }
+
+    public void setInitialSearchFocus(boolean focus) {
+        this.initialSearchFocus = focus;
     }
 
     @Override
@@ -155,6 +159,10 @@ public class FieldGuideScreen extends BookScreen {
         int searchY = this.bounds.bottom() + 5;
 
         this.searchBox = new FieldGuideSearchBox(this.font, searchX, searchY, SEARCH_WIDTH, SEARCH_HEIGHT, this.searchQuery, this::onSearchChanged);
+        if (this.initialSearchFocus) {
+            this.searchBox.setInitialFocus();
+            this.setFocused(this.searchBox);
+        }
         this.addRenderableWidget(this.searchBox);
 
         // Get entries
@@ -171,6 +179,10 @@ public class FieldGuideScreen extends BookScreen {
         }
 
         goToPage(this.currentPage);
+    }
+
+    public FieldGuideSearchBox getSearchBox() {
+        return this.searchBox;
     }
 
     private void onSearchChanged(String query) {
@@ -380,7 +392,41 @@ public class FieldGuideScreen extends BookScreen {
                         guiGraphics.drawString(this.font, searchTitle, iconX + iconSize + 4, titleY, ModConfig.get().getTextColorInt(), false);
                     }
                 } else if (searchQuery.startsWith("=^")) {
-                    guiGraphics.drawString(this.font, "Drops " + searchQuery.substring(2), this.leftPageBounds.left(), titleY, ModConfig.get().getTextColorInt(), false);
+                    String dropQuery = searchQuery.substring(2).toLowerCase(Locale.ROOT);
+                    ItemStack displayStack = ItemStack.EMPTY;
+                    String dropName = searchQuery.substring(2);
+
+                    for (Object entry : currentEntries) {
+                        List<ItemStack> drops = ClientFieldGuideManager.getInstance().getDrops(entry);
+                        for (ItemStack stack : drops) {
+                            if (stack.getHoverName().getString().toLowerCase(Locale.ROOT).equals(dropQuery)) {
+                                displayStack = stack;
+                                dropName = stack.getHoverName().getString();
+                                break;
+                            }
+                        }
+                        if (!displayStack.isEmpty()) break;
+                    }
+
+                    int iconSize = 16;
+                    int iconY = titleY - 5;
+                    int iconX = this.leftPageBounds.left() - 3;
+
+                    if (!displayStack.isEmpty()) {
+                        guiGraphics.renderItem(displayStack, iconX, iconY);
+                    } else {
+                        StringBuilder titleCase = new StringBuilder();
+                        for (String word : dropName.split("\\s+")) {
+                            if (!word.isEmpty()) {
+                                titleCase.append(Character.toUpperCase(word.charAt(0)))
+                                        .append(word.substring(1).toLowerCase(Locale.ROOT))
+                                        .append(" ");
+                            }
+                        }
+                        dropName = titleCase.toString().trim();
+                    }
+
+                    guiGraphics.drawString(this.font, "Drops " + dropName, iconX + iconSize + 4, titleY, ModConfig.get().getTextColorInt(), false);
                 } else {
                     guiGraphics.drawString(this.font, searchQuery, this.leftPageBounds.left(), titleY, ModConfig.get().getTextMutedColorInt(), false);
                 }

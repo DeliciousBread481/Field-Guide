@@ -32,13 +32,12 @@ public abstract class BookScreen extends Screen {
     private static final int TAB_GAP = -1;
     private static final int TAB_Y_OFFSET = 32;
     private static final int MAX_TABS = 6;
-
+    private static int tabStartIndex = 0;
     private final List<TabButton> tabButtons = new ArrayList<>();
     private final List<Category> sortedCategories = new ArrayList<>();
     protected Bounds bounds;
     protected Bounds leftPageBounds;
     protected Bounds rightPageBounds;
-    private int tabStartIndex = 0;
     private Button tabUpButton;
     private Button tabDownButton;
     private Category selectedCategory;
@@ -69,7 +68,7 @@ public abstract class BookScreen extends Screen {
                 .thenComparing(c -> c.getId().getPath()));
 
         int maxStart = Math.max(0, this.sortedCategories.size() - MAX_TABS);
-        this.tabStartIndex = Math.max(0, Math.min(this.tabStartIndex, maxStart));
+        tabStartIndex = Math.max(0, Math.min(tabStartIndex, maxStart));
 
         this.tabButtons.clear();
         int xPos = this.bounds.left() - 7;
@@ -105,28 +104,28 @@ public abstract class BookScreen extends Screen {
     }
 
     private void scrollTabs(int direction) {
-        this.tabStartIndex += direction;
+        tabStartIndex += direction;
         int maxStart = Math.max(0, this.sortedCategories.size() - MAX_TABS);
-        this.tabStartIndex = Math.max(0, Math.min(this.tabStartIndex, maxStart));
+        tabStartIndex = Math.max(0, Math.min(tabStartIndex, maxStart));
         updateTabVisibility();
     }
 
     private void updateTabVisibility() {
         boolean needsPagination = this.sortedCategories.size() > MAX_TABS;
 
-        this.tabUpButton.visible = needsPagination && this.tabStartIndex > 0;
-        this.tabDownButton.visible = needsPagination && this.tabStartIndex < this.sortedCategories.size() - MAX_TABS;
+        this.tabUpButton.visible = needsPagination && tabStartIndex > 0;
+        this.tabDownButton.visible = needsPagination && tabStartIndex < this.sortedCategories.size() - MAX_TABS;
 
         int startY = this.bounds.top() + TAB_Y_OFFSET;
 
         for (int i = 0; i < this.tabButtons.size(); i++) {
             TabButton tab = this.tabButtons.get(i);
 
-            if (i >= this.tabStartIndex && i < this.tabStartIndex + MAX_TABS) {
+            if (i >= tabStartIndex && i < tabStartIndex + MAX_TABS) {
                 tab.visible = true;
                 tab.active = true;
 
-                int relativeIndex = i - this.tabStartIndex;
+                int relativeIndex = i - tabStartIndex;
                 tab.setY(startY + (relativeIndex * (TAB_HEIGHT + TAB_GAP)));
             } else {
                 tab.visible = false;

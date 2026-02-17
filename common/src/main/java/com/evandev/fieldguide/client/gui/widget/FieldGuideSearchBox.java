@@ -24,6 +24,12 @@ public class FieldGuideSearchBox extends EditBox {
         this.setResponder(onSearch);
     }
 
+    public void setInitialFocus() {
+        this.setFocused(true);
+        this.setEditable(true);
+        this.setCursorPosition(this.getValue().length());
+    }
+
     @Override
     public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         int boxX = this.getX() - 2;

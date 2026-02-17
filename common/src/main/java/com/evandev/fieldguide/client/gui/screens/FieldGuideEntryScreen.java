@@ -6,6 +6,7 @@ import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
+import com.evandev.fieldguide.client.gui.widget.FieldGuideSearchBox;
 import com.evandev.fieldguide.client.gui.widget.PageTurnButton;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
@@ -50,6 +51,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     private ItemStack hoveredItem;
     private ImageButton prevBiomePageButton;
     private ImageButton nextBiomePageButton;
+    private FieldGuideSearchBox searchBox;
 
     private String editableDescription = "";
     private boolean isEditingDescription = false;
@@ -176,6 +178,23 @@ public class FieldGuideEntryScreen extends BookScreen {
         prevBiomePageButton.visible = false;
         this.addRenderableWidget(nextBiomePageButton);
         this.addRenderableWidget(prevBiomePageButton);
+
+        int searchX = this.width / 2 - 140 / 2;
+        int searchY = this.bounds.bottom() + 5;
+        this.searchBox = new FieldGuideSearchBox(this.font, searchX, searchY, 140, 20, "", this::onSearchChanged);
+        this.addRenderableWidget(this.searchBox);
+    }
+
+    private void onSearchChanged(String query) {
+        if (!query.isEmpty() && this.minecraft != null) {
+            FieldGuideScreen searchScreen = new FieldGuideScreen(query, this);
+            searchScreen.setInitialSearchFocus(true);
+            this.minecraft.setScreen(searchScreen);
+
+            if (searchScreen.getSearchBox() != null) {
+                searchScreen.getSearchBox().setCursorPosition(query.length());
+            }
+        }
     }
 
     private void saveDescriptionIfChanged() {
@@ -206,11 +225,24 @@ public class FieldGuideEntryScreen extends BookScreen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (this.searchBox != null) {
+            if (this.searchBox.isMouseOver(mouseX, mouseY)) {
+                this.searchBox.setFocused(true);
+                if (isEditingDescription) {
+                    isEditingDescription = false;
+                    saveDescriptionIfChanged();
+                }
+            } else {
+                this.searchBox.setFocused(false);
+            }
+        }
+
         if (super.mouseClicked(mouseX, mouseY, button)) return true;
 
         if (ClientFieldGuideManager.isUnlocked(entry)) {
             if (mouseX >= textX && mouseX <= textX + textAreaWidth && mouseY >= textY && mouseY <= textY + textAreaHeight) {
                 isEditingDescription = true;
+                if (this.searchBox != null) this.searchBox.setFocused(false);
                 return true;
             } else if (isEditingDescription) {
                 isEditingDescription = false;
@@ -265,6 +297,15 @@ public class FieldGuideEntryScreen extends BookScreen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (this.searchBox != null && this.searchBox.isFocused()) {
+            if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+                this.searchBox.setFocused(false);
+                return true;
+            }
+            if (this.searchBox.keyPressed(keyCode, scanCode, modifiers)) return true;
+            return true;
+        }
+
         if (isEditingDescription) {
             if (Screen.isPaste(keyCode)) {
                 String clipboard = Minecraft.getInstance().keyboardHandler.getClipboard();
