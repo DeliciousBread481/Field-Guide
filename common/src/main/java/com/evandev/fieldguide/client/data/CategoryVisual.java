@@ -7,4 +7,7 @@ public class CategoryVisual {
     public static final CategoryVisual DEFAULT = new CategoryVisual();
 
     public ResourceLocation icon = Constants.DEFAULT_ICON;
+    public ResourceLocation hostileIcon = Constants.HOSTILE_ICON;
+    public ResourceLocation passiveIcon = Constants.PASSIVE_ICON;
+    public ResourceLocation neutralIcon = Constants.NEUTRAL_ICON;
 }

@@ -3,6 +3,7 @@ package com.evandev.fieldguide.client.gui.screens;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
+import com.evandev.fieldguide.client.data.CategoryVisual;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
@@ -24,6 +25,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.*;
@@ -545,7 +547,12 @@ public class FieldGuideEntryScreen extends BookScreen {
                     mouseY >= yPos - halfSize && mouseY <= yPos + halfSize) {
 
                 if (ClientFieldGuideManager.isUnlocked(entry)) {
-                    if (entry instanceof EntityType<?> && renderedEntity != null) {
+                    ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
+                    EntryVisual visual = entryId != null ? ClientFieldGuideManager.getInstance().getEntryVisual(entryId) : null;
+
+                    if (visual != null && visual.customSound != null) {
+                        Objects.requireNonNull(this.minecraft).getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(visual.customSound), 1.0F, 1.0F));
+                    } else if (entry instanceof EntityType<?> && renderedEntity != null) {
                         FieldGuideClient.playMobCry(this.renderedEntity);
                     } else if (entry instanceof Block block) {
                         if (this.minecraft != null) {
@@ -920,15 +927,24 @@ public class FieldGuideEntryScreen extends BookScreen {
             ResourceLocation icon;
             Component typeComponent;
 
+            Category category = this.getSelectedCategory();
+            CategoryVisual catVisual = category != null ? ClientFieldGuideManager.getInstance().getCategoryVisual(category.getId()) : CategoryVisual.DEFAULT;
+
             if (renderedEntity instanceof NeutralMob) {
-                icon = Constants.NEUTRAL_ICON;
+                icon = catVisual.neutralIcon;
                 typeComponent = Component.translatable("fieldguide.alignment.neutral");
             } else if (type.getCategory() == MobCategory.MONSTER) {
-                icon = Constants.HOSTILE_ICON;
+                icon = catVisual.hostileIcon;
                 typeComponent = Component.translatable("fieldguide.alignment.hostile");
             } else {
-                icon = Constants.PASSIVE_ICON;
+                icon = catVisual.passiveIcon;
                 typeComponent = Component.translatable("fieldguide.alignment.passive");
+            }
+
+            ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
+            EntryVisual entryVisual = entryId != null ? ClientFieldGuideManager.getInstance().getEntryVisual(entryId) : null;
+            if (entryVisual != null && entryVisual.alignmentIcon != null) {
+                icon = entryVisual.alignmentIcon;
             }
 
             int iconX = this.rightPageBounds.right() - 12;

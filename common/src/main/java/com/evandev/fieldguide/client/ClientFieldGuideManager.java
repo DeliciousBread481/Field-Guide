@@ -299,6 +299,12 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         loadVisuals(resourceManager, "visuals/categories", (id, json) -> {
             CategoryVisual visual = new CategoryVisual();
             if (json.has("icon")) visual.icon = new ResourceLocation(GsonHelper.getAsString(json, "icon"));
+            if (json.has("hostile_icon"))
+                visual.hostileIcon = new ResourceLocation(GsonHelper.getAsString(json, "hostile_icon"));
+            if (json.has("passive_icon"))
+                visual.passiveIcon = new ResourceLocation(GsonHelper.getAsString(json, "passive_icon"));
+            if (json.has("neutral_icon"))
+                visual.neutralIcon = new ResourceLocation(GsonHelper.getAsString(json, "neutral_icon"));
             categoryVisuals.put(id, visual);
         });
 
@@ -317,6 +323,12 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
             if (json.has("auto_rotate")) visual.autoRotate = GsonHelper.getAsBoolean(json, "auto_rotate");
             if (json.has("rotation_speed")) visual.rotationSpeed = GsonHelper.getAsFloat(json, "rotation_speed");
+
+            // Overrides
+            if (json.has("custom_sound"))
+                visual.customSound = new ResourceLocation(GsonHelper.getAsString(json, "custom_sound"));
+            if (json.has("alignment_icon"))
+                visual.alignmentIcon = new ResourceLocation(GsonHelper.getAsString(json, "alignment_icon"));
 
             // Base
             if (json.has("scale")) visual.scale = GsonHelper.getAsFloat(json, "scale");

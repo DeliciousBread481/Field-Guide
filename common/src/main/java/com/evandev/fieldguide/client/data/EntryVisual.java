@@ -5,13 +5,17 @@ import net.minecraft.resources.ResourceLocation;
 import java.util.List;
 
 public class EntryVisual {
-    // Global defaults
+    // Global Defaults
     public float scale = 1.0f;
     public float yOffset = 0.0f;
     public float xOffset = 0.0f;
     public Boolean autoRotate = null;
     public Float rotationSpeed = null;
     public List<ResourceLocation> spawnBiomes = null;
+
+    // Custom Sounds & Icons
+    public ResourceLocation customSound = null;
+    public ResourceLocation alignmentIcon = null;
 
     // Grid Overrides
     public Float gridScale = null;

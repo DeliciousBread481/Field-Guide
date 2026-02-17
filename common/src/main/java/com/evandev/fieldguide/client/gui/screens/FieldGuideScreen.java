@@ -3,6 +3,7 @@ package com.evandev.fieldguide.client.gui.screens;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
+import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.gui.widget.FieldGuideSearchBox;
@@ -18,6 +19,7 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.Entity;
@@ -312,6 +314,9 @@ public class FieldGuideScreen extends BookScreen {
         if (ClientFieldGuideManager.isNew(entry)) ClientFieldGuideManager.markAsSeen(entry);
         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F));
 
+        ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
+        EntryVisual visual = entryId != null ? ClientFieldGuideManager.getInstance().getEntryVisual(entryId) : null;
+
         if (entry instanceof EntityType<?> type) {
             Entity entity = entryCache.get(type);
             if (entity == null && Objects.requireNonNull(this.minecraft).level != null) {
@@ -322,7 +327,15 @@ public class FieldGuideScreen extends BookScreen {
                 }
             }
             if (entity != null && ClientFieldGuideManager.isUnlocked(entry)) {
-                FieldGuideClient.playMobCry(entity);
+                if (visual != null && visual.customSound != null) {
+                    Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(visual.customSound), 1.0F, 1.0F));
+                } else {
+                    FieldGuideClient.playMobCry(entity);
+                }
+            }
+        } else if (entry instanceof Block && ClientFieldGuideManager.isUnlocked(entry)) {
+            if (visual != null && visual.customSound != null) {
+                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(visual.customSound), 1.0F, 1.0F));
             }
         }
 
