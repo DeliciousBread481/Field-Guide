@@ -109,6 +109,10 @@
   "option.fieldguide.play_scanning_sound": "Play Scanning Sound",
   "option.fieldguide.play_scanning_sound.tooltip": "If false, the scribbling noise played when scanning entities will be disabled.",
 
+  "fieldguide.alignment.passive": "Passive",
+  "fieldguide.alignment.neutral": "Neutral",
+  "fieldguide.alignment.hostile": "Hostile",
+
   "fieldguide.time.morning": "Morning",
   "fieldguide.time.noon": "Noon",
   "fieldguide.time.evening": "Evening",

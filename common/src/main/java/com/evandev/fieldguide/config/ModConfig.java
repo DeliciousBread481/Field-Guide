@@ -95,6 +95,8 @@ public class ModConfig {
     public static List<String> getDefaultBlacklist() {
         List<String> defaults = new ArrayList<>();
         defaults.add("minecraft:armor_stand");
+        defaults.add("minecraft:giant");
+        defaults.add("minecraft:illusioner");
         defaults.add("minecraft:grass");
         defaults.add("minecraft:tall_grass");
         return defaults;

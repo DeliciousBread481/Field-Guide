@@ -26,9 +26,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
@@ -722,6 +720,34 @@ public class FieldGuideEntryScreen extends BookScreen {
         // Entry Name
         int titleY = this.leftPageBounds.top() + 8;
         guiGraphics.drawString(this.font, title, this.rightPageBounds.left() + 5, titleY, unlocked ? ModConfig.get().getTextTitleColorInt() : ModConfig.get().getTextMutedColorInt(), false);
+
+        // Mob Alignment Icons
+        if ((unlocked || ModConfig.get().showUndiscoveredNames) && entry instanceof EntityType<?> type && renderedEntity instanceof LivingEntity) {
+            ResourceLocation icon;
+            Component typeComponent;
+
+            if (renderedEntity instanceof NeutralMob) {
+                icon = Constants.NEUTRAL_ICON;
+                typeComponent = Component.translatable("fieldguide.alignment.neutral");
+            } else if (type.getCategory() == MobCategory.MONSTER) {
+                icon = Constants.HOSTILE_ICON;
+                typeComponent = Component.translatable("fieldguide.alignment.hostile");
+            } else {
+                icon = Constants.PASSIVE_ICON;
+                typeComponent = Component.translatable("fieldguide.alignment.passive");
+            }
+
+            int iconX = this.rightPageBounds.right() - 12;
+            int iconY = titleY - 2;
+
+            RenderSystem.enableBlend();
+            guiGraphics.blit(icon, iconX, iconY, 0, 0, 12, 12, 12, 12);
+            RenderSystem.disableBlend();
+
+            if (Bounds.isMouseOver(mouseX, mouseY, iconX, iconY, 12, 12)) {
+                tooltipText = typeComponent;
+            }
+        }
 
         // Spawn Biomes
         int biomeIconSize = 16;
