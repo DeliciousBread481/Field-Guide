@@ -4,90 +4,42 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.data.CategoryVisual;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.data.JournalPage;
-import com.evandev.fieldguide.client.gui.toasts.FieldGuideToast;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
+import com.evandev.fieldguide.client.progress.ProgressManager;
+import com.evandev.fieldguide.client.scanning.FieldGuideScanner;
+import com.evandev.fieldguide.client.search.SearchManager;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CategoryEntry;
-import com.evandev.fieldguide.network.ClaimXpPacket;
-import com.evandev.fieldguide.platform.Services;
-import com.google.gson.*;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.GsonHelper;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
-import net.minecraft.world.entity.boss.EnderDragonPart;
-import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.SpawnEggItem;
-import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.*;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.LevelResource;
-import net.minecraft.world.phys.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.Reader;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 public class ClientFieldGuideManager implements ResourceManagerReloadListener {
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final ClientFieldGuideManager INSTANCE = new ClientFieldGuideManager();
-    private static final int FADE_DURATION = 10;
 
-    // Data Structures
     private final Map<ResourceLocation, Category> syncedCategories = new LinkedHashMap<>();
     private final Map<ResourceLocation, List<Object>> resolvedCategoryEntries = new HashMap<>();
-
-    // Visuals
     private final Map<ResourceLocation, CategoryVisual> categoryVisuals = new HashMap<>();
     private final Map<ResourceLocation, EntryVisual> entryVisuals = new HashMap<>();
-
-    // Progress
-    private final Set<String> unlockedEntries = new HashSet<>();
-    private final Set<String> seenEntries = new HashSet<>();
-    private final Map<String, Long> discoveryTimes = new HashMap<>();
     private final Map<Object, List<ItemStack>> dropCache = new HashMap<>();
-    private final Map<String, String> customDescriptions = new HashMap<>();
-    private final Map<String, String> customNames = new HashMap<>();
-    private final Map<String, Long> discoveryGameTimes = new HashMap<>();
-    private final List<JournalPage> journalPages = new ArrayList<>();
-    private String journalTitle = "My Field Guide";
-    private Path currentSavePath = null;
-
-    // Scanning State
-    private long lastUnlockTime = 0;
-    private Object lastUnlockedEntry = null;
-    private Object scanningTarget = null;
-    private int scanTicks = 0;
-    private BlockPos scanningPos = null;
-    private Object fadingTarget = null;
-    private int fadeTicks = 0;
-    private int prevScanTicks = 0;
-    private BlockPos fadingPos = null;
-    private Object outOfRangeTarget = null;
 
     private ClientFieldGuideManager() {
     }
@@ -103,49 +55,34 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         INSTANCE.resolveAllEntries();
     }
 
-    public static Map<ResourceLocation, Category> getCategories() {
-        return INSTANCE.syncedCategories;
-    }
-
-    public static List<Object> getValidEntries() {
-        return INSTANCE.resolvedCategoryEntries.values().stream()
-                .flatMap(List::stream)
-                .distinct()
-                .collect(Collectors.toList());
-    }
-
     public static ResourceLocation getEntryId(Object entry) {
         if (entry instanceof EntityType<?> type) return BuiltInRegistries.ENTITY_TYPE.getKey(type);
         if (entry instanceof Block block) return BuiltInRegistries.BLOCK.getKey(block);
         return null;
     }
 
-    public static boolean isUnlocked(Object entry) {
-        ResourceLocation id = getEntryId(entry);
-        return id != null && INSTANCE.unlockedEntries.contains(id.toString());
-    }
-
     public static boolean hideFromSearch(Object entry) {
         return ModConfig.get().hideUndiscoveredFromSearch && !isUnlocked(entry);
     }
 
+    // Facade Methods over ProgressManager
+    public static boolean isUnlocked(Object entry) {
+        return ProgressManager.getInstance().isUnlocked(entry);
+    }
+
     public static boolean isNew(Object entry) {
-        ResourceLocation id = getEntryId(entry);
-        return id != null && INSTANCE.unlockedEntries.contains(id.toString()) && !INSTANCE.seenEntries.contains(id.toString());
+        return ProgressManager.getInstance().isNew(entry);
     }
 
     public static void markAsSeen(Object entry) {
-        ResourceLocation id = getEntryId(entry);
-        if (id != null && INSTANCE.seenEntries.add(id.toString())) INSTANCE.saveProgress();
+        ProgressManager.getInstance().markAsSeen(entry);
     }
 
     public static String getEntryDescription(Object entry) {
         ResourceLocation id = getEntryId(entry);
         if (id == null) return "";
-
-        if (INSTANCE.customDescriptions.containsKey(id.toString())) {
-            return INSTANCE.customDescriptions.get(id.toString());
-        }
+        String custom = ProgressManager.getInstance().getCustomDescription(entry);
+        if (custom != null) return custom;
 
         String overrideKey = "fieldguide." + id.getNamespace() + "." + id.getPath() + ".description";
         String fallbackKey = (entry instanceof EntityType) ? "entity." + id.getNamespace() + "." + id.getPath() + ".description" : "lore." + id.getNamespace() + "." + id.getPath();
@@ -153,39 +90,19 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public static void setCustomDescription(Object entry, String desc) {
-        ResourceLocation id = getEntryId(entry);
-        if (id != null) {
-            INSTANCE.customDescriptions.put(id.toString(), desc);
-            INSTANCE.saveProgress();
-        }
+        ProgressManager.getInstance().setCustomDescription(entry, desc);
     }
 
     public static Component getEntryName(Object entry) {
-        ResourceLocation id = getEntryId(entry);
-        if (id != null && INSTANCE.customNames.containsKey(id.toString())) {
-            return Component.literal(INSTANCE.customNames.get(id.toString()));
-        }
+        String custom = ProgressManager.getInstance().getCustomName(entry);
+        if (custom != null) return Component.literal(custom);
         if (entry instanceof EntityType<?> type) return type.getDescription();
         if (entry instanceof Block block) return block.getName();
         return Component.translatable("fieldguide.unknown");
     }
 
-    public static String getCustomName(Object entry) {
-        ResourceLocation id = getEntryId(entry);
-        if (id != null) return INSTANCE.customNames.get(id.toString());
-        return null;
-    }
-
     public static void setCustomName(Object entry, String name) {
-        ResourceLocation id = getEntryId(entry);
-        if (id != null) {
-            if (name == null || name.isEmpty() || name.equals(getDefaultName(entry))) {
-                INSTANCE.customNames.remove(id.toString());
-            } else {
-                INSTANCE.customNames.put(id.toString(), name);
-            }
-            INSTANCE.saveProgress();
-        }
+        ProgressManager.getInstance().setCustomName(entry, name);
     }
 
     public static String getDefaultName(Object entry) {
@@ -194,83 +111,38 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         return I18n.get("fieldguide.unknown");
     }
 
+    public static Map<ResourceLocation, Category> getCategories() {
+        return INSTANCE.syncedCategories;
+    }
+
+    public static List<Object> getValidEntries() {
+        return INSTANCE.resolvedCategoryEntries.values().stream().flatMap(List::stream).distinct().collect(Collectors.toList());
+    }
+
     public String getJournalTitle() {
-        return journalTitle;
+        return ProgressManager.getInstance().getJournalTitle();
     }
 
     public void setJournalTitle(String title) {
-        this.journalTitle = title;
-        saveProgress();
+        ProgressManager.getInstance().setJournalTitle(title);
     }
 
     public void saveJournal() {
-        saveProgress();
+        ProgressManager.getInstance().saveJournal();
     }
 
     public List<JournalPage> getJournalPages() {
-        if (journalPages.isEmpty()) {
-            journalPages.add(new JournalPage("", "", System.currentTimeMillis()));
-        }
-        return journalPages;
+        return ProgressManager.getInstance().getJournalPages();
     }
 
     public void exportToLang(String type) {
-        try {
-            JsonObject langJson = new JsonObject();
-
-            boolean exportNames = type.equals("names") || type.equals("all");
-            boolean exportDesc = type.equals("descriptions") || type.equals("all");
-
-            if (exportNames) {
-                for (Map.Entry<String, String> entry : customNames.entrySet()) {
-                    ResourceLocation id = new ResourceLocation(entry.getKey());
-                    String key;
-                    if (BuiltInRegistries.ENTITY_TYPE.containsKey(id)) {
-                        key = "entity." + id.getNamespace() + "." + id.getPath();
-                    } else {
-                        key = "block." + id.getNamespace() + "." + id.getPath();
-                    }
-                    langJson.addProperty(key, entry.getValue());
-                }
-            }
-
-            if (exportDesc) {
-                for (Map.Entry<String, String> entry : customDescriptions.entrySet()) {
-                    ResourceLocation id = new ResourceLocation(entry.getKey());
-                    String key = "fieldguide." + id.getNamespace() + "." + id.getPath() + ".description";
-                    langJson.addProperty(key, entry.getValue());
-                }
-            }
-
-            Path exportDir = Minecraft.getInstance().gameDirectory.toPath().resolve("fieldguide_exports");
-            Files.createDirectories(exportDir);
-
-            String fileName = "en_us_" + type + "_" + System.currentTimeMillis() + ".json";
-            File exportFile = exportDir.resolve(fileName).toFile();
-
-            try (java.io.FileWriter writer = new java.io.FileWriter(exportFile)) {
-                GSON.toJson(langJson, writer);
-            }
-
-            if (Minecraft.getInstance().player != null) {
-                Minecraft.getInstance().player.displayClientMessage(Component.literal("§aExported Field Guide data to " + exportFile.getAbsolutePath()), false);
-            }
-
-        } catch (Exception e) {
-            Constants.LOG.error("Failed to export lang file", e);
-            if (Minecraft.getInstance().player != null) {
-                Minecraft.getInstance().player.displayClientMessage(Component.literal("§cFailed to export: " + e.getMessage()), false);
-            }
-        }
+        ProgressManager.getInstance().exportToLang(type);
     }
 
     public void updateCategoriesFromServer(List<Category> categories) {
         this.syncedCategories.clear();
         categories.sort(Comparator.comparingInt(Category::getSortIndex).thenComparing(Category::getId));
-
-        for (Category cat : categories) {
-            this.syncedCategories.put(cat.getId(), cat);
-        }
+        for (Category cat : categories) this.syncedCategories.put(cat.getId(), cat);
         resolveAllEntries();
     }
 
@@ -278,14 +150,8 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         for (Map.Entry<ResourceLocation, List<ItemStack>> entry : lootCache.entrySet()) {
             ResourceLocation id = entry.getKey();
             List<ItemStack> drops = entry.getValue();
-
-            Optional<EntityType<?>> type = BuiltInRegistries.ENTITY_TYPE.getOptional(id);
-            if (type.isPresent()) {
-                dropCache.put(type.get(), drops);
-            } else {
-                Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(id);
-                block.ifPresent(b -> dropCache.put(b, drops));
-            }
+            BuiltInRegistries.ENTITY_TYPE.getOptional(id).ifPresent(type -> dropCache.put(type, drops));
+            BuiltInRegistries.BLOCK.getOptional(id).ifPresent(block -> dropCache.put(block, drops));
         }
     }
 
@@ -317,81 +183,51 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         });
 
         loadVisuals(resourceManager, "visuals/entries", (derivedId, json) -> {
-            ResourceLocation targetId = derivedId;
-            if (json.has("id")) {
-                String idStr = GsonHelper.getAsString(json, "id");
-                try {
-                    targetId = new ResourceLocation(idStr);
-                } catch (Exception e) {
-                    Constants.LOG.error("Invalid 'id' in visual override: {}", idStr, e);
-                }
-            }
-
+            ResourceLocation targetId = json.has("id") ? new ResourceLocation(GsonHelper.getAsString(json, "id")) : derivedId;
             EntryVisual visual = new EntryVisual();
-
             if (json.has("auto_rotate")) visual.autoRotate = GsonHelper.getAsBoolean(json, "auto_rotate");
             if (json.has("rotation_speed")) visual.rotationSpeed = GsonHelper.getAsFloat(json, "rotation_speed");
-
-            // Overrides
             if (json.has("custom_sound"))
                 visual.customSound = new ResourceLocation(GsonHelper.getAsString(json, "custom_sound"));
             if (json.has("alignment_icon"))
                 visual.alignmentIcon = new ResourceLocation(GsonHelper.getAsString(json, "alignment_icon"));
-
-            // Base
             if (json.has("scale")) visual.scale = GsonHelper.getAsFloat(json, "scale");
             if (json.has("y_offset")) visual.yOffset = GsonHelper.getAsFloat(json, "y_offset");
             if (json.has("x_offset")) visual.xOffset = GsonHelper.getAsFloat(json, "x_offset");
-
-            // Grid Overrides
             if (json.has("grid_scale")) visual.gridScale = GsonHelper.getAsFloat(json, "grid_scale");
             if (json.has("grid_y_offset")) visual.gridYOffset = GsonHelper.getAsFloat(json, "grid_y_offset");
             if (json.has("grid_x_offset")) visual.gridXOffset = GsonHelper.getAsFloat(json, "grid_x_offset");
-
-            // Page Overrides
             if (json.has("page_scale")) visual.pageScale = GsonHelper.getAsFloat(json, "page_scale");
             if (json.has("page_y_offset")) visual.pageYOffset = GsonHelper.getAsFloat(json, "page_y_offset");
             if (json.has("page_x_offset")) visual.pageXOffset = GsonHelper.getAsFloat(json, "page_x_offset");
-
             if (json.has("spawn_biomes")) {
                 visual.spawnBiomes = new ArrayList<>();
-                for (JsonElement el : GsonHelper.getAsJsonArray(json, "spawn_biomes")) {
-                    visual.spawnBiomes.add(new ResourceLocation(el.getAsString()));
-                }
+                GsonHelper.getAsJsonArray(json, "spawn_biomes").forEach(el -> visual.spawnBiomes.add(new ResourceLocation(el.getAsString())));
             }
-
             entryVisuals.put(targetId, visual);
         });
 
         resolveAllEntries();
-        Constants.LOG.info("Loaded {} category visuals and {} entry visuals.", categoryVisuals.size(), entryVisuals.size());
     }
 
-    private void loadVisuals(ResourceManager mgr, String folder, BiConsumer<ResourceLocation, JsonObject> processor) {
-        Map<ResourceLocation, List<Resource>> resources = mgr.listResourceStacks("fieldguide/" + folder,
-                id -> id.getPath().endsWith(".json"));
-
-        for (Map.Entry<ResourceLocation, List<Resource>> entry : resources.entrySet()) {
-            ResourceLocation fileId = entry.getKey();
+    private void loadVisuals(ResourceManager mgr, String folder, BiConsumer<ResourceLocation, com.google.gson.JsonObject> processor) {
+        mgr.listResourceStacks("fieldguide/" + folder, id -> id.getPath().endsWith(".json")).forEach((fileId, resources) -> {
             String path = fileId.getPath();
             String idPath = path.substring(("fieldguide/" + folder + "/").length(), path.length() - ".json".length());
             ResourceLocation targetId = new ResourceLocation(fileId.getNamespace(), idPath);
-
-            for (Resource resource : entry.getValue()) {
+            resources.forEach(resource -> {
                 try (Reader reader = resource.openAsReader()) {
                     processor.accept(targetId, GsonHelper.parse(reader));
                 } catch (Exception e) {
-                    Constants.LOG.error("Error loading field guide visual: {}", fileId, e);
+                    Constants.LOG.error("Error loading visual: {}", fileId, e);
                 }
-            }
-        }
+            });
+        });
     }
 
     private void resolveAllEntries() {
         resolvedCategoryEntries.clear();
-        for (Category cat : syncedCategories.values()) {
-            resolveCategory(cat);
-        }
+        syncedCategories.values().forEach(this::resolveCategory);
     }
 
     private void resolveCategory(Category category) {
@@ -399,15 +235,9 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         ModConfig config = ModConfig.get();
 
         for (CategoryEntry entry : category.getEntries()) {
-            if (entry.type() == CategoryEntry.Type.ENTRY) {
-                if (entry.id() == null) continue;
-                Optional<EntityType<?>> entityType = BuiltInRegistries.ENTITY_TYPE.getOptional(entry.id());
-                if (entityType.isPresent()) {
-                    if (isValidEntity(entityType.get(), config)) foundEntries.add(entityType.get());
-                } else {
-                    Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(entry.id());
-                    if (block.isPresent() && isValidBlock(block.get(), config)) foundEntries.add(block.get());
-                }
+            if (entry.type() == CategoryEntry.Type.ENTRY && entry.id() != null) {
+                BuiltInRegistries.ENTITY_TYPE.getOptional(entry.id()).filter(t -> isValidEntity(t, config)).ifPresent(foundEntries::add);
+                BuiltInRegistries.BLOCK.getOptional(entry.id()).filter(b -> isValidBlock(b, config)).ifPresent(foundEntries::add);
             } else if (entry.type() == CategoryEntry.Type.AUTO_POPULATE) {
                 foundEntries.addAll(getEntriesForStrategy(entry.strategy(), config));
             }
@@ -421,715 +251,100 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
     public List<Object> getRecentEntries(Category category, int limit) {
         return getEntriesForCategory(category).stream()
-                .filter(ClientFieldGuideManager::isUnlocked)
-                .sorted((a, b) -> {
-                    ResourceLocation idA = getEntryId(a);
-                    ResourceLocation idB = getEntryId(b);
-                    long timeA = idA != null ? discoveryTimes.getOrDefault(idA.toString(), 0L) : 0L;
-                    long timeB = idB != null ? discoveryTimes.getOrDefault(idB.toString(), 0L) : 0L;
-                    return Long.compare(timeB, timeA);
-                })
+                .filter(ProgressManager.getInstance()::isUnlocked)
+                .sorted((a, b) -> Long.compare(ProgressManager.getInstance().getDiscoveryTime(b), ProgressManager.getInstance().getDiscoveryTime(a)))
                 .limit(limit)
                 .collect(Collectors.toList());
+    }
+
+    public boolean isValidEntity(EntityType<?> type, ModConfig config) {
+        return type.canSummon() && !config.isEntityBlacklisted(BuiltInRegistries.ENTITY_TYPE.getKey(type));
+    }
+
+    private boolean isValidBlock(Block block, ModConfig config) {
+        return !config.isEntityBlacklisted(BuiltInRegistries.BLOCK.getKey(block));
     }
 
     private List<Object> getEntriesForStrategy(String strategy, ModConfig config) {
         List<Object> results = new ArrayList<>();
         if ("plants".equalsIgnoreCase(strategy)) {
-            results.addAll(BuiltInRegistries.BLOCK.stream()
-                    .filter(block -> block instanceof BushBlock || block instanceof LeavesBlock || block instanceof VineBlock || block instanceof CactusBlock || block instanceof SugarCaneBlock || block instanceof WaterlilyBlock || block instanceof StemBlock)
-                    .filter(block -> isValidBlock(block, config))
-                    .sorted(Comparator.comparing(block -> BuiltInRegistries.BLOCK.getKey(block).toString()))
-                    .toList());
+            results.addAll(BuiltInRegistries.BLOCK.stream().filter(b -> isPlant(b) && isValidBlock(b, config)).sorted(Comparator.comparing(b -> BuiltInRegistries.BLOCK.getKey(b).toString())).toList());
         } else if (strategy.startsWith("mod:")) {
             String modId = strategy.substring(4);
-            results.addAll(BuiltInRegistries.ENTITY_TYPE.stream()
-                    .filter(type -> BuiltInRegistries.ENTITY_TYPE.getKey(type).getNamespace().equals(modId))
-                    .filter(type -> isValidEntity(type, config))
-                    .sorted(Comparator.comparing(type -> BuiltInRegistries.ENTITY_TYPE.getKey(type).toString()))
-                    .toList());
+            results.addAll(BuiltInRegistries.ENTITY_TYPE.stream().filter(t -> BuiltInRegistries.ENTITY_TYPE.getKey(t).getNamespace().equals(modId) && isValidEntity(t, config)).sorted(Comparator.comparing(t -> BuiltInRegistries.ENTITY_TYPE.getKey(t).toString())).toList());
         } else if (strategy.startsWith("mod_plants:")) {
             String modId = strategy.substring(10);
-            results.addAll(BuiltInRegistries.BLOCK.stream()
-                    .filter(block -> BuiltInRegistries.BLOCK.getKey(block).getNamespace().equals(modId))
-                    .filter(block -> block instanceof BushBlock || block instanceof LeavesBlock || block instanceof VineBlock || block instanceof CactusBlock || block instanceof SugarCaneBlock || block instanceof WaterlilyBlock || block instanceof StemBlock)
-                    .filter(block -> isValidBlock(block, config))
-                    .sorted(Comparator.comparing(block -> BuiltInRegistries.BLOCK.getKey(block).toString()))
-                    .toList());
+            results.addAll(BuiltInRegistries.BLOCK.stream().filter(b -> BuiltInRegistries.BLOCK.getKey(b).getNamespace().equals(modId) && isPlant(b) && isValidBlock(b, config)).sorted(Comparator.comparing(b -> BuiltInRegistries.BLOCK.getKey(b).toString())).toList());
         } else if (strategy.startsWith("tag:")) {
-            String tagId = strategy.substring(4);
             try {
-                ResourceLocation tagLoc = new ResourceLocation(tagId);
-                TagKey<EntityType<?>> tagKey = TagKey.create(Registries.ENTITY_TYPE, tagLoc);
-                for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
-                    var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type);
-                    if (key.isPresent()) {
-                        var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
-                        if (holder.isPresent() && holder.get().is(tagKey)) {
-                            if (isValidEntity(type, config)) results.add(type);
-                        }
-                    }
-                }
+                TagKey<EntityType<?>> tagKey = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(strategy.substring(4)));
+                BuiltInRegistries.ENTITY_TYPE.forEach(type -> BuiltInRegistries.ENTITY_TYPE.getResourceKey(type).flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder).filter(h -> h.is(tagKey) && isValidEntity(type, config)).ifPresent(h -> results.add(type)));
                 results.sort(Comparator.comparing(o -> BuiltInRegistries.ENTITY_TYPE.getKey((EntityType<?>) o).toString()));
             } catch (Exception e) {
                 Constants.LOG.error("Invalid tag strategy: {}", strategy, e);
             }
         } else if ("monsters".equalsIgnoreCase(strategy) || "animals".equalsIgnoreCase(strategy)) {
             TagKey<EntityType<?>> bossesTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation("fieldguide", "bosses"));
-
-            results.addAll(BuiltInRegistries.ENTITY_TYPE.stream()
-                    .filter(type -> {
-                        boolean isBoss = false;
-                        var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type);
-                        if (key.isPresent()) {
-                            var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
-                            if (holder.isPresent()) {
-                                isBoss = holder.get().is(bossesTag);
-                            }
-                        }
-
-                        if ("monsters".equalsIgnoreCase(strategy))
-                            return type.getCategory() == MobCategory.MONSTER && !isBoss;
-                        if ("animals".equalsIgnoreCase(strategy))
-                            return type.getCategory() != MobCategory.MONSTER && (type.getCategory() != MobCategory.MISC || SpawnEggItem.byId(type) != null) && !isBoss;
-                        return false;
-                    })
-                    .filter(type -> isValidEntity(type, config))
-                    .sorted(Comparator.comparing(type -> BuiltInRegistries.ENTITY_TYPE.getKey(type).toString()))
-                    .toList());
+            results.addAll(BuiltInRegistries.ENTITY_TYPE.stream().filter(type -> {
+                boolean isBoss = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type).flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder).map(h -> h.is(bossesTag)).orElse(false);
+                if ("monsters".equalsIgnoreCase(strategy)) return type.getCategory() == MobCategory.MONSTER && !isBoss;
+                if ("animals".equalsIgnoreCase(strategy))
+                    return type.getCategory() != MobCategory.MONSTER && (type.getCategory() != MobCategory.MISC || SpawnEggItem.byId(type) != null) && !isBoss;
+                return false;
+            }).filter(type -> isValidEntity(type, config)).sorted(Comparator.comparing(type -> BuiltInRegistries.ENTITY_TYPE.getKey(type).toString())).toList());
         }
         return results;
     }
 
-    private boolean isValidEntity(EntityType<?> type, ModConfig config) {
-        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
-        return type.canSummon() && !config.isEntityBlacklisted(id);
-    }
-
-    private boolean isValidBlock(Block block, ModConfig config) {
-        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
-        return !config.isEntityBlacklisted(id);
-    }
-
-    public Object getOutOfRangeTarget() {
-        return outOfRangeTarget;
+    private boolean isPlant(Block block) {
+        return block instanceof BushBlock || block instanceof LeavesBlock || block instanceof VineBlock || block instanceof CactusBlock || block instanceof SugarCaneBlock || block instanceof WaterlilyBlock || block instanceof StemBlock;
     }
 
     public Category getCategoryForEntry(Object entry) {
-        for (Map.Entry<ResourceLocation, List<Object>> cat : resolvedCategoryEntries.entrySet()) {
-            if (cat.getValue().contains(entry)) return syncedCategories.get(cat.getKey());
-        }
-        return null;
+        return resolvedCategoryEntries.entrySet().stream().filter(e -> e.getValue().contains(entry)).map(e -> syncedCategories.get(e.getKey())).findFirst().orElse(null);
     }
 
     public List<Object> searchEntries(String query) {
-        String processedQuery = query.toLowerCase(Locale.ROOT).trim();
-        boolean exactMatch;
-        List<Object> results = new ArrayList<>();
-        if (processedQuery.isEmpty()) return results;
-
-        // Exact Match
-        if (processedQuery.startsWith("=")) {
-            exactMatch = true;
-            processedQuery = processedQuery.substring(1);
-        } else {
-            exactMatch = false;
-        }
-
-        // Search by Tag
-        if (processedQuery.startsWith("#")) {
-            String tagQuery = processedQuery.substring(1);
-            if (tagQuery.isEmpty()) return results;
-
-            for (Object entry : getValidEntries()) {
-                if (hideFromSearch(entry)) continue;
-                if (entry instanceof EntityType<?> type) {
-                    var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type);
-                    if (key.isPresent()) {
-                        Optional<Holder.Reference<EntityType<?>>> holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
-                        if (holder.isPresent()) {
-                            if (exactMatch) {
-                                if (holder.get().tags().anyMatch(tag -> tag.location().toString().toLowerCase(Locale.ROOT).equals(tagQuery) || tag.location().getPath().toLowerCase(Locale.ROOT).equals(tagQuery))) {
-                                    results.add(entry);
-                                }
-                            } else {
-                                if (holder.get().tags().anyMatch(tag -> tag.location().toString().toLowerCase(Locale.ROOT).contains(tagQuery) || tag.location().getPath().toLowerCase(Locale.ROOT).contains(tagQuery))) {
-                                    results.add(entry);
-                                }
-                            }
-                        }
-                    }
-                } else if (entry instanceof Block block) {
-                    var key = BuiltInRegistries.BLOCK.getResourceKey(block);
-                    if (key.isPresent()) {
-                        Optional<Holder.Reference<Block>> holder = BuiltInRegistries.BLOCK.getHolder(key.get());
-                        if (holder.isPresent()) {
-                            if (holder.get().tags().anyMatch(tag -> tag.location().toString().toLowerCase(Locale.ROOT).contains(tagQuery) || tag.location().getPath().toLowerCase(Locale.ROOT).contains(tagQuery))) {
-                                results.add(entry);
-                            }
-                        }
-                    }
-                }
-            }
-            return results;
-        }
-
-        // Search by Drop
-        if (processedQuery.startsWith("^")) {
-            String dropQuery = processedQuery.substring(1);
-            if (dropQuery.isEmpty()) return results;
-
-            for (Object entry : getValidEntries()) {
-                if (hideFromSearch(entry)) continue;
-
-                if (dropCache.containsKey(entry)) {
-                    List<ItemStack> drops = dropCache.get(entry);
-                    boolean match = drops.stream().anyMatch(stack -> {
-                                if (exactMatch) {
-                                    return stack.getHoverName().getString().toLowerCase(Locale.ROOT).equals(dropQuery);
-                                } else {
-                                    return stack.getHoverName().getString().toLowerCase(Locale.ROOT).contains(dropQuery);
-                                }
-                            }
-                    );
-                    if (match) results.add(entry);
-                }
-            }
-            return results;
-        }
-
-        // Search by Biome
-        if (processedQuery.startsWith("!")) {
-            String biomeQuery = processedQuery.substring(1);
-            if (biomeQuery.isEmpty()) return results;
-
-            if (Minecraft.getInstance().level != null) {
-                var registryAccess = Minecraft.getInstance().level.registryAccess();
-                var biomeRegistry = registryAccess.registryOrThrow(Registries.BIOME);
-
-                for (var biomeEntry : biomeRegistry.entrySet()) {
-                    ResourceLocation biomeId = biomeEntry.getKey().location();
-                    boolean biomeMatch;
-                    if (exactMatch) {
-                        biomeMatch = biomeId.toString().equals(biomeQuery) || biomeId.getPath().equals(biomeQuery);
-                    } else {
-                        biomeMatch = biomeId.toString().contains(biomeQuery) || biomeId.getPath().contains(biomeQuery);
-                    }
-                    if (biomeMatch) {
-                        Biome biome = biomeEntry.getValue();
-                        for (MobCategory cat : MobCategory.values()) {
-                            var spawns = biome.getMobSettings().getMobs(cat);
-                            for (var spawn : spawns.unwrap()) {
-                                if (isValidEntity(spawn.type, ModConfig.get())) {
-                                    if (!hideFromSearch(spawn.type) && !results.contains(spawn.type)) {
-                                        results.add(spawn.type);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            return results;
-        }
-
-        // Search by Mod ID
-        if (processedQuery.startsWith("@")) {
-            String modQuery = processedQuery.substring(1);
-            if (modQuery.isEmpty()) return results;
-
-            for (Object entry : getValidEntries()) {
-                if (hideFromSearch(entry)) continue;
-                ResourceLocation id = getEntryId(entry);
-                if (id != null) {
-                    boolean match;
-                    if (exactMatch) {
-                        match = id.getNamespace().toLowerCase(Locale.ROOT).equals(modQuery);
-                    } else {
-                        match = id.getNamespace().toLowerCase(Locale.ROOT).contains(modQuery);
-                    }
-                    if (match) results.add(entry);
-                }
-            }
-            return results;
-        }
-
-        // Standard Name/ID Search
-        for (Object entry : getValidEntries()) {
-            if (hideFromSearch(entry)) continue;
-            ResourceLocation id = getEntryId(entry);
-            if (id == null) continue;
-
-            String name = (entry instanceof EntityType<?> type) ? type.getDescription().getString() : ((Block) entry).getName().getString();
-            boolean match;
-            if (exactMatch) {
-                match = name.toLowerCase(Locale.ROOT).equals(processedQuery) || id.getPath().equals(processedQuery);
-            } else {
-                match = name.toLowerCase(Locale.ROOT).contains(processedQuery) || id.getPath().contains(processedQuery);
-            }
-
-            if (match) results.add(entry);
-        }
-        return results;
-    }
-
-    public void onClientTick(Minecraft minecraft) {
-        if (minecraft.player == null || minecraft.level == null) return;
-
-        boolean isScanningActive = (minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(Items.SPYGLASS))
-                || !ModConfig.get().requireSpyglass;
-
-        if (isScanningActive) {
-            double range = 256.0D;
-            Vec3 eyePos = minecraft.player.getEyePosition(1.0F);
-            Vec3 viewVec = minecraft.player.getViewVector(1.0F);
-            Vec3 endPos = eyePos.add(viewVec.scale(range));
-
-            AABB searchBox = minecraft.player.getBoundingBox().expandTowards(viewVec.scale(range)).inflate(1.0D);
-            EntityHitResult entityHit = ProjectileUtil.getEntityHitResult(
-                    minecraft.player, eyePos, endPos, searchBox,
-                    (entity) -> !entity.isSpectator() && entity.isPickable(),
-                    range * range
-            );
-
-            BlockHitResult blockHit = minecraft.level.clip(new ClipContext(
-                    eyePos, endPos, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, minecraft.player
-            ));
-
-            while (blockHit.getType() == HitResult.Type.BLOCK) {
-                BlockState state = minecraft.level.getBlockState(blockHit.getBlockPos());
-
-                if (state.canBeReplaced()) {
-                    Vec3 hitVec = blockHit.getLocation();
-                    Vec3 nextStart = hitVec.add(viewVec.scale(0.01));
-
-                    if (eyePos.distanceToSqr(nextStart) >= range * range) {
-                        break;
-                    }
-
-                    blockHit = minecraft.level.clip(new ClipContext(
-                            nextStart, endPos, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, minecraft.player
-                    ));
-                } else {
-                    break;
-                }
-            }
-
-            Object foundTarget = null;
-            double entityDist = entityHit != null ? eyePos.distanceToSqr(entityHit.getLocation()) : Double.MAX_VALUE;
-            double blockDist = blockHit.getType() != HitResult.Type.MISS ? eyePos.distanceToSqr(blockHit.getLocation()) : Double.MAX_VALUE;
-            double hitDistSq = Math.min(entityDist, blockDist);
-
-            if (entityHit != null && entityDist < blockDist) {
-                Entity hitEntity = entityHit.getEntity();
-
-                if (hitEntity instanceof EnderDragonPart part) {
-                    hitEntity = part.parentMob;
-                }
-
-                EntityType<?> type = hitEntity.getType();
-                Category cat = getCategoryForEntry(type);
-                boolean isScannable = cat != null;
-
-                TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation("fieldguide", "kill_to_unlock"));
-                boolean requiresKill = false;
-                var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type);
-                if (key.isPresent()) {
-                    var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
-                    if (holder.isPresent() && holder.get().is(killToUnlockTag)) {
-                        requiresKill = true;
-                    }
-                }
-
-                if (getValidEntries().contains(type) && !isUnlocked(type) && isScannable && !requiresKill) {
-                    foundTarget = hitEntity;
-                } else if (!isUnlocked(type) && isScannable && !requiresKill) {
-                    ResourceLocation originalId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
-                    if (ModConfig.get().getRedirect(originalId) != null) {
-                        foundTarget = hitEntity;
-                    }
-                }
-            } else if (blockHit.getType() == HitResult.Type.BLOCK) {
-                BlockState state = minecraft.level.getBlockState(blockHit.getBlockPos());
-                Block block = state.getBlock();
-                if (getValidEntries().contains(block) && !isUnlocked(block)) {
-                    foundTarget = block;
-                } else if (!isUnlocked(block)) {
-                    ResourceLocation originalId = BuiltInRegistries.BLOCK.getKey(block);
-                    if (ModConfig.get().getRedirect(originalId) != null) {
-                        foundTarget = block;
-                    }
-                }
-            }
-
-            if (foundTarget != null) {
-                double activeScanDist = ModConfig.get().scanDistance;
-                boolean outOfRange = hitDistSq > (activeScanDist * activeScanDist);
-
-                if (outOfRange) {
-                    this.outOfRangeTarget = foundTarget;
-                    this.scanningTarget = null;
-                    this.scanningPos = null;
-                    this.scanTicks = 0;
-                    this.prevScanTicks = 0;
-                } else {
-                    this.outOfRangeTarget = null;
-
-                    Object targetKey = (foundTarget instanceof Entity) ? ((Entity) foundTarget).getType() : foundTarget;
-
-                    boolean sameTarget;
-                    if (scanningTarget instanceof Entity && foundTarget instanceof Entity) {
-                        sameTarget = scanningTarget == foundTarget;
-                    } else {
-                        sameTarget = Objects.equals(scanningTarget, foundTarget);
-                    }
-
-                    if (sameTarget) {
-                        this.prevScanTicks = this.scanTicks;
-                        scanTicks++;
-
-                        if (foundTarget instanceof Block) {
-                            this.scanningPos = blockHit.getBlockPos();
-                        }
-
-                        if (scanTicks >= (int) (ModConfig.get().scanSpeed * 20)) {
-                            ResourceLocation targetId = getEntryId(targetKey);
-                            if (targetId != null) {
-                                ResourceLocation redirectId = ModConfig.get().getRedirect(targetId);
-                                if (redirectId != null) {
-                                    Optional<EntityType<?>> entityType = BuiltInRegistries.ENTITY_TYPE.getOptional(redirectId);
-                                    if (entityType.isPresent()) {
-                                        targetKey = entityType.get();
-                                    } else {
-                                        Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(redirectId);
-                                        if (block.isPresent()) {
-                                            targetKey = block.get();
-                                        }
-                                    }
-                                }
-                            }
-
-                            unlock(targetKey);
-                            minecraft.player.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
-
-                            if (ModConfig.get().grantXpOnScan && ModConfig.get().xpAmountOnScan > 0) {
-                                Services.NETWORK.sendToServer(
-                                        new ClaimXpPacket(ModConfig.get().xpAmountOnScan)
-                                );
-                            }
-
-                            fadingTarget = foundTarget;
-                            if (foundTarget instanceof Block) {
-                                fadingPos = scanningPos;
-                            } else {
-                                fadingPos = null;
-                            }
-                            fadeTicks = FADE_DURATION;
-
-                            scanningTarget = null;
-                            scanningPos = null;
-                            scanTicks = 0;
-                        }
-                    } else {
-                        this.prevScanTicks = 0;
-                        scanningTarget = foundTarget;
-
-                        if (scanningTarget instanceof Block) {
-                            this.scanningPos = blockHit.getBlockPos();
-                        } else {
-                            this.scanningPos = null;
-                        }
-
-                        if (ModConfig.get().playScanningSound) {
-                            minecraft.player.playSound(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 1.0F, 1.0F);
-                        }
-
-                        scanTicks = 0;
-                    }
-                }
-            } else {
-                this.outOfRangeTarget = null;
-
-                if (scanTicks > 0) {
-                    this.prevScanTicks = this.scanTicks;
-                    scanTicks -= 2;
-                    if (scanTicks <= 0) {
-                        scanningTarget = null;
-                        scanningPos = null;
-                        scanTicks = 0;
-                    }
-                } else {
-                    scanningTarget = null;
-                    scanningPos = null;
-                }
-            }
-
-            if (scanningTarget instanceof Entity ent && (ent.isRemoved() || !ent.isAlive())) {
-                scanningTarget = null;
-                scanTicks = 0;
-            }
-
-        } else {
-            scanningTarget = null;
-            scanningPos = null;
-            scanTicks = 0;
-            outOfRangeTarget = null;
-        }
-
-        if (fadeTicks > 0) {
-            fadeTicks--;
-            if (fadeTicks <= 0) {
-                fadingTarget = null;
-                fadingPos = null;
-            }
-        }
-    }
-
-    public Object getScanningTarget() {
-        return scanningTarget;
-    }
-
-    public BlockPos getScanningPos() {
-        return scanningPos;
-    }
-
-    public Entity getScanningEntity() {
-        return scanningTarget instanceof Entity ? (Entity) scanningTarget : null;
-    }
-
-    public float getScanProgress(float partialTicks) {
-        float lerped = (float) prevScanTicks + ((float) scanTicks - (float) prevScanTicks) * partialTicks;
-        return Math.min(1.0F, lerped / (int) (ModConfig.get().scanSpeed * 20));
-    }
-
-    public Entity getOutOfRangeEntity() {
-        return outOfRangeTarget instanceof Entity ? (Entity) outOfRangeTarget : null;
-    }
-
-    public Object getFadingTarget() {
-        return fadingTarget;
-    }
-
-    public BlockPos getFadingPos() {
-        return fadingPos;
-    }
-
-    public Entity getFadingEntity() {
-        return fadingTarget instanceof Entity ? (Entity) fadingTarget : null;
-    }
-
-    public float getFadeProgress(float partialTicks) {
-        float currentFade = Math.max(0, fadeTicks - partialTicks);
-        return currentFade / (float) FADE_DURATION;
-    }
-
-    public boolean getIsTickingDown() {
-        return scanTicks < prevScanTicks;
-    }
-
-    public void unlock(Object entry) {
-        unlock(entry, true);
-    }
-
-    public long getDiscoveryGameTime(Object entry) {
-        ResourceLocation id = getEntryId(entry);
-        if (id != null) {
-            return discoveryGameTimes.getOrDefault(id.toString(), 0L);
-        }
-        return 0L;
-    }
-
-    public void unlock(Object entry, boolean showToast) {
-        ResourceLocation id = getEntryId(entry);
-        if (id != null && unlockedEntries.add(id.toString())) {
-            this.lastUnlockedEntry = entry;
-            this.lastUnlockTime = System.currentTimeMillis();
-            this.discoveryTimes.put(id.toString(), this.lastUnlockTime);
-            if (Minecraft.getInstance().level != null) {
-                this.discoveryGameTimes.put(id.toString(), Minecraft.getInstance().level.dayTime());
-            }
-            if (showToast) Minecraft.getInstance().getToasts().addToast(new FieldGuideToast(entry));
-            saveProgress();
-        }
-    }
-
-    public long getLastUnlockTime() {
-        return lastUnlockTime;
-    }
-
-    public Object getLastUnlockedEntry() {
-        return lastUnlockedEntry;
-    }
-
-    public long getDiscoveryTime(Object entry) {
-        ResourceLocation id = getEntryId(entry);
-        if (id != null) {
-            return discoveryTimes.getOrDefault(id.toString(), 0L);
-        }
-        return 0L;
+        return SearchManager.searchEntries(query);
     }
 
     public List<ItemStack> getDrops(Object entry) {
         return dropCache.getOrDefault(entry, Collections.emptyList());
     }
 
+    public void onClientTick(net.minecraft.client.Minecraft minecraft) {
+        FieldGuideScanner.getInstance().onClientTick(minecraft);
+    }
+
+    public long getLastUnlockTime() {
+        return ProgressManager.getInstance().getLastUnlockTime();
+    }
+
+    public Object getLastUnlockedEntry() {
+        return ProgressManager.getInstance().getLastUnlockedEntry();
+    }
+
     public void onWorldLoad(String serverIdentifier) {
-        this.unlockedEntries.clear();
-        this.seenEntries.clear();
-        this.discoveryTimes.clear();
-
-        Minecraft minecraft = Minecraft.getInstance();
-
-        try {
-            if (minecraft.hasSingleplayerServer() && minecraft.getSingleplayerServer() != null) {
-                // Singleplayer: Save directly in the world's save folder
-                Path worldDir = minecraft.getSingleplayerServer().getWorldPath(LevelResource.ROOT);
-                Path dataDir = worldDir.resolve("fieldguide_data");
-                Files.createDirectories(dataDir);
-                this.currentSavePath = dataDir.resolve("progress.dat");
-            } else {
-                // Multiplayer: Save in the global config folder using the server identifier
-                Path gameDir = minecraft.gameDirectory.toPath();
-                Path dataDir = gameDir.resolve("config").resolve("fieldguide_data");
-                Files.createDirectories(dataDir);
-
-                String safeName = serverIdentifier.replaceAll("[^a-zA-Z0-9.-]", "_");
-                this.currentSavePath = dataDir.resolve(safeName + ".dat");
-            }
-        } catch (Exception e) {
-            Constants.LOG.error("Failed to setup save directory for Field Guide", e);
-        }
-
-        loadProgress();
+        ProgressManager.getInstance().onWorldLoad(serverIdentifier);
     }
 
     public void onWorldUnload() {
-        if (this.currentSavePath != null) saveProgress();
-        this.currentSavePath = null;
-        this.unlockedEntries.clear();
-        this.seenEntries.clear();
-        this.discoveryTimes.clear();
-        this.discoveryGameTimes.clear();
-        this.customDescriptions.clear();
-        this.customNames.clear();
-        this.journalPages.clear();
-        this.journalTitle = "My Field Guide";
+        ProgressManager.getInstance().onWorldUnload();
     }
 
-    private void loadProgress() {
-        if (currentSavePath == null || !currentSavePath.toFile().exists()) return;
-        try (FileReader reader = new FileReader(currentSavePath.toFile())) {
-            JsonObject json = GSON.fromJson(reader, JsonObject.class);
-            if (json.has("unlocked"))
-                for (JsonElement e : json.getAsJsonArray("unlocked")) unlockedEntries.add(e.getAsString());
-            if (json.has("seen")) for (JsonElement e : json.getAsJsonArray("seen")) seenEntries.add(e.getAsString());
-            if (json.has("times")) {
-                JsonObject times = json.getAsJsonObject("times");
-                for (Map.Entry<String, JsonElement> entry : times.entrySet()) {
-                    discoveryTimes.put(entry.getKey(), entry.getValue().getAsLong());
-                }
-            }
-            if (json.has("gameTimes")) {
-                JsonObject gameTimes = json.getAsJsonObject("gameTimes");
-                for (Map.Entry<String, JsonElement> entry : gameTimes.entrySet()) {
-                    discoveryGameTimes.put(entry.getKey(), entry.getValue().getAsLong());
-                }
-            }
-
-            if (json.has("customDescriptions")) {
-                JsonObject descs = json.getAsJsonObject("customDescriptions");
-                for (Map.Entry<String, JsonElement> entry : descs.entrySet()) {
-                    customDescriptions.put(entry.getKey(), entry.getValue().getAsString());
-                }
-            }
-
-            if (json.has("customNames")) {
-                JsonObject names = json.getAsJsonObject("customNames");
-                for (Map.Entry<String, JsonElement> entry : names.entrySet()) {
-                    customNames.put(entry.getKey(), entry.getValue().getAsString());
-                }
-            }
-
-            if (json.has("journalTitle")) journalTitle = json.get("journalTitle").getAsString();
-            if (json.has("journalPages")) {
-                journalPages.clear();
-                for (JsonElement e : json.getAsJsonArray("journalPages")) {
-                    JsonObject obj = e.getAsJsonObject();
-                    journalPages.add(new JournalPage(
-                            obj.has("title") ? obj.get("title").getAsString() : "",
-                            obj.has("content") ? obj.get("content").getAsString() : "",
-                            obj.has("timestamp") ? obj.get("timestamp").getAsLong() : System.currentTimeMillis()
-                    ));
-                }
-            }
-        } catch (Exception e) {
-            Constants.LOG.error("Failed to load progress", e);
-        }
+    public void unlock(Object entry) {
+        ProgressManager.getInstance().unlock(entry);
     }
 
-    private void saveProgress() {
-        if (currentSavePath == null) return;
-        try {
-            JsonObject json = new JsonObject();
-            JsonArray uArr = new JsonArray();
-            unlockedEntries.forEach(uArr::add);
-            json.add("unlocked", uArr);
-            JsonArray sArr = new JsonArray();
-            seenEntries.forEach(sArr::add);
-            json.add("seen", sArr);
-
-            JsonObject timesObj = new JsonObject();
-            discoveryTimes.forEach(timesObj::addProperty);
-            json.add("times", timesObj);
-
-            JsonObject gameTimesObj = new JsonObject();
-            discoveryGameTimes.forEach(gameTimesObj::addProperty);
-            json.add("gameTimes", gameTimesObj);
-
-            JsonObject descsObj = new JsonObject();
-            customDescriptions.forEach(descsObj::addProperty);
-            json.add("customDescriptions", descsObj);
-
-            JsonObject namesObj = new JsonObject();
-            customNames.forEach(namesObj::addProperty);
-            json.add("customNames", namesObj);
-
-            json.addProperty("journalTitle", journalTitle);
-            JsonArray jpArr = new JsonArray();
-            for (JournalPage jp : getJournalPages()) {
-                JsonObject obj = new JsonObject();
-                obj.addProperty("title", jp.title);
-                obj.addProperty("content", jp.content);
-                obj.addProperty("timestamp", jp.timestamp);
-                jpArr.add(obj);
-            }
-            json.add("journalPages", jpArr);
-
-            File file = currentSavePath.toFile();
-            if (file.getParentFile() != null) file.getParentFile().mkdirs();
-            try (FileWriter w = new FileWriter(file)) {
-                GSON.toJson(json, w);
-            }
-        } catch (Exception e) {
-            Constants.LOG.error("Failed to save progress", e);
-        }
+    public void unlock(Object entry, boolean showToast) {
+        ProgressManager.getInstance().unlock(entry, showToast);
     }
 
     public void revoke(Object entry) {
-        ResourceLocation id = getEntryId(entry);
-        if (id != null && unlockedEntries.remove(id.toString())) {
-            seenEntries.remove(id.toString());
-            discoveryTimes.remove(id.toString());
-            discoveryGameTimes.remove(id.toString());
-            saveProgress();
-        }
+        ProgressManager.getInstance().revoke(entry);
     }
 
     public void revokeAll() {
-        unlockedEntries.clear();
-        seenEntries.clear();
-        discoveryTimes.clear();
-        discoveryGameTimes.clear();
-        saveProgress();
+        ProgressManager.getInstance().revokeAll();
     }
 }

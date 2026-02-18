@@ -42,8 +42,8 @@ public class FieldGuideScreen extends BookScreen {
 
     private static final int SEARCH_WIDTH = 140;
     private static final int SEARCH_HEIGHT = 20;
-    private static ResourceLocation lastOpenedCategory = null;
     public static int lastOpenedJournalPage = 0;
+    private static ResourceLocation lastOpenedCategory = null;
     private final Map<EntityType<?>, Entity> entryCache = new HashMap<>();
     public boolean isSearching = false;
     private boolean initialSearchFocus = false;
@@ -91,19 +91,29 @@ public class FieldGuideScreen extends BookScreen {
     @Override
     protected void init() {
         super.init();
+
         if (this.getSelectedCategory() == null) {
             if (lastOpenedCategory != null) {
                 this.setSelectedCategory(ClientFieldGuideManager.getCategories().get(lastOpenedCategory));
             }
 
-            if (this.getSelectedCategory() == null && !this.getSortedCategories().isEmpty()) {
-                this.setSelectedCategory(this.getSortedCategories().get(0));
-            }
+            if (this.getSelectedCategory() == null) {
+                Category intro = ClientFieldGuideManager.getCategories().values().stream()
+                        .filter(cat -> cat.getId().getPath().equals("intro"))
+                        .findFirst()
+                        .orElse(null);
 
-            if (this.getSelectedCategory() != null && this.getSelectedCategory().getId().getPath().equals("intro")) {
-                Objects.requireNonNull(this.minecraft).setScreen(new FieldGuideJournalScreen(this.getSelectedCategory(), lastOpenedJournalPage));
-                return;
+                if (intro != null) {
+                    this.setSelectedCategory(intro);
+                } else if (!this.getSortedCategories().isEmpty()) {
+                    this.setSelectedCategory(this.getSortedCategories().get(0));
+                }
             }
+        }
+
+        if (this.getSelectedCategory() != null && this.getSelectedCategory().getId().getPath().equals("intro")) {
+            Objects.requireNonNull(this.minecraft).setScreen(new FieldGuideJournalScreen(this.getSelectedCategory(), lastOpenedJournalPage));
+            return;
         }
 
         lastOpenedCategory = this.getSelectedCategory().getId();
@@ -217,6 +227,8 @@ public class FieldGuideScreen extends BookScreen {
 
     @Override
     public void onTabClick(Category category) {
+        lastOpenedCategory = category.getId();
+
         if (category.getId().getPath().equals("intro")) {
             Objects.requireNonNull(this.minecraft).setScreen(new FieldGuideJournalScreen(category, lastOpenedJournalPage));
             return;
@@ -225,7 +237,6 @@ public class FieldGuideScreen extends BookScreen {
         this.setSelectedCategory(category);
         this.getEntriesForSelectedCategory();
         this.goToPage(0);
-        lastOpenedCategory = category.getId();
 
         if (this.searchBox != null) {
             this.searchBox.setValue("");

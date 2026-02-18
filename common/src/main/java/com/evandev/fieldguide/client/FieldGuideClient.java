@@ -4,6 +4,7 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.gui.screens.BookScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideScreen;
+import com.evandev.fieldguide.client.scanning.FieldGuideScanner;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.mixin.accessor.MobAccessor;
@@ -70,10 +71,10 @@ public class FieldGuideClient {
         ModConfig config = ModConfig.get();
         if (!config.showScanIcon) return;
 
-        ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
-        boolean outOfRange = manager.getOutOfRangeTarget() != null;
-        boolean isFading = manager.getFadingTarget() != null;
-        boolean hasTarget = manager.getScanningTarget() != null;
+        FieldGuideScanner scanner = FieldGuideScanner.getInstance();
+        boolean outOfRange = scanner.getOutOfRangeTarget() != null;
+        boolean isFading = scanner.getFadingTarget() != null;
+        boolean hasTarget = scanner.getScanningTarget() != null;
 
         if (hasTarget || isFading || outOfRange) {
             int screenWidth = guiGraphics.guiWidth();
@@ -93,8 +94,8 @@ public class FieldGuideClient {
             } else if (isFading) {
                 frame = 4;
             } else {
-                float progress = manager.getScanProgress(partialTick);
-                if (manager.getIsTickingDown()) return;
+                float progress = scanner.getScanProgress(partialTick);
+                if (scanner.getIsTickingDown()) return;
                 int animationFrames = 4;
                 frame = (int) Math.min(Math.floor(progress * animationFrames), animationFrames - 1);
             }

@@ -7,6 +7,7 @@ import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.gui.widget.*;
+import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.platform.Services;
@@ -154,7 +155,8 @@ public class FieldGuideEntryScreen extends BookScreen {
                     graphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
                 }
             }, stack -> {
-                if (this.minecraft != null) this.minecraft.setScreen(new FieldGuideScreen("=^" + stack.getHoverName().getString().toLowerCase(Locale.ROOT), this));
+                if (this.minecraft != null)
+                    this.minecraft.setScreen(new FieldGuideScreen("=^" + stack.getHoverName().getString().toLowerCase(Locale.ROOT), this));
             }));
         }
     }
@@ -256,7 +258,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             guiGraphics.drawString(this.font, getTitleForEntry(entry), titleX, titleY, ModConfig.get().getTextMutedColorInt(), false);
             guiGraphics.drawWordWrap(font, Component.translatable("fieldguide.description.locked"), textX, titleY + 30, textAreaWidth, ModConfig.get().getTextMutedColorInt());
         } else {
-            long discoveryTime = ClientFieldGuideManager.getInstance().getDiscoveryTime(entry);
+            long discoveryTime = ProgressManager.getInstance().getDiscoveryTime(entry);
             if (discoveryTime > 0) {
                 String dateStr = new SimpleDateFormat("MMM dd, yyyy").format(new Date(discoveryTime));
                 guiGraphics.drawString(this.font, Component.literal(dateStr), titleX, titleY + this.font.lineHeight + 2, ModConfig.get().getTextMutedColorInt(), false);
