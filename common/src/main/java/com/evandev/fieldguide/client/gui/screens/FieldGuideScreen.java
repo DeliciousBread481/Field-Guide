@@ -43,7 +43,6 @@ public class FieldGuideScreen extends BookScreen {
     private static final int SEARCH_WIDTH = 140;
     private static final int SEARCH_HEIGHT = 20;
     private static ResourceLocation lastOpenedCategory = null;
-    private static int lastOpenedPage = 0;
     public static int lastOpenedJournalPage = 0;
     private final Map<EntityType<?>, Entity> entryCache = new HashMap<>();
     public boolean isSearching = false;
@@ -83,14 +82,6 @@ public class FieldGuideScreen extends BookScreen {
         int index = entries.indexOf(entry);
         if (index < 0) return 0;
         return 1 + index / ITEMS_PER_VIEW;
-    }
-
-    public static int getLastOpenedPage() {
-        return lastOpenedPage;
-    }
-
-    public static void setLastOpenedPage(int lastOpenedPage) {
-        FieldGuideScreen.lastOpenedPage = lastOpenedPage;
     }
 
     public void setInitialSearchFocus(boolean focus) {
@@ -139,7 +130,7 @@ public class FieldGuideScreen extends BookScreen {
         this.addRenderableWidget(prevPageButton);
         this.addRenderableWidget(nextPageButton);
 
-        // Add Back Button
+        // Back Button
         this.backButton = new PageTurnButton(
                 this.bounds.right() + 9 - 24,
                 this.bounds.top() + 26,
@@ -162,7 +153,7 @@ public class FieldGuideScreen extends BookScreen {
         backButton.visible = false;
         this.addRenderableWidget(backButton);
 
-        // Add Search Bar
+        // Search Bar
         int searchX = this.width / 2 - SEARCH_WIDTH / 2;
         int searchY = this.bounds.bottom() + 5;
 
@@ -173,7 +164,6 @@ public class FieldGuideScreen extends BookScreen {
         }
         this.addRenderableWidget(this.searchBox);
 
-        // Get entries
         if (this.isSearching) {
             this.setSelectedCategory(null);
             this.getEntriesForSearchQuery();
@@ -187,10 +177,6 @@ public class FieldGuideScreen extends BookScreen {
         }
 
         goToPage(this.currentPage);
-    }
-
-    public FieldGuideSearchBox getSearchBox() {
-        return this.searchBox;
     }
 
     private void onSearchChanged(String query) {
@@ -270,7 +256,6 @@ public class FieldGuideScreen extends BookScreen {
 
     private void goToPage(int page) {
         this.currentPage = page;
-        lastOpenedPage = currentPage;
         this.updatePageButtons();
     }
 
@@ -401,8 +386,6 @@ public class FieldGuideScreen extends BookScreen {
                     renderPageNumber(rightPageNum, this.rightPageBounds, guiGraphics);
                 }
 
-                // Render title
-
                 // Biome Title
                 if (searchQuery.startsWith("=!")) {
                     ResourceLocation biomeId = ResourceLocation.tryParse(searchQuery.substring(2));
@@ -461,7 +444,8 @@ public class FieldGuideScreen extends BookScreen {
                 if (currentEntries.size() > startIdx + ITEMS_PER_PAGE) {
                     renderPageNumber(rightPageNum, this.rightPageBounds, guiGraphics);
                 }
-                // Render title
+
+                // Category Title
                 Component title = Component.translatable("category.fieldguide." + this.getSelectedCategory().getId().getPath());
                 guiGraphics.drawString(this.font, title, this.leftPageBounds.left(), titleY, ModConfig.get().getTextMutedColorInt(), false);
             }
@@ -477,12 +461,11 @@ public class FieldGuideScreen extends BookScreen {
             }
         }
 
-        // Back button
+        // Back Button
         this.backButton.visible = this.isSearching;
-
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
-        // Render grid
+        // Grid
         if (currentPage > 0 || isSearching) {
             renderGrid(guiGraphics, mouseX, mouseY);
         }
