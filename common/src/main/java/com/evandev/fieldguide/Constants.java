@@ -16,7 +16,8 @@ public class Constants {
     public static final ResourceLocation DETAILS_PAGE_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/page_details.png");
     public static final ResourceLocation TOAST_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/toast.png");
     public static final ResourceLocation JOURNAL_TITLE_PAGE_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/journal_title_page.png");
-    public static final ResourceLocation JOURNAL_LINES_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/journal_lines.png");
+    public static final ResourceLocation JOURNAL_PAGE_RIGHT_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/journal_lines_right.png");
+    public static final ResourceLocation JOURNAL_PAGE_LEFT_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/journal_lines_left.png");
 
     // Buttons
     public static final ResourceLocation BUTTON_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/fieldguide_button.png");

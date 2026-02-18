@@ -404,7 +404,7 @@ public class FieldGuideScreen extends BookScreen {
                         ResourceLocation texture = new ResourceLocation(biomeId.getNamespace(), "textures/immersiveoverlays/" + biomeId.getPath() + ".png");
                         int iconSize = 16;
                         int iconY = titleY - 5;
-                        int iconX = this.leftPageBounds.left() - 3;
+                        int iconX = this.leftPageBounds.left() + 3;
                         guiGraphics.blit(texture, iconX, iconY, 0, 0, iconSize, iconSize, iconSize, iconSize);
                         Component searchTitle = Component.translatable("biome." + biomeId.getNamespace() + "." + biomeId.getPath());
                         guiGraphics.drawString(this.font, searchTitle, iconX + iconSize + 4, titleY, ModConfig.get().getTextColorInt(), false);
@@ -428,7 +428,7 @@ public class FieldGuideScreen extends BookScreen {
 
                     int iconSize = 16;
                     int iconY = titleY - 5;
-                    int iconX = this.leftPageBounds.left() - 3;
+                    int iconX = this.leftPageBounds.left() + 3;
 
                     if (!displayStack.isEmpty()) {
                         guiGraphics.renderItem(displayStack, iconX, iconY);
@@ -446,7 +446,7 @@ public class FieldGuideScreen extends BookScreen {
 
                     guiGraphics.drawString(this.font, dropName, iconX + iconSize + 4, titleY, ModConfig.get().getTextColorInt(), false);
                 } else {
-                    guiGraphics.drawString(this.font, searchQuery, this.leftPageBounds.left(), titleY, ModConfig.get().getTextMutedColorInt(), false);
+                    guiGraphics.drawString(this.font, searchQuery, this.leftPageBounds.left() + 6, titleY, ModConfig.get().getTextMutedColorInt(), false);
                 }
 
 
@@ -458,7 +458,7 @@ public class FieldGuideScreen extends BookScreen {
 
                 // Category Title
                 Component title = Component.translatable("category.fieldguide." + this.getSelectedCategory().getId().getPath());
-                guiGraphics.drawString(this.font, title, this.leftPageBounds.left(), titleY, ModConfig.get().getTextMutedColorInt(), false);
+                guiGraphics.drawString(this.font, title, this.leftPageBounds.left() + 6, titleY, ModConfig.get().getTextMutedColorInt(), false);
             }
         }
 
@@ -653,7 +653,7 @@ public class FieldGuideScreen extends BookScreen {
         if (i < ITEMS_PER_PAGE) pageBounds = this.leftPageBounds;
         else pageBounds = this.rightPageBounds;
 
-        int startX = pageBounds.left();
+        int startX = pageBounds.left() + 6;
         int startY = pageBounds.top() + 24;
         int localIndex = i % ITEMS_PER_PAGE;
         int col = localIndex % GRID_COLS;

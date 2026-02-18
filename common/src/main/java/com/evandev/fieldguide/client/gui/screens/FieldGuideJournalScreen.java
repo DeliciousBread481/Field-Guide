@@ -38,11 +38,11 @@ public class FieldGuideJournalScreen extends BookScreen {
         ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
         ensurePagesExist(manager);
 
-        int textXLeft = this.leftPageBounds.left() + 5;
-        int textXRight = this.rightPageBounds.left() + 5;
+        int textXLeft = this.leftPageBounds.left() + 6;
+        int textXRight = this.rightPageBounds.left() + 6;
         int titleY = this.leftPageBounds.top() + 8;
         int textY = titleY + this.font.lineHeight * 2 + 8;
-        int textAreaWidth = this.rightPageBounds.width() - 10;
+        int textAreaWidth = this.rightPageBounds.width() - 12;
         int textAreaHeight = this.leftPageBounds.height() - (textY - this.leftPageBounds.top()) - 20;
 
         // Journal Title
@@ -152,10 +152,10 @@ public class FieldGuideJournalScreen extends BookScreen {
 
         if (currentSpread == 0) {
             guiGraphics.blit(Constants.JOURNAL_TITLE_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
-            guiGraphics.blit(Constants.JOURNAL_LINES_TEXTURE, this.rightPageBounds.left(), this.rightPageBounds.top(), 0, 0, this.rightPageBounds.width(), this.rightPageBounds.height(), this.rightPageBounds.width(), this.rightPageBounds.height());
+            guiGraphics.blit(Constants.JOURNAL_PAGE_RIGHT_TEXTURE, this.rightPageBounds.left(), this.rightPageBounds.top(), 0, 0, this.rightPageBounds.width(), this.rightPageBounds.height(), this.rightPageBounds.width(), this.rightPageBounds.height());
         } else {
-            guiGraphics.blit(Constants.JOURNAL_LINES_TEXTURE, this.leftPageBounds.left(), this.leftPageBounds.top(), 0, 0, this.leftPageBounds.width(), this.leftPageBounds.height(), this.leftPageBounds.width(), this.leftPageBounds.height());
-            guiGraphics.blit(Constants.JOURNAL_LINES_TEXTURE, this.rightPageBounds.left(), this.rightPageBounds.top(), 0, 0, this.rightPageBounds.width(), this.rightPageBounds.height(), this.rightPageBounds.width(), this.rightPageBounds.height());
+            guiGraphics.blit(Constants.JOURNAL_PAGE_LEFT_TEXTURE, this.leftPageBounds.left(), this.leftPageBounds.top(), 0, 0, this.leftPageBounds.width(), this.leftPageBounds.height(), this.leftPageBounds.width(), this.leftPageBounds.height());
+            guiGraphics.blit(Constants.JOURNAL_PAGE_RIGHT_TEXTURE, this.rightPageBounds.left(), this.rightPageBounds.top(), 0, 0, this.rightPageBounds.width(), this.rightPageBounds.height(), this.rightPageBounds.width(), this.rightPageBounds.height());
         }
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
@@ -169,13 +169,13 @@ public class FieldGuideJournalScreen extends BookScreen {
             guiGraphics.drawString(this.font, leftPageStr, this.leftPageBounds.x_center() - this.font.width(leftPageStr) / 2, this.leftPageBounds.bottom() - 11, ModConfig.get().getPageNumberColorInt(), false);
 
             JournalPage lPage = ClientFieldGuideManager.getInstance().getJournalPages().get(currentSpread * 2 - 1);
-            guiGraphics.drawString(this.font, dateFormat.format(new Date(lPage.timestamp)), this.leftPageBounds.left() + 5, dateY, ModConfig.get().getTextMutedColorInt(), false);
+            guiGraphics.drawString(this.font, dateFormat.format(new Date(lPage.timestamp)), this.leftPageBounds.left() + 6, dateY, ModConfig.get().getTextMutedColorInt(), false);
         }
 
         String rightPageStr = (currentSpread * 2 + 1) + "";
         guiGraphics.drawString(this.font, rightPageStr, this.rightPageBounds.x_center() - this.font.width(rightPageStr) / 2, this.rightPageBounds.bottom() - 11, ModConfig.get().getPageNumberColorInt(), false);
 
         JournalPage rPage = ClientFieldGuideManager.getInstance().getJournalPages().get(currentSpread == 0 ? 0 : currentSpread * 2);
-        guiGraphics.drawString(this.font, dateFormat.format(new Date(rPage.timestamp)), this.rightPageBounds.left() + 5, dateY, ModConfig.get().getTextMutedColorInt(), false);
+        guiGraphics.drawString(this.font, dateFormat.format(new Date(rPage.timestamp)), this.rightPageBounds.left() + 6, dateY, ModConfig.get().getTextMutedColorInt(), false);
     }
 }

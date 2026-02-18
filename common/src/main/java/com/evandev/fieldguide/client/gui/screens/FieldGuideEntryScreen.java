@@ -77,7 +77,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private void setupTextWidgets(boolean unlocked) {
-        int textX = this.rightPageBounds.left() + 5;
+        int textX = this.rightPageBounds.left() + 6;
         int titleY = this.leftPageBounds.top() + 8;
         int textY = this.rightPageBounds.top() + 38;
         int textAreaWidth = this.rightPageBounds.width() - 10;
@@ -257,8 +257,8 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         boolean unlocked = ClientFieldGuideManager.isUnlocked(entry);
         int titleY = this.leftPageBounds.top() + 8;
-        int titleX = this.rightPageBounds.left() + 5;
-        int textX = this.rightPageBounds.left() + 5;
+        int titleX = this.rightPageBounds.left() + 6;
+        int textX = this.rightPageBounds.left() + 6;
         int textAreaWidth = this.rightPageBounds.width() - 10;
 
         if (!unlocked) {
