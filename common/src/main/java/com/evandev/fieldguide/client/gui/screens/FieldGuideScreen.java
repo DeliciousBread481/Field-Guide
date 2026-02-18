@@ -515,7 +515,7 @@ public class FieldGuideScreen extends BookScreen {
             guiGraphics.drawString(this.font, totalText, x + xOffset - font.width(totalText) / 2, y, ModConfig.get().getTextColorInt(), false);
 
             // Progress Bar
-            int barWidth = 92;
+            int barWidth = 86;
             int barHeight = 2;
             int barX = x - barWidth / 2;
             int barY = y + 21;
