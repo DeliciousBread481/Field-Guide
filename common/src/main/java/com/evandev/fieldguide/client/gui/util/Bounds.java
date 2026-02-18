@@ -29,7 +29,7 @@ public record Bounds(int x, int y, int width, int height) {
         return x >= left() && x < right() && y >= top() && y < bottom();
     }
 
-    public static boolean isMouseOver(int mouseX, int mouseY, int posX, int posY, int width, int height) {
+    public static boolean isMouseOver(double mouseX, double mouseY, int posX, int posY, int width, int height) {
         return mouseX >= posX && mouseX < posX + width && mouseY >= posY && mouseY < posY + height;
     }
 }

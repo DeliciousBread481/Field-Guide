@@ -3,6 +3,7 @@ package com.evandev.fieldguide.client;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.data.CategoryVisual;
 import com.evandev.fieldguide.client.data.EntryVisual;
+import com.evandev.fieldguide.client.data.JournalPage;
 import com.evandev.fieldguide.client.gui.toasts.FieldGuideToast;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.config.ModConfig;
@@ -69,10 +70,11 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     private final Set<String> seenEntries = new HashSet<>();
     private final Map<String, Long> discoveryTimes = new HashMap<>();
     private final Map<Object, List<ItemStack>> dropCache = new HashMap<>();
-
     private final Map<String, String> customDescriptions = new HashMap<>();
     private final Map<String, String> customNames = new HashMap<>();
     private final Map<String, Long> discoveryGameTimes = new HashMap<>();
+    private final List<JournalPage> journalPages = new ArrayList<>();
+    private String journalTitle = "My Field Guide";
     private Path currentSavePath = null;
 
     // Scanning State
@@ -190,6 +192,26 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         if (entry instanceof EntityType<?> type) return type.getDescription().getString();
         if (entry instanceof Block block) return block.getName().getString();
         return I18n.get("fieldguide.unknown");
+    }
+
+    public String getJournalTitle() {
+        return journalTitle;
+    }
+
+    public void setJournalTitle(String title) {
+        this.journalTitle = title;
+        saveProgress();
+    }
+
+    public void saveJournal() {
+        saveProgress();
+    }
+
+    public List<JournalPage> getJournalPages() {
+        if (journalPages.isEmpty()) {
+            journalPages.add(new JournalPage("", "", System.currentTimeMillis()));
+        }
+        return journalPages;
     }
 
     public void exportToLang(String type) {
@@ -990,6 +1012,8 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         this.discoveryGameTimes.clear();
         this.customDescriptions.clear();
         this.customNames.clear();
+        this.journalPages.clear();
+        this.journalTitle = "My Field Guide";
     }
 
     private void loadProgress() {
@@ -1025,6 +1049,19 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
                     customNames.put(entry.getKey(), entry.getValue().getAsString());
                 }
             }
+
+            if (json.has("journalTitle")) journalTitle = json.get("journalTitle").getAsString();
+            if (json.has("journalPages")) {
+                journalPages.clear();
+                for (JsonElement e : json.getAsJsonArray("journalPages")) {
+                    JsonObject obj = e.getAsJsonObject();
+                    journalPages.add(new JournalPage(
+                            obj.has("title") ? obj.get("title").getAsString() : "",
+                            obj.has("content") ? obj.get("content").getAsString() : "",
+                            obj.has("timestamp") ? obj.get("timestamp").getAsLong() : System.currentTimeMillis()
+                    ));
+                }
+            }
         } catch (Exception e) {
             Constants.LOG.error("Failed to load progress", e);
         }
@@ -1056,6 +1093,17 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             JsonObject namesObj = new JsonObject();
             customNames.forEach(namesObj::addProperty);
             json.add("customNames", namesObj);
+
+            json.addProperty("journalTitle", journalTitle);
+            JsonArray jpArr = new JsonArray();
+            for (JournalPage jp : getJournalPages()) {
+                JsonObject obj = new JsonObject();
+                obj.addProperty("title", jp.title);
+                obj.addProperty("content", jp.content);
+                obj.addProperty("timestamp", jp.timestamp);
+                jpArr.add(obj);
+            }
+            json.add("journalPages", jpArr);
 
             File file = currentSavePath.toFile();
             if (file.getParentFile() != null) file.getParentFile().mkdirs();

@@ -60,7 +60,9 @@ public abstract class BookScreen extends Screen {
         this.sortedCategories.clear();
         for (Category cat : ClientFieldGuideManager.getCategories().values()) {
             List<Object> entries = ClientFieldGuideManager.getInstance().getEntriesForCategory(cat);
-            if (entries != null && !entries.isEmpty()) {
+            boolean isIntro = cat.getId().getPath().equals("intro");
+
+            if (isIntro || (entries != null && !entries.isEmpty())) {
                 this.sortedCategories.add(cat);
             }
         }

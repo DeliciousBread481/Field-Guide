@@ -44,6 +44,7 @@ public class FieldGuideScreen extends BookScreen {
     private static final int SEARCH_HEIGHT = 20;
     private static ResourceLocation lastOpenedCategory = null;
     private static int lastOpenedPage = 0;
+    public static int lastOpenedJournalPage = 0;
     private final Map<EntityType<?>, Entity> entryCache = new HashMap<>();
     public boolean isSearching = false;
     private boolean initialSearchFocus = false;
@@ -107,13 +108,18 @@ public class FieldGuideScreen extends BookScreen {
             if (this.getSelectedCategory() == null && !this.getSortedCategories().isEmpty()) {
                 this.setSelectedCategory(this.getSortedCategories().get(0));
             }
+
+            if (this.getSelectedCategory() != null && this.getSelectedCategory().getId().getPath().equals("intro")) {
+                Objects.requireNonNull(this.minecraft).setScreen(new FieldGuideJournalScreen(this.getSelectedCategory(), lastOpenedJournalPage));
+                return;
+            }
         }
 
         lastOpenedCategory = this.getSelectedCategory().getId();
 
         this.isSearching = !this.searchQuery.trim().isEmpty();
 
-        // Add Pagination Buttons
+        // Pagination Buttons
         this.prevPageButton = new PageTurnButton(
                 this.bounds.left() + 15,
                 this.leftPageBounds.bottom() - 15,
@@ -225,6 +231,11 @@ public class FieldGuideScreen extends BookScreen {
 
     @Override
     public void onTabClick(Category category) {
+        if (category.getId().getPath().equals("intro")) {
+            Objects.requireNonNull(this.minecraft).setScreen(new FieldGuideJournalScreen(category, lastOpenedJournalPage));
+            return;
+        }
+
         this.setSelectedCategory(category);
         this.getEntriesForSelectedCategory();
         this.goToPage(0);
