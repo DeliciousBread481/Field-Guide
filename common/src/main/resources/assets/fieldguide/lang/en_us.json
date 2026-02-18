@@ -109,6 +109,18 @@
   "option.fieldguide.play_scanning_sound": "Play Scanning Sound",
   "option.fieldguide.play_scanning_sound.tooltip": "If false, the scribbling noise played when scanning entities will be disabled.",
 
+  "option.fieldguide.disable_loot_display": "Disable Loot Display",
+  "option.fieldguide.disable_loot_display.tooltip": "Hides the drops grid in Field Guide entries.",
+
+  "option.fieldguide.disable_biome_display": "Disable Biome Display",
+  "option.fieldguide.disable_biome_display.tooltip": "Hides the spawn biomes grid in Field Guide entries.",
+
+  "option.fieldguide.disable_editing_descriptions": "Disable Editing Descriptions",
+  "option.fieldguide.disable_editing_descriptions.tooltip": "Prevents players from modifying the description of discovered entries.",
+
+  "option.fieldguide.disable_editing_names": "Disable Editing Names",
+  "option.fieldguide.disable_editing_names.tooltip": "Prevents players from modifying the name of discovered entries.",
+
   "fieldguide.alignment.passive": "Passive",
   "fieldguide.alignment.neutral": "Neutral",
   "fieldguide.alignment.hostile": "Hostile",

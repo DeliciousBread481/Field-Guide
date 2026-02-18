@@ -85,12 +85,16 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         if (unlocked) {
             String initialName = ClientFieldGuideManager.getEntryName(entry).getString();
-            this.addRenderableWidget(new BookTextFieldWidget(this.font, textX, titleY, Math.max(font.width(initialName), 50), font.lineHeight, initialName, ModConfig.get().getTextTitleColorInt(), 50,
-                    newName -> ClientFieldGuideManager.setCustomName(entry, newName)));
+            if (!ModConfig.get().disableEditingNames) {
+                this.addRenderableWidget(new BookTextFieldWidget(this.font, textX, titleY, Math.max(font.width(initialName), 50), font.lineHeight, initialName, ModConfig.get().getTextTitleColorInt(), 50,
+                        newName -> ClientFieldGuideManager.setCustomName(entry, newName)));
+            }
 
             String initialDesc = ClientFieldGuideManager.getEntryDescription(entry);
-            this.addRenderableWidget(new BookTextAreaWidget(this.font, textX, textY, textAreaWidth, textAreaHeight, 10, ModConfig.get().getTextColorInt(), true, initialDesc,
-                    newDesc -> ClientFieldGuideManager.setCustomDescription(entry, newDesc)));
+            if (!ModConfig.get().disableEditingDescriptions) {
+                this.addRenderableWidget(new BookTextAreaWidget(this.font, textX, textY, textAreaWidth, textAreaHeight, 10, ModConfig.get().getTextColorInt(), true, initialDesc,
+                        newDesc -> ClientFieldGuideManager.setCustomDescription(entry, newDesc)));
+            }
         }
     }
 
@@ -123,6 +127,8 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private void setupBiomeWidget(boolean unlocked) {
+        if (ModConfig.get().disableBiomeDisplay) return;
+
         if (unlocked && !spawnBiomes.isEmpty()) {
             this.addRenderableWidget(new PaginatedGridWidget<>(this.leftPageBounds.left(), this.leftPageBounds.bottom() - 24, this.leftPageBounds.width(), 16, 6, 16, 0, spawnBiomes, (graphics, item, x, y, mouseX, mouseY) -> {
                 ResourceLocation texture = new ResourceLocation(item.getNamespace(), "textures/immersiveoverlays/" + item.getPath() + ".png");
@@ -137,6 +143,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private void setupDropWidget(boolean unlocked) {
+        if (ModConfig.get().disableLootDisplay) return;
         List<ItemStack> drops = unlocked ? ClientFieldGuideManager.getInstance().getDrops(entry) : List.of();
         if (!drops.isEmpty()) {
             int dropItemSize = 20;
@@ -262,6 +269,14 @@ public class FieldGuideEntryScreen extends BookScreen {
             if (discoveryTime > 0) {
                 String dateStr = new SimpleDateFormat("MMM dd, yyyy").format(new Date(discoveryTime));
                 guiGraphics.drawString(this.font, Component.literal(dateStr), titleX, titleY + this.font.lineHeight + 2, ModConfig.get().getTextMutedColorInt(), false);
+            }
+
+            if (ModConfig.get().disableEditingNames) {
+                guiGraphics.drawString(this.font, ClientFieldGuideManager.getEntryName(entry), titleX, titleY, ModConfig.get().getTextTitleColorInt(), false);
+            }
+            if (ModConfig.get().disableEditingDescriptions) {
+                int textY = this.rightPageBounds.top() + 38;
+                guiGraphics.drawWordWrap(font, Component.literal(ClientFieldGuideManager.getEntryDescription(entry)), textX, textY, textAreaWidth, ModConfig.get().getTextColorInt());
             }
         }
 

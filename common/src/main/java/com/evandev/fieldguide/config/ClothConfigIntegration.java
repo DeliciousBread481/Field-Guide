@@ -94,6 +94,30 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.xpAmountOnScan = newValue)
                 .build());
 
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.disable_loot_display"), config.disableLootDisplay)
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("option.fieldguide.disable_loot_display.tooltip"))
+                .setSaveConsumer(newValue -> config.disableLootDisplay = newValue)
+                .build());
+
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.disable_biome_display"), config.disableBiomeDisplay)
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("option.fieldguide.disable_biome_display.tooltip"))
+                .setSaveConsumer(newValue -> config.disableBiomeDisplay = newValue)
+                .build());
+
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.disable_editing_descriptions"), config.disableEditingDescriptions)
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("option.fieldguide.disable_editing_descriptions.tooltip"))
+                .setSaveConsumer(newValue -> config.disableEditingDescriptions = newValue)
+                .build());
+
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.disable_editing_names"), config.disableEditingNames)
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("option.fieldguide.disable_editing_names.tooltip"))
+                .setSaveConsumer(newValue -> config.disableEditingNames = newValue)
+                .build());
+
         // Interface
         ConfigCategory interfaceCat = builder.getOrCreateCategory(Component.translatable("category.fieldguide.interface"));
 

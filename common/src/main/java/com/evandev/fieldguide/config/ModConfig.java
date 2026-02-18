@@ -23,6 +23,11 @@ public class ModConfig {
     public int pauseButtonXOffset = 0;
     public int pauseButtonYOffset = 0;
 
+    public boolean disableLootDisplay = false;
+    public boolean disableBiomeDisplay = false;
+    public boolean disableEditingDescriptions = false;
+    public boolean disableEditingNames = false;
+
     public boolean showInventoryButton = true;
     public int inventoryButtonXOffset = 126;
     public int inventoryButtonYOffset = 61;
