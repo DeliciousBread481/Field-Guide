@@ -3,8 +3,7 @@ title: Datapacks (Customizing Content)
 hide_meta: true
 ---
 
-You can add new categories, reorganize existing ones, or add modded entities to the Field Guide using standard Minecraft
-**Datapacks**.
+You can add new categories, reorganize existing ones, or add modded entities to the Field Guide using standard Minecraft **Datapacks**.
 
 ### Defining Categories
 
@@ -23,8 +22,7 @@ The filename becomes the ID of the category (e.g., `wetlands.json` becomes `<nam
 
 #### Removing Default Categories
 
-To remove a category provided by the mod (or another datapack), create a file with the **same ID** and use
-`"replace": true` with an empty contents list. The Field Guide automatically hides empty categories.
+To remove a category provided by the mod (or another datapack), create a file with the **same ID** and use `"replace": true` with an empty contents list. The Field Guide automatically hides empty categories.
 
 **Example:** Removing the default `monsters` category:
 
@@ -35,6 +33,7 @@ To remove a category provided by the mod (or another datapack), create a file wi
   "replace": true,
   "contents": []
 }
+
 ```
 
 #### Content Types
@@ -92,3 +91,10 @@ To remove a category provided by the mod (or another datapack), create a file wi
 }
 
 ```
+
+### Special Entity Tags
+
+Field Guide uses specific entity tags that you can add to your datapacks to change scanning behavior:
+
+* `fieldguide:bosses`: Entities with this tag are excluded from the `monsters` and `animals` auto-populate strategies, and are moved to a special `bosses` category.
+* `fieldguide:kill_to_unlock`: Entities with this tag can't be scanned with a spyglass: you have to kill them to unlock their entry (defaults to all bosses).

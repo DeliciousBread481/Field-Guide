@@ -6,79 +6,55 @@ hide_meta: true
 You can customize the appearance of categories, render settings for entities, and descriptions using **Resource Packs**.
 
 ### Category Visuals
-
-To customize the icon and color of a category tab, create a JSON file at:
+To customize the icons of a category tab, create a JSON file at:
 `assets/fieldguide/visuals/categories/<category_name>.json`
 
 *Note: The filename must match the path of the category ID.*
 
 ```json
 {
-  "color": "#32a852",
-  "icon": "minecraft:textures/item/slime_ball.png"
+  "icon": "minecraft:textures/item/slime_ball.png",
+  "hostile_icon": "fieldguide:textures/gui/icons/hostile.png",
+  "passive_icon": "fieldguide:textures/gui/icons/passive.png",
+  "neutral_icon": "fieldguide:textures/gui/icons/neutral.png"
 }
 
 ```
 
 ### Entry Configuration (Scaling & Offsets)
 
-Sometimes entities or blocks render too large, too small, or off-center in the book. You can adjust this by creating a
-JSON file at:
+Sometimes entities or blocks render too large, too small, or off-center in the book. You can adjust this by creating a JSON file at:
 `assets/<namespace>/fieldguide/visuals/entries/<entry_id>.json`
 
 For example: `assets/minecraft/fieldguide/visuals/entries/pig.json` makes adjustments to `minecraft:pig`.
 
 #### JSON Structure
 
-| Field            | Type    | Description                                                                                                                |
-|------------------|---------|----------------------------------------------------------------------------------------------------------------------------|
-| `id`             | String  | (Optional) The ID of the entity/block to target (e.g., minecraft:cow). If omitted, the filename and path determine the ID. |
-| `scale`          | Float   | Base scale multiplier. 1.0 is default size, 0.5 is half size, 2.0 is double.                                               |
-| `y_offset`       | Float   | Moves the model up/down globally.                                                                                          |
-| `x_offset`       | Float   | Moves the model left/right globally.                                                                                       |
-| `auto_rotate`    | Boolean | (Optional) Overrides the global auto-rotate setting for this specific entry.                                               |
-| `rotation_speed` | Float   | (Optional) Overrides the global rotation speed setting for this specific entry.                                            |
-| `grid_scale`     | Float   | (Optional) Overrides scale specifically for the grid view.                                                                 |
-| `page_scale`     | Float   | (Optional) Overrides scale specifically for the detailed page view.                                                        |
-| `spawn_biomes`   | Array   | (Optional) List of biome IDs where this entry can be found. Useful for blocks or overriding entity biomes.                 |
-
-#### Example: Defining Biomes for a Block
-
-`assets/minecraft/fieldguide/visuals/entries/lily_pad.json`
-
-```json
-{
-  "id": "minecraft:lily_pad",
-  "spawn_biomes": [
-    "minecraft:swamp",
-    "minecraft:mangrove_swamp"
-  ]
-}
-```
-
-#### Example: Adjusting a Creeper
-
-`assets/fieldguide/visuals/entries/creeper.json`
-
-```json
-{
-  "id": "minecraft:creeper",
-  "scale": 0.8,
-  "y_offset": 10.0,
-  "page_scale": 1.2
-}
-
-```
+| Field | Type | Description |
+| --- | --- | --- |
+| `id` | String | (Optional) The ID of the entity/block to target. If omitted, the filename and path determine the ID. |
+| `scale` | Float | Base scale multiplier. 1.0 is default size, 0.5 is half size, 2.0 is double. |
+| `y_offset` | Float | Moves the model up/down globally. |
+| `x_offset` | Float | Moves the model left/right globally. |
+| `auto_rotate` | Boolean | (Optional) Overrides the global auto-rotate setting for this specific entry. |
+| `rotation_speed` | Float | (Optional) Overrides the global rotation speed setting for this specific entry. |
+| `grid_scale` | Float | (Optional) Overrides scale specifically for the grid view. |
+| `grid_y_offset` | Float | (Optional) Overrides the Y offset specifically for the grid view. |
+| `grid_x_offset` | Float | (Optional) Overrides the X offset specifically for the grid view. |
+| `page_scale` | Float | (Optional) Overrides scale specifically for the detailed page view. |
+| `page_y_offset` | Float | (Optional) Overrides the Y offset specifically for the detailed page view. |
+| `page_x_offset` | Float | (Optional) Overrides the X offset specifically for the detailed page view. |
+| `spawn_biomes` | Array | (Optional) List of biome IDs where this entry can be found. Useful for blocks or overriding entity biomes. |
+| `custom_sound` | String | (Optional) A custom SoundEvent ID to play when the entry is clicked (e.g., `minecraft:entity.pig.ambient`). |
+| `alignment_icon` | String | (Optional) A custom texture path to override the alignment icon (hostile/passive/neutral) for this entry. |
 
 ### Descriptions & Localization
 
-By default, Field Guide uses descriptions from [Item Descriptions](https://modrinth.com/mod/item-descriptions) and its
-addon resource pack [Mod Descriptions](https://modrinth.com/resourcepack/mod-descriptions). To add names to custom
-categories or descriptions to entries, add lines to your `en_us.json` (or other language file).
+By default, Field Guide uses descriptions from [Item Descriptions](https://modrinth.com/mod/item-descriptions) and its addon resource pack [Mod Descriptions](https://modrinth.com/resourcepack/mod-descriptions). To add names to custom categories or descriptions to entries, add lines to your `en_us.json` (or other language file).
 
-| Type              | Key Format                                | Example                                                             |
-|-------------------|-------------------------------------------|---------------------------------------------------------------------|
-| Category Name     | `category.fieldguide.<category_id>`       | `"category.fieldguide.swamp_life": "Swamp Life"`                    |
+| Type | Key Format | Example |
+| --- | --- | --- |
+| Category Name | `category.fieldguide.<category_id>` | `"category.fieldguide.swamp_life": "Swamp Life"` |
 | Entry Description | `fieldguide.<namespace>.<id>.description` | `"fieldguide.minecraft.pig.description": "A common farm animal..."` |
 
 If you write new entity descriptions and think others would find them helpful, feel free to make a pull request to
@@ -86,10 +62,7 @@ the [Mod Descriptions GitHub](https://github.com/cassiancc/Mod-Descriptions/pull
 
 ### Texture Overrides (2D Sprites)
 
-If an entity renders poorly (or if you prefer 2D illustrations), you can force the Field Guide to use a texture instead
-of the 3D model.
-
-Place textures in: `assets/<namespace>/textures/fieldguide/entries/`
+If an entity renders poorly (or if you prefer 2D illustrations), you can force the Field Guide to use a texture instead of the 3D model. Place textures in: `assets/<namespace>/textures/fieldguide/entries/`
 
 The mod looks for textures in this specific order:
 
