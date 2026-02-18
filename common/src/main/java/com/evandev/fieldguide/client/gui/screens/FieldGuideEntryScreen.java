@@ -13,7 +13,6 @@ import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.platform.Services;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -45,14 +44,19 @@ public class FieldGuideEntryScreen extends BookScreen {
     private final Object entry;
     private final List<ResourceLocation> spawnBiomes = new ArrayList<>();
     private final int biomesPerPage = 6;
-    private final int maxVisibleLines = 9;
+    private final int maxVisibleLines = 10;
+    private final int lootPerPage = 5;
     private Entity renderedEntity;
     private long lastClickTime = 0;
     private int currentBiomePage = 1;
     private ResourceLocation hoveredBiome;
-    private ItemStack hoveredItem;
     private ImageButton prevBiomePageButton;
     private ImageButton nextBiomePageButton;
+    private int currentLootPage = 1;
+    private ItemStack hoveredItem;
+    private ImageButton prevLootPageButton;
+    private ImageButton nextLootPageButton;
+
     private FieldGuideSearchBox searchBox;
 
     private int scrollOffset = 0;
@@ -62,7 +66,6 @@ public class FieldGuideEntryScreen extends BookScreen {
     private int cursorPos = 0;
     private int selectionPos = 0;
 
-    private int lootScrollOffset = 0;
     private String editableName = "";
     private boolean isEditingName = false;
     private int nameCursorPos = 0;
@@ -106,9 +109,9 @@ public class FieldGuideEntryScreen extends BookScreen {
         }
 
         textX = this.rightPageBounds.left() + 5;
-        textY = this.rightPageBounds.top() + 25;
+        textY = this.rightPageBounds.top() + 38;
         textAreaWidth = this.rightPageBounds.width() - 10;
-        textAreaHeight = this.rightPageBounds.height() - 85;
+        textAreaHeight = this.rightPageBounds.height() - 98;
 
         if (entry instanceof EntityType<?> type) {
             if (this.minecraft != null && this.minecraft.level != null) {
@@ -234,6 +237,44 @@ public class FieldGuideEntryScreen extends BookScreen {
         this.addRenderableWidget(nextBiomePageButton);
         this.addRenderableWidget(prevBiomePageButton);
 
+        // Loot Buttons
+        this.nextLootPageButton = new ImageButton(
+                this.rightPageBounds.right() - 13,
+                this.rightPageBounds.bottom() - 24,
+                16,
+                16,
+                16,
+                0,
+                16,
+                Constants.BIOME_PAGINATION_BUTTONS_TEXTURE,
+                32,
+                48,
+                b -> {
+                    List<ItemStack> drops = ClientFieldGuideManager.getInstance().getDrops(entry);
+                    int total = (int) Math.ceil((double) drops.size() / lootPerPage);
+                    currentLootPage = Math.min(total, currentLootPage + 1);
+                }
+        );
+
+        this.prevLootPageButton = new ImageButton(
+                this.rightPageBounds.left() - 3,
+                this.rightPageBounds.bottom() - 24,
+                16,
+                16,
+                0,
+                0,
+                16,
+                Constants.BIOME_PAGINATION_BUTTONS_TEXTURE,
+                32,
+                48,
+                b -> currentLootPage = Math.max(1, currentLootPage - 1)
+        );
+
+        nextLootPageButton.visible = false;
+        prevLootPageButton.visible = false;
+        this.addRenderableWidget(nextLootPageButton);
+        this.addRenderableWidget(prevLootPageButton);
+
         int searchX = this.width / 2 - 140 / 2;
         int searchY = this.bounds.bottom() + 5;
         this.searchBox = new FieldGuideSearchBox(this.font, searchX, searchY, 140, 20, "", this::onSearchChanged);
@@ -243,12 +284,17 @@ public class FieldGuideEntryScreen extends BookScreen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         int dropItemSize = 20;
-        int maxVisibleDropLines = 2;
-        int dropsAreaHeight = maxVisibleDropLines * dropItemSize + (maxVisibleDropLines - 1);
-        int dropsAreaY = this.rightPageBounds.bottom() - 6 - dropsAreaHeight;
+        int dropsAreaY = this.rightPageBounds.bottom() - 6 - dropItemSize;
 
         if (mouseX >= this.rightPageBounds.left() && mouseX <= this.rightPageBounds.right() && mouseY >= dropsAreaY && mouseY <= this.rightPageBounds.bottom() - 6) {
-            lootScrollOffset = Math.max(0, lootScrollOffset - (int) Math.signum(delta));
+            List<ItemStack> drops = ClientFieldGuideManager.getInstance().getDrops(entry);
+            int totalPages = (int) Math.ceil((double) drops.size() / lootPerPage);
+
+            if (delta > 0 && currentLootPage > 1) {
+                currentLootPage--;
+            } else if (delta < 0 && currentLootPage < totalPages) {
+                currentLootPage++;
+            }
             return true;
         }
 
@@ -923,6 +969,37 @@ public class FieldGuideEntryScreen extends BookScreen {
             guiGraphics.drawString(this.font, title, titleX, titleY, ModConfig.get().getTextMutedColorInt(), false);
         }
 
+        // Discovery Time below Title
+        if (unlocked) {
+            String dateStr = "";
+            long discoveryTime = ClientFieldGuideManager.getInstance().getDiscoveryTime(entry);
+            long gameTime = ClientFieldGuideManager.getInstance().getDiscoveryGameTime(entry);
+
+            if (ModConfig.get().useRealWorldDate && discoveryTime > 0) {
+                dateStr = new SimpleDateFormat("MMM dd, yyyy").format(new Date(discoveryTime));
+            } else if (gameTime > 0) {
+                long day = gameTime / 24000L + 1;
+                int timeOfDay = (int) (gameTime % 24000L);
+
+                String timeKey;
+                if (timeOfDay >= 23000 || timeOfDay < 2000) timeKey = "morning";
+                else if (timeOfDay < 9000) timeKey = "noon";
+                else if (timeOfDay < 13000) timeKey = "evening";
+                else if (timeOfDay < 22000) timeKey = "midnight";
+                else timeKey = "morning";
+
+                String timeStr = I18n.get("fieldguide.time." + timeKey);
+                dateStr = I18n.get("fieldguide.date.in_game", timeStr, day);
+            } else if (discoveryTime > 0) {
+                dateStr = new SimpleDateFormat("MMM dd, yyyy").format(new Date(discoveryTime));
+            }
+
+            if (!dateStr.isEmpty()) {
+                Component dateComp = Component.literal(dateStr);
+                guiGraphics.drawString(this.font, dateComp, titleX, titleY + this.font.lineHeight + 2, ModConfig.get().getTextMutedColorInt(), false);
+            }
+        }
+
         // Mob Alignment Icons
         if ((unlocked || ModConfig.get().showUndiscoveredNames) && entry instanceof EntityType<?> type && renderedEntity instanceof LivingEntity) {
             ResourceLocation icon;
@@ -1039,34 +1116,6 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         // Description
         if (unlocked) {
-            String dateStr = "";
-            long discoveryTime = ClientFieldGuideManager.getInstance().getDiscoveryTime(entry);
-            long gameTime = ClientFieldGuideManager.getInstance().getDiscoveryGameTime(entry);
-
-            if (ModConfig.get().useRealWorldDate && discoveryTime > 0) {
-                dateStr = new SimpleDateFormat("MMM dd, yyyy").format(new Date(discoveryTime));
-            } else if (gameTime > 0) {
-                long day = gameTime / 24000L + 1;
-                int timeOfDay = (int) (gameTime % 24000L);
-
-                String timeKey;
-                if (timeOfDay >= 23000 || timeOfDay < 2000) timeKey = "morning";
-                else if (timeOfDay < 9000) timeKey = "noon";
-                else if (timeOfDay < 13000) timeKey = "evening";
-                else if (timeOfDay < 22000) timeKey = "midnight";
-                else timeKey = "morning";
-
-                String timeStr = I18n.get("fieldguide.time." + timeKey);
-                dateStr = I18n.get("fieldguide.date.in_game", timeStr, day);
-            } else if (discoveryTime > 0) {
-                dateStr = new SimpleDateFormat("MMM dd, yyyy").format(new Date(discoveryTime));
-            }
-
-            if (!dateStr.isEmpty()) {
-                Component dateComp = Component.literal(dateStr);
-                guiGraphics.drawString(this.font, dateComp, this.rightPageBounds.right() - this.font.width(dateComp), this.rightPageBounds.bottom() - 58, ModConfig.get().getTextMutedColorInt(), false);
-            }
-
             List<FormattedCharSequence> lines = this.font.split(Component.literal(editableDescription), textAreaWidth);
             int totalLines = lines.size();
             scrollOffset = Math.max(0, Math.min(scrollOffset, Math.max(0, totalLines - maxVisibleLines)));
@@ -1168,96 +1217,73 @@ public class FieldGuideEntryScreen extends BookScreen {
         }
 
         // Drops
-        List<List<ItemStack>> dropLines = new ArrayList<>();
         int dropItemSize = 20;
         int dropSpacing = 1;
-        int scrollbarY;
 
         if (unlocked) {
             List<ItemStack> drops = ClientFieldGuideManager.getInstance().getDrops(entry);
 
             if (!drops.isEmpty()) {
-                int maxLineWidth = (dropItemSize + dropSpacing) * 6;
-                List<ItemStack> currentLine = new ArrayList<>();
-                int currentWidth = 0;
+                int totalLootPages = (int) Math.ceil((double) drops.size() / lootPerPage);
+                currentLootPage = Math.max(1, Math.min(currentLootPage, totalLootPages));
 
-                for (ItemStack stack : drops) {
-                    int needed = (currentLine.isEmpty() ? 0 : dropSpacing) + dropItemSize;
-                    if (currentWidth + needed > maxLineWidth) {
-                        dropLines.add(currentLine);
-                        currentLine = new ArrayList<>();
-                        currentWidth = 0;
-                    }
-                    currentWidth += (currentLine.isEmpty() ? 0 : dropSpacing) + dropItemSize;
-                    currentLine.add(stack);
-                }
-                dropLines.add(currentLine);
+                int indexStart = lootPerPage * (currentLootPage - 1);
+                int indexEnd = Math.min(drops.size(), lootPerPage * currentLootPage);
+                int itemsToDraw = indexEnd - indexStart;
 
-                int maxVisibleDropLines = 2;
-                lootScrollOffset = Math.max(0, Math.min(lootScrollOffset, Math.max(0, dropLines.size() - maxVisibleDropLines)));
-
-                int maxDropsAreaHeight = maxVisibleDropLines * dropItemSize + Math.max(0, maxVisibleDropLines - 1) * dropSpacing;
-                int bottomAnchor = this.rightPageBounds.bottom() - 6;
-                scrollbarY = bottomAnchor - maxDropsAreaHeight;
+                int totalWidth = itemsToDraw * dropItemSize + Math.max(0, itemsToDraw - 1) * dropSpacing;
+                int startX = this.rightPageBounds.x_center() - totalWidth / 2;
+                int currentY = this.rightPageBounds.bottom() - 6 - dropItemSize;
 
                 RenderSystem.enableDepthTest();
                 RenderSystem.depthMask(true);
 
-                // Backgrounds and Items
-                int currentY = scrollbarY;
-                for (int i = lootScrollOffset; i < Math.min(lootScrollOffset + maxVisibleDropLines, dropLines.size()); i++) {
-                    List<ItemStack> line = dropLines.get(i);
-                    int startX = this.rightPageBounds.left();
+                for (int i = indexStart; i < indexEnd; i++) {
+                    ItemStack stack = drops.get(i);
 
+                    guiGraphics.blit(Constants.ITEM_BACKGROUND_TEXTURE, startX, currentY, 0, 0, dropItemSize, dropItemSize, dropItemSize, dropItemSize);
 
-                    for (ItemStack stack : line) {
-                        int lootFill = ModConfig.get().getTextColorInt();
-                        lootFill |= 0x44000000;
+                    guiGraphics.renderItem(stack, startX + 2, currentY + 2);
+                    guiGraphics.renderItemDecorations(this.font, stack, startX + 2, currentY + 2, "");
 
-                        guiGraphics.fill(startX, currentY, startX + dropItemSize, currentY + dropItemSize, lootFill);
-                        guiGraphics.renderItem(stack, startX + 2, currentY + 2);
-                        String decorationString = null;
-
-                        if (stack.hasTag() && stack.getTag().contains("FieldGuideMin")) {
-                            int min = stack.getTag().getInt("FieldGuideMin");
-                            int max = stack.getTag().getInt("FieldGuideMax");
-
-                            int displayMin = Math.max(1, min);
-
-                            if (displayMin < max) {
-                                decorationString = displayMin + "-" + max;
-                            } else if (displayMin > 1) {
-                                decorationString = String.valueOf(displayMin);
-                            }
-                        }
-
-                        guiGraphics.renderItemDecorations(this.font, stack, startX + 2, currentY + 2, "");
-
-                        if (decorationString != null) {
-                            PoseStack pose = guiGraphics.pose();
-                            pose.pushPose();
-
-                            pose.translate(0, 0, 200.0F);
-
-                            int textWidth = this.font.width(decorationString);
-                            int textX = startX + dropItemSize - textWidth - 1;
-                            int textY = currentY + dropItemSize - this.font.lineHeight - 1;
-
-                            guiGraphics.drawString(this.font, decorationString, textX, textY, 0xFFFFFF, true);
-
-                            pose.popPose();
-                        }
-
-                        if (Bounds.isMouseOver(mouseX, mouseY, startX, currentY, dropItemSize, dropItemSize)) {
-                            tooltipStack = stack;
-                            hoveredItem = stack;
-                        }
-
-                        startX += dropItemSize + dropSpacing;
+                    if (Bounds.isMouseOver(mouseX, mouseY, startX, currentY, dropItemSize, dropItemSize)) {
+                        tooltipStack = stack;
+                        hoveredItem = stack;
                     }
-                    currentY += dropItemSize + dropSpacing;
+
+                    startX += dropItemSize + dropSpacing;
                 }
+
+                nextLootPageButton.active = currentLootPage < totalLootPages;
+                prevLootPageButton.active = currentLootPage > 1;
+
+                if (totalLootPages > 1) {
+                    nextLootPageButton.visible = true;
+                    prevLootPageButton.visible = true;
+
+                    // Loot Progress Bar
+                    int sideMargin = 13;
+                    int barY = currentY + dropItemSize + 2;
+                    Bounds bounds = new Bounds(rightPageBounds.left() + sideMargin, barY, rightPageBounds.width() - sideMargin * 2, 1);
+                    float progressStart = (float) (currentLootPage - 1) / totalLootPages;
+                    float progressEnd = (float) currentLootPage / totalLootPages;
+
+                    int barStart = (int) (bounds.left() + bounds.width() * progressStart);
+                    int barEnd = (int) (bounds.left() + bounds.width() * progressEnd);
+
+                    guiGraphics.fill(bounds.left(), bounds.top(), bounds.right(), bounds.bottom(), 0xFFF9EED0);
+                    guiGraphics.fill(barStart, bounds.top(), barEnd, bounds.bottom(), 0xFFE0D2AE);
+                } else {
+                    nextLootPageButton.visible = false;
+                    prevLootPageButton.visible = false;
+                }
+            } else {
+                nextLootPageButton.visible = false;
+                prevLootPageButton.visible = false;
             }
+        } else {
+            nextLootPageButton.visible = false;
+            prevLootPageButton.visible = false;
         }
 
         // Render Tooltip

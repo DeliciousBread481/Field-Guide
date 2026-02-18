@@ -439,7 +439,7 @@ public class FieldGuideScreen extends BookScreen {
                         dropName = titleCase.toString().trim();
                     }
 
-                    guiGraphics.drawString(this.font, "Drops " + dropName, iconX + iconSize + 4, titleY, ModConfig.get().getTextColorInt(), false);
+                    guiGraphics.drawString(this.font, dropName, iconX + iconSize + 4, titleY, ModConfig.get().getTextColorInt(), false);
                 } else {
                     guiGraphics.drawString(this.font, searchQuery, this.leftPageBounds.left(), titleY, ModConfig.get().getTextMutedColorInt(), false);
                 }
@@ -499,7 +499,7 @@ public class FieldGuideScreen extends BookScreen {
         int total = currentEntries.size();
         if (total > 0) {
             long unlocked = currentEntries.stream().filter(ClientFieldGuideManager::isUnlocked).count();
-            int y = this.leftPageBounds.bottom() - 27;
+            int y = this.leftPageBounds.bottom() - 42;
             int x = this.leftPageBounds.x_center();
             int xOffset = 18;
 
@@ -508,6 +508,15 @@ public class FieldGuideScreen extends BookScreen {
 
             guiGraphics.drawString(this.font, countText, x - xOffset - font.width(countText) / 2, y, ModConfig.get().getTextColorInt(), false);
             guiGraphics.drawString(this.font, totalText, x + xOffset - font.width(totalText) / 2, y, ModConfig.get().getTextColorInt(), false);
+
+            // Progress Bar
+            int barWidth = 92;
+            int barHeight = 2;
+            int barX = x - barWidth / 2;
+            int barY = y + 21;
+
+            int progressWidth = (int) ((float) unlocked / total * barWidth);
+            guiGraphics.fill(barX, barY, barX + progressWidth, barY + barHeight, 0xFF7A583C);
         }
     }
 
