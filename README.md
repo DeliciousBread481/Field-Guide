@@ -40,8 +40,8 @@ mods:
 | Icon                                                 | Link                                                                       | Feature Added                                                        |
 |------------------------------------------------------|----------------------------------------------------------------------------|----------------------------------------------------------------------|
 | <img src="images/immersive_overlays.jpg" width="64"> | **[Immersive Overlays](https://modrinth.com/mod/immersive-overlays)**      | **Biome Displays** — Shows beautiful spawn details for entities.     |
-| <img src="images/item_descriptions.webp" width="64"> | **[Item Descriptions](https://modrinth.com/mod/item-descriptions)**        | **Entry Descriptions** — Automatically fills in entry lore.          |
-| <img src="images/mod_descriptions.webp" width="64">  | **[Mod Descriptions](https://modrinth.com/resourcepack/mod-descriptions)** | **Modded Support** — Adds automatic descriptions for modded entries. |
+| <img src="images/item_descriptions.jpg" width="64">  | **[Item Descriptions](https://modrinth.com/mod/item-descriptions)**        | **Entry Descriptions** — Automatically fills in entry lore.          |
+| <img src="images/mod_descriptions.jpg" width="64">   | **[Mod Descriptions](https://modrinth.com/resourcepack/mod-descriptions)** | **Modded Support** — Adds automatic descriptions for modded entries. |
 
 ---
 
