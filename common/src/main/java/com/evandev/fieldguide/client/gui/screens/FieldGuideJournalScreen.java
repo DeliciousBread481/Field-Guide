@@ -5,6 +5,7 @@ import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.data.JournalPage;
 import com.evandev.fieldguide.client.gui.util.Bounds;
+import com.evandev.fieldguide.client.gui.widget.FieldGuideSearchBox;
 import com.evandev.fieldguide.client.gui.widget.PageTurnButton;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
@@ -22,6 +23,8 @@ import java.util.List;
 import java.util.Objects;
 
 public class FieldGuideJournalScreen extends BookScreen {
+    private static final int SEARCH_WIDTH = 140;
+    private static final int SEARCH_HEIGHT = 20;
     public static int lastOpenedJournalPage = 0;
     final int MAX_LINES = 13;
     private int currentSpread;
@@ -30,6 +33,7 @@ public class FieldGuideJournalScreen extends BookScreen {
     private String rightTitle = "";
     private String leftContent = "";
     private String rightContent = "";
+    private FieldGuideSearchBox searchBox;
 
     // 0 = none, 1 = Journal Title, 2 = Left Title, 3 = Right Title, 4 = Left Content, 5 = Right Content
     private int editingElement = 0;
@@ -37,6 +41,9 @@ public class FieldGuideJournalScreen extends BookScreen {
     private int selection = 0;
 
     private int textXLeft, textXRight, textY, textAreaWidth;
+
+    private PageTurnButton prevButton;
+    private PageTurnButton nextButton;
 
     public FieldGuideJournalScreen(Category category, int pageIndex) {
         super(Component.literal("Journal"));
@@ -58,8 +65,7 @@ public class FieldGuideJournalScreen extends BookScreen {
 
         loadPageData();
 
-        // Prev Page
-        this.addRenderableWidget(new PageTurnButton(
+        this.prevButton = this.addRenderableWidget(new PageTurnButton(
                 this.bounds.left() + 15, this.leftPageBounds.bottom() - 15,
                 16, 16, 0, 0, 16, Constants.PREV_PAGE_TEXTURE, 16, 32,
                 b -> {
@@ -67,20 +73,48 @@ public class FieldGuideJournalScreen extends BookScreen {
                         savePageData();
                         currentSpread--;
                         loadPageData();
+                        updateButtonVisibility();
                     }
                 }
         ));
 
         // Next Page
-        this.addRenderableWidget(new PageTurnButton(
+        this.nextButton = this.addRenderableWidget(new PageTurnButton(
                 this.bounds.right() - 14 - 16, this.rightPageBounds.bottom() - 15,
                 16, 16, 0, 0, 16, Constants.NEXT_PAGE_TEXTURE, 16, 32,
                 b -> {
                     savePageData();
                     currentSpread++;
                     loadPageData();
+                    updateButtonVisibility();
                 }
         ));
+
+        updateButtonVisibility();
+        int searchX = this.width / 2 - SEARCH_WIDTH / 2;
+        int searchY = this.bounds.bottom() + 5;
+
+        this.searchBox = new FieldGuideSearchBox(this.font, searchX, searchY, SEARCH_WIDTH, SEARCH_HEIGHT, "", this::onSearchChanged);
+        this.addRenderableWidget(this.searchBox);
+    }
+
+
+    private void onSearchChanged(String query) {
+        if (!query.isEmpty() && this.minecraft != null) {
+            FieldGuideScreen searchScreen = new FieldGuideScreen(query, this);
+            searchScreen.setInitialSearchFocus(true);
+            this.minecraft.setScreen(searchScreen);
+
+            if (searchScreen.getSearchBox() != null) {
+                searchScreen.getSearchBox().setCursorPosition(query.length());
+            }
+        }
+    }
+
+    private void updateButtonVisibility() {
+        if (this.prevButton != null) {
+            this.prevButton.visible = this.currentSpread > 0;
+        }
     }
 
     private void loadPageData() {
@@ -90,8 +124,7 @@ public class FieldGuideJournalScreen extends BookScreen {
 
         int targetSize = currentSpread == 0 ? 1 : currentSpread * 2 + 1;
         while (manager.getJournalPages().size() < targetSize) {
-            int newPageNum = manager.getJournalPages().size() + 1;
-            manager.getJournalPages().add(new JournalPage("Journal Page #" + newPageNum, "", System.currentTimeMillis()));
+            manager.getJournalPages().add(new JournalPage("", "", System.currentTimeMillis()));
         }
 
         if (currentSpread > 0) {
@@ -270,6 +303,7 @@ public class FieldGuideJournalScreen extends BookScreen {
                         cursor = remainingCursor;
                         selection = cursor;
                         moveCursor = false;
+                        updateButtonVisibility(); // Make sure visibility stays accurate on spillover
                     }
                 } else {
                     int splitIndex = getSplitIndexForMaxLines(merged);
@@ -284,6 +318,7 @@ public class FieldGuideJournalScreen extends BookScreen {
                         cursor = remainingCursor;
                         selection = cursor;
                         moveCursor = false;
+                        updateButtonVisibility(); // Make sure visibility stays accurate on spillover
                     } else if (moveCursor) {
                         remainingCursor -= splitIndex;
                     }
@@ -415,6 +450,13 @@ public class FieldGuideJournalScreen extends BookScreen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (this.searchBox != null) {
+            this.searchBox.setFocused(this.searchBox.isMouseOver(mouseX, mouseY));
+            if (this.searchBox.isFocused()) {
+                this.editingElement = 0;
+            }
+        }
+
         if (super.mouseClicked(mouseX, mouseY, button)) return true;
 
         int prevFocus = editingElement;
@@ -430,6 +472,7 @@ public class FieldGuideJournalScreen extends BookScreen {
             if (Bounds.isMouseOver(mouseX, mouseY, jtX, jtY, jtWidth, this.font.lineHeight)) {
                 editingElement = 1;
                 setCursorSingleLine(mouseX, journalTitle, jtX);
+                this.setFocused(null);
                 return true;
             }
         }
@@ -440,6 +483,7 @@ public class FieldGuideJournalScreen extends BookScreen {
             if (Bounds.isMouseOver(mouseX, mouseY, textXLeft, titleY, ltWidth, this.font.lineHeight)) {
                 editingElement = 2;
                 setCursorSingleLine(mouseX, leftTitle, textXLeft);
+                this.setFocused(null);
                 return true;
             }
         }
@@ -449,6 +493,7 @@ public class FieldGuideJournalScreen extends BookScreen {
         if (Bounds.isMouseOver(mouseX, mouseY, textXRight, titleY, rtWidth, this.font.lineHeight)) {
             editingElement = 3;
             setCursorSingleLine(mouseX, rightTitle, textXRight);
+            this.setFocused(null);
             return true;
         }
 
@@ -457,6 +502,7 @@ public class FieldGuideJournalScreen extends BookScreen {
             if (mouseX >= textXLeft && mouseX <= textXLeft + textAreaWidth && mouseY >= textY && mouseY <= this.leftPageBounds.bottom() - 20) {
                 editingElement = 4;
                 setCursorMultiLine(mouseX, mouseY, leftContent, textXLeft, textY);
+                this.setFocused(null);
                 return true;
             }
         }
@@ -465,6 +511,7 @@ public class FieldGuideJournalScreen extends BookScreen {
         if (mouseX >= textXRight && mouseX <= textXRight + textAreaWidth && mouseY >= textY && mouseY <= this.rightPageBounds.bottom() - 20) {
             editingElement = 5;
             setCursorMultiLine(mouseX, mouseY, rightContent, textXRight, textY);
+            this.setFocused(null);
             return true;
         }
 
@@ -499,8 +546,20 @@ public class FieldGuideJournalScreen extends BookScreen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (this.searchBox != null && this.searchBox.isFocused()) {
+            if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+                this.searchBox.setFocused(false);
+                return true;
+            }
+            return this.searchBox.keyPressed(keyCode, scanCode, modifiers);
+        }
+
         if (editingElement > 0) {
             String text = getActiveText();
+
+            if (keyCode == GLFW.GLFW_KEY_SPACE) {
+                return true;
+            }
 
             if (Screen.isSelectAll(keyCode)) {
                 selection = 0;
