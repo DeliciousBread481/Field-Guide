@@ -1,9 +1,6 @@
 package com.evandev.fieldguide;
 
-import com.evandev.fieldguide.network.ClaimXpPacket;
-import com.evandev.fieldguide.network.GrantContentPacket;
-import com.evandev.fieldguide.network.SyncCategoriesPacket;
-import com.evandev.fieldguide.network.SyncLootPacket;
+import com.evandev.fieldguide.network.*;
 import com.evandev.fieldguide.platform.ForgeNetworkHelper;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
@@ -57,6 +54,12 @@ public class FieldGuideMod {
     public static void handleSyncCategories(SyncCategoriesPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
         NetworkEvent.Context context = contextSupplier.get();
         context.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> FieldGuideForgeClient.handleSyncCategories(packet)));
+        context.setPacketHandled(true);
+    }
+
+    public static void handleExportContent(ExportContentPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
+        NetworkEvent.Context context = contextSupplier.get();
+        context.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> packet::handleClient));
         context.setPacketHandled(true);
     }
 

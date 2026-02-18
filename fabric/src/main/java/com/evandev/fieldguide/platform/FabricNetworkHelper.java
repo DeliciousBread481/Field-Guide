@@ -1,10 +1,7 @@
 package com.evandev.fieldguide.platform;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.network.ClaimXpPacket;
-import com.evandev.fieldguide.network.GrantContentPacket;
-import com.evandev.fieldguide.network.SyncCategoriesPacket;
-import com.evandev.fieldguide.network.SyncLootPacket;
+import com.evandev.fieldguide.network.*;
 import com.evandev.fieldguide.platform.services.INetworkHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
@@ -18,6 +15,7 @@ public class FabricNetworkHelper implements INetworkHelper {
     public static final ResourceLocation GRANT_CONTENT_CHANNEL = new ResourceLocation(Constants.MOD_ID, "grant_content");
     public static final ResourceLocation SYNC_LOOT_CHANNEL = new ResourceLocation(Constants.MOD_ID, "sync_loot");
     public static final ResourceLocation CLAIM_XP_CHANNEL = new ResourceLocation(Constants.MOD_ID, "claim_xp");
+    public static final ResourceLocation EXPORT_CONTENT_CHANNEL = new ResourceLocation(Constants.MOD_ID, "export_content");
 
     @Override
     public void sendToServer(Object packet) {
@@ -40,6 +38,9 @@ public class FabricNetworkHelper implements INetworkHelper {
         } else if (packet instanceof SyncLootPacket syncLoot) {
             syncLoot.encode(buf);
             ServerPlayNetworking.send(player, SYNC_LOOT_CHANNEL, buf);
+        } else if (packet instanceof ExportContentPacket export) {
+            export.encode(buf);
+            ServerPlayNetworking.send(player, EXPORT_CONTENT_CHANNEL, buf);
         }
     }
 }

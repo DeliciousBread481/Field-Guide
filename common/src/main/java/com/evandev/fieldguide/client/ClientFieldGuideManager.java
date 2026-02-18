@@ -73,8 +73,6 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     private final Map<String, String> customDescriptions = new HashMap<>();
     private final Map<String, String> customNames = new HashMap<>();
     private final Map<String, Long> discoveryGameTimes = new HashMap<>();
-    private Path customDescriptionsPath = null;
-    private Path customNamesPath = null;
     private Path currentSavePath = null;
 
     // Scanning State
@@ -156,7 +154,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         ResourceLocation id = getEntryId(entry);
         if (id != null) {
             INSTANCE.customDescriptions.put(id.toString(), desc);
-            INSTANCE.saveCustomDescriptions();
+            INSTANCE.saveProgress();
         }
     }
 
@@ -184,7 +182,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             } else {
                 INSTANCE.customNames.put(id.toString(), name);
             }
-            INSTANCE.saveCustomNames();
+            INSTANCE.saveProgress();
         }
     }
 
@@ -194,65 +192,53 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         return I18n.get("fieldguide.unknown");
     }
 
-    private void loadCustomDescriptions() {
-        if (customDescriptionsPath == null || !customDescriptionsPath.toFile().exists()) return;
-        try (FileReader reader = new FileReader(customDescriptionsPath.toFile())) {
-            JsonObject json = GSON.fromJson(reader, JsonObject.class);
-            customDescriptions.clear();
-            for (Map.Entry<String, JsonElement> entry : json.entrySet()) {
-                customDescriptions.put(entry.getKey(), entry.getValue().getAsString());
-            }
-        } catch (Exception e) {
-            Constants.LOG.error("Failed to load custom descriptions", e);
-        }
-    }
-
-    private void saveCustomDescriptions() {
-        if (customDescriptionsPath == null) return;
+    public void exportToLang(String type) {
         try {
-            JsonObject json = new JsonObject();
-            for (Map.Entry<String, String> entry : customDescriptions.entrySet()) {
-                json.addProperty(entry.getKey(), entry.getValue());
+            JsonObject langJson = new JsonObject();
+
+            boolean exportNames = type.equals("names") || type.equals("all");
+            boolean exportDesc = type.equals("descriptions") || type.equals("all");
+
+            if (exportNames) {
+                for (Map.Entry<String, String> entry : customNames.entrySet()) {
+                    ResourceLocation id = new ResourceLocation(entry.getKey());
+                    String key;
+                    if (BuiltInRegistries.ENTITY_TYPE.containsKey(id)) {
+                        key = "entity." + id.getNamespace() + "." + id.getPath();
+                    } else {
+                        key = "block." + id.getNamespace() + "." + id.getPath();
+                    }
+                    langJson.addProperty(key, entry.getValue());
+                }
             }
 
-            File file = customDescriptionsPath.toFile();
-            if (file.getParentFile() != null) file.getParentFile().mkdirs();
-            try (FileWriter w = new FileWriter(file)) {
-                GSON.toJson(json, w);
+            if (exportDesc) {
+                for (Map.Entry<String, String> entry : customDescriptions.entrySet()) {
+                    ResourceLocation id = new ResourceLocation(entry.getKey());
+                    String key = "fieldguide." + id.getNamespace() + "." + id.getPath() + ".description";
+                    langJson.addProperty(key, entry.getValue());
+                }
             }
+
+            Path exportDir = Minecraft.getInstance().gameDirectory.toPath().resolve("fieldguide_exports");
+            Files.createDirectories(exportDir);
+
+            String fileName = "en_us_" + type + "_" + System.currentTimeMillis() + ".json";
+            File exportFile = exportDir.resolve(fileName).toFile();
+
+            try (java.io.FileWriter writer = new java.io.FileWriter(exportFile)) {
+                GSON.toJson(langJson, writer);
+            }
+
+            if (Minecraft.getInstance().player != null) {
+                Minecraft.getInstance().player.displayClientMessage(Component.literal("§aExported Field Guide data to " + exportFile.getAbsolutePath()), false);
+            }
+
         } catch (Exception e) {
-            Constants.LOG.error("Failed to save custom descriptions", e);
-        }
-    }
-
-    private void loadCustomNames() {
-        if (customNamesPath == null || !customNamesPath.toFile().exists()) return;
-        try (FileReader reader = new FileReader(customNamesPath.toFile())) {
-            JsonObject json = GSON.fromJson(reader, JsonObject.class);
-            customNames.clear();
-            for (Map.Entry<String, JsonElement> entry : json.entrySet()) {
-                customNames.put(entry.getKey(), entry.getValue().getAsString());
+            Constants.LOG.error("Failed to export lang file", e);
+            if (Minecraft.getInstance().player != null) {
+                Minecraft.getInstance().player.displayClientMessage(Component.literal("§cFailed to export: " + e.getMessage()), false);
             }
-        } catch (Exception e) {
-            Constants.LOG.error("Failed to load custom names", e);
-        }
-    }
-
-    private void saveCustomNames() {
-        if (customNamesPath == null) return;
-        try {
-            JsonObject json = new JsonObject();
-            for (Map.Entry<String, String> entry : customNames.entrySet()) {
-                json.addProperty(entry.getKey(), entry.getValue());
-            }
-
-            File file = customNamesPath.toFile();
-            if (file.getParentFile() != null) file.getParentFile().mkdirs();
-            try (FileWriter w = new FileWriter(file)) {
-                GSON.toJson(json, w);
-            }
-        } catch (Exception e) {
-            Constants.LOG.error("Failed to save custom names", e);
         }
     }
 
@@ -354,18 +340,6 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
             entryVisuals.put(targetId, visual);
         });
-
-        if (customDescriptionsPath == null) {
-            customDescriptionsPath = Minecraft.getInstance().gameDirectory.toPath()
-                    .resolve("config").resolve("fieldguide_descriptions.json");
-        }
-        loadCustomDescriptions();
-
-        if (customNamesPath == null) {
-            customNamesPath = Minecraft.getInstance().gameDirectory.toPath()
-                    .resolve("config").resolve("fieldguide_names.json");
-        }
-        loadCustomNames();
 
         resolveAllEntries();
         Constants.LOG.info("Loaded {} category visuals and {} entry visuals.", categoryVisuals.size(), entryVisuals.size());
@@ -1014,6 +988,8 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         this.seenEntries.clear();
         this.discoveryTimes.clear();
         this.discoveryGameTimes.clear();
+        this.customDescriptions.clear();
+        this.customNames.clear();
     }
 
     private void loadProgress() {
@@ -1033,6 +1009,20 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
                 JsonObject gameTimes = json.getAsJsonObject("gameTimes");
                 for (Map.Entry<String, JsonElement> entry : gameTimes.entrySet()) {
                     discoveryGameTimes.put(entry.getKey(), entry.getValue().getAsLong());
+                }
+            }
+
+            if (json.has("customDescriptions")) {
+                JsonObject descs = json.getAsJsonObject("customDescriptions");
+                for (Map.Entry<String, JsonElement> entry : descs.entrySet()) {
+                    customDescriptions.put(entry.getKey(), entry.getValue().getAsString());
+                }
+            }
+
+            if (json.has("customNames")) {
+                JsonObject names = json.getAsJsonObject("customNames");
+                for (Map.Entry<String, JsonElement> entry : names.entrySet()) {
+                    customNames.put(entry.getKey(), entry.getValue().getAsString());
                 }
             }
         } catch (Exception e) {
@@ -1058,6 +1048,14 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             JsonObject gameTimesObj = new JsonObject();
             discoveryGameTimes.forEach(gameTimesObj::addProperty);
             json.add("gameTimes", gameTimesObj);
+
+            JsonObject descsObj = new JsonObject();
+            customDescriptions.forEach(descsObj::addProperty);
+            json.add("customDescriptions", descsObj);
+
+            JsonObject namesObj = new JsonObject();
+            customNames.forEach(namesObj::addProperty);
+            json.add("customNames", namesObj);
 
             File file = currentSavePath.toFile();
             if (file.getParentFile() != null) file.getParentFile().mkdirs();

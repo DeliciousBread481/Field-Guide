@@ -12,9 +12,11 @@
     "accessor.LootPoolAccessor",
     "accessor.LootPoolEntryContainerAccessor",
     "accessor.LootPoolSingletonContainerAccessor",
+    "accessor.LootTableReferenceAccessor",
     "accessor.MobAccessor",
     "accessor.RandomChanceConditionAccessor",
     "accessor.RandomChanceWithLootingConditionAccessor",
+    "accessor.SetItemCountFunctionAccessor",
     "accessor.TagEntryAccessor",
     "accessor.UniformGeneratorAccessor"
   ],

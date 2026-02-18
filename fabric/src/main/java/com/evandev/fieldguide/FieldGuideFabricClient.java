@@ -3,6 +3,7 @@ package com.evandev.fieldguide;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.ModRenderTypes;
+import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.network.GrantContentPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
@@ -80,6 +81,11 @@ public class FieldGuideFabricClient implements ClientModInitializer {
             } catch (IOException e) {
                 throw new RuntimeException("Failed to register fieldguide shaders", e);
             }
+        });
+
+        ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.EXPORT_CONTENT_CHANNEL, (client, handler, buf, responseSender) -> {
+            ExportContentPacket packet = new ExportContentPacket(buf);
+            client.execute(packet::handleClient);
         });
 
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {

@@ -13,6 +13,7 @@ import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.platform.Services;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -1208,9 +1209,44 @@ public class FieldGuideEntryScreen extends BookScreen {
                     List<ItemStack> line = dropLines.get(i);
                     int startX = this.rightPageBounds.left();
 
+
                     for (ItemStack stack : line) {
+                        int lootFill = ModConfig.get().getTextColorInt();
+                        lootFill |= 0x44000000;
+
+                        guiGraphics.fill(startX, currentY, startX + dropItemSize, currentY + dropItemSize, lootFill);
                         guiGraphics.renderItem(stack, startX + 2, currentY + 2);
-                        guiGraphics.renderItemDecorations(this.font, stack, startX + 2, currentY + 2);
+                        String decorationString = null;
+
+                        if (stack.hasTag() && stack.getTag().contains("FieldGuideMin")) {
+                            int min = stack.getTag().getInt("FieldGuideMin");
+                            int max = stack.getTag().getInt("FieldGuideMax");
+
+                            int displayMin = Math.max(1, min);
+
+                            if (displayMin < max) {
+                                decorationString = displayMin + "-" + max;
+                            } else if (displayMin > 1) {
+                                decorationString = String.valueOf(displayMin);
+                            }
+                        }
+
+                        guiGraphics.renderItemDecorations(this.font, stack, startX + 2, currentY + 2, "");
+
+                        if (decorationString != null) {
+                            PoseStack pose = guiGraphics.pose();
+                            pose.pushPose();
+
+                            pose.translate(0, 0, 200.0F);
+
+                            int textWidth = this.font.width(decorationString);
+                            int textX = startX + dropItemSize - textWidth - 1;
+                            int textY = currentY + dropItemSize - this.font.lineHeight - 1;
+
+                            guiGraphics.drawString(this.font, decorationString, textX, textY, 0xFFFFFF, true);
+
+                            pose.popPose();
+                        }
 
                         if (Bounds.isMouseOver(mouseX, mouseY, startX, currentY, dropItemSize, dropItemSize)) {
                             tooltipStack = stack;
@@ -1230,7 +1266,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
             if (tooltipStack.hasTag() && Objects.requireNonNull(tooltipStack.getTag()).contains("FieldGuideDropChance")) {
                 float chance = tooltipStack.getTag().getFloat("FieldGuideDropChance");
-                tooltip.add(Component.literal(String.format(Locale.ROOT, "%.1f%%", chance)).withStyle(ChatFormatting.GRAY));
+                tooltip.add(Component.literal(String.format(Locale.ROOT, "%.2f%%", chance)).withStyle(ChatFormatting.GRAY));
             }
 
             guiGraphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);

@@ -2,10 +2,7 @@ package com.evandev.fieldguide.platform;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.FieldGuideMod;
-import com.evandev.fieldguide.network.ClaimXpPacket;
-import com.evandev.fieldguide.network.GrantContentPacket;
-import com.evandev.fieldguide.network.SyncCategoriesPacket;
-import com.evandev.fieldguide.network.SyncLootPacket;
+import com.evandev.fieldguide.network.*;
 import com.evandev.fieldguide.platform.services.INetworkHelper;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -28,6 +25,7 @@ public class ForgeNetworkHelper implements INetworkHelper {
         CHANNEL.registerMessage(id++, SyncCategoriesPacket.class, SyncCategoriesPacket::encode, SyncCategoriesPacket::new, FieldGuideMod::handleSyncCategories);
         CHANNEL.registerMessage(id++, GrantContentPacket.class, GrantContentPacket::encode, GrantContentPacket::new, FieldGuideMod::handleGrantContent);
         CHANNEL.registerMessage(id++, ClaimXpPacket.class, ClaimXpPacket::encode, ClaimXpPacket::new, FieldGuideMod::handleClaimXp);
+        CHANNEL.registerMessage(id++, ExportContentPacket.class, ExportContentPacket::encode, ExportContentPacket::new, FieldGuideMod::handleExportContent);
     }
 
     @Override

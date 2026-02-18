@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.server.command;
 
 import com.evandev.fieldguide.data.Category;
+import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.network.GrantContentPacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
@@ -23,6 +24,11 @@ public class FieldGuideCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("fieldguide")
                 .requires(source -> source.hasPermission(2))
+                .then(Commands.literal("export")
+                        .then(Commands.literal("names").executes(ctx -> export(ctx.getSource(), "names")))
+                        .then(Commands.literal("descriptions").executes(ctx -> export(ctx.getSource(), "descriptions")))
+                        .then(Commands.literal("all").executes(ctx -> export(ctx.getSource(), "all")))
+                )
                 .then(Commands.literal("grant")
                         .then(Commands.argument("targets", EntityArgument.players())
                                 .then(Commands.literal("everything")
@@ -87,6 +93,17 @@ public class FieldGuideCommand {
         }
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.category.success", categoryId, targets.size()), true);
         return targets.size();
+    }
+
+    private static int export(CommandSourceStack source, String type) {
+        if (source.getEntity() instanceof ServerPlayer player) {
+            Services.NETWORK.sendToPlayer(new ExportContentPacket(type), player);
+            source.sendSuccess(() -> Component.literal("Triggering export on client..."), false);
+            return 1;
+        } else {
+            source.sendFailure(Component.literal("This command must be run by an in-game player."));
+            return 0;
+        }
     }
 
     private static int grantEntry(CommandSourceStack source, Collection<ServerPlayer> targets, ResourceLocation entryId) {
