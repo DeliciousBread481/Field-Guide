@@ -30,9 +30,11 @@ public class PaginatedGridWidget<T> extends AbstractWidget {
         this.spacing = spacing;
         this.itemRenderer = itemRenderer;
         this.onClick = onClick;
+        int buttonSize = 16;
+        int buttonYOffset = (itemSize - buttonSize) / 2;
 
-        this.prevButton = new ImageButton(x - 3, y, 16, 16, 0, 0, 16, Constants.BIOME_PAGINATION_BUTTONS_TEXTURE, 32, 48, b -> setPage(currentPage - 1));
-        this.nextButton = new ImageButton(x + width - 13, y, 16, 16, 16, 0, 16, Constants.BIOME_PAGINATION_BUTTONS_TEXTURE, 32, 48, b -> setPage(currentPage + 1));
+        this.prevButton = new ImageButton(x, y + buttonYOffset, buttonSize, buttonSize, 0, 0, 16, Constants.BIOME_PAGINATION_BUTTONS_TEXTURE, 32, 48, b -> setPage(currentPage - 1));
+        this.nextButton = new ImageButton(x + width - 16, y + buttonYOffset, buttonSize, buttonSize, 16, 0, 16, Constants.BIOME_PAGINATION_BUTTONS_TEXTURE, 32, 48, b -> setPage(currentPage + 1));
         updateButtons();
     }
 
@@ -46,8 +48,10 @@ public class PaginatedGridWidget<T> extends AbstractWidget {
     }
 
     private void updateButtons() {
-        this.prevButton.visible = currentPage > 1;
-        this.nextButton.visible = currentPage < getTotalPages();
+        this.prevButton.visible = getTotalPages() > 1;
+        this.nextButton.visible = getTotalPages() > 1;
+        this.prevButton.active = currentPage > 1;
+        this.nextButton.active = currentPage < getTotalPages();
     }
 
     @Override
@@ -105,9 +109,8 @@ public class PaginatedGridWidget<T> extends AbstractWidget {
 
         if (getTotalPages() > 1) {
             int barY = this.getY() + itemSize + 2;
-            int sideMargin = 13;
-            int barWidth = this.width - sideMargin * 2;
-            int barStartX = this.getX() + sideMargin;
+            int barWidth = (itemSize + spacing) * itemsPerPage - spacing;
+            int barStartX = this.getX() + (width / 2) - (barWidth / 2);
 
             float progressStart = (float) (currentPage - 1) / getTotalPages();
             float progressEnd = (float) currentPage / getTotalPages();

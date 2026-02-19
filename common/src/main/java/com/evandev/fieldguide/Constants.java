@@ -36,6 +36,7 @@ public class Constants {
     public static final ResourceLocation ITEM_BACKGROUND_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/item_background.png");
     public static final ResourceLocation CELL_BACKGROUND_HOVER_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/cell_background_hover.png");
     public static final ResourceLocation HEALTH_FRAME_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/health_frame.png");
+    public static final ResourceLocation PROGRESS_BAR_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/progress_bar.png");
 
     // Icons
     public static final ResourceLocation DEFAULT_ICON = new ResourceLocation(MOD_ID, "textures/gui/icons/book.png");

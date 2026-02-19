@@ -504,9 +504,9 @@ public class FieldGuideScreen extends BookScreen {
         int total = currentEntries.size();
         if (total > 0) {
             long unlocked = currentEntries.stream().filter(ClientFieldGuideManager::isUnlocked).count();
-            int y = this.leftPageBounds.bottom() - 42;
+            int y = this.leftPageBounds.bottom() - 38;
             int x = this.leftPageBounds.x_center();
-            int xOffset = 18;
+            int xOffset = 14;
 
             String countText = String.valueOf(unlocked);
             String totalText = String.valueOf(total);
@@ -515,13 +515,16 @@ public class FieldGuideScreen extends BookScreen {
             guiGraphics.drawString(this.font, totalText, x + xOffset - font.width(totalText) / 2, y, ModConfig.get().getTextColorInt(), false);
 
             // Progress Bar
-            int barWidth = 86;
-            int barHeight = 2;
-            int barX = x - barWidth / 2;
-            int barY = y + 21;
+            if (unlocked > 0) {
+                int barWidth = 83;
+                int barHeight = 7;
+                int barX = x - barWidth / 2 - 1;
+                int barY = y + 15;
 
-            int progressWidth = (int) ((float) unlocked / total * barWidth);
-            guiGraphics.fill(barX, barY, barX + progressWidth, barY + barHeight, 0xFF7A583C);
+                int progressWidth = (int) ((float) unlocked / total * barWidth);
+                progressWidth = Math.max(progressWidth, 6);
+                guiGraphics.blitNineSliced(Constants.PROGRESS_BAR_TEXTURE, barX, barY, progressWidth, barHeight, 3, 7,7,0, 0);
+            }
         }
     }
 
@@ -614,7 +617,7 @@ public class FieldGuideScreen extends BookScreen {
         int textY = bounds.bottom() - 8;
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0, 0, 200);
-        guiGraphics.drawString(this.font, newText, textX, textY, 0x63B40C, false);
+        guiGraphics.drawString(this.font, newText, textX, textY, ModConfig.get().getTextNewColorInt(), false);
         guiGraphics.pose().popPose();
     }
 

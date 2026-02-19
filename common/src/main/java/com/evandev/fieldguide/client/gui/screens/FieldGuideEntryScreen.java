@@ -130,7 +130,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (ModConfig.get().disableBiomeDisplay) return;
 
         if (unlocked && !spawnBiomes.isEmpty()) {
-            this.addRenderableWidget(new PaginatedGridWidget<>(this.leftPageBounds.left(), this.leftPageBounds.bottom() - 24, this.leftPageBounds.width(), 16, 6, 16, 0, spawnBiomes, (graphics, item, x, y, mouseX, mouseY) -> {
+            this.addRenderableWidget(new PaginatedGridWidget<>(this.rightPageBounds.left() + 2, this.rightPageBounds.bottom() - 31, this.rightPageBounds.width() - 4, 16, 6, 16, 0, spawnBiomes, (graphics, item, x, y, mouseX, mouseY) -> {
                 ResourceLocation texture = new ResourceLocation(item.getNamespace(), "textures/immersiveoverlays/" + item.getPath() + ".png");
                 graphics.blit(texture, x, y, 0, 0, 16, 16, 16, 16);
                 if (Bounds.isMouseOver(mouseX, mouseY, x, y, 16, 16)) {
@@ -147,7 +147,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         List<ItemStack> drops = unlocked ? ClientFieldGuideManager.getInstance().getDrops(entry) : List.of();
         if (!drops.isEmpty()) {
             int dropItemSize = 20;
-            this.addRenderableWidget(new PaginatedGridWidget<>(this.rightPageBounds.left(), this.rightPageBounds.bottom() - 6 - dropItemSize, this.rightPageBounds.width(), dropItemSize, 5, dropItemSize, 1, drops, (graphics, stack, x, y, mouseX, mouseY) -> {
+            this.addRenderableWidget(new PaginatedGridWidget<>(this.leftPageBounds.left() + 2, this.leftPageBounds.bottom() - 33, this.leftPageBounds.width() - 4, dropItemSize, 5, dropItemSize, 0, drops, (graphics, stack, x, y, mouseX, mouseY) -> {
                 RenderSystem.enableDepthTest();
                 graphics.blit(Constants.ITEM_BACKGROUND_TEXTURE, x, y, 0, 0, dropItemSize, dropItemSize, dropItemSize, dropItemSize);
                 graphics.renderItem(stack, x + 2, y + 2);
@@ -285,7 +285,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (elapsed < 150) bounce = 1.0f - 0.05f * (float) Math.sin((elapsed / 150.0f) * Math.PI);
 
         int xPos = leftPageBounds.x_center();
-        int yPos = leftPageBounds.y_center();
+        int yPos = leftPageBounds.y_center() - 23;
 
         if (entry instanceof EntityType && renderedEntity instanceof LivingEntity living) {
             EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, !unlocked, ModConfig.get().getDetailsSilhouetteColorInt(), true, bounce);
