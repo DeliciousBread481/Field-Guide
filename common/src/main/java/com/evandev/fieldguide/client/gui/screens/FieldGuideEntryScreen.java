@@ -80,7 +80,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         int textX = this.rightPageBounds.left() + 6;
         int titleY = this.leftPageBounds.top() + 8;
         int textY = this.rightPageBounds.top() + 38;
-        int textAreaWidth = this.rightPageBounds.width() - 10;
+        int textAreaWidth = this.rightPageBounds.width() - 12;
         int textAreaHeight = this.rightPageBounds.height() - 98;
 
         if (unlocked) {
@@ -130,10 +130,13 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (ModConfig.get().disableBiomeDisplay) return;
 
         if (unlocked && !spawnBiomes.isEmpty()) {
-            this.addRenderableWidget(new PaginatedGridWidget<>(this.rightPageBounds.left() + 2, this.rightPageBounds.bottom() - 31, this.rightPageBounds.width() - 4, 16, 6, 16, 0, spawnBiomes, (graphics, item, x, y, mouseX, mouseY) -> {
+            int itemSize = 18;
+            this.addRenderableWidget(new PaginatedGridWidget<>(this.rightPageBounds.left() + 2, this.rightPageBounds.bottom() - 33, this.rightPageBounds.width() - 4, itemSize, 5, itemSize, 1, spawnBiomes, (graphics, item, x, y, mouseX, mouseY) -> {
                 ResourceLocation texture = new ResourceLocation(item.getNamespace(), "textures/immersiveoverlays/" + item.getPath() + ".png");
-                graphics.blit(texture, x, y, 0, 0, 16, 16, 16, 16);
-                if (Bounds.isMouseOver(mouseX, mouseY, x, y, 16, 16)) {
+                graphics.blit(Constants.BIOME_BACKGROUND_TEXTURE, x, y, 0, 0, itemSize, itemSize, itemSize, itemSize);
+                int offset = (itemSize - 16) / 2;
+                graphics.blit(texture, x + offset, y + offset, 0, 0, 16, 16, 16, 16);
+                if (Bounds.isMouseOver(mouseX, mouseY, x + offset, y + offset, 16, 16)) {
                     graphics.renderTooltip(this.font, Component.translatable("biome." + item.getNamespace() + "." + item.getPath()), mouseX, mouseY);
                 }
             }, item -> {
@@ -150,8 +153,9 @@ public class FieldGuideEntryScreen extends BookScreen {
             this.addRenderableWidget(new PaginatedGridWidget<>(this.leftPageBounds.left() + 2, this.leftPageBounds.bottom() - 33, this.leftPageBounds.width() - 4, dropItemSize, 5, dropItemSize, 0, drops, (graphics, stack, x, y, mouseX, mouseY) -> {
                 RenderSystem.enableDepthTest();
                 graphics.blit(Constants.ITEM_BACKGROUND_TEXTURE, x, y, 0, 0, dropItemSize, dropItemSize, dropItemSize, dropItemSize);
-                graphics.renderItem(stack, x + 2, y + 2);
-                graphics.renderItemDecorations(this.font, stack, x + 2, y + 2, "");
+                int offset = (dropItemSize - 16) / 2;
+                graphics.renderItem(stack, x + offset, y + offset);
+                graphics.renderItemDecorations(this.font, stack, x + offset, y + offset, "");
                 if (Bounds.isMouseOver(mouseX, mouseY, x, y, dropItemSize, dropItemSize)) {
                     Minecraft mc = Minecraft.getInstance();
                     List<Component> tooltip = new ArrayList<>(Screen.getTooltipFromItem(mc, stack));
@@ -285,7 +289,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (elapsed < 150) bounce = 1.0f - 0.05f * (float) Math.sin((elapsed / 150.0f) * Math.PI);
 
         int xPos = leftPageBounds.x_center();
-        int yPos = leftPageBounds.y_center() - 23;
+        int yPos = leftPageBounds.y_center() - 18;
 
         if (entry instanceof EntityType && renderedEntity instanceof LivingEntity living) {
             EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, !unlocked, ModConfig.get().getDetailsSilhouetteColorInt(), true, bounce);
@@ -301,7 +305,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         int iconSpacing = 2;
         int gap = 8;
 
-        int yPos = leftPageBounds.top() + 13;
+        int yPos = leftPageBounds.bottom() - 47 - iconSize;
 
         String health = String.valueOf((int) entity.getMaxHealth() / 2);
         String armor = String.valueOf(entity.getArmorValue());
@@ -315,9 +319,6 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         guiGraphics.blit(Constants.ATTRIBUTES_TEXTURE, xPos, yPos, 0, 0, iconSize, iconSize, 32, 32);
         guiGraphics.drawString(this.font, health, xPos + iconSize + iconSpacing, yPos + 1, ModConfig.get().getTextColorInt(), false);
-
-        guiGraphics.blit(Constants.HEALTH_FRAME_TEXTURE, xPos - 9, yPos - 4, 0, 0, 8, 16, 16, 16);
-        guiGraphics.blit(Constants.HEALTH_FRAME_TEXTURE, xPos + totalWidth + 1, yPos - 4, 8, 0, 8, 16, 16, 16);
 
         if (showArmor) {
             xPos = xPos + healthWidth + gap;
