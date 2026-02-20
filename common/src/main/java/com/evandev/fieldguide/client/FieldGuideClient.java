@@ -54,8 +54,6 @@ public class FieldGuideClient {
                 if (isRecent && lastEntry != null) {
                     Category targetCategory = manager.getCategoryForEntry(lastEntry);
                     if (targetCategory != null) {
-                        ClientFieldGuideManager.markAsSeen(lastEntry);
-
                         int page = FieldGuideScreen.getPageForEntry(targetCategory, lastEntry);
                         FieldGuideScreen mainScreen = new FieldGuideScreen(targetCategory, page);
                         minecraft.setScreen(new FieldGuideEntryScreen(mainScreen, lastEntry));

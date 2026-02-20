@@ -67,7 +67,9 @@ public class FieldGuideEntryScreen extends BookScreen {
         super.init();
         spawnBiomes.clear();
         boolean unlocked = ClientFieldGuideManager.isUnlocked(entry);
-
+        if (ClientFieldGuideManager.isNew(entry)) {
+            ClientFieldGuideManager.markAsSeen(entry);
+        }
         setupTextWidgets(unlocked);
         setupEntityPreview();
         loadSpawnBiomes();

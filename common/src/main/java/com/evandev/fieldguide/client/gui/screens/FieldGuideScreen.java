@@ -322,7 +322,6 @@ public class FieldGuideScreen extends BookScreen {
     }
 
     private void handleEntryClick(Object entry) {
-        if (ClientFieldGuideManager.isNew(entry)) ClientFieldGuideManager.markAsSeen(entry);
         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F));
 
         ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
