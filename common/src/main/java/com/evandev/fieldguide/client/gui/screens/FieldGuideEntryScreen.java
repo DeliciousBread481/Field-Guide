@@ -130,8 +130,8 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (ModConfig.get().disableBiomeDisplay) return;
 
         if (unlocked && !spawnBiomes.isEmpty()) {
-            int itemSize = 18;
-            this.addRenderableWidget(new PaginatedGridWidget<>(this.rightPageBounds.left() + 2, this.rightPageBounds.bottom() - 33, this.rightPageBounds.width() - 4, itemSize, 5, itemSize, 1, spawnBiomes, (graphics, item, x, y, mouseX, mouseY) -> {
+            int itemSize = 20;
+            this.addRenderableWidget(new PaginatedGridWidget<>(this.rightPageBounds.left() + 2, this.rightPageBounds.bottom() - 33, this.rightPageBounds.width() - 4, itemSize, 5, itemSize, 0, spawnBiomes, (graphics, item, x, y, mouseX, mouseY) -> {
                 ResourceLocation texture = new ResourceLocation(item.getNamespace(), "textures/immersiveoverlays/" + item.getPath() + ".png");
                 graphics.blit(Constants.BIOME_BACKGROUND_TEXTURE, x, y, 0, 0, itemSize, itemSize, itemSize, itemSize);
                 int offset = (itemSize - 16) / 2;
