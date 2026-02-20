@@ -138,7 +138,7 @@
   "fieldguide.new": "New!",
   "fieldguide.unknown": "???",
   "fieldguide.undiscovered": "???",
-  "fieldguide.description.missing": "No description available.",
+  "fieldguide.description.missing": "Notes...",
   "fieldguide.description.locked": "Observe with a spyglass to discover details.",
   "fieldguide.description.locked.kill": "Defeat this creature to discover details.",
   "fieldguide.description.locked.no_spyglass": "Observe this closely to discover details.",
