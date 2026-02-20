@@ -46,7 +46,7 @@ public class ModConfig {
     public boolean grantXpOnScan = true;
     public int xpAmountOnScan = 5;
 
-    public String scanOverlayColor = "#FFFFFF";
+    public String scanOverlayColor = "#F9EED0";
     public double scanOverlayAlpha = 0.5D;
 
     public String textColor = "#8A5E3B";
@@ -164,7 +164,7 @@ public class ModConfig {
     }
 
     public int getScanOverlayColorInt() {
-        return parseColor(scanOverlayColor, 0xFFFFFF);
+        return parseColor(scanOverlayColor, 0xF9EED0);
     }
 
     public int getTextColorInt() {

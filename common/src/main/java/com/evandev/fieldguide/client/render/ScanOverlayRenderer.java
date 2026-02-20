@@ -46,7 +46,7 @@ public class ScanOverlayRenderer {
             green = 0.0F;
             blue = 0.0F;
             float pulse = (float) (Math.sin(System.currentTimeMillis() / 200.0) * 0.5 + 0.5);
-            alpha = 0.2F + (pulse * 0.4F);
+            alpha = 0.0F + (pulse * 0.2F);
         } else {
             int colorInt = ModConfig.get().getScanOverlayColorInt();
             Color c = new Color(colorInt);
