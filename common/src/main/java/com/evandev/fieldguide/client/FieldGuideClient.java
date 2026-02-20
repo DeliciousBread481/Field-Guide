@@ -57,7 +57,7 @@ public class FieldGuideClient {
                         ClientFieldGuideManager.markAsSeen(lastEntry);
 
                         int page = FieldGuideScreen.getPageForEntry(targetCategory, lastEntry);
-                        BookScreen mainScreen = new FieldGuideScreen(targetCategory, page);
+                        FieldGuideScreen mainScreen = new FieldGuideScreen(targetCategory, page);
                         minecraft.setScreen(new FieldGuideEntryScreen(mainScreen, lastEntry));
                     }
                 } else {

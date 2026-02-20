@@ -39,13 +39,13 @@ import java.util.List;
 import java.util.Locale;
 
 public class FieldGuideEntryScreen extends BookScreen {
-    private final BookScreen parent;
+    private final FieldGuideScreen parent;
     private final Object entry;
     private final List<ResourceLocation> spawnBiomes = new ArrayList<>();
     private Entity renderedEntity;
     private long lastClickTime = 0;
 
-    public FieldGuideEntryScreen(BookScreen parent, Object entry) {
+    public FieldGuideEntryScreen(FieldGuideScreen parent, Object entry) {
         super(getTitleForEntry(entry));
         this.parent = parent;
         this.entry = entry;
@@ -177,9 +177,9 @@ public class FieldGuideEntryScreen extends BookScreen {
             if (this.minecraft != null) this.minecraft.setScreen(parent);
         }));
 
-        Category currentCat = this.getSelectedCategory();
-        if (currentCat != null) {
-            List<Object> entries = ClientFieldGuideManager.getInstance().getEntriesForCategory(currentCat);
+        List<Object> entries = parent.getCurrentEntries();
+
+        if (!entries.isEmpty()) {
             int index = entries.indexOf(this.entry);
 
             PageTurnButton prevEntryButton = new PageTurnButton(this.bounds.left() + 15, this.leftPageBounds.bottom() - 15, 16, 16, 0, 0, 16, Constants.PREV_PAGE_TEXTURE, 16, 32, b -> {

@@ -88,6 +88,10 @@ public class FieldGuideScreen extends BookScreen {
         this.initialSearchFocus = focus;
     }
 
+    public List<Object> getCurrentEntries() {
+        return this.currentEntries;
+    }
+
     @Override
     protected void init() {
         super.init();
