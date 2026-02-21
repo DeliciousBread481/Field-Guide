@@ -330,7 +330,7 @@ public class FieldGuideScreen extends BookScreen {
 
         ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
         EntryVisual visual = entryId != null ? ClientFieldGuideManager.getInstance().getEntryVisual(entryId) : null;
-        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
+        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
 
         if (coreEntry instanceof EntityType<?> type) {
             Entity entity = entryCache.get(type);
@@ -675,9 +675,15 @@ public class FieldGuideScreen extends BookScreen {
     }
 
     private void renderEntryInGrid(GuiGraphics guiGraphics, Object entry, int x, int y, int scale, boolean unlocked) {
-        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
+        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
 
-        if (coreEntry instanceof EntityType<?> type) {
+        if (entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() instanceof Block block) {
+            if (composite.structureNbt() != null) {
+                EntryRenderHelper.renderStructure(guiGraphics, composite, x, y, CELL_SIZE - 4, !unlocked, false, 1.0F);
+            } else {
+                EntryRenderHelper.renderBlock(guiGraphics, block, x, y, 15.0F, !unlocked, false, 1.0F);
+            }
+        } else if (coreEntry instanceof EntityType<?> type) {
             if (this.minecraft != null && this.minecraft.level != null) {
                 Entity entity = entryCache.get(type);
                 if (entity == null && !entryCache.containsKey(type)) {

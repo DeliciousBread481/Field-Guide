@@ -102,7 +102,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private void setupEntityPreview() {
-        Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
+        Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
         if (renderEntry instanceof EntityType<?> type && this.minecraft != null && this.minecraft.level != null) {
             try {
                 this.renderedEntity = type.create(this.minecraft.level);
@@ -115,7 +115,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
         EntryVisual visual = entryId != null ? ClientFieldGuideManager.getInstance().getEntryVisual(entryId) : null;
 
-        Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
+        Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
 
         if (visual != null && visual.spawnBiomes != null) {
             spawnBiomes.addAll(visual.spawnBiomes);
@@ -235,11 +235,11 @@ public class FieldGuideEntryScreen extends BookScreen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (super.mouseClicked(mouseX, mouseY, button)) return true;
 
-        Object clickEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
+        Object clickEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
 
         if (button == 0 && (renderedEntity != null || clickEntry instanceof Block)) {
             int xPos = leftPageBounds.left() + leftPageBounds.width() / 2;
-            int yPos = leftPageBounds.y_center();
+            int yPos = leftPageBounds.y_center() - 18;
             if (mouseX >= xPos - 50 && mouseX <= xPos + 50 && mouseY >= yPos - 50 && mouseY <= yPos + 50) {
                 if (ClientFieldGuideManager.isUnlocked(entry)) {
                     ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
@@ -341,9 +341,15 @@ public class FieldGuideEntryScreen extends BookScreen {
         int xPos = leftPageBounds.x_center();
         int yPos = leftPageBounds.y_center() - 18;
 
-        Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
+        Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
 
-        if (renderEntry instanceof EntityType && renderedEntity instanceof LivingEntity living) {
+        if (entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() instanceof Block block) {
+            if (composite.structureNbt() != null) {
+                EntryRenderHelper.renderStructure(guiGraphics, composite, xPos, yPos, 80, !unlocked, true, bounce);
+            } else {
+                EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 30.0F, !unlocked, true, bounce);
+            }
+        } else if (renderEntry instanceof EntityType && renderedEntity instanceof LivingEntity living) {
             EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, !unlocked, ModConfig.get().getDetailsSilhouetteColorInt(), true, bounce);
             if (unlocked) renderAttributes(guiGraphics, living);
         } else if (renderEntry instanceof Block block) {

@@ -53,7 +53,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public static ResourceLocation getEntryId(Object entry) {
-        if (entry instanceof CompositeFieldGuideEntry composite) return composite.getId();
+        if (entry instanceof CompositeFieldGuideEntry composite) return composite.id();
         if (entry instanceof EntityType<?> type) return BuiltInRegistries.ENTITY_TYPE.getKey(type);
         if (entry instanceof Block block) return BuiltInRegistries.BLOCK.getKey(block);
         return null;
@@ -83,7 +83,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
         String overrideKey = "fieldguide." + id.getNamespace() + "." + id.getPath() + ".description";
 
-        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
+        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
         String fallbackKey = (coreEntry instanceof EntityType) ? "entity." + id.getNamespace() + "." + id.getPath() + ".description" : "lore." + id.getNamespace() + "." + id.getPath();
         return I18n.exists(overrideKey) ? I18n.get(overrideKey) : (I18n.exists(fallbackKey) ? I18n.get(fallbackKey) : I18n.get("fieldguide.description.missing"));
     }
@@ -96,21 +96,18 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         String custom = ProgressManager.getInstance().getCustomName(entry);
         if (custom != null) return Component.literal(custom);
 
-        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
-        if (coreEntry instanceof EntityType<?> type) return type.getDescription();
-        if (coreEntry instanceof Block block) {
-            if (entry instanceof CompositeFieldGuideEntry) {
-                String name = block.getName().getString();
-                if (name.endsWith(" Sapling")) {
-                    return Component.literal(name.substring(0, name.length() - 8) + " Tree");
-                } else if (name.endsWith(" Fungus")) {
-                    return Component.literal( "Huge " + name.substring(0, name.length() - 7) + " Fungus");
-                } else if (name.endsWith(" Propagule")) {
-                    return Component.literal(name.substring(0, name.length() - 10) + " Tree");
-                }
+        ResourceLocation id = getEntryId(entry);
+        if (id != null) {
+            String overrideKey = "fieldguide.name." + id.getNamespace() + "." + id.getPath();
+            if (I18n.exists(overrideKey)) {
+                return Component.translatable(overrideKey);
             }
-            return block.getName();
         }
+
+        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
+        if (coreEntry instanceof EntityType<?> type) return type.getDescription();
+        if (coreEntry instanceof Block block) return block.getName();
+
         return Component.translatable("fieldguide.unknown");
     }
 
@@ -119,21 +116,18 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public static String getDefaultName(Object entry) {
-        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
-        if (coreEntry instanceof EntityType<?> type) return type.getDescription().getString();
-        if (coreEntry instanceof Block block) {
-            if (entry instanceof CompositeFieldGuideEntry) {
-                String name = block.getName().getString();
-                if (name.endsWith(" Sapling")) {
-                    return name.substring(0, name.length() - 8) + " Tree";
-                } else if (name.endsWith(" Fungus")) {
-                    return name.substring(0, name.length() - 7) + " Tree";
-                } else if (name.endsWith(" Propagule")) {
-                    return name.substring(0, name.length() - 10) + " Tree";
-                }
+        ResourceLocation id = getEntryId(entry);
+        if (id != null) {
+            String overrideKey = "fieldguide.name." + id.getNamespace() + "." + id.getPath();
+            if (I18n.exists(overrideKey)) {
+                return I18n.get(overrideKey);
             }
-            return block.getName().getString();
         }
+
+        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
+        if (coreEntry instanceof EntityType<?> type) return type.getDescription().getString();
+        if (coreEntry instanceof Block block) return block.getName().getString();
+
         return I18n.get("fieldguide.unknown");
     }
 
@@ -149,7 +143,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         for (Object entry : getValidEntries()) {
             if (entry.equals(target)) return entry;
             if (entry instanceof CompositeFieldGuideEntry composite) {
-                if (composite.getDisplayEntry().equals(target) || composite.getComponents().contains(target)) {
+                if (composite.displayEntry().equals(target) || composite.components().contains(target)) {
                     return entry;
                 }
             }
@@ -184,7 +178,10 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         resolveAllEntries();
     }
 
+
     public void updateLootCache(Map<ResourceLocation, List<ItemStack>> lootCache) {
+        this.dropCache.clear();
+
         for (Map.Entry<ResourceLocation, List<ItemStack>> entry : lootCache.entrySet()) {
             ResourceLocation id = entry.getKey();
             List<ItemStack> drops = entry.getValue();
@@ -298,8 +295,8 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     public List<ItemStack> getDrops(Object entry) {
         List<ItemStack> rawDrops;
         if (entry instanceof CompositeFieldGuideEntry composite) {
-            rawDrops = new ArrayList<>(dropCache.getOrDefault(composite.getDisplayEntry(), Collections.emptyList()));
-            for (Object comp : composite.getComponents()) {
+            rawDrops = new ArrayList<>(dropCache.getOrDefault(composite.displayEntry(), Collections.emptyList()));
+            for (Object comp : composite.components()) {
                 rawDrops.addAll(dropCache.getOrDefault(comp, Collections.emptyList()));
             }
         } else {

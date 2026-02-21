@@ -95,7 +95,7 @@ public class ScanOverlayRenderer {
                     BlockPos neighbor = pos.relative(dir);
                     if (!blocksToRender.contains(neighbor)) {
                         Block neighborBlock = mc.level.getBlockState(neighbor).getBlock();
-                        if (composite.getComponents().contains(neighborBlock) || composite.getDisplayEntry() == neighborBlock) {
+                        if (composite.components().contains(neighborBlock) || composite.displayEntry() == neighborBlock) {
                             blocksToRender.add(neighbor);
                             queue.add(neighbor);
                         }

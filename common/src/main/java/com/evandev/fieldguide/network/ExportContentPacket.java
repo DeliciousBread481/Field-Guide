@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.network;
 
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.client.gui.util.IconCacheManager;
 import net.minecraft.network.FriendlyByteBuf;
 
 public class ExportContentPacket {
@@ -19,6 +20,11 @@ public class ExportContentPacket {
     }
 
     public void handleClient() {
-        ClientFieldGuideManager.getInstance().exportToLang(type);
+        if ("reload_cache".equals(type)) {
+            ClientFieldGuideManager.clearCache();
+            IconCacheManager.clearCache();
+        } else {
+            ClientFieldGuideManager.getInstance().exportToLang(type);
+        }
     }
 }

@@ -161,5 +161,19 @@
   "category.fieldguide.monsters": "Monsters",
   "category.fieldguide.animals": "Animals",
   "category.fieldguide.plants": "Plants",
-  "category.fieldguide.bosses": "Bosses"
+  "category.fieldguide.bosses": "Bosses",
+
+  "fieldguide.name.minecraft.oak_sapling": "Oak Tree",
+  "fieldguide.name.minecraft.spruce_sapling": "Spruce Tree",
+  "fieldguide.name.minecraft.birch_sapling": "Birch Tree",
+  "fieldguide.name.minecraft.jungle_sapling": "Jungle Tree",
+  "fieldguide.name.minecraft.acacia_sapling": "Acacia Tree",
+  "fieldguide.name.minecraft.dark_oak_sapling": "Dark Oak Tree",
+  "fieldguide.name.minecraft.mangrove_propagule": "Mangrove Tree",
+  "fieldguide.name.minecraft.cherry_sapling": "Cherry Tree",
+  "fieldguide.name.minecraft.azalea": "Azalea Tree",
+  "fieldguide.name.minecraft.crimson_fungus": "Huge Crimson Fungus",
+  "fieldguide.name.minecraft.warped_fungus": "Huge Warped Fungus",
+  "fieldguide.name.minecraft.brown_mushroom": "Huge Brown Mushroom",
+  "fieldguide.name.minecraft.red_mushroom": "Huge Red Mushroom"
 }
