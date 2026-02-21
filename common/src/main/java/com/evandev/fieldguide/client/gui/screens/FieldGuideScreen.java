@@ -410,7 +410,7 @@ public class FieldGuideScreen extends BookScreen {
                         int iconX = this.leftPageBounds.left() + 3;
                         guiGraphics.blit(texture, iconX, iconY, 0, 0, iconSize, iconSize, iconSize, iconSize);
                         Component searchTitle = Component.translatable("biome." + biomeId.getNamespace() + "." + biomeId.getPath());
-                        guiGraphics.drawString(this.font, searchTitle, iconX + iconSize + 4, titleY, ModConfig.get().getTextColorInt(), false);
+                        guiGraphics.drawString(this.font, searchTitle, iconX + iconSize + 3, titleY, ModConfig.get().getTextColorInt(), false);
                     }
                 } else if (searchQuery.startsWith("=^")) {
                     String dropQuery = searchQuery.substring(2).toLowerCase(Locale.ROOT);
@@ -447,7 +447,7 @@ public class FieldGuideScreen extends BookScreen {
                         dropName = titleCase.toString().trim();
                     }
 
-                    guiGraphics.drawString(this.font, dropName, iconX + iconSize + 4, titleY, ModConfig.get().getTextColorInt(), false);
+                    guiGraphics.drawString(this.font, dropName, iconX + iconSize + 3, titleY, ModConfig.get().getTextColorInt(), false);
                 } else {
                     guiGraphics.drawString(this.font, searchQuery, this.leftPageBounds.left() + 6, titleY, ModConfig.get().getTextMutedColorInt(), false);
                 }
