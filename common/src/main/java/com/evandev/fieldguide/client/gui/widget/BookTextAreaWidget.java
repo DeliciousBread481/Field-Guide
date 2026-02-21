@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.client.gui.widget;
 
+import com.evandev.fieldguide.config.ModConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -393,14 +394,12 @@ public class BookTextAreaWidget extends AbstractWidget {
                 }
             }
 
-            if ((System.currentTimeMillis() / 500) % 2 == 0) {
-                int[] coords = getCoordsForIndex(cursorPos);
-                int cursorLine = coords[2];
-                if (!scrollable || (cursorLine >= scrollOffset && cursorLine < scrollOffset + maxVisibleLines)) {
-                    int visibleLine = cursorLine - scrollOffset;
-                    String cursorChar = (cursorPos == text.length()) ? "_" : "|";
-                    guiGraphics.drawString(this.font, cursorChar, coords[0], this.getY() + visibleLine * this.font.lineHeight, textColor, false);
-                }
+            int[] coords = getCoordsForIndex(cursorPos);
+            int cursorLine = coords[2];
+            if (!scrollable || (cursorLine >= scrollOffset && cursorLine < scrollOffset + maxVisibleLines)) {
+                int visibleLine = cursorLine - scrollOffset;
+                // Render cursor
+                this.renderCursor(guiGraphics, coords[0], this.getY() + visibleLine * this.font.lineHeight);
             }
         }
 
@@ -413,6 +412,18 @@ public class BookTextAreaWidget extends AbstractWidget {
             int thumbColor = (isDraggingScrollbar || isScrollbarHovered(mouseX, mouseY)) ? 0xFF8B5A2B : 0xFFBC986A;
             guiGraphics.fill(scrollbarX, this.getY(), scrollbarX + 2, this.getY() + scrollbarHeight, 0xFFF9EED0);
             guiGraphics.fill(scrollbarX, thumbY, scrollbarX + 2, thumbY + thumbHeight, thumbColor);
+        }
+    }
+
+    private void renderCursor(GuiGraphics guiGraphics, int x, int y) {
+        if ((System.currentTimeMillis() / 400) % 2 == 0) {
+            if (cursorPos == text.length()) {
+                guiGraphics.drawString(this.font, "_", x, y, ModConfig.get().getTextCursorColorInt(), false);
+            } else {
+                int cursorWidth = 1;
+                int cursorHeight = this.font.lineHeight;
+                guiGraphics.fill(x, y - 1, x + cursorWidth, y - 1 + cursorHeight, ModConfig.get().getTextCursorColorInt());
+            }
         }
     }
 

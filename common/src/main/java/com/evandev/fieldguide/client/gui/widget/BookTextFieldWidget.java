@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.client.gui.widget;
 
+import com.evandev.fieldguide.config.ModConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -204,10 +205,22 @@ public class BookTextFieldWidget extends AbstractWidget {
 
         guiGraphics.drawString(this.font, text, renderX, this.getY(), textColor, false);
 
-        if (this.isFocused() && (System.currentTimeMillis() / 500) % 2 == 0) {
+
+        if (this.isFocused()) {
             int cursorX = renderX + this.font.width(text.substring(0, cursorPos));
-            String cursorChar = (cursorPos == text.length()) ? "_" : "|";
-            guiGraphics.drawString(this.font, cursorChar, cursorX, this.getY(), textColor, false);
+            this.renderCursor(guiGraphics, cursorX, this.getY());
+        }
+    }
+
+    private void renderCursor(GuiGraphics guiGraphics, int x, int y) {
+        if ((System.currentTimeMillis() / 400) % 2 == 0) {
+            if (cursorPos == text.length()) {
+                guiGraphics.drawString(this.font, "_", x, y, ModConfig.get().getTextCursorColorInt(), false);
+            } else {
+                int cursorWidth = 1;
+                int cursorHeight = this.font.lineHeight;
+                guiGraphics.fill(x, y - 1, x + cursorWidth, y - 1 + cursorHeight, ModConfig.get().getTextCursorColorInt());
+            }
         }
     }
 

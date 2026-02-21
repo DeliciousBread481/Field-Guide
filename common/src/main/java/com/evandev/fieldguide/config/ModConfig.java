@@ -53,6 +53,7 @@ public class ModConfig {
     public String textTitleColor = "#704623";
     public String textMutedColor = "#C7A875";
     public String textNewColor = "#63B40C";
+    public String textCursorColor = "#0xFF704623";
     public String pageNumberColor = "#C7A875";
     public String listSilhouetteColor = "#DDC69B";
     public String detailsSilhouetteColor = "#DDC69B";
@@ -192,6 +193,10 @@ public class ModConfig {
 
     public int getTextNewColorInt() {
         return parseColor(textNewColor, 0x63B40C);
+    }
+
+    public int getTextCursorColorInt() {
+        return parseColor(textCursorColor, 0xFF704623);
     }
 
     public int getPageNumberColorInt() {
