@@ -4,7 +4,7 @@
     {
       "type": "composite",
       "id": "minecraft:oak_sapling",
-      "structure_nbt": "fieldguide:oak_tree",
+      "structure_nbt": "fieldguide:oak",
       "components": [
         "minecraft:oak_log",
         "minecraft:oak_leaves"
@@ -13,7 +13,7 @@
     {
       "type": "composite",
       "id": "minecraft:spruce_sapling",
-      "structure_nbt": "fieldguide:spruce_tree",
+      "structure_nbt": "fieldguide:spruce",
       "components": [
         "minecraft:spruce_log",
         "minecraft:spruce_leaves"
@@ -22,7 +22,7 @@
     {
       "type": "composite",
       "id": "minecraft:birch_sapling",
-      "structure_nbt": "fieldguide:birch_tree",
+      "structure_nbt": "fieldguide:birch",
       "components": [
         "minecraft:birch_log",
         "minecraft:birch_leaves"
@@ -31,7 +31,7 @@
     {
       "type": "composite",
       "id": "minecraft:jungle_sapling",
-      "structure_nbt": "fieldguide:jungle_tree",
+      "structure_nbt": "fieldguide:jungle_tree_no_vine",
       "components": [
         "minecraft:jungle_log",
         "minecraft:jungle_leaves"
@@ -40,7 +40,7 @@
     {
       "type": "composite",
       "id": "minecraft:acacia_sapling",
-      "structure_nbt": "fieldguide:acacia_tree",
+      "structure_nbt": "fieldguide:acacia",
       "components": [
         "minecraft:acacia_log",
         "minecraft:acacia_leaves"
@@ -49,7 +49,7 @@
     {
       "type": "composite",
       "id": "minecraft:dark_oak_sapling",
-      "structure_nbt": "fieldguide:dark_oak_tree",
+      "structure_nbt": "fieldguide:dark_oak",
       "components": [
         "minecraft:dark_oak_log",
         "minecraft:dark_oak_leaves"
@@ -58,7 +58,7 @@
     {
       "type": "composite",
       "id": "minecraft:mangrove_propagule",
-      "structure_nbt": "fieldguide:mangrove_tree",
+      "structure_nbt": "fieldguide:mangrove",
       "components": [
         "minecraft:mangrove_log",
         "minecraft:mangrove_leaves",
@@ -69,7 +69,7 @@
     {
       "type": "composite",
       "id": "minecraft:cherry_sapling",
-      "structure_nbt": "fieldguide:cherry_tree",
+      "structure_nbt": "fieldguide:cherry",
       "components": [
         "minecraft:cherry_log",
         "minecraft:cherry_leaves"
@@ -77,8 +77,8 @@
     },
     {
       "type": "composite",
-      "id": "minecraft:azalea",
-      "structure_nbt": "fieldguide:azalea_tree",
+      "id": "minecraft:azalea_tree",
+      "structure_nbt": "fieldguide:azalea",
       "components": [
         "minecraft:oak_log",
         "minecraft:azalea_leaves",
@@ -88,7 +88,7 @@
     {
       "type": "composite",
       "id": "minecraft:crimson_fungus",
-      "structure_nbt": "fieldguide:huge_crimson_fungus",
+      "structure_nbt": "fieldguide:crimson_fungus",
       "components": [
         "minecraft:crimson_stem",
         "minecraft:nether_wart_block",
@@ -98,7 +98,7 @@
     {
       "type": "composite",
       "id": "minecraft:warped_fungus",
-      "structure_nbt": "fieldguide:huge_warped_fungus",
+      "structure_nbt": "fieldguide:warped_fungus",
       "components": [
         "minecraft:warped_stem",
         "minecraft:warped_wart_block",
@@ -121,6 +121,40 @@
       "components": [
         "minecraft:red_mushroom_block",
         "minecraft:mushroom_stem"
+      ]
+    },
+    {
+      "type": "composite",
+      "id": "minecraft:weeping_vines",
+      "components": [
+        "minecraft:weeping_vines",
+        "minecraft:weeping_vines_plant"
+      ]
+    },
+    {
+      "type": "composite",
+      "id": "minecraft:twisting_vines",
+      "components": [
+        "minecraft:twisting_vines",
+        "minecraft:twisting_vines_plant"
+      ]
+    },
+    {
+      "type": "composite",
+      "id": "minecraft:chorus_plant",
+      "structure_nbt": "fieldguide:chorus_plant",
+      "components": [
+        "minecraft:chorus_plant",
+        "minecraft:chorus_fruit"
+      ]
+    },
+    {
+      "type": "composite",
+      "id": "minecraft:kelp",
+      "structure_nbt": "fieldguide:kelp",
+      "components": [
+        "minecraft:kelp",
+        "minecraft:kelp_plant"
       ]
     },
     {

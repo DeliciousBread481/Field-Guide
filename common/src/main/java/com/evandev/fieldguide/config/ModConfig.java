@@ -66,7 +66,7 @@ public class ModConfig {
     public List<String> biomeRemovals = new ArrayList<>();
     public List<String> biomeAdditions = getDefaultBiomeAdditions();
 
-    public List<String> discoveryRedirects = new ArrayList<>();
+    public List<String> discoveryRedirects = getDefaultDiscoveryRedirects();
 
     public static ModConfig get() {
         if (INSTANCE == null) {
@@ -141,6 +141,12 @@ public class ModConfig {
         defaults.add("minecraft:bee|minecraft:flower_forest");
         defaults.add("minecraft:bee|minecraft:sunflower_plains");
         defaults.add("minecraft:bee|minecraft:plains");
+
+        return defaults;
+    }
+    public static List<String> getDefaultDiscoveryRedirects() {
+        List<String> defaults = new ArrayList<>();
+        defaults.add("minecraft:bamboo_sapling|minecraft:bamboo");
 
         return defaults;
     }
