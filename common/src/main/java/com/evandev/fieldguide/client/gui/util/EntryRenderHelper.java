@@ -25,7 +25,7 @@ import net.minecraft.world.level.block.state.properties.Property;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -132,7 +132,7 @@ public class EntryRenderHelper {
                 pose.scale(clampedScale, -clampedScale, -clampedScale);
 
                 pose.mulPose(Axis.XP.rotationDegrees(30.0F));
-                pose.mulPose(Axis.YP.rotationDegrees(210.0F));
+                pose.mulPose(Axis.YP.rotationDegrees(-30.0F));
 
                 pose.translate(0, (entityHeight / -2.0F) + (yOff / clampedScale), 0);
 
