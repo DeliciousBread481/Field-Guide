@@ -109,9 +109,6 @@ public class FieldGuideCommand {
 
     private static int reload(CommandSourceStack source) {
         ServerFieldGuideManager.getInstance().reload(source.getServer());
-        for (ServerPlayer player : source.getServer().getPlayerList().getPlayers()) {
-            Services.NETWORK.sendToPlayer(new ExportContentPacket("reload_cache"), player);
-        }
         source.sendSuccess(() -> Component.literal("FieldGuide configuration and caches reloaded!"), true);
         return 1;
     }

@@ -4,6 +4,7 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CategoryEntry;
+import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
 import com.evandev.fieldguide.platform.Services;
@@ -104,13 +105,13 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
                             switch (typeStr) {
                                 case "entry" -> {
                                     ResourceLocation id = new ResourceLocation(GsonHelper.getAsString(obj, "id"));
-                                    category.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, id, null, null));
+                                    category.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, id, null, null, null));
                                 }
                                 case "auto_populate" -> {
                                     String strategy = GsonHelper.getAsString(obj, "strategy");
-                                    category.addEntry(new CategoryEntry(CategoryEntry.Type.AUTO_POPULATE, null, strategy, null));
+                                    category.addEntry(new CategoryEntry(CategoryEntry.Type.AUTO_POPULATE, null, strategy, null, null));
                                 }
-                                case "composite" -> {
+                                case "composite", "structure" -> {
                                     ResourceLocation id = new ResourceLocation(GsonHelper.getAsString(obj, "id"));
                                     List<ResourceLocation> components = new ArrayList<>();
                                     if (obj.has("components")) {
@@ -118,7 +119,8 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
                                             components.add(new ResourceLocation(comp.getAsString()));
                                         }
                                     }
-                                    category.addEntry(new CategoryEntry(CategoryEntry.Type.COMPOSITE, id, null, components));
+                                    ResourceLocation structureNbt = obj.has("structure_nbt") ? new ResourceLocation(GsonHelper.getAsString(obj, "structure_nbt")) : null;
+                                    category.addEntry(new CategoryEntry(CategoryEntry.Type.COMPOSITE, id, null, components, structureNbt));
                                 }
                             }
                         }
@@ -139,8 +141,13 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
     }
 
     public void reload(MinecraftServer server) {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            Services.NETWORK.sendToPlayer(new ExportContentPacket("reload_cache"), player);
+        }
+
         resolveAllCategories();
         this.serverLootCache = LootTableHelper.generateLootMap(server.overworld());
+
         syncToAll(server);
     }
 

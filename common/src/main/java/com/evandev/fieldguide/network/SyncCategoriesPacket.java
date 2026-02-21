@@ -36,7 +36,9 @@ public class SyncCategoriesPacket {
                     }
                 }
 
-                cat.addEntry(new CategoryEntry(type, entryId, strategy, components));
+                ResourceLocation structureNbt = b.readBoolean() ? b.readResourceLocation() : null;
+
+                cat.addEntry(new CategoryEntry(type, entryId, strategy, components, structureNbt));
             }
             return cat;
         });
@@ -63,6 +65,9 @@ public class SyncCategoriesPacket {
                         b.writeResourceLocation(comp);
                     }
                 }
+
+                b.writeBoolean(entry.structureNbt() != null);
+                if (entry.structureNbt() != null) b.writeResourceLocation(entry.structureNbt());
             }
         });
     }

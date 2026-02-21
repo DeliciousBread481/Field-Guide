@@ -37,14 +37,14 @@ public class FieldGuideToast implements Toast {
 
         int iconX = 17;
         int iconY = 15;
-        Object coreEntry = this.entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : this.entry;
+        Object coreEntry = this.entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : this.entry;
 
         if (!entityInitialized && coreEntry instanceof EntityType<?> type) {
             cachedEntity = type.create(Minecraft.getInstance().level);
             entityInitialized = true;
         }
 
-        if (this.entry instanceof CompositeFieldGuideEntry composite && composite.getDisplayEntry() instanceof Block block) {
+        if (this.entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() instanceof Block block) {
             boolean isTree = block.getName().getString().endsWith(" Sapling") || block.getName().getString().endsWith(" Fungus") || block.getName().getString().endsWith(" Propagule") || block.getName().getString().endsWith(" Mushroom");
             if (isTree) {
                 EntryRenderHelper.renderStructure(guiGraphics, composite, iconX, iconY, 16, false, false, 1.0F);

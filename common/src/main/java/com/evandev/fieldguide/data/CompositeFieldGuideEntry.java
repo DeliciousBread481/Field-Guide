@@ -5,28 +5,8 @@ import net.minecraft.resources.ResourceLocation;
 import java.util.List;
 import java.util.Objects;
 
-public class CompositeFieldGuideEntry {
-    private final ResourceLocation id;
-    private final Object displayEntry;
-    private final List<Object> components;
-
-    public CompositeFieldGuideEntry(ResourceLocation id, Object displayEntry, List<Object> components) {
-        this.id = id;
-        this.displayEntry = displayEntry;
-        this.components = components;
-    }
-
-    public ResourceLocation getId() {
-        return id;
-    }
-
-    public Object getDisplayEntry() {
-        return displayEntry;
-    }
-
-    public List<Object> getComponents() {
-        return components;
-    }
+public record CompositeFieldGuideEntry(ResourceLocation id, Object displayEntry, List<Object> components,
+                                       ResourceLocation structureNbt) {
 
     @Override
     public boolean equals(Object o) {

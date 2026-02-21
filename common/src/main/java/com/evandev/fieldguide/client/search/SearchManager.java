@@ -45,7 +45,7 @@ public class SearchManager {
         for (Object entry : ClientFieldGuideManager.getValidEntries()) {
             if (ClientFieldGuideManager.hideFromSearch(entry)) continue;
 
-            Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
+            Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
 
             if (coreEntry instanceof EntityType<?> type) {
                 var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type);

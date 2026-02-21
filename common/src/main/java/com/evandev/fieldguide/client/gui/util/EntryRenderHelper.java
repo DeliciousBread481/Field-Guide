@@ -1,9 +1,11 @@
 package com.evandev.fieldguide.client.gui.util;
 
+import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.mixin.accessor.StructureTemplateAccessor;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -14,7 +16,10 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.Block;
@@ -22,14 +27,13 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 import java.awt.*;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.List;
 
 public class EntryRenderHelper {
 
@@ -226,51 +230,50 @@ public class EntryRenderHelper {
                 setupFieldGuideBlockLighting();
                 PoseStack pose = new PoseStack();
 
-                boolean isFungus = composite.getDisplayEntry() instanceof Block b && BuiltInRegistries.BLOCK.getKey(b).getPath().endsWith("_fungus");
-                boolean isMushroom = composite.getDisplayEntry() instanceof Block b && BuiltInRegistries.BLOCK.getKey(b).getPath().endsWith("_mushroom");
+                Map<BlockPos, BlockState> blocks = getStructureBlocks(composite);
+                if (blocks.isEmpty()) return;
 
-                // Scale proportionally so larger features fit into the 256x256 cache
-                float scale = isFungus ? 22f : (isMushroom ? 22f : 30f);
+                int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, minZ = Integer.MAX_VALUE;
+                int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE, maxZ = Integer.MIN_VALUE;
+
+                for (BlockPos pos : blocks.keySet()) {
+                    if (pos.getX() < minX) minX = pos.getX();
+                    if (pos.getY() < minY) minY = pos.getY();
+                    if (pos.getZ() < minZ) minZ = pos.getZ();
+                    if (pos.getX() > maxX) maxX = pos.getX();
+                    if (pos.getY() > maxY) maxY = pos.getY();
+                    if (pos.getZ() > maxZ) maxZ = pos.getZ();
+                }
+
+                int width = maxX - minX + 1;
+                int height = maxY - minY + 1;
+                int length = maxZ - minZ + 1;
+                int maxDim = Math.max(width, Math.max(height, length));
+
+                float scale = 30.0f * (5.0f / maxDim);
                 pose.scale(scale, -scale, -scale);
 
                 pose.mulPose(Axis.XP.rotationDegrees(30.0F));
                 pose.mulPose(Axis.YP.rotationDegrees(210.0F));
 
-                if (isFungus || isMushroom) {
-                    pose.translate(0, -3.5, 0);
-                } else {
-                    pose.translate(0, -2.0, 0);
-                }
+                float centerX = minX + (width - 1) / 2.0f;
+                float centerY = minY + (height - 1) / 2.0f;
+                float centerZ = minZ + (length - 1) / 2.0f;
+
+                pose.translate(-centerX, -centerY, -centerZ);
 
                 MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
-                Block logBlock = null;
-                Block leavesBlock = null;
-                Block rootsBlock = null;
+                var blockRenderer = Minecraft.getInstance().getBlockRenderer();
 
-                for (Object comp : composite.getComponents()) {
-                    if (comp instanceof Block b) {
-                        String path = BuiltInRegistries.BLOCK.getKey(b).getPath();
-                        if ((path.endsWith("_log") || path.endsWith("_stem") || path.endsWith("mushroom_stem") || path.endsWith("_hyphae") || path.endsWith("_wood")) && !path.startsWith("stripped_")) {
-                            if (logBlock == null) logBlock = b;
-                        }
-                        if (path.endsWith("_leaves") || path.endsWith("wart_block") || path.endsWith("mushroom_block")) {
-                            if (leavesBlock == null) leavesBlock = b;
-                        }
-                        if (path.endsWith("_roots") && !path.startsWith("potted_")) {
-                            if (rootsBlock == null) rootsBlock = b;
-                        }
-                    }
-                }
+                for (Map.Entry<BlockPos, BlockState> b : blocks.entrySet()) {
+                    BlockPos pos = b.getKey();
+                    BlockState state = b.getValue();
+                    if (state.isAir()) continue;
 
-                if (logBlock == null) logBlock = (Block) composite.getDisplayEntry();
-                if (leavesBlock == null) leavesBlock = logBlock;
-
-                if (isFungus) {
-                    renderFungus(pose, buffers, logBlock.defaultBlockState(), leavesBlock.defaultBlockState(), rootsBlock != null ? rootsBlock.defaultBlockState() : null);
-                } else if (isMushroom) {
-                    renderMushroom(pose, buffers, logBlock.defaultBlockState(), leavesBlock.defaultBlockState());
-                } else {
-                    renderMiniTree(pose, buffers, logBlock.defaultBlockState(), leavesBlock.defaultBlockState(), rootsBlock != null ? rootsBlock.defaultBlockState() : null);
+                    pose.pushPose();
+                    pose.translate(pos.getX(), pos.getY(), pos.getZ());
+                    blockRenderer.renderSingleBlock(state, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
+                    pose.popPose();
                 }
 
                 buffers.endBatch();
@@ -281,128 +284,105 @@ public class EntryRenderHelper {
         textureOpt.ifPresent(texture -> drawCachedTexture(guiGraphics, texture, x, y, size, size, silhouette, color, bounceScale));
     }
 
-    private static void renderMiniTree(PoseStack pose, MultiBufferSource.BufferSource buffers, BlockState log, BlockState leaves, BlockState roots) {
-        var blockRenderer = Minecraft.getInstance().getBlockRenderer();
+    private static Map<BlockPos, BlockState> getStructureBlocks(CompositeFieldGuideEntry entry) {
+        if (entry.structureNbt() != null) {
+            Map<BlockPos, BlockState> blocks = new HashMap<>();
+            ResourceLocation nbtLocation = entry.structureNbt();
+            ResourceLocation path = new ResourceLocation(nbtLocation.getNamespace(), "structures/" + nbtLocation.getPath() + ".nbt");
 
-        if (roots != null) {
-            pose.pushPose();
-            pose.translate(-0.5, 0, -0.5);
-            blockRenderer.renderSingleBlock(roots, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-            pose.popPose();
-        }
+            try {
+                var res = Minecraft.getInstance().getResourceManager().getResource(path);
+                if (res.isPresent()) {
+                    CompoundTag tag = NbtIo.readCompressed(res.get().open());
+                    StructureTemplate template = new StructureTemplate();
+                    template.load(BuiltInRegistries.BLOCK.asLookup(), tag);
 
-        int trunkStart = roots != null ? 1 : 0;
+                    List<StructureTemplate.Palette> palettes = ((StructureTemplateAccessor) template).getPalettes();
 
-        for (int y = trunkStart; y <= trunkStart + 3; y++) {
-            pose.pushPose();
-            pose.translate(-0.5, y, -0.5);
-            blockRenderer.renderSingleBlock(log, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-            pose.popPose();
-        }
-
-        int leafBase = trunkStart + 2;
-
-        for (int x = -1; x <= 1; x++) {
-            for (int z = -1; z <= 1; z++) {
-                if (x == 0 && z == 0) continue;
-                pose.pushPose();
-                pose.translate(x - 0.5, leafBase, z - 0.5);
-                blockRenderer.renderSingleBlock(leaves, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-                pose.popPose();
+                    if (!palettes.isEmpty()) {
+                        for (StructureTemplate.StructureBlockInfo info : palettes.get(0).blocks()) {
+                            blocks.put(info.pos(), info.state());
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                Constants.LOG.error("Failed to load structure NBT: {}", path, e);
             }
+            return blocks;
         }
 
-        for (int x = -1; x <= 1; x++) {
-            for (int z = -1; z <= 1; z++) {
-                if (x == 0 && z == 0) continue;
-                pose.pushPose();
-                pose.translate(x - 0.5, leafBase + 1, z - 0.5);
-                blockRenderer.renderSingleBlock(leaves, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-                pose.popPose();
-            }
-        }
-
-        for (int x = -1; x <= 1; x++) {
-            for (int z = -1; z <= 1; z++) {
-                if (Math.abs(x) == 1 && Math.abs(z) == 1) continue;
-                if (x == 0 && z == 0) continue;
-                pose.pushPose();
-                pose.translate(x - 0.5, leafBase + 2, z - 0.5);
-                blockRenderer.renderSingleBlock(leaves, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-                pose.popPose();
-            }
-        }
-
-        pose.pushPose();
-        pose.translate(-0.5, leafBase + 3, -0.5);
-        blockRenderer.renderSingleBlock(leaves, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-        pose.popPose();
+        return buildFallbackTree(entry);
     }
 
-    private static void renderFungus(PoseStack pose, MultiBufferSource.BufferSource buffers, BlockState stem, BlockState wart, BlockState roots) {
-        var blockRenderer = Minecraft.getInstance().getBlockRenderer();
-        if (roots != null) {
-            pose.pushPose();
-            pose.translate(-0.5, 0, -0.5);
-            blockRenderer.renderSingleBlock(roots, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-            pose.popPose();
+    private static Map<BlockPos, BlockState> buildFallbackTree(CompositeFieldGuideEntry composite) {
+        Map<BlockPos, BlockState> blocks = new HashMap<>();
+
+        Block logBlock = null;
+        Block leavesBlock = null;
+        Block rootsBlock = null;
+
+        if (composite.components() != null) {
+            for (Object comp : composite.components()) {
+                if (comp instanceof Block b) {
+                    String path = BuiltInRegistries.BLOCK.getKey(b).getPath();
+                    if ((path.endsWith("_log") || path.endsWith("_stem") || path.endsWith("mushroom_stem") || path.endsWith("_hyphae") || path.endsWith("_wood")) && !path.startsWith("stripped_")) {
+                        if (logBlock == null) logBlock = b;
+                    }
+                    if (path.endsWith("_leaves") || path.endsWith("wart_block") || path.endsWith("mushroom_block")) {
+                        if (leavesBlock == null) leavesBlock = b;
+                    }
+                    if (path.endsWith("_roots") && !path.startsWith("potted_")) {
+                        if (rootsBlock == null) rootsBlock = b;
+                    }
+                }
+            }
         }
 
-        int trunkStart = roots != null ? 1 : 0;
-        for (int y = trunkStart; y <= trunkStart + 4; y++) {
-            pose.pushPose();
-            pose.translate(-0.5, y, -0.5);
-            blockRenderer.renderSingleBlock(stem, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-            pose.popPose();
+        if (logBlock == null) logBlock = (Block) composite.displayEntry();
+        if (leavesBlock == null) leavesBlock = logBlock;
+
+        BlockState log = logBlock.defaultBlockState();
+        BlockState leaves = leavesBlock.defaultBlockState();
+        BlockState roots = rootsBlock != null ? rootsBlock.defaultBlockState() : null;
+
+        boolean isFungus = composite.displayEntry() instanceof Block b && BuiltInRegistries.BLOCK.getKey(b).getPath().endsWith("_fungus");
+        boolean isMushroom = composite.displayEntry() instanceof Block b && BuiltInRegistries.BLOCK.getKey(b).getPath().endsWith("_mushroom");
+
+        if (isFungus) {
+            if (roots != null) blocks.put(new BlockPos(0, 0, 0), roots);
+            int trunkStart = roots != null ? 1 : 0;
+            for (int y = trunkStart; y <= trunkStart + 4; y++) blocks.put(new BlockPos(0, y, 0), log);
+            int hatBase = trunkStart + 3;
+            for (int x = -1; x <= 1; x++)
+                for (int z = -1; z <= 1; z++) if (x != 0 || z != 0) blocks.put(new BlockPos(x, hatBase, z), leaves);
+            for (int x = -2; x <= 2; x++)
+                for (int z = -2; z <= 2; z++)
+                    if ((Math.abs(x) != 2 || Math.abs(z) != 2) && (x != 0 || z != 0))
+                        blocks.put(new BlockPos(x, hatBase + 1, z), leaves);
+            for (int x = -1; x <= 1; x++)
+                for (int z = -1; z <= 1; z++) blocks.put(new BlockPos(x, hatBase + 2, z), leaves);
+        } else if (isMushroom) {
+            for (int y = 0; y <= 3; y++) blocks.put(new BlockPos(0, y, 0), log);
+            int hatBase = 4;
+            for (int x = -2; x <= 2; x++) for (int z = -2; z <= 2; z++) blocks.put(new BlockPos(x, hatBase, z), leaves);
+        } else {
+            if (roots != null) blocks.put(new BlockPos(0, 0, 0), roots);
+            int trunkStart = roots != null ? 1 : 0;
+            for (int y = trunkStart; y <= trunkStart + 3; y++) blocks.put(new BlockPos(0, y, 0), log);
+            int leafBase = trunkStart + 2;
+            for (int x = -1; x <= 1; x++)
+                for (int z = -1; z <= 1; z++) if (x != 0 || z != 0) blocks.put(new BlockPos(x, leafBase, z), leaves);
+            for (int x = -1; x <= 1; x++)
+                for (int z = -1; z <= 1; z++)
+                    if (x != 0 || z != 0) blocks.put(new BlockPos(x, leafBase + 1, z), leaves);
+            for (int x = -1; x <= 1; x++)
+                for (int z = -1; z <= 1; z++)
+                    if (Math.abs(x) != 1 || Math.abs(z) != 1)
+                        if (x != 0 || z != 0) blocks.put(new BlockPos(x, leafBase + 2, z), leaves);
+            blocks.put(new BlockPos(0, leafBase + 3, 0), leaves);
         }
 
-        int hatBase = trunkStart + 3;
-        for (int x = -1; x <= 1; x++) {
-            for (int z = -1; z <= 1; z++) {
-                if (x == 0 && z == 0) continue;
-                pose.pushPose();
-                pose.translate(x - 0.5, hatBase, z - 0.5);
-                blockRenderer.renderSingleBlock(wart, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-                pose.popPose();
-            }
-        }
-        for (int x = -2; x <= 2; x++) {
-            for (int z = -2; z <= 2; z++) {
-                if (Math.abs(x) == 2 && Math.abs(z) == 2) continue;
-                if (x == 0 && z == 0) continue;
-                pose.pushPose();
-                pose.translate(x - 0.5, hatBase + 1, z - 0.5);
-                blockRenderer.renderSingleBlock(wart, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-                pose.popPose();
-            }
-        }
-        for (int x = -1; x <= 1; x++) {
-            for (int z = -1; z <= 1; z++) {
-                pose.pushPose();
-                pose.translate(x - 0.5, hatBase + 2, z - 0.5);
-                blockRenderer.renderSingleBlock(wart, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-                pose.popPose();
-            }
-        }
-    }
-
-    private static void renderMushroom(PoseStack pose, MultiBufferSource.BufferSource buffers, BlockState stem, BlockState block) {
-        var blockRenderer = Minecraft.getInstance().getBlockRenderer();
-        for (int y = 0; y <= 3; y++) {
-            pose.pushPose();
-            pose.translate(-0.5, y, -0.5);
-            blockRenderer.renderSingleBlock(stem, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-            pose.popPose();
-        }
-        int hatBase = 4;
-        for (int x = -2; x <= 2; x++) {
-            for (int z = -2; z <= 2; z++) {
-                pose.pushPose();
-                pose.translate(x - 0.5, hatBase, z - 0.5);
-                blockRenderer.renderSingleBlock(block, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-                pose.popPose();
-            }
-        }
+        return blocks;
     }
 
     private static void setupFieldGuideEntityLighting() {

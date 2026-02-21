@@ -66,7 +66,7 @@ public class EntryResolver {
                 }
 
                 if (displayEntry != null) {
-                    foundEntries.add(new CompositeFieldGuideEntry(entry.id(), displayEntry, components));
+                    foundEntries.add(new CompositeFieldGuideEntry(entry.id(), displayEntry, components, entry.structureNbt()));
                 }
             }
         }
@@ -179,7 +179,7 @@ public class EntryResolver {
             ResourceLocation saplingId = BuiltInRegistries.BLOCK.getKey(entry.getValue());
             List<Block> components = treeComponents.get(entry.getKey());
             if (!components.isEmpty()) {
-                results.add(new CompositeFieldGuideEntry(saplingId, entry.getValue(), new ArrayList<>(components)));
+                results.add(new CompositeFieldGuideEntry(saplingId, entry.getValue(), new ArrayList<>(components), null));
             } else {
                 results.add(entry.getValue());
             }
@@ -187,7 +187,7 @@ public class EntryResolver {
 
         results.addAll(loosePlants);
         results.sort(Comparator.comparing(p -> {
-            if (p instanceof CompositeFieldGuideEntry composite) return composite.getId().toString();
+            if (p instanceof CompositeFieldGuideEntry composite) return composite.id().toString();
             if (p instanceof Block b) return BuiltInRegistries.BLOCK.getKey(b).toString();
             return p.toString();
         }));
