@@ -26,8 +26,9 @@ public class ScreenMixin {
 
                 if (hoveredStack != null && !hoveredStack.isEmpty()) {
                     String query = "=^" + hoveredStack.getHoverName().getString().toLowerCase(Locale.ROOT);
-
-                    Minecraft.getInstance().setScreen(new FieldGuideScreen(query, (Screen) (Object) this));
+                    FieldGuideScreen screen = new FieldGuideScreen(query, (Screen) (Object) this);
+                    screen.setSearchItemStack(hoveredStack);
+                    Minecraft.getInstance().setScreen(screen);
                     cir.setReturnValue(true);
                 }
             }

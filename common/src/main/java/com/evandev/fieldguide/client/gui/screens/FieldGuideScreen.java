@@ -47,6 +47,7 @@ public class FieldGuideScreen extends BookScreen {
     private final Map<EntityType<?>, Entity> entryCache = new HashMap<>();
     public boolean isSearching = false;
     private boolean initialSearchFocus = false;
+    private ItemStack searchItemStack;
     private List<Object> currentEntries = new ArrayList<>();
     private List<Object> recentEntries = new ArrayList<>();
     private int currentPage = 0;
@@ -86,6 +87,10 @@ public class FieldGuideScreen extends BookScreen {
 
     public void setInitialSearchFocus(boolean focus) {
         this.initialSearchFocus = focus;
+    }
+
+    public void setSearchItemStack(ItemStack searchItemStack) {
+        this.searchItemStack = searchItemStack;
     }
 
     public List<Object> getCurrentEntries() {
@@ -198,6 +203,7 @@ public class FieldGuideScreen extends BookScreen {
 
         this.isSearching = !query.trim().isEmpty();
         this.searchQuery = query;
+        this.searchItemStack = null;
 
         if (!isSearching) {
             Category category = ClientFieldGuideManager.getCategories().get(lastOpenedCategory);
@@ -415,23 +421,29 @@ public class FieldGuideScreen extends BookScreen {
                         int iconX = this.leftPageBounds.left() + 3;
                         guiGraphics.blit(texture, iconX, iconY, 0, 0, iconSize, iconSize, iconSize, iconSize);
                         Component searchTitle = Component.translatable("biome." + biomeId.getNamespace() + "." + biomeId.getPath());
-                        guiGraphics.drawString(this.font, searchTitle, iconX + iconSize + 3, titleY, ModConfig.get().getTextColorInt(), false);
+
+                        renderTitle(guiGraphics, searchTitle, iconSize, ModConfig.get().getTextColorInt());
                     }
                 } else if (searchQuery.startsWith("=^")) {
                     String dropQuery = searchQuery.substring(2).toLowerCase(Locale.ROOT);
                     ItemStack displayStack = ItemStack.EMPTY;
                     String dropName = searchQuery.substring(2);
 
-                    for (Object entry : currentEntries) {
-                        List<ItemStack> drops = ClientFieldGuideManager.getInstance().getDrops(entry);
-                        for (ItemStack stack : drops) {
-                            if (stack.getHoverName().getString().toLowerCase(Locale.ROOT).equals(dropQuery)) {
-                                displayStack = stack;
-                                dropName = stack.getHoverName().getString();
-                                break;
+                    if (this.searchItemStack != null) {
+                        displayStack = this.searchItemStack;
+                        dropName = displayStack.getHoverName().getString();
+                    } else {
+                        for (Object entry : currentEntries) {
+                            List<ItemStack> drops = ClientFieldGuideManager.getInstance().getDrops(entry);
+                            for (ItemStack stack : drops) {
+                                if (stack.getHoverName().getString().toLowerCase(Locale.ROOT).equals(dropQuery)) {
+                                    displayStack = stack;
+                                    dropName = stack.getHoverName().getString();
+                                    break;
+                                }
                             }
+                            if (!displayStack.isEmpty()) break;
                         }
-                        if (!displayStack.isEmpty()) break;
                     }
 
                     int iconSize = 16;
@@ -440,24 +452,21 @@ public class FieldGuideScreen extends BookScreen {
 
                     if (!displayStack.isEmpty()) {
                         guiGraphics.renderItem(displayStack, iconX, iconY);
+                        renderTitle(guiGraphics, Component.translatable("gui.fieldguide.drops", dropName), iconSize, ModConfig.get().getTextColorInt());
                     } else {
-                        StringBuilder titleCase = new StringBuilder();
-                        for (String word : dropName.split("\\s+")) {
-                            if (!word.isEmpty()) {
-                                titleCase.append(Character.toUpperCase(word.charAt(0)))
-                                        .append(word.substring(1).toLowerCase(Locale.ROOT))
-                                        .append(" ");
-                            }
-                        }
-                        dropName = titleCase.toString().trim();
+                        renderTitle(guiGraphics, Component.translatable("gui.fieldguide.searching_drops"));
                     }
-
-                    guiGraphics.drawString(this.font, dropName, iconX + iconSize + 3, titleY, ModConfig.get().getTextColorInt(), false);
                 } else {
-                    guiGraphics.drawString(this.font, searchQuery, this.leftPageBounds.left() + 6, titleY, ModConfig.get().getTextMutedColorInt(), false);
+                    Component title = Component.translatable("gui.fieldguide.searching_name");
+                    if (searchQuery.startsWith("^")) {
+                        title = Component.translatable("gui.fieldguide.searching_drops");
+                    } else if (searchQuery.startsWith("!")) {
+                        title = Component.translatable("gui.fieldguide.searching_biomes");
+                    } else if (searchQuery.startsWith("#")) {
+                        title = Component.translatable("gui.fieldguide.searching_tags");
+                    }
+                    renderTitle(guiGraphics, title);
                 }
-
-
             } else {
                 int startIdx = (currentPage - 1) * ITEMS_PER_VIEW;
                 if (currentEntries.size() > startIdx + ITEMS_PER_PAGE) {
@@ -466,7 +475,7 @@ public class FieldGuideScreen extends BookScreen {
 
                 // Category Title
                 Component title = Component.translatable("category.fieldguide." + this.getSelectedCategory().getId().getPath());
-                guiGraphics.drawString(this.font, title, this.leftPageBounds.left() + 6, titleY, ModConfig.get().getTextMutedColorInt(), false);
+                renderTitle(guiGraphics, title);
             }
         }
 
@@ -488,6 +497,21 @@ public class FieldGuideScreen extends BookScreen {
         if (currentPage > 0 || isSearching) {
             renderGrid(guiGraphics, mouseX, mouseY);
         }
+    }
+
+    private void renderTitle(GuiGraphics guiGraphics, Component text) {
+        renderTitle(guiGraphics, text, 0, ModConfig.get().getTextMutedColorInt());
+    }
+
+    private void renderTitle(GuiGraphics guiGraphics, Component text, int offset, int color) {
+        int titleY = this.rightPageBounds.top() + 8;
+
+        int maxWidth = this.leftPageBounds.width() - 12 - offset;
+        String title = text.getString();
+        if (this.font.width(text) > maxWidth) {
+            title = font.plainSubstrByWidth(title, maxWidth) + "...";
+        }
+        guiGraphics.drawString(this.font, title, this.leftPageBounds.left() + 6 + offset, titleY, color, false);
     }
 
     private void renderCategoryInfo(GuiGraphics guiGraphics) {

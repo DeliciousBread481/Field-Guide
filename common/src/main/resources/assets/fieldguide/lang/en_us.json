@@ -5,6 +5,12 @@
   "gui.fieldguide.open": "Open Field Guide",
   "gui.fieldguide.search": "Search...",
   "gui.fieldguide.no_results": "No Results",
+  "gui.fieldguide.drops": "Drops %s",
+
+  "gui.fieldguide.searching_name": "Searching Name",
+  "gui.fieldguide.searching_drops": "Searching Drops",
+  "gui.fieldguide.searching_biomes": "Searching Biomes",
+  "gui.fieldguide.searching_tags": "Searching Tags",
 
   "category.fieldguide.main": "Field Guide",
   "category.fieldguide.general": "General Settings",
