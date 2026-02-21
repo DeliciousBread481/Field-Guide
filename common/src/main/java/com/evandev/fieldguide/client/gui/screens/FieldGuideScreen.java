@@ -26,7 +26,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.*;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
@@ -678,7 +678,7 @@ public class FieldGuideScreen extends BookScreen {
         Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
 
         if (entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() instanceof Block block) {
-            boolean isTree = block.getName().getString().endsWith(" Sapling") || block.getName().getString().endsWith(" Fungus") || block.getName().getString().endsWith(" Propagule") || block.getName().getString().endsWith(" Mushroom");
+            boolean isTree = block instanceof SaplingBlock || block instanceof FungusBlock || block instanceof MushroomBlock || block instanceof MangrovePropaguleBlock;
             if (isTree) {
                 EntryRenderHelper.renderStructure(guiGraphics, composite, x, y, CELL_SIZE - 4, !unlocked, false, 1.0F);
             } else {

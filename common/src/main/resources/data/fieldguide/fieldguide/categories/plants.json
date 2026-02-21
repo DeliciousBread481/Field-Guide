@@ -2,6 +2,128 @@
   "sort_index": 3,
   "contents": [
     {
+      "type": "composite",
+      "id": "minecraft:oak_sapling",
+      "structure_nbt": "fieldguide:oak_tree",
+      "components": [
+        "minecraft:oak_log",
+        "minecraft:oak_leaves"
+      ]
+    },
+    {
+      "type": "composite",
+      "id": "minecraft:spruce_sapling",
+      "structure_nbt": "fieldguide:spruce_tree",
+      "components": [
+        "minecraft:spruce_log",
+        "minecraft:spruce_leaves"
+      ]
+    },
+    {
+      "type": "composite",
+      "id": "minecraft:birch_sapling",
+      "structure_nbt": "fieldguide:birch_tree",
+      "components": [
+        "minecraft:birch_log",
+        "minecraft:birch_leaves"
+      ]
+    },
+    {
+      "type": "composite",
+      "id": "minecraft:jungle_sapling",
+      "structure_nbt": "fieldguide:jungle_tree",
+      "components": [
+        "minecraft:jungle_log",
+        "minecraft:jungle_leaves"
+      ]
+    },
+    {
+      "type": "composite",
+      "id": "minecraft:acacia_sapling",
+      "structure_nbt": "fieldguide:acacia_tree",
+      "components": [
+        "minecraft:acacia_log",
+        "minecraft:acacia_leaves"
+      ]
+    },
+    {
+      "type": "composite",
+      "id": "minecraft:dark_oak_sapling",
+      "structure_nbt": "fieldguide:dark_oak_tree",
+      "components": [
+        "minecraft:dark_oak_log",
+        "minecraft:dark_oak_leaves"
+      ]
+    },
+    {
+      "type": "composite",
+      "id": "minecraft:mangrove_propagule",
+      "structure_nbt": "fieldguide:mangrove_tree",
+      "components": [
+        "minecraft:mangrove_log",
+        "minecraft:mangrove_leaves",
+        "minecraft:mangrove_roots",
+        "minecraft:muddy_mangrove_roots"
+      ]
+    },
+    {
+      "type": "composite",
+      "id": "minecraft:cherry_sapling",
+      "structure_nbt": "fieldguide:cherry_tree",
+      "components": [
+        "minecraft:cherry_log",
+        "minecraft:cherry_leaves"
+      ]
+    },
+    {
+      "type": "composite",
+      "id": "minecraft:azalea",
+      "structure_nbt": "fieldguide:azalea_tree",
+      "components": [
+        "minecraft:oak_log",
+        "minecraft:azalea_leaves",
+        "minecraft:flowering_azalea_leaves"
+      ]
+    },
+    {
+      "type": "composite",
+      "id": "minecraft:crimson_fungus",
+      "structure_nbt": "fieldguide:huge_crimson_fungus",
+      "components": [
+        "minecraft:crimson_stem",
+        "minecraft:nether_wart_block",
+        "minecraft:shroomlight"
+      ]
+    },
+    {
+      "type": "composite",
+      "id": "minecraft:warped_fungus",
+      "structure_nbt": "fieldguide:huge_warped_fungus",
+      "components": [
+        "minecraft:warped_stem",
+        "minecraft:warped_wart_block",
+        "minecraft:shroomlight"
+      ]
+    },
+    {
+      "type": "composite",
+      "id": "minecraft:brown_mushroom",
+      "structure_nbt": "fieldguide:huge_brown_mushroom",
+      "components": [
+        "minecraft:brown_mushroom_block",
+        "minecraft:mushroom_stem"
+      ]
+    },
+    {
+      "type": "composite",
+      "id": "minecraft:red_mushroom",
+      "structure_nbt": "fieldguide:huge_red_mushroom",
+      "components": [
+        "minecraft:red_mushroom_block",
+        "minecraft:mushroom_stem"
+      ]
+    },
+    {
       "type": "auto_populate",
       "strategy": "plants"
     }

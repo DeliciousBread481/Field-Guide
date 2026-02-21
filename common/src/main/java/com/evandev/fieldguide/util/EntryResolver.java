@@ -29,48 +29,49 @@ public class EntryResolver {
 
     public static List<Object> resolveCategoryEntries(Category category, ModConfig config) {
         Set<Object> foundEntries = new LinkedHashSet<>();
+        Set<ResourceLocation> addedIds = new HashSet<>();
 
         for (CategoryEntry entry : category.getEntries()) {
             if (entry.type() == CategoryEntry.Type.ENTRY && entry.id() != null) {
-                BuiltInRegistries.ENTITY_TYPE.getOptional(entry.id()).filter(t -> isValidEntity(t, config)).ifPresent(foundEntries::add);
-                BuiltInRegistries.BLOCK.getOptional(entry.id()).filter(b -> isValidBlock(b, config)).ifPresent(foundEntries::add);
-            } else if (entry.type() == CategoryEntry.Type.AUTO_POPULATE) {
-                foundEntries.addAll(getEntriesForStrategy(entry.strategy(), config));
-            } else if (entry.type() == CategoryEntry.Type.COMPOSITE) {
-                if (entry.id() == null) continue;
-                List<Object> components = new ArrayList<>();
-                Object displayEntry = null;
-
-                Optional<EntityType<?>> entityType = BuiltInRegistries.ENTITY_TYPE.getOptional(entry.id());
-                if (entityType.isPresent() && isValidEntity(entityType.get(), config)) {
-                    displayEntry = entityType.get();
-                } else {
-                    Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(entry.id());
-                    if (block.isPresent() && isValidBlock(block.get(), config)) {
-                        displayEntry = block.get();
-                    }
-                }
-
-                if (entry.components() != null) {
-                    for (ResourceLocation compId : entry.components()) {
-                        Optional<EntityType<?>> compEntity = BuiltInRegistries.ENTITY_TYPE.getOptional(compId);
-                        if (compEntity.isPresent() && isValidEntity(compEntity.get(), config)) {
-                            components.add(compEntity.get());
-                        } else {
-                            Optional<Block> compBlock = BuiltInRegistries.BLOCK.getOptional(compId);
-                            if (compBlock.isPresent() && isValidBlock(compBlock.get(), config)) {
-                                components.add(compBlock.get());
-                            }
+                resolveSingleEntry(entry.id(), config).ifPresent(e -> {
+                    foundEntries.add(e);
+                    addedIds.add(entry.id());
+                });
+            } else if (entry.type() == CategoryEntry.Type.COMPOSITE && entry.id() != null) {
+                resolveSingleEntry(entry.id(), config).ifPresent(displayEntry -> {
+                    List<Object> components = new ArrayList<>();
+                    if (entry.components() != null) {
+                        for (ResourceLocation compId : entry.components()) {
+                            resolveSingleEntry(compId, config).ifPresent(components::add);
                         }
                     }
-                }
-
-                if (displayEntry != null) {
                     foundEntries.add(new CompositeFieldGuideEntry(entry.id(), displayEntry, components, entry.structureNbt()));
+                    addedIds.add(entry.id());
+                });
+            } else if (entry.type() == CategoryEntry.Type.AUTO_POPULATE) {
+                for (Object obj : getEntriesForStrategy(entry.strategy(), config)) {
+                    ResourceLocation id = null;
+                    if (obj instanceof Block b) id = BuiltInRegistries.BLOCK.getKey(b);
+                    else if (obj instanceof EntityType<?> e) id = BuiltInRegistries.ENTITY_TYPE.getKey(e);
+                    else if (obj instanceof CompositeFieldGuideEntry c) id = c.id();
+
+                    if (id != null && !addedIds.contains(id)) {
+                        foundEntries.add(obj);
+                        addedIds.add(id);
+                    }
                 }
             }
         }
         return new ArrayList<>(foundEntries);
+    }
+
+    private static Optional<Object> resolveSingleEntry(ResourceLocation id, ModConfig config) {
+        return BuiltInRegistries.ENTITY_TYPE.getOptional(id)
+                .filter(t -> isValidEntity(t, config))
+                .map(Object.class::cast)
+                .or(() -> BuiltInRegistries.BLOCK.getOptional(id)
+                        .filter(b -> isValidBlock(b, config))
+                        .map(Object.class::cast));
     }
 
     private static List<Object> getEntriesForStrategy(String strategy, ModConfig config) {
@@ -105,94 +106,13 @@ public class EntryResolver {
     }
 
     private static List<Object> getPlants(Predicate<ResourceLocation> namespaceFilter, ModConfig config) {
-        List<Object> results = new ArrayList<>();
-        Map<String, Block> saplings = new HashMap<>();
-        Map<String, List<Block>> treeComponents = new HashMap<>();
-        List<Block> loosePlants = new ArrayList<>();
-
-        for (Block block : BuiltInRegistries.BLOCK) {
-            ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
-            if (!namespaceFilter.test(id) || !isValidBlock(block, config)) continue;
-
-            String path = id.getPath();
-            if (path.endsWith("_sapling") && !path.startsWith("potted_")) {
-                String prefix = path.substring(0, path.length() - "_sapling".length());
-                String key = id.getNamespace() + ":" + prefix;
-                saplings.put(key, block);
-                treeComponents.put(key, new ArrayList<>());
-            } else if (path.endsWith("_fungus") && !path.startsWith("potted_")) {
-                String prefix = path.substring(0, path.length() - "_fungus".length());
-                String key = id.getNamespace() + ":" + prefix;
-                saplings.put(key, block);
-                treeComponents.put(key, new ArrayList<>());
-            } else if (path.endsWith("_propagule") && !path.startsWith("potted_")) {
-                String prefix = path.substring(0, path.length() - "_propagule".length());
-                String key = id.getNamespace() + ":" + prefix;
-                saplings.put(key, block);
-                treeComponents.put(key, new ArrayList<>());
-            } else if (path.equals("brown_mushroom") || path.equals("red_mushroom")) {
-                String key = id.getNamespace() + ":" + path;
-                saplings.put(key, block);
-                treeComponents.put(key, new ArrayList<>());
-            }
-        }
-
-        for (Block block : BuiltInRegistries.BLOCK) {
-            ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
-            if (!namespaceFilter.test(id) || !isValidBlock(block, config)) continue;
-            String path = id.getPath();
-
-            boolean addedToTree = false;
-            for (String key : saplings.keySet()) {
-                String[] parts = key.split(":");
-                String namespace = parts[0];
-                String prefix = parts[1];
-
-                if (id.getNamespace().equals(namespace)) {
-                    if (path.equals(prefix + "_log") || path.equals(prefix + "_leaves") ||
-                            path.equals("stripped_" + prefix + "_log") || path.equals(prefix + "_wood") ||
-                            path.equals("stripped_" + prefix + "_wood") ||
-                            path.equals(prefix + "_stem") || path.equals("stripped_" + prefix + "_stem") ||
-                            path.equals(prefix + "_hyphae") || path.equals("stripped_" + prefix + "_hyphae") ||
-                            path.equals(prefix + "_roots") || path.equals("muddy_" + prefix + "_roots")) {
-                        treeComponents.get(key).add(block);
-                        addedToTree = true;
-                        break;
-                    }
-                    if (prefix.equals("brown_mushroom") && (path.equals("brown_mushroom_block") || path.equals("mushroom_stem"))) {
-                        treeComponents.get(key).add(block);
-                        addedToTree = true;
-                    }
-                    if (prefix.equals("red_mushroom") && (path.equals("red_mushroom_block") || path.equals("mushroom_stem"))) {
-                        treeComponents.get(key).add(block);
-                        addedToTree = true;
-                    }
-                }
-            }
-
-            if (!addedToTree && !path.endsWith("_sapling") && !path.endsWith("_fungus") && !path.endsWith("_propagule")) {
-                if (isPlant(block)) loosePlants.add(block);
-            }
-        }
-
-        for (Map.Entry<String, Block> entry : saplings.entrySet()) {
-            ResourceLocation saplingId = BuiltInRegistries.BLOCK.getKey(entry.getValue());
-            List<Block> components = treeComponents.get(entry.getKey());
-            if (!components.isEmpty()) {
-                results.add(new CompositeFieldGuideEntry(saplingId, entry.getValue(), new ArrayList<>(components), null));
-            } else {
-                results.add(entry.getValue());
-            }
-        }
-
-        results.addAll(loosePlants);
-        results.sort(Comparator.comparing(p -> {
-            if (p instanceof CompositeFieldGuideEntry composite) return composite.id().toString();
-            if (p instanceof Block b) return BuiltInRegistries.BLOCK.getKey(b).toString();
-            return p.toString();
-        }));
-
-        return results;
+        return BuiltInRegistries.BLOCK.stream()
+                .filter(b -> namespaceFilter.test(BuiltInRegistries.BLOCK.getKey(b)))
+                .filter(b -> isValidBlock(b, config))
+                .filter(EntryResolver::isPlant)
+                .sorted(Comparator.comparing(b -> BuiltInRegistries.BLOCK.getKey(b).toString()))
+                .map(Object.class::cast)
+                .toList();
     }
 
     private static boolean isPlant(Block block) {

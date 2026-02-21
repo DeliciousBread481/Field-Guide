@@ -285,9 +285,11 @@ public class EntryRenderHelper {
     }
 
     private static Map<BlockPos, BlockState> getStructureBlocks(CompositeFieldGuideEntry entry) {
+        Map<BlockPos, BlockState> blocks = new HashMap<>();
+
         if (entry.structureNbt() != null) {
-            Map<BlockPos, BlockState> blocks = new HashMap<>();
             ResourceLocation nbtLocation = entry.structureNbt();
+            // Assumes structures are placed in: assets/<namespace>/structures/<path>.nbt
             ResourceLocation path = new ResourceLocation(nbtLocation.getNamespace(), "structures/" + nbtLocation.getPath() + ".nbt");
 
             try {
@@ -308,78 +310,6 @@ public class EntryRenderHelper {
             } catch (Exception e) {
                 Constants.LOG.error("Failed to load structure NBT: {}", path, e);
             }
-            return blocks;
-        }
-
-        return buildFallbackTree(entry);
-    }
-
-    private static Map<BlockPos, BlockState> buildFallbackTree(CompositeFieldGuideEntry composite) {
-        Map<BlockPos, BlockState> blocks = new HashMap<>();
-
-        Block logBlock = null;
-        Block leavesBlock = null;
-        Block rootsBlock = null;
-
-        if (composite.components() != null) {
-            for (Object comp : composite.components()) {
-                if (comp instanceof Block b) {
-                    String path = BuiltInRegistries.BLOCK.getKey(b).getPath();
-                    if ((path.endsWith("_log") || path.endsWith("_stem") || path.endsWith("mushroom_stem") || path.endsWith("_hyphae") || path.endsWith("_wood")) && !path.startsWith("stripped_")) {
-                        if (logBlock == null) logBlock = b;
-                    }
-                    if (path.endsWith("_leaves") || path.endsWith("wart_block") || path.endsWith("mushroom_block")) {
-                        if (leavesBlock == null) leavesBlock = b;
-                    }
-                    if (path.endsWith("_roots") && !path.startsWith("potted_")) {
-                        if (rootsBlock == null) rootsBlock = b;
-                    }
-                }
-            }
-        }
-
-        if (logBlock == null) logBlock = (Block) composite.displayEntry();
-        if (leavesBlock == null) leavesBlock = logBlock;
-
-        BlockState log = logBlock.defaultBlockState();
-        BlockState leaves = leavesBlock.defaultBlockState();
-        BlockState roots = rootsBlock != null ? rootsBlock.defaultBlockState() : null;
-
-        boolean isFungus = composite.displayEntry() instanceof Block b && BuiltInRegistries.BLOCK.getKey(b).getPath().endsWith("_fungus");
-        boolean isMushroom = composite.displayEntry() instanceof Block b && BuiltInRegistries.BLOCK.getKey(b).getPath().endsWith("_mushroom");
-
-        if (isFungus) {
-            if (roots != null) blocks.put(new BlockPos(0, 0, 0), roots);
-            int trunkStart = roots != null ? 1 : 0;
-            for (int y = trunkStart; y <= trunkStart + 4; y++) blocks.put(new BlockPos(0, y, 0), log);
-            int hatBase = trunkStart + 3;
-            for (int x = -1; x <= 1; x++)
-                for (int z = -1; z <= 1; z++) if (x != 0 || z != 0) blocks.put(new BlockPos(x, hatBase, z), leaves);
-            for (int x = -2; x <= 2; x++)
-                for (int z = -2; z <= 2; z++)
-                    if ((Math.abs(x) != 2 || Math.abs(z) != 2) && (x != 0 || z != 0))
-                        blocks.put(new BlockPos(x, hatBase + 1, z), leaves);
-            for (int x = -1; x <= 1; x++)
-                for (int z = -1; z <= 1; z++) blocks.put(new BlockPos(x, hatBase + 2, z), leaves);
-        } else if (isMushroom) {
-            for (int y = 0; y <= 3; y++) blocks.put(new BlockPos(0, y, 0), log);
-            int hatBase = 4;
-            for (int x = -2; x <= 2; x++) for (int z = -2; z <= 2; z++) blocks.put(new BlockPos(x, hatBase, z), leaves);
-        } else {
-            if (roots != null) blocks.put(new BlockPos(0, 0, 0), roots);
-            int trunkStart = roots != null ? 1 : 0;
-            for (int y = trunkStart; y <= trunkStart + 3; y++) blocks.put(new BlockPos(0, y, 0), log);
-            int leafBase = trunkStart + 2;
-            for (int x = -1; x <= 1; x++)
-                for (int z = -1; z <= 1; z++) if (x != 0 || z != 0) blocks.put(new BlockPos(x, leafBase, z), leaves);
-            for (int x = -1; x <= 1; x++)
-                for (int z = -1; z <= 1; z++)
-                    if (x != 0 || z != 0) blocks.put(new BlockPos(x, leafBase + 1, z), leaves);
-            for (int x = -1; x <= 1; x++)
-                for (int z = -1; z <= 1; z++)
-                    if (Math.abs(x) != 1 || Math.abs(z) != 1)
-                        if (x != 0 || z != 0) blocks.put(new BlockPos(x, leafBase + 2, z), leaves);
-            blocks.put(new BlockPos(0, leafBase + 3, 0), leaves);
         }
 
         return blocks;

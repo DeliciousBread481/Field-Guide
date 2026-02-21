@@ -4,6 +4,7 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CategoryEntry;
+import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
@@ -12,6 +13,7 @@ import com.evandev.fieldguide.util.EntryResolver;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -20,7 +22,9 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Reader;
@@ -41,8 +45,35 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
     }
 
     public void syncToPlayer(ServerPlayer player) {
-        List<Category> categoryList = new ArrayList<>(categories.values());
-        Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(categoryList), player);
+        List<Category> flattenedCategories = new ArrayList<>();
+
+        for (Category rawCat : categories.values()) {
+            Category flatCat = new Category(rawCat.getId());
+            flatCat.setSortIndex(rawCat.getSortIndex());
+            List<Object> resolved = resolvedCategoryEntries.get(rawCat.getId());
+
+            if (resolved != null) {
+                for (Object obj : resolved) {
+                    if (obj instanceof EntityType<?> type) {
+                        flatCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.ENTITY_TYPE.getKey(type), null, null, null));
+                    } else if (obj instanceof Block block) {
+                        flatCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.BLOCK.getKey(block), null, null, null));
+                    } else if (obj instanceof CompositeFieldGuideEntry comp) {
+                        List<ResourceLocation> compIds = new ArrayList<>();
+                        if (comp.components() != null) {
+                            for (Object c : comp.components()) {
+                                if (c instanceof EntityType<?> t) compIds.add(BuiltInRegistries.ENTITY_TYPE.getKey(t));
+                                else if (c instanceof Block b) compIds.add(BuiltInRegistries.BLOCK.getKey(b));
+                            }
+                        }
+                        flatCat.addEntry(new CategoryEntry(CategoryEntry.Type.COMPOSITE, comp.id(), null, compIds, comp.structureNbt()));
+                    }
+                }
+            }
+            flattenedCategories.add(flatCat);
+        }
+
+        Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(flattenedCategories), player);
 
         if (!serverLootCache.isEmpty()) {
             Services.NETWORK.sendToPlayer(new SyncLootPacket(serverLootCache), player);
