@@ -21,8 +21,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -79,6 +78,25 @@ public class ScanOverlayRenderer {
         }
     }
 
+    private static boolean isMultiblockPlant(Block block) {
+        return block instanceof CactusBlock ||
+                block instanceof SugarCaneBlock ||
+                block instanceof BambooStalkBlock ||
+                block instanceof KelpBlock ||
+                block instanceof KelpPlantBlock ||
+                block instanceof TallGrassBlock ||
+                block instanceof DoublePlantBlock ||
+                block instanceof VineBlock ||
+                block instanceof WeepingVinesBlock ||
+                block instanceof WeepingVinesPlantBlock ||
+                block instanceof TwistingVinesBlock ||
+                block instanceof TwistingVinesPlantBlock ||
+                block instanceof CaveVinesBlock ||
+                block instanceof CaveVinesPlantBlock ||
+                block instanceof ChorusPlantBlock ||
+                block instanceof ChorusFlowerBlock;
+    }
+
     private static void renderBlockOverlay(PoseStack poseStack, float partialTick, Vec3 camPos, MultiBufferSource.BufferSource bufferSource, BlockPos targetBlock, FieldGuideScanner scanner, Minecraft mc, float red, float green, float blue, float alpha) {
         boolean isOutOfRange = scanner.getOutOfRangePos() != null && targetBlock == scanner.getOutOfRangePos();
         float progress = isOutOfRange ? 1.0f : (scanner.getScanningTarget() != null ? scanner.getScanProgress(partialTick) : scanner.getFadeProgress(partialTick));
@@ -86,7 +104,8 @@ public class ScanOverlayRenderer {
 
         float fillHeight = scanner.getScanningTarget() != null ? progress : 1.0f;
 
-        Object entry = ClientFieldGuideManager.getInstance().getEntryForTarget(mc.level.getBlockState(targetBlock).getBlock());
+        Block targetBlockType = mc.level.getBlockState(targetBlock).getBlock();
+        Object entry = ClientFieldGuideManager.getInstance().getEntryForTarget(targetBlockType);
         Set<BlockPos> blocksToRender = new HashSet<>();
         blocksToRender.add(targetBlock);
 
@@ -102,6 +121,24 @@ public class ScanOverlayRenderer {
                     if (!blocksToRender.contains(neighbor)) {
                         Block neighborBlock = mc.level.getBlockState(neighbor).getBlock();
                         if (composite.components().contains(neighborBlock) || composite.displayEntry() == neighborBlock) {
+                            blocksToRender.add(neighbor);
+                            queue.add(neighbor);
+                        }
+                    }
+                }
+            }
+        } else if (isMultiblockPlant(targetBlockType)) {
+            Queue<BlockPos> queue = new LinkedList<>();
+            queue.add(targetBlock);
+            int maxBlocks = 100;
+
+            while (!queue.isEmpty() && blocksToRender.size() < maxBlocks) {
+                BlockPos pos = queue.poll();
+                for (Direction dir : Direction.values()) {
+                    BlockPos neighbor = pos.relative(dir);
+                    if (!blocksToRender.contains(neighbor)) {
+                        Block neighborBlock = mc.level.getBlockState(neighbor).getBlock();
+                        if (neighborBlock == targetBlockType) {
                             blocksToRender.add(neighbor);
                             queue.add(neighbor);
                         }

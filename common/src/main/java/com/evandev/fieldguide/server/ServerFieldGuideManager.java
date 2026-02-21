@@ -83,8 +83,25 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
     private void resolveAllCategories() {
         resolvedCategoryEntries.clear();
         ModConfig config = ModConfig.get();
+        Set<Object> allCompositeComponents = new HashSet<>();
+
         for (Category cat : categories.values()) {
-            resolvedCategoryEntries.put(cat.getId(), EntryResolver.resolveCategoryEntries(cat, config));
+            List<Object> entries = EntryResolver.resolveCategoryEntries(cat, config);
+            for (Object entry : entries) {
+                if (entry instanceof CompositeFieldGuideEntry composite) {
+                    if (composite.components() != null) {
+                        allCompositeComponents.addAll(composite.components());
+                    }
+                    if (composite.displayEntry() != null) {
+                        allCompositeComponents.add(composite.displayEntry());
+                    }
+                }
+            }
+            resolvedCategoryEntries.put(cat.getId(), entries);
+        }
+
+        for (List<Object> entries : resolvedCategoryEntries.values()) {
+            entries.removeIf(entry -> !(entry instanceof CompositeFieldGuideEntry) && allCompositeComponents.contains(entry));
         }
     }
 

@@ -14,6 +14,7 @@ import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.util.EntryResolver;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -178,7 +179,6 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         resolveAllEntries();
     }
 
-
     public void updateLootCache(Map<ResourceLocation, List<ItemStack>> lootCache) {
         this.dropCache.clear();
 
@@ -261,9 +261,26 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     private void resolveAllEntries() {
         resolvedCategoryEntries.clear();
         ModConfig config = ModConfig.get();
+        Set<Object> allCompositeComponents = new HashSet<>();
+
         syncedCategories.values().forEach(category -> {
-            resolvedCategoryEntries.put(category.getId(), EntryResolver.resolveCategoryEntries(category, config));
+            List<Object> entries = EntryResolver.resolveCategoryEntries(category, config);
+            for (Object entry : entries) {
+                if (entry instanceof CompositeFieldGuideEntry composite) {
+                    if (composite.components() != null) {
+                        allCompositeComponents.addAll(composite.components());
+                    }
+                    if (composite.displayEntry() != null) {
+                        allCompositeComponents.add(composite.displayEntry());
+                    }
+                }
+            }
+            resolvedCategoryEntries.put(category.getId(), entries);
         });
+
+        for (List<Object> entries : resolvedCategoryEntries.values()) {
+            entries.removeIf(entry -> !(entry instanceof CompositeFieldGuideEntry) && allCompositeComponents.contains(entry));
+        }
     }
 
     public List<Object> getEntriesForCategory(Category category) {
@@ -291,23 +308,43 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public List<ItemStack> getDrops(Object entry) {
-        List<ItemStack> rawDrops;
+        List<ItemStack> rawDrops = new ArrayList<>();
         if (entry instanceof CompositeFieldGuideEntry composite) {
-            rawDrops = new ArrayList<>(dropCache.getOrDefault(composite.displayEntry(), Collections.emptyList()));
-            for (Object comp : composite.components()) {
+            Set<Object> uniqueComponents = new HashSet<>();
+            if (composite.displayEntry() != null) uniqueComponents.add(composite.displayEntry());
+            if (composite.components() != null) uniqueComponents.addAll(composite.components());
+            for (Object comp : uniqueComponents) {
                 rawDrops.addAll(dropCache.getOrDefault(comp, Collections.emptyList()));
             }
         } else {
-            rawDrops = dropCache.getOrDefault(entry, Collections.emptyList());
+            rawDrops.addAll(dropCache.getOrDefault(entry, Collections.emptyList()));
         }
 
         List<ItemStack> distinct = new ArrayList<>();
         for (ItemStack stack : rawDrops) {
-            if (distinct.stream().noneMatch(s -> ItemStack.isSameItemSameTags(s, stack))) {
+            if (distinct.stream().noneMatch(s -> isSameLootItem(s, stack))) {
                 distinct.add(stack);
             }
         }
         return distinct;
+    }
+
+    private boolean isSameLootItem(ItemStack a, ItemStack b) {
+        if (!ItemStack.isSameItem(a, b)) return false;
+        if (a.getTag() == b.getTag()) return true;
+        if (a.getTag() == null || b.getTag() == null) return false;
+
+        CompoundTag tagA = a.getTag().copy();
+        tagA.remove("FieldGuideDropChance");
+        tagA.remove("FieldGuideMin");
+        tagA.remove("FieldGuideMax");
+
+        CompoundTag tagB = b.getTag().copy();
+        tagB.remove("FieldGuideDropChance");
+        tagB.remove("FieldGuideMin");
+        tagB.remove("FieldGuideMax");
+
+        return tagA.equals(tagB);
     }
 
     public void onClientTick(net.minecraft.client.Minecraft minecraft) {
