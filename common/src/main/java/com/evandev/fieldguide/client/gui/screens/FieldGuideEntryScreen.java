@@ -239,7 +239,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         if (button == 0 && (renderedEntity != null || clickEntry instanceof Block)) {
             int xPos = leftPageBounds.left() + leftPageBounds.width() / 2;
-            int yPos = leftPageBounds.y_center();
+            int yPos = leftPageBounds.y_center() - 18;
             if (mouseX >= xPos - 50 && mouseX <= xPos + 50 && mouseY >= yPos - 50 && mouseY <= yPos + 50) {
                 if (ClientFieldGuideManager.isUnlocked(entry)) {
                     ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
@@ -343,7 +343,14 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
 
-        if (renderEntry instanceof EntityType && renderedEntity instanceof LivingEntity living) {
+        if (entry instanceof CompositeFieldGuideEntry composite && composite.getDisplayEntry() instanceof Block block) {
+            boolean isTree = block.getName().getString().endsWith(" Sapling") || block.getName().getString().endsWith(" Fungus") || block.getName().getString().endsWith(" Propagule");
+            if (isTree) {
+                EntryRenderHelper.renderStructure(guiGraphics, composite, xPos, yPos, 80, !unlocked, true, bounce);
+            } else {
+                EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 30.0F, !unlocked, true, bounce);
+            }
+        } else if (renderEntry instanceof EntityType && renderedEntity instanceof LivingEntity living) {
             EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, !unlocked, ModConfig.get().getDetailsSilhouetteColorInt(), true, bounce);
             if (unlocked) renderAttributes(guiGraphics, living);
         } else if (renderEntry instanceof Block block) {

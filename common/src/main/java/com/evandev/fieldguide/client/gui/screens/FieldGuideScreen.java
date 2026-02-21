@@ -677,7 +677,14 @@ public class FieldGuideScreen extends BookScreen {
     private void renderEntryInGrid(GuiGraphics guiGraphics, Object entry, int x, int y, int scale, boolean unlocked) {
         Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
 
-        if (coreEntry instanceof EntityType<?> type) {
+        if (entry instanceof CompositeFieldGuideEntry composite && composite.getDisplayEntry() instanceof Block block) {
+            boolean isTree = block.getName().getString().endsWith(" Sapling") || block.getName().getString().endsWith(" Fungus") || block.getName().getString().endsWith(" Propagule");
+            if (isTree) {
+                EntryRenderHelper.renderStructure(guiGraphics, composite, x, y, CELL_SIZE - 4, !unlocked, false, 1.0F);
+            } else {
+                EntryRenderHelper.renderBlock(guiGraphics, block, x, y, 15.0F, !unlocked, false, 1.0F);
+            }
+        } else if (coreEntry instanceof EntityType<?> type) {
             if (this.minecraft != null && this.minecraft.level != null) {
                 Entity entity = entryCache.get(type);
                 if (entity == null && !entryCache.containsKey(type)) {
