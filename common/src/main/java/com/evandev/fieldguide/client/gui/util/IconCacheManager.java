@@ -38,6 +38,10 @@ public class IconCacheManager {
     }
 
     public static void clearCache() {
+        Minecraft mc = Minecraft.getInstance();
+        for (ResourceLocation id : TEXTURE_CACHE.values()) {
+            mc.getTextureManager().release(id);
+        }
         TEXTURE_CACHE.clear();
     }
 

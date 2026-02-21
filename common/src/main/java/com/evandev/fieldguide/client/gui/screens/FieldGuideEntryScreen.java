@@ -30,7 +30,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 
 import java.text.SimpleDateFormat;
@@ -344,8 +344,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
 
         if (entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() instanceof Block block) {
-            boolean isTree = block instanceof SaplingBlock || block instanceof FungusBlock || block instanceof MushroomBlock || block instanceof MangrovePropaguleBlock;
-            if (isTree) {
+            if (composite.structureNbt() != null) {
                 EntryRenderHelper.renderStructure(guiGraphics, composite, xPos, yPos, 80, !unlocked, true, bounce);
             } else {
                 EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 30.0F, !unlocked, true, bounce);

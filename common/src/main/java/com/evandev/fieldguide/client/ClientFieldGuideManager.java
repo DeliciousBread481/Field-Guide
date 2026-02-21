@@ -96,23 +96,18 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         String custom = ProgressManager.getInstance().getCustomName(entry);
         if (custom != null) return Component.literal(custom);
 
+        ResourceLocation id = getEntryId(entry);
+        if (id != null) {
+            String overrideKey = "fieldguide.name." + id.getNamespace() + "." + id.getPath();
+            if (I18n.exists(overrideKey)) {
+                return Component.translatable(overrideKey);
+            }
+        }
+
         Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
         if (coreEntry instanceof EntityType<?> type) return type.getDescription();
-        if (coreEntry instanceof Block block) {
-            if (entry instanceof CompositeFieldGuideEntry) {
-                String name = block.getName().getString();
-                if (name.endsWith(" Sapling")) {
-                    return Component.literal(name.substring(0, name.length() - 8) + " Tree");
-                } else if (name.endsWith(" Fungus")) {
-                    return Component.literal("Huge " + name.substring(0, name.length() - 7) + " Fungus");
-                } else if (name.endsWith(" Propagule")) {
-                    return Component.literal(name.substring(0, name.length() - 10) + " Tree");
-                } else if (name.endsWith(" Mushroom")) {
-                    return Component.literal("Huge " + name.substring(0, name.length() - 9) + " Mushroom");
-                }
-            }
-            return block.getName();
-        }
+        if (coreEntry instanceof Block block) return block.getName();
+
         return Component.translatable("fieldguide.unknown");
     }
 
@@ -121,23 +116,18 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public static String getDefaultName(Object entry) {
+        ResourceLocation id = getEntryId(entry);
+        if (id != null) {
+            String overrideKey = "fieldguide.name." + id.getNamespace() + "." + id.getPath();
+            if (I18n.exists(overrideKey)) {
+                return I18n.get(overrideKey);
+            }
+        }
+
         Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
         if (coreEntry instanceof EntityType<?> type) return type.getDescription().getString();
-        if (coreEntry instanceof Block block) {
-            if (entry instanceof CompositeFieldGuideEntry) {
-                String name = block.getName().getString();
-                if (name.endsWith(" Sapling")) {
-                    return name.substring(0, name.length() - 8) + " Tree";
-                } else if (name.endsWith(" Fungus")) {
-                    return name.substring(0, name.length() - 7) + " Tree";
-                } else if (name.endsWith(" Propagule")) {
-                    return name.substring(0, name.length() - 10) + " Tree";
-                } else if (name.endsWith(" Mushroom")) {
-                    return name.substring(0, name.length() - 9) + " Mushroom";
-                }
-            }
-            return block.getName().getString();
-        }
+        if (coreEntry instanceof Block block) return block.getName().getString();
+
         return I18n.get("fieldguide.unknown");
     }
 

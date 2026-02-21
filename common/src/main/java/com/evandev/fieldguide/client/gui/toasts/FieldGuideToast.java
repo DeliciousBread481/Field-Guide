@@ -13,7 +13,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 
 public class FieldGuideToast implements Toast {
@@ -45,8 +45,7 @@ public class FieldGuideToast implements Toast {
         }
 
         if (this.entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() instanceof Block block) {
-            boolean isTree = block instanceof SaplingBlock || block instanceof FungusBlock || block instanceof MushroomBlock || block instanceof MangrovePropaguleBlock;
-            if (isTree) {
+            if (composite.structureNbt() != null) {
                 EntryRenderHelper.renderStructure(guiGraphics, composite, iconX, iconY, 16, false, false, 1.0F);
             } else {
                 EntryRenderHelper.renderBlock(guiGraphics, block, iconX, iconY, 8.0F, false, false, 1.0F);
