@@ -1,8 +1,10 @@
 package com.evandev.fieldguide.client.render;
 
+import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.ModRenderTypes;
 import com.evandev.fieldguide.client.scanning.FieldGuideScanner;
 import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
@@ -22,7 +24,10 @@ import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
-import java.util.Objects;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Set;
 
 public class ScanOverlayRenderer {
     private static final float VERTICAL_BUFFER = 1.3f;
@@ -74,38 +79,64 @@ public class ScanOverlayRenderer {
         if (progress <= 0.0f) return;
 
         float fillHeight = scanner.getScanningTarget() != null ? progress : 1.0f;
-        BlockState state = Objects.requireNonNull(mc.level).getBlockState(targetBlock);
 
-        if (!state.isAir()) {
-            Vec3 offset = state.getOffset(mc.level, targetBlock);
-            double x = targetBlock.getX() - camPos.x + offset.x;
-            double y = targetBlock.getY() - camPos.y + offset.y;
-            double z = targetBlock.getZ() - camPos.z + offset.z;
+        Object entry = ClientFieldGuideManager.getInstance().getEntryForTarget(mc.level.getBlockState(targetBlock).getBlock());
+        Set<BlockPos> blocksToRender = new HashSet<>();
+        blocksToRender.add(targetBlock);
 
-            poseStack.pushPose();
-            poseStack.translate(x, y, z);
+        if (entry instanceof CompositeFieldGuideEntry composite) {
+            Queue<BlockPos> queue = new LinkedList<>();
+            queue.add(targetBlock);
+            int maxBlocks = 300;
 
-            double shapeHeight = 0;
-            if (mc.player != null) {
-                shapeHeight = state.isCollisionShapeFullBlock(mc.level, targetBlock) ? 1.0 : Math.max(1.0, state.getShape(mc.level, targetBlock, CollisionContext.of(mc.player)).max(Direction.Axis.Y));
+            while (!queue.isEmpty() && blocksToRender.size() < maxBlocks) {
+                BlockPos pos = queue.poll();
+                for (Direction dir : Direction.values()) {
+                    BlockPos neighbor = pos.relative(dir);
+                    if (!blocksToRender.contains(neighbor)) {
+                        Block neighborBlock = mc.level.getBlockState(neighbor).getBlock();
+                        if (composite.getComponents().contains(neighborBlock) || composite.getDisplayEntry() == neighborBlock) {
+                            blocksToRender.add(neighbor);
+                            queue.add(neighbor);
+                        }
+                    }
+                }
             }
-            float localScanLimitY = fillHeight >= 1.0f ? 10000.0f : (float) (shapeHeight * fillHeight);
+        }
 
-            if (ModRenderTypes.SCAN_BLOCK_SHADER != null) {
-                ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("ScanLimitY").set(localScanLimitY);
-                Matrix4f modelViewMat = new Matrix4f(poseStack.last().pose());
-                ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("InverseModelViewMat").set(modelViewMat.invert());
+        for (BlockPos pos : blocksToRender) {
+            BlockState state = mc.level.getBlockState(pos);
+            if (!state.isAir()) {
+                Vec3 offset = state.getOffset(mc.level, pos);
+                double x = pos.getX() - camPos.x + offset.x;
+                double y = pos.getY() - camPos.y + offset.y;
+                double z = pos.getZ() - camPos.z + offset.z;
+
+                poseStack.pushPose();
+                poseStack.translate(x, y, z);
+
+                double shapeHeight = 0;
+                if (mc.player != null) {
+                    shapeHeight = state.isCollisionShapeFullBlock(mc.level, pos) ? 1.0 : Math.max(1.0, state.getShape(mc.level, pos, CollisionContext.of(mc.player)).max(Direction.Axis.Y));
+                }
+                float localScanLimitY = fillHeight >= 1.0f ? 10000.0f : (float) (shapeHeight * fillHeight);
+
+                if (ModRenderTypes.SCAN_BLOCK_SHADER != null) {
+                    ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("ScanLimitY").set(localScanLimitY);
+                    Matrix4f modelViewMat = new Matrix4f(poseStack.last().pose());
+                    ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("InverseModelViewMat").set(modelViewMat.invert());
+                }
+
+                MultiBufferSource depthSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForDepth(requestedType, false)), 1, 1, 1, 1);
+                mc.getBlockRenderer().renderSingleBlock(state, poseStack, depthSource, 15728880, OverlayTexture.pack(0, 10));
+                bufferSource.endBatch();
+
+                MultiBufferSource tintedSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForScan(requestedType, false)), red, green, blue, alpha);
+                mc.getBlockRenderer().renderSingleBlock(state, poseStack, tintedSource, 15728880, OverlayTexture.pack(0, 10));
+                bufferSource.endBatch();
+
+                poseStack.popPose();
             }
-
-            MultiBufferSource depthSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForDepth(requestedType, false)), 1, 1, 1, 1);
-            mc.getBlockRenderer().renderSingleBlock(state, poseStack, depthSource, 15728880, OverlayTexture.pack(0, 10));
-            bufferSource.endBatch();
-
-            MultiBufferSource tintedSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForScan(requestedType, false)), red, green, blue, alpha);
-            mc.getBlockRenderer().renderSingleBlock(state, poseStack, tintedSource, 15728880, OverlayTexture.pack(0, 10));
-            bufferSource.endBatch();
-
-            poseStack.popPose();
         }
     }
 

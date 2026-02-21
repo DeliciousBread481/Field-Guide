@@ -24,6 +24,7 @@ import java.util.Objects;
 public class FieldGuideJournalScreen extends BookScreen {
     public static int lastOpenedJournalPage = 0;
     private int currentSpread;
+    private FieldGuideSearchBox searchBox;
 
     public FieldGuideJournalScreen(Category category, int pageIndex) {
         super(Component.literal("Journal"));
@@ -88,9 +89,14 @@ public class FieldGuideJournalScreen extends BookScreen {
         this.addRenderableWidget(prevButton);
         this.addRenderableWidget(nextButton);
 
-        this.addRenderableWidget(new FieldGuideSearchBox(this.font, this.width / 2 - 70, this.bounds.bottom() + 5, 140, 20, "", q -> {
-            if (!q.isEmpty()) Minecraft.getInstance().setScreen(new FieldGuideScreen(q, this));
-        }));
+        this.searchBox = new FieldGuideSearchBox(this.font, this.width / 2 - 70, this.bounds.bottom() + 5, 140, 20, "", q -> {
+            if (!q.isEmpty() && this.minecraft != null) {
+                FieldGuideScreen searchScreen = new FieldGuideScreen(q, this);
+                searchScreen.setInitialSearchFocus(true);
+                this.minecraft.setScreen(searchScreen);
+            }
+        });
+        this.addRenderableWidget(this.searchBox);
     }
 
     private void ensurePagesExist(ClientFieldGuideManager manager) {
@@ -136,6 +142,12 @@ public class FieldGuideJournalScreen extends BookScreen {
         }
 
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (this.searchBox != null) this.searchBox.setFocused(this.searchBox.isMouseOver(mouseX, mouseY));
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override

@@ -205,6 +205,7 @@ public class FieldGuideScanner {
             }
         } else {
             this.outOfRangeTarget = null;
+            this.outOfRangePos = null;
             if (scanTicks > 0) {
                 this.prevScanTicks = this.scanTicks;
                 scanTicks -= 2;

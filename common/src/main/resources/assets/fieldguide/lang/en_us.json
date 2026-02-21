@@ -126,10 +126,10 @@
   "fieldguide.alignment.hostile": "Hostile",
 
   "fieldguide.date.in_game": "Day %s, %s",
-  "fieldguide.time.day": "Day",
+  "fieldguide.time.day": "Morning",
   "fieldguide.time.noon": "Noon",
-  "fieldguide.time.night": "Night",
-  "fieldguide.time.midnight": "Midnight",
+  "fieldguide.time.night": "Evening",
+  "fieldguide.time.midnight": "Night",
 
   "fieldguide.tooltip.common_spawn": "Common Spawn",
 

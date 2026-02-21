@@ -17,7 +17,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
@@ -116,14 +115,14 @@ public class FieldGuideScreen extends BookScreen {
             }
         }
 
-        if (this.getSelectedCategory() != null && this.getSelectedCategory().getId().getPath().equals("intro")) {
+        this.isSearching = !this.searchQuery.trim().isEmpty();
+
+        if (!this.isSearching && this.getSelectedCategory() != null && this.getSelectedCategory().getId().getPath().equals("intro")) {
             Objects.requireNonNull(this.minecraft).setScreen(new FieldGuideJournalScreen(this.getSelectedCategory(), lastOpenedJournalPage));
             return;
         }
 
         lastOpenedCategory = this.getSelectedCategory().getId();
-
-        this.isSearching = !this.searchQuery.trim().isEmpty();
 
         // Pagination Buttons
         this.prevPageButton = new PageTurnButton(
@@ -202,6 +201,10 @@ public class FieldGuideScreen extends BookScreen {
 
         if (!isSearching) {
             Category category = ClientFieldGuideManager.getCategories().get(lastOpenedCategory);
+            if (category != null && category.getId().getPath().equals("intro")) {
+                Objects.requireNonNull(this.minecraft).setScreen(new FieldGuideJournalScreen(category, lastOpenedJournalPage));
+                return;
+            }
             this.setSelectedCategory(category);
             if (category != null) {
                 this.getEntriesForSelectedCategory();
@@ -528,7 +531,7 @@ public class FieldGuideScreen extends BookScreen {
 
                 int progressWidth = (int) ((float) unlocked / total * barWidth);
                 progressWidth = Math.max(progressWidth, 6);
-                guiGraphics.blitNineSliced(Constants.PROGRESS_BAR_TEXTURE, barX, barY, progressWidth, barHeight, 3, 7,7,0, 0);
+                guiGraphics.blitNineSliced(Constants.PROGRESS_BAR_TEXTURE, barX, barY, progressWidth, barHeight, 3, 7, 7, 0, 0);
             }
         }
     }

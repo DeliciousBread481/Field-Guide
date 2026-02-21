@@ -98,7 +98,19 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
         Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
         if (coreEntry instanceof EntityType<?> type) return type.getDescription();
-        if (coreEntry instanceof Block block) return block.getName();
+        if (coreEntry instanceof Block block) {
+            if (entry instanceof CompositeFieldGuideEntry) {
+                String name = block.getName().getString();
+                if (name.endsWith(" Sapling")) {
+                    return Component.literal(name.substring(0, name.length() - 8) + " Tree");
+                } else if (name.endsWith(" Fungus")) {
+                    return Component.literal( "Huge " + name.substring(0, name.length() - 7) + " Fungus");
+                } else if (name.endsWith(" Propagule")) {
+                    return Component.literal(name.substring(0, name.length() - 10) + " Tree");
+                }
+            }
+            return block.getName();
+        }
         return Component.translatable("fieldguide.unknown");
     }
 
@@ -109,7 +121,19 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     public static String getDefaultName(Object entry) {
         Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
         if (coreEntry instanceof EntityType<?> type) return type.getDescription().getString();
-        if (coreEntry instanceof Block block) return block.getName().getString();
+        if (coreEntry instanceof Block block) {
+            if (entry instanceof CompositeFieldGuideEntry) {
+                String name = block.getName().getString();
+                if (name.endsWith(" Sapling")) {
+                    return name.substring(0, name.length() - 8) + " Tree";
+                } else if (name.endsWith(" Fungus")) {
+                    return name.substring(0, name.length() - 7) + " Tree";
+                } else if (name.endsWith(" Propagule")) {
+                    return name.substring(0, name.length() - 10) + " Tree";
+                }
+            }
+            return block.getName().getString();
+        }
         return I18n.get("fieldguide.unknown");
     }
 

@@ -115,13 +115,18 @@ public class EntryResolver {
             if (!namespaceFilter.test(id) || !isValidBlock(block, config)) continue;
 
             String path = id.getPath();
-            if (path.endsWith("_sapling")) {
+            if (path.endsWith("_sapling") && !path.startsWith("potted_")) {
                 String prefix = path.substring(0, path.length() - "_sapling".length());
                 String key = id.getNamespace() + ":" + prefix;
                 saplings.put(key, block);
                 treeComponents.put(key, new ArrayList<>());
-            } else if (path.endsWith("_fungus")) {
+            } else if (path.endsWith("_fungus") && !path.startsWith("potted_")) {
                 String prefix = path.substring(0, path.length() - "_fungus".length());
+                String key = id.getNamespace() + ":" + prefix;
+                saplings.put(key, block);
+                treeComponents.put(key, new ArrayList<>());
+            } else if (path.endsWith("_propagule") && !path.startsWith("potted_")) {
+                String prefix = path.substring(0, path.length() - "_propagule".length());
                 String key = id.getNamespace() + ":" + prefix;
                 saplings.put(key, block);
                 treeComponents.put(key, new ArrayList<>());
@@ -144,7 +149,8 @@ public class EntryResolver {
                             path.equals("stripped_" + prefix + "_log") || path.equals(prefix + "_wood") ||
                             path.equals("stripped_" + prefix + "_wood") ||
                             path.equals(prefix + "_stem") || path.equals("stripped_" + prefix + "_stem") ||
-                            path.equals(prefix + "_hyphae") || path.equals("stripped_" + prefix + "_hyphae")) {
+                            path.equals(prefix + "_hyphae") || path.equals("stripped_" + prefix + "_hyphae") ||
+                            path.equals(prefix + "_roots") || path.equals("muddy_" + prefix + "_roots")) {
                         treeComponents.get(key).add(block);
                         addedToTree = true;
                         break;
@@ -152,7 +158,7 @@ public class EntryResolver {
                 }
             }
 
-            if (!addedToTree && !path.endsWith("_sapling") && !path.endsWith("_fungus")) {
+            if (!addedToTree && !path.endsWith("_sapling") && !path.endsWith("_fungus") && !path.endsWith("_propagule")) {
                 if (isPlant(block)) loosePlants.add(block);
             }
         }
@@ -178,6 +184,6 @@ public class EntryResolver {
     }
 
     private static boolean isPlant(Block block) {
-        return (block instanceof BushBlock && !(block instanceof StemBlock) && !(block instanceof AttachedStemBlock)) || block instanceof LeavesBlock || block instanceof VineBlock || block instanceof CactusBlock || block instanceof SugarCaneBlock || block instanceof WaterlilyBlock || block instanceof StemGrownBlock || block instanceof CoralFanBlock || block instanceof CoralPlantBlock;
+        return (block instanceof BushBlock && !(block instanceof StemBlock) && !(block instanceof AttachedStemBlock)) || block instanceof LeavesBlock || block instanceof VineBlock || block instanceof CactusBlock || block instanceof SugarCaneBlock || block instanceof WaterlilyBlock || block instanceof StemGrownBlock || block instanceof CoralFanBlock || block instanceof CoralPlantBlock || block instanceof KelpBlock || block instanceof KelpPlantBlock;
     }
 }
