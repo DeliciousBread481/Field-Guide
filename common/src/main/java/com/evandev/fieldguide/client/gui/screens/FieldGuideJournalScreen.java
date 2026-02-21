@@ -41,7 +41,7 @@ public class FieldGuideJournalScreen extends BookScreen {
         int textXLeft = this.leftPageBounds.left() + 6;
         int textXRight = this.rightPageBounds.left() + 6;
         int titleY = this.leftPageBounds.top() + 8;
-        int textY = titleY + this.font.lineHeight * 2 + 8;
+        int textY = titleY + this.font.lineHeight * 2 + 13;
         int textAreaWidth = this.rightPageBounds.width() - 12;
         int textAreaHeight = this.leftPageBounds.height() - (textY - this.leftPageBounds.top()) - 20;
 
