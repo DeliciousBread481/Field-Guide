@@ -89,7 +89,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (unlocked) {
             String initialName = ClientFieldGuideManager.getEntryName(entry).getString();
             if (!ModConfig.get().disableEditingNames) {
-                this.addRenderableWidget(new BookTextFieldWidget(this.font, textX, titleY, Math.max(font.width(initialName), 50), font.lineHeight, initialName, ModConfig.get().getTextTitleColorInt(), 50,
+                this.addRenderableWidget(new BookTextFieldWidget(this.font, textX, titleY, textAreaWidth, font.lineHeight, initialName, ModConfig.get().getTextTitleColorInt(), textAreaWidth,
                         newName -> ClientFieldGuideManager.setCustomName(entry, newName)));
             }
 
