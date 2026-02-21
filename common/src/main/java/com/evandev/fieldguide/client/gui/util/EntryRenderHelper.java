@@ -1,11 +1,10 @@
 package com.evandev.fieldguide.client.gui.util;
 
-import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
-import com.evandev.fieldguide.mixin.accessor.StructureTemplateAccessor;
+import com.evandev.fieldguide.util.StructureUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -17,9 +16,6 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtIo;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.Block;
@@ -27,13 +23,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.Property;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 import java.awt.*;
-import java.util.*;
-import java.util.List;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 public class EntryRenderHelper {
 
@@ -230,7 +227,7 @@ public class EntryRenderHelper {
                 setupFieldGuideBlockLighting();
                 PoseStack pose = new PoseStack();
 
-                Map<BlockPos, BlockState> blocks = getStructureBlocks(composite);
+                Map<BlockPos, BlockState> blocks = StructureUtils.getStructureBlocks(composite);
                 if (blocks.isEmpty()) return;
 
                 int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, minZ = Integer.MAX_VALUE;
@@ -282,37 +279,6 @@ public class EntryRenderHelper {
 
         int color = ModConfig.get().getListSilhouetteColorInt();
         textureOpt.ifPresent(texture -> drawCachedTexture(guiGraphics, texture, x, y, size, size, silhouette, color, bounceScale));
-    }
-
-    private static Map<BlockPos, BlockState> getStructureBlocks(CompositeFieldGuideEntry entry) {
-        Map<BlockPos, BlockState> blocks = new HashMap<>();
-
-        if (entry.structureNbt() != null) {
-            ResourceLocation nbtLocation = entry.structureNbt();
-            // Assumes structures are placed in: assets/<namespace>/structures/<path>.nbt
-            ResourceLocation path = new ResourceLocation(nbtLocation.getNamespace(), "structures/" + nbtLocation.getPath() + ".nbt");
-
-            try {
-                var res = Minecraft.getInstance().getResourceManager().getResource(path);
-                if (res.isPresent()) {
-                    CompoundTag tag = NbtIo.readCompressed(res.get().open());
-                    StructureTemplate template = new StructureTemplate();
-                    template.load(BuiltInRegistries.BLOCK.asLookup(), tag);
-
-                    List<StructureTemplate.Palette> palettes = ((StructureTemplateAccessor) template).getPalettes();
-
-                    if (!palettes.isEmpty()) {
-                        for (StructureTemplate.StructureBlockInfo info : palettes.get(0).blocks()) {
-                            blocks.put(info.pos(), info.state());
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                Constants.LOG.error("Failed to load structure NBT: {}", path, e);
-            }
-        }
-
-        return blocks;
     }
 
     private static void setupFieldGuideEntityLighting() {
