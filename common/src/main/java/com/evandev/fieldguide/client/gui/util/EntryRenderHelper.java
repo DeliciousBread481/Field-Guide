@@ -73,10 +73,9 @@ public class EntryRenderHelper {
                 pose.scale(70f, -70f, -70f);
 
                 pose.mulPose(Axis.XP.rotationDegrees(30.0F));
-                pose.mulPose(Axis.YP.rotationDegrees(225.0F));
+                pose.mulPose(Axis.YP.rotationDegrees(330.0F));
 
                 pose.translate(0, -0.2f, 0);
-                pose.mulPose(Axis.YP.rotationDegrees(180.0F));
 
                 entity.setYRot(0.0F);
                 entity.setXRot(0.0F);
@@ -84,6 +83,7 @@ public class EntryRenderHelper {
                 entity.yHeadRotO = 0.0F;
                 entity.yBodyRot = 0.0F;
                 entity.yBodyRotO = 0.0F;
+
                 entity.tickCount = 0;
                 entity.walkAnimation.setSpeed(0.0F);
                 entity.walkAnimation.position(0.0F);
@@ -109,7 +109,7 @@ public class EntryRenderHelper {
                 pose.scale(100f, -100f, -100f);
 
                 pose.mulPose(Axis.XP.rotationDegrees(30.0F));
-                pose.mulPose(Axis.YP.rotationDegrees(225.0F));
+                pose.mulPose(Axis.YP.rotationDegrees(330.0F));
 
                 pose.translate(-0.5, -0.5, -0.5);
 
@@ -168,7 +168,7 @@ public class EntryRenderHelper {
                 pose.scale(30f, -30f, -30f);
 
                 pose.mulPose(Axis.XP.rotationDegrees(30.0F));
-                pose.mulPose(Axis.YP.rotationDegrees(225.0F));
+                pose.mulPose(Axis.YP.rotationDegrees(330.0F));
 
                 pose.translate(0, -2.0, 0);
 

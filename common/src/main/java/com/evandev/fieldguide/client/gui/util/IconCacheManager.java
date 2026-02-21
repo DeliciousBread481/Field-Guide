@@ -89,7 +89,7 @@ public class IconCacheManager {
         RenderSystem.enableDepthTest();
         RenderSystem.depthMask(true);
 
-        Matrix4f projectionMatrix = new Matrix4f().setOrtho(0.0F, RENDER_SIZE, RENDER_SIZE, 0.0F, 3000.0F, -1000.0F);
+        Matrix4f projectionMatrix = new Matrix4f().setOrtho(0.0F, RENDER_SIZE, RENDER_SIZE, 0.0F, 10000.0F, -10000.0F);
         RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.ORTHOGRAPHIC_Z);
 
         PoseStack poseStack = RenderSystem.getModelViewStack();
