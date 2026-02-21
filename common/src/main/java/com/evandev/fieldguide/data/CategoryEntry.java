@@ -2,7 +2,8 @@ package com.evandev.fieldguide.data;
 
 import net.minecraft.resources.ResourceLocation;
 
-public record CategoryEntry(Type type, ResourceLocation id, String strategy) {
+import java.util.List;
 
-    public enum Type {ENTRY, AUTO_POPULATE}
+public record CategoryEntry(Type type, ResourceLocation id, String strategy, List<ResourceLocation> components) {
+    public enum Type {ENTRY, AUTO_POPULATE, COMPOSITE}
 }

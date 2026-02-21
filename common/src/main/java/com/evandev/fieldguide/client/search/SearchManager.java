@@ -2,6 +2,7 @@ package com.evandev.fieldguide.client.search;
 
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -44,13 +45,15 @@ public class SearchManager {
         for (Object entry : ClientFieldGuideManager.getValidEntries()) {
             if (ClientFieldGuideManager.hideFromSearch(entry)) continue;
 
-            if (entry instanceof EntityType<?> type) {
+            Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
+
+            if (coreEntry instanceof EntityType<?> type) {
                 var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type);
                 key.flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder).ifPresent(holder -> {
                     if (holder.tags().anyMatch(tag -> matchLocation(tag.location(), tagQuery, exactMatch)))
                         results.add(entry);
                 });
-            } else if (entry instanceof Block block) {
+            } else if (coreEntry instanceof Block block) {
                 var key = BuiltInRegistries.BLOCK.getResourceKey(block);
                 key.flatMap(BuiltInRegistries.BLOCK::getHolder).ifPresent(holder -> {
                     if (holder.tags().anyMatch(tag -> matchLocation(tag.location(), tagQuery, exactMatch)))
@@ -91,7 +94,8 @@ public class SearchManager {
                     for (var spawn : biome.getMobSettings().getMobs(cat).unwrap()) {
                         if (ClientFieldGuideManager.getInstance().isValidEntity(spawn.type, ModConfig.get())) {
                             if (!ClientFieldGuideManager.hideFromSearch(spawn.type) && !results.contains(spawn.type)) {
-                                results.add(spawn.type);
+                                Object entry = ClientFieldGuideManager.getInstance().getEntryForTarget(spawn.type);
+                                if (entry != null && !results.contains(entry)) results.add(entry);
                             }
                         }
                     }
@@ -155,8 +159,7 @@ public class SearchManager {
             ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
             if (id == null) continue;
 
-            String name = (entry instanceof EntityType<?> type) ? type.getDescription().getString() : ((Block) entry).getName().getString();
-            name = name.toLowerCase(Locale.ROOT);
+            String name = ClientFieldGuideManager.getDefaultName(entry).toLowerCase(Locale.ROOT);
 
             boolean match = exactMatch ?
                     (name.equals(query) || id.getPath().equals(query)) :

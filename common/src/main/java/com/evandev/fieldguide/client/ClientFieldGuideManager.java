@@ -11,6 +11,7 @@ import com.evandev.fieldguide.client.search.SearchManager;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CategoryEntry;
+import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -56,6 +57,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public static ResourceLocation getEntryId(Object entry) {
+        if (entry instanceof CompositeFieldGuideEntry composite) return composite.getId();
         if (entry instanceof EntityType<?> type) return BuiltInRegistries.ENTITY_TYPE.getKey(type);
         if (entry instanceof Block block) return BuiltInRegistries.BLOCK.getKey(block);
         return null;
@@ -65,7 +67,6 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         return ModConfig.get().hideUndiscoveredFromSearch && !isUnlocked(entry);
     }
 
-    // Facade Methods over ProgressManager
     public static boolean isUnlocked(Object entry) {
         return ProgressManager.getInstance().isUnlocked(entry);
     }
@@ -85,7 +86,9 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         if (custom != null) return custom;
 
         String overrideKey = "fieldguide." + id.getNamespace() + "." + id.getPath() + ".description";
-        String fallbackKey = (entry instanceof EntityType) ? "entity." + id.getNamespace() + "." + id.getPath() + ".description" : "lore." + id.getNamespace() + "." + id.getPath();
+
+        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
+        String fallbackKey = (coreEntry instanceof EntityType) ? "entity." + id.getNamespace() + "." + id.getPath() + ".description" : "lore." + id.getNamespace() + "." + id.getPath();
         return I18n.exists(overrideKey) ? I18n.get(overrideKey) : (I18n.exists(fallbackKey) ? I18n.get(fallbackKey) : I18n.get("fieldguide.description.missing"));
     }
 
@@ -96,8 +99,10 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     public static Component getEntryName(Object entry) {
         String custom = ProgressManager.getInstance().getCustomName(entry);
         if (custom != null) return Component.literal(custom);
-        if (entry instanceof EntityType<?> type) return type.getDescription();
-        if (entry instanceof Block block) return block.getName();
+
+        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
+        if (coreEntry instanceof EntityType<?> type) return type.getDescription();
+        if (coreEntry instanceof Block block) return block.getName();
         return Component.translatable("fieldguide.unknown");
     }
 
@@ -106,8 +111,9 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public static String getDefaultName(Object entry) {
-        if (entry instanceof EntityType<?> type) return type.getDescription().getString();
-        if (entry instanceof Block block) return block.getName().getString();
+        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
+        if (coreEntry instanceof EntityType<?> type) return type.getDescription().getString();
+        if (coreEntry instanceof Block block) return block.getName().getString();
         return I18n.get("fieldguide.unknown");
     }
 
@@ -117,6 +123,18 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
     public static List<Object> getValidEntries() {
         return INSTANCE.resolvedCategoryEntries.values().stream().flatMap(List::stream).distinct().collect(Collectors.toList());
+    }
+
+    public Object getEntryForTarget(Object target) {
+        for (Object entry : getValidEntries()) {
+            if (entry.equals(target)) return entry;
+            if (entry instanceof CompositeFieldGuideEntry composite) {
+                if (composite.getDisplayEntry().equals(target) || composite.getComponents().contains(target)) {
+                    return entry;
+                }
+            }
+        }
+        return null;
     }
 
     public String getJournalTitle() {
@@ -240,6 +258,38 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
                 BuiltInRegistries.BLOCK.getOptional(entry.id()).filter(b -> isValidBlock(b, config)).ifPresent(foundEntries::add);
             } else if (entry.type() == CategoryEntry.Type.AUTO_POPULATE) {
                 foundEntries.addAll(getEntriesForStrategy(entry.strategy(), config));
+            } else if (entry.type() == CategoryEntry.Type.COMPOSITE) {
+                if (entry.id() == null) continue;
+                List<Object> components = new ArrayList<>();
+                Object displayEntry = null;
+
+                Optional<EntityType<?>> entityType = BuiltInRegistries.ENTITY_TYPE.getOptional(entry.id());
+                if (entityType.isPresent() && isValidEntity(entityType.get(), config)) {
+                    displayEntry = entityType.get();
+                } else {
+                    Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(entry.id());
+                    if (block.isPresent() && isValidBlock(block.get(), config)) {
+                        displayEntry = block.get();
+                    }
+                }
+
+                if (entry.components() != null) {
+                    for (ResourceLocation compId : entry.components()) {
+                        Optional<EntityType<?>> compEntity = BuiltInRegistries.ENTITY_TYPE.getOptional(compId);
+                        if (compEntity.isPresent() && isValidEntity(compEntity.get(), config)) {
+                            components.add(compEntity.get());
+                        } else {
+                            Optional<Block> compBlock = BuiltInRegistries.BLOCK.getOptional(compId);
+                            if (compBlock.isPresent() && isValidBlock(compBlock.get(), config)) {
+                                components.add(compBlock.get());
+                            }
+                        }
+                    }
+                }
+
+                if (displayEntry != null) {
+                    foundEntries.add(new CompositeFieldGuideEntry(entry.id(), displayEntry, components));
+                }
             }
         }
         resolvedCategoryEntries.put(category.getId(), new ArrayList<>(foundEntries));
@@ -265,16 +315,92 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         return !config.isEntityBlacklisted(BuiltInRegistries.BLOCK.getKey(block));
     }
 
+    private List<Object> getPlants(java.util.function.Predicate<ResourceLocation> namespaceFilter, ModConfig config) {
+        List<Object> results = new ArrayList<>();
+        Map<String, Block> saplings = new HashMap<>();
+        Map<String, List<Block>> treeComponents = new HashMap<>();
+        List<Block> loosePlants = new ArrayList<>();
+
+        for (Block block : BuiltInRegistries.BLOCK) {
+            ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
+            if (!namespaceFilter.test(id) || !isValidBlock(block, config)) continue;
+
+            String path = id.getPath();
+            if (path.endsWith("_sapling")) {
+                String prefix = path.substring(0, path.length() - "_sapling".length());
+                String key = id.getNamespace() + ":" + prefix;
+                saplings.put(key, block);
+                treeComponents.put(key, new ArrayList<>());
+            } else if (path.endsWith("_fungus")) {
+                String prefix = path.substring(0, path.length() - "_fungus".length());
+                String key = id.getNamespace() + ":" + prefix;
+                saplings.put(key, block);
+                treeComponents.put(key, new ArrayList<>());
+            }
+        }
+
+        for (Block block : BuiltInRegistries.BLOCK) {
+            ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
+            if (!namespaceFilter.test(id) || !isValidBlock(block, config)) continue;
+            String path = id.getPath();
+
+            boolean addedToTree = false;
+            for (String key : saplings.keySet()) {
+                String[] parts = key.split(":");
+                String namespace = parts[0];
+                String prefix = parts[1];
+
+                if (id.getNamespace().equals(namespace)) {
+                    if (path.equals(prefix + "_log") || path.equals(prefix + "_leaves") ||
+                            path.equals("stripped_" + prefix + "_log") || path.equals(prefix + "_wood") ||
+                            path.equals("stripped_" + prefix + "_wood") ||
+                            path.equals(prefix + "_stem") || path.equals("stripped_" + prefix + "_stem") ||
+                            path.equals(prefix + "_hyphae") || path.equals("stripped_" + prefix + "_hyphae")) {
+                        treeComponents.get(key).add(block);
+                        addedToTree = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!addedToTree && !path.endsWith("_sapling") && !path.endsWith("_fungus")) {
+                if (isPlant(block)) {
+                    loosePlants.add(block);
+                }
+            }
+        }
+
+        for (Map.Entry<String, Block> entry : saplings.entrySet()) {
+            ResourceLocation saplingId = BuiltInRegistries.BLOCK.getKey(entry.getValue());
+            List<Block> components = treeComponents.get(entry.getKey());
+            if (!components.isEmpty()) {
+                results.add(new CompositeFieldGuideEntry(saplingId, entry.getValue(), new ArrayList<>(components)));
+            } else {
+                results.add(entry.getValue());
+            }
+        }
+
+        results.addAll(loosePlants);
+
+        results.sort(Comparator.comparing(p -> {
+            if (p instanceof CompositeFieldGuideEntry composite) return composite.getId().toString();
+            if (p instanceof Block b) return BuiltInRegistries.BLOCK.getKey(b).toString();
+            return p.toString();
+        }));
+
+        return results;
+    }
+
     private List<Object> getEntriesForStrategy(String strategy, ModConfig config) {
         List<Object> results = new ArrayList<>();
         if ("plants".equalsIgnoreCase(strategy)) {
-            results.addAll(BuiltInRegistries.BLOCK.stream().filter(b -> isPlant(b) && isValidBlock(b, config)).sorted(Comparator.comparing(b -> BuiltInRegistries.BLOCK.getKey(b).toString())).toList());
+            results.addAll(getPlants(id -> true, config));
         } else if (strategy.startsWith("mod:")) {
             String modId = strategy.substring(4);
             results.addAll(BuiltInRegistries.ENTITY_TYPE.stream().filter(t -> BuiltInRegistries.ENTITY_TYPE.getKey(t).getNamespace().equals(modId) && isValidEntity(t, config)).sorted(Comparator.comparing(t -> BuiltInRegistries.ENTITY_TYPE.getKey(t).toString())).toList());
         } else if (strategy.startsWith("mod_plants:")) {
             String modId = strategy.substring(10);
-            results.addAll(BuiltInRegistries.BLOCK.stream().filter(b -> BuiltInRegistries.BLOCK.getKey(b).getNamespace().equals(modId) && isPlant(b) && isValidBlock(b, config)).sorted(Comparator.comparing(b -> BuiltInRegistries.BLOCK.getKey(b).toString())).toList());
+            results.addAll(getPlants(id -> id.getNamespace().equals(modId), config));
         } else if (strategy.startsWith("tag:")) {
             try {
                 TagKey<EntityType<?>> tagKey = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(strategy.substring(4)));
@@ -309,7 +435,23 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public List<ItemStack> getDrops(Object entry) {
-        return dropCache.getOrDefault(entry, Collections.emptyList());
+        List<ItemStack> rawDrops;
+        if (entry instanceof CompositeFieldGuideEntry composite) {
+            rawDrops = new ArrayList<>(dropCache.getOrDefault(composite.getDisplayEntry(), Collections.emptyList()));
+            for (Object comp : composite.getComponents()) {
+                rawDrops.addAll(dropCache.getOrDefault(comp, Collections.emptyList()));
+            }
+        } else {
+            rawDrops = dropCache.getOrDefault(entry, Collections.emptyList());
+        }
+
+        List<ItemStack> distinct = new ArrayList<>();
+        for (ItemStack stack : rawDrops) {
+            if (distinct.stream().noneMatch(s -> ItemStack.isSameItemSameTags(s, stack))) {
+                distinct.add(stack);
+            }
+        }
+        return distinct;
     }
 
     public void onClientTick(net.minecraft.client.Minecraft minecraft) {
@@ -330,10 +472,6 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
     public void onWorldUnload() {
         ProgressManager.getInstance().onWorldUnload();
-    }
-
-    public void unlock(Object entry) {
-        ProgressManager.getInstance().unlock(entry);
     }
 
     public void unlock(Object entry, boolean showToast) {

@@ -26,7 +26,17 @@ public class SyncCategoriesPacket {
                 CategoryEntry.Type type = b.readEnum(CategoryEntry.Type.class);
                 ResourceLocation entryId = b.readBoolean() ? b.readResourceLocation() : null;
                 String strategy = b.readBoolean() ? b.readUtf() : null;
-                cat.addEntry(new CategoryEntry(type, entryId, strategy));
+
+                List<ResourceLocation> components = null;
+                if (b.readBoolean()) {
+                    int compCount = b.readInt();
+                    components = new ArrayList<>();
+                    for (int j = 0; j < compCount; j++) {
+                        components.add(b.readResourceLocation());
+                    }
+                }
+
+                cat.addEntry(new CategoryEntry(type, entryId, strategy, components));
             }
             return cat;
         });
@@ -45,6 +55,14 @@ public class SyncCategoriesPacket {
 
                 b.writeBoolean(entry.strategy() != null);
                 if (entry.strategy() != null) b.writeUtf(entry.strategy());
+
+                b.writeBoolean(entry.components() != null);
+                if (entry.components() != null) {
+                    b.writeInt(entry.components().size());
+                    for (ResourceLocation comp : entry.components()) {
+                        b.writeResourceLocation(comp);
+                    }
+                }
             }
         });
     }

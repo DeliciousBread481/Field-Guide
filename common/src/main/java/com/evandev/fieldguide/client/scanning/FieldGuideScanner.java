@@ -109,7 +109,8 @@ public class FieldGuideScanner {
             if (hitEntity instanceof EnderDragonPart part) hitEntity = part.parentMob;
 
             EntityType<?> type = hitEntity.getType();
-            Category cat = ClientFieldGuideManager.getInstance().getCategoryForEntry(type);
+            Object entryForTarget = ClientFieldGuideManager.getInstance().getEntryForTarget(type);
+            Category cat = ClientFieldGuideManager.getInstance().getCategoryForEntry(entryForTarget);
             boolean isScannable = cat != null;
 
             TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation("fieldguide", "kill_to_unlock"));
@@ -120,7 +121,7 @@ public class FieldGuideScanner {
                 if (holder.isPresent() && holder.get().is(killToUnlockTag)) requiresKill = true;
             }
 
-            if (ClientFieldGuideManager.getValidEntries().contains(type) && !ProgressManager.getInstance().isUnlocked(type) && isScannable && !requiresKill) {
+            if (entryForTarget != null && !ProgressManager.getInstance().isUnlocked(entryForTarget) && isScannable && !requiresKill) {
                 foundTarget = hitEntity;
             } else if (!ProgressManager.getInstance().isUnlocked(type) && isScannable && !requiresKill) {
                 ResourceLocation originalId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
@@ -130,7 +131,8 @@ public class FieldGuideScanner {
             if (blockHit.getType() == HitResult.Type.BLOCK) {
                 BlockState state = minecraft.level.getBlockState(blockHit.getBlockPos());
                 Block block = state.getBlock();
-                if (ClientFieldGuideManager.getValidEntries().contains(block) && !ProgressManager.getInstance().isUnlocked(block)) {
+                Object entryForTarget = ClientFieldGuideManager.getInstance().getEntryForTarget(block);
+                if (entryForTarget != null && !ProgressManager.getInstance().isUnlocked(entryForTarget)) {
                     foundTarget = block;
                 } else if (!ProgressManager.getInstance().isUnlocked(block)) {
                     ResourceLocation originalId = BuiltInRegistries.BLOCK.getKey(block);
@@ -141,8 +143,9 @@ public class FieldGuideScanner {
             if (foundTarget == null && firstBlockHit.getType() == HitResult.Type.BLOCK && !firstBlockHit.getBlockPos().equals(blockHit.getBlockPos())) {
                 BlockState state = minecraft.level.getBlockState(firstBlockHit.getBlockPos());
                 Block block = state.getBlock();
+                Object entryForTarget = ClientFieldGuideManager.getInstance().getEntryForTarget(block);
                 boolean validTarget = false;
-                if (ClientFieldGuideManager.getValidEntries().contains(block) && !ProgressManager.getInstance().isUnlocked(block)) {
+                if (entryForTarget != null && !ProgressManager.getInstance().isUnlocked(entryForTarget)) {
                     validTarget = true;
                 } else if (!ProgressManager.getInstance().isUnlocked(block)) {
                     ResourceLocation originalId = BuiltInRegistries.BLOCK.getKey(block);
@@ -172,7 +175,10 @@ public class FieldGuideScanner {
             } else {
                 this.outOfRangeTarget = null;
                 this.outOfRangePos = null;
-                Object targetKey = (foundTarget instanceof Entity) ? ((Entity) foundTarget).getType() : foundTarget;
+                Object targetKey = ClientFieldGuideManager.getInstance().getEntryForTarget((foundTarget instanceof Entity) ? ((Entity) foundTarget).getType() : foundTarget);
+                if (targetKey == null)
+                    targetKey = (foundTarget instanceof Entity) ? ((Entity) foundTarget).getType() : foundTarget;
+
                 boolean sameTarget = (scanningTarget instanceof Entity && foundTarget instanceof Entity)
                         ? scanningTarget == foundTarget
                         : Objects.equals(scanningTarget, foundTarget);

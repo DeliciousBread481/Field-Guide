@@ -10,6 +10,7 @@ import com.evandev.fieldguide.client.gui.widget.FieldGuideSearchBox;
 import com.evandev.fieldguide.client.gui.widget.PageTurnButton;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
+import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -326,8 +327,9 @@ public class FieldGuideScreen extends BookScreen {
 
         ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
         EntryVisual visual = entryId != null ? ClientFieldGuideManager.getInstance().getEntryVisual(entryId) : null;
+        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
 
-        if (entry instanceof EntityType<?> type) {
+        if (coreEntry instanceof EntityType<?> type) {
             Entity entity = entryCache.get(type);
             if (entity == null && Objects.requireNonNull(this.minecraft).level != null) {
                 try {
@@ -343,7 +345,7 @@ public class FieldGuideScreen extends BookScreen {
                     FieldGuideClient.playMobCry(entity);
                 }
             }
-        } else if (entry instanceof Block && ClientFieldGuideManager.isUnlocked(entry)) {
+        } else if (coreEntry instanceof Block && ClientFieldGuideManager.isUnlocked(entry)) {
             if (visual != null && visual.customSound != null) {
                 Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(visual.customSound), 1.0F, 1.0F));
             }
@@ -626,18 +628,13 @@ public class FieldGuideScreen extends BookScreen {
 
     private void renderEntryTooltip(GuiGraphics guiGraphics, Object entry, int mouseX, int mouseY, boolean unlocked) {
         if (unlocked || ModConfig.get().showUndiscoveredNames) {
-            Component name;
-            if (entry instanceof EntityType<?>) name = ClientFieldGuideManager.getEntryName(entry);
-            else if (entry instanceof Block) name = ClientFieldGuideManager.getEntryName(entry);
-            else name = Component.translatable("fieldguide.unknown");
+            Component name = ClientFieldGuideManager.getEntryName(entry);
 
             List<Component> tooltip = new ArrayList<>();
             tooltip.add(name);
 
             if (this.minecraft != null && this.minecraft.options.advancedItemTooltips) {
-                ResourceLocation id = null;
-                if (entry instanceof EntityType<?> type) id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
-                else if (entry instanceof Block block) id = BuiltInRegistries.BLOCK.getKey(block);
+                ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
 
                 if (id != null) {
                     tooltip.add(Component.literal(id.toString()).withStyle(ChatFormatting.DARK_GRAY));
@@ -675,7 +672,9 @@ public class FieldGuideScreen extends BookScreen {
     }
 
     private void renderEntryInGrid(GuiGraphics guiGraphics, Object entry, int x, int y, int scale, boolean unlocked) {
-        if (entry instanceof EntityType<?> type) {
+        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
+
+        if (coreEntry instanceof EntityType<?> type) {
             if (this.minecraft != null && this.minecraft.level != null) {
                 Entity entity = entryCache.get(type);
                 if (entity == null && !entryCache.containsKey(type)) {
@@ -696,7 +695,7 @@ public class FieldGuideScreen extends BookScreen {
                     EntryRenderHelper.renderEntityNormalized(guiGraphics, living, x, y, CELL_SIZE - 8, CELL_SIZE - 8, scale, !unlocked, ModConfig.get().getListSilhouetteColorInt(), false, 1.0F);
                 }
             }
-        } else if (entry instanceof Block block) {
+        } else if (coreEntry instanceof Block block) {
             EntryRenderHelper.renderBlock(guiGraphics, block, x, y, 15.0F, !unlocked, false, 1.0F);
         }
     }

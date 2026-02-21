@@ -10,6 +10,7 @@ import com.evandev.fieldguide.client.gui.widget.*;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
+import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.platform.Services;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.ChatFormatting;
@@ -101,7 +102,8 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private void setupEntityPreview() {
-        if (entry instanceof EntityType<?> type && this.minecraft != null && this.minecraft.level != null) {
+        Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
+        if (renderEntry instanceof EntityType<?> type && this.minecraft != null && this.minecraft.level != null) {
             try {
                 this.renderedEntity = type.create(this.minecraft.level);
             } catch (Exception ignored) {
@@ -113,9 +115,11 @@ public class FieldGuideEntryScreen extends BookScreen {
         ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
         EntryVisual visual = entryId != null ? ClientFieldGuideManager.getInstance().getEntryVisual(entryId) : null;
 
+        Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
+
         if (visual != null && visual.spawnBiomes != null) {
             spawnBiomes.addAll(visual.spawnBiomes);
-        } else if (entry instanceof EntityType<?> entityType && Services.PLATFORM.isModLoaded("immersiveoverlays") && this.minecraft != null && this.minecraft.level != null) {
+        } else if (renderEntry instanceof EntityType<?> entityType && Services.PLATFORM.isModLoaded("immersiveoverlays") && this.minecraft != null && this.minecraft.level != null) {
             Registry<Biome> biomeRegistry = this.minecraft.level.registryAccess().registryOrThrow(Registries.BIOME);
             for (var biomeEntry : biomeRegistry.entrySet()) {
                 var spawns = biomeEntry.getValue().getMobSettings().getMobs(entityType.getCategory());
@@ -231,7 +235,9 @@ public class FieldGuideEntryScreen extends BookScreen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (super.mouseClicked(mouseX, mouseY, button)) return true;
 
-        if (button == 0 && (renderedEntity != null || entry instanceof Block)) {
+        Object clickEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
+
+        if (button == 0 && (renderedEntity != null || clickEntry instanceof Block)) {
             int xPos = leftPageBounds.left() + leftPageBounds.width() / 2;
             int yPos = leftPageBounds.y_center();
             if (mouseX >= xPos - 50 && mouseX <= xPos + 50 && mouseY >= yPos - 50 && mouseY <= yPos + 50) {
@@ -240,9 +246,9 @@ public class FieldGuideEntryScreen extends BookScreen {
                     EntryVisual visual = entryId != null ? ClientFieldGuideManager.getInstance().getEntryVisual(entryId) : null;
                     if (visual != null && visual.customSound != null && this.minecraft != null) {
                         this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(visual.customSound), 1.0F, 1.0F));
-                    } else if (entry instanceof EntityType<?> && renderedEntity != null) {
+                    } else if (clickEntry instanceof EntityType<?> && renderedEntity != null) {
                         FieldGuideClient.playMobCry(this.renderedEntity);
-                    } else if (entry instanceof Block block && this.minecraft != null) {
+                    } else if (clickEntry instanceof Block block && this.minecraft != null) {
                         this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(block.defaultBlockState().getSoundType().getBreakSound(), 1.0F, 1.0F));
                     }
                     this.lastClickTime = System.currentTimeMillis();
@@ -335,10 +341,12 @@ public class FieldGuideEntryScreen extends BookScreen {
         int xPos = leftPageBounds.x_center();
         int yPos = leftPageBounds.y_center() - 18;
 
-        if (entry instanceof EntityType && renderedEntity instanceof LivingEntity living) {
+        Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
+
+        if (renderEntry instanceof EntityType && renderedEntity instanceof LivingEntity living) {
             EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, !unlocked, ModConfig.get().getDetailsSilhouetteColorInt(), true, bounce);
             if (unlocked) renderAttributes(guiGraphics, living);
-        } else if (entry instanceof Block block) {
+        } else if (renderEntry instanceof Block block) {
             EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 30.0F, !unlocked, true, bounce);
         }
     }

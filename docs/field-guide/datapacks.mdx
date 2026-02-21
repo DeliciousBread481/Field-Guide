@@ -22,7 +22,8 @@ The filename becomes the ID of the category (e.g., `wetlands.json` becomes `<nam
 
 #### Removing Default Categories
 
-To remove a category provided by the mod (or another datapack), create a file with the **same ID** and use `"replace": true` with an empty contents list. The Field Guide automatically hides empty categories.
+To remove a category provided by the mod (or another datapack), create a file with the **same ID** and use `"replace": true` with an empty contents list.
+The Field Guide automatically hides empty categories.
 
 **Example:** Removing the default `monsters` category:
 
@@ -62,9 +63,9 @@ To remove a category provided by the mod (or another datapack), create a file wi
 
 * `animals`: All animals.
 * `monsters`: All monsters.
-* `plants`: All vanilla-like plants.
+* `plants`: All vanilla-like plants. (Automatically groups tree saplings, logs, leaves, wood, and stems into a single entry)
 * `mod:<mod_id>`: All entities from a specific mod.
-* `mod_plants:<mod_id>`: All plant-like blocks from a specific mod.
+* `mod_plants:<mod_id>`: All plant-like blocks from a specific mod. (Automatically groups tree saplings, logs, leaves, wood, and stems into a single entry)
 * `tag:<tag_id>`: All entities with a specific tag (e.g. tag:minecraft:raiders).
 
 #### Example: Custom Category
