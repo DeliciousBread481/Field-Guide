@@ -126,6 +126,25 @@ public class FieldGuideEntryScreen extends BookScreen {
                 }
             }
         }
+
+        if (entryId != null) {
+            ModConfig config = ModConfig.get();
+            for (String removal : config.biomeRemovals) {
+                String[] parts = removal.split("\\|");
+                if (parts.length == 2 && parts[0].equals(entryId.toString())) {
+                    spawnBiomes.remove(new ResourceLocation(parts[1]));
+                }
+            }
+            for (String addition : config.biomeAdditions) {
+                String[] parts = addition.split("\\|");
+                if (parts.length == 2 && parts[0].equals(entryId.toString())) {
+                    ResourceLocation biomeId = new ResourceLocation(parts[1]);
+                    if (!spawnBiomes.contains(biomeId)) {
+                        spawnBiomes.add(biomeId);
+                    }
+                }
+            }
+        }
     }
 
     private void setupBiomeWidget(boolean unlocked) {
@@ -273,15 +292,31 @@ public class FieldGuideEntryScreen extends BookScreen {
         } else {
             long discoveryTime = ProgressManager.getInstance().getDiscoveryTime(entry);
             if (discoveryTime > 0) {
-                String dateStr;
+                Component dateComponent;
+
                 if (ModConfig.get().useRealWorldDate) {
-                    dateStr = new SimpleDateFormat("MMM dd, yyyy").format(new Date(discoveryTime));
+                    String realDate = new SimpleDateFormat("MMM dd, yyyy")
+                            .format(new Date(discoveryTime));
+
+                    dateComponent = Component.literal(realDate);
                 } else {
                     long gameTime = ProgressManager.getInstance().getDiscoveryGameTime(entry);
                     long days = gameTime / 24000L;
-                    dateStr = "Day " + days;
+                    long timeOfDay = gameTime % 24000L;
+
+                    String timeKey = "fieldguide.time.day";
+
+                    if (timeOfDay >= 4500 && timeOfDay < 7500) {
+                        timeKey = "fieldguide.time.noon";
+                    } else if (timeOfDay >= 16500 && timeOfDay < 19500) {
+                        timeKey = "fieldguide.time.midnight";
+                    } else if (timeOfDay >= 13000 && timeOfDay < 23000) {
+                        timeKey = "fieldguide.time.night";
+                    }
+
+                    dateComponent = Component.translatable("fieldguide.date.in_game", days, Component.translatable(timeKey));
                 }
-                guiGraphics.drawString(this.font, Component.literal(dateStr), titleX, titleY + this.font.lineHeight + 2, ModConfig.get().getTextMutedColorInt(), false);
+                guiGraphics.drawString(this.font, dateComponent, titleX, titleY + this.font.lineHeight + 2, ModConfig.get().getTextMutedColorInt(), false);
             }
 
             if (ModConfig.get().disableEditingNames) {

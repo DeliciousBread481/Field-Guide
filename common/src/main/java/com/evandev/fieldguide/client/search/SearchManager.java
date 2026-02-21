@@ -3,7 +3,6 @@ package com.evandev.fieldguide.client.search;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.config.ModConfig;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -16,7 +15,6 @@ import net.minecraft.world.level.block.Block;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 
 public class SearchManager {
 
@@ -48,18 +46,16 @@ public class SearchManager {
 
             if (entry instanceof EntityType<?> type) {
                 var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type);
-                if (key.isPresent()) {
-                    BuiltInRegistries.ENTITY_TYPE.getHolder(key.get()).ifPresent(holder -> {
-                        if (holder.tags().anyMatch(tag -> matchLocation(tag.location(), tagQuery, exactMatch))) results.add(entry);
-                    });
-                }
+                key.flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder).ifPresent(holder -> {
+                    if (holder.tags().anyMatch(tag -> matchLocation(tag.location(), tagQuery, exactMatch)))
+                        results.add(entry);
+                });
             } else if (entry instanceof Block block) {
                 var key = BuiltInRegistries.BLOCK.getResourceKey(block);
-                if (key.isPresent()) {
-                    BuiltInRegistries.BLOCK.getHolder(key.get()).ifPresent(holder -> {
-                        if (holder.tags().anyMatch(tag -> matchLocation(tag.location(), tagQuery, exactMatch))) results.add(entry);
-                    });
-                }
+                key.flatMap(BuiltInRegistries.BLOCK::getHolder).ifPresent(holder -> {
+                    if (holder.tags().anyMatch(tag -> matchLocation(tag.location(), tagQuery, exactMatch)))
+                        results.add(entry);
+                });
             }
         }
         return results;
@@ -102,6 +98,38 @@ public class SearchManager {
                 }
             }
         }
+
+        for (Object entry : ClientFieldGuideManager.getValidEntries()) {
+            if (ClientFieldGuideManager.hideFromSearch(entry)) continue;
+            ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
+            if (entryId != null) {
+                for (String addition : ModConfig.get().biomeAdditions) {
+                    String[] parts = addition.split("\\|");
+                    if (parts.length == 2 && parts[0].equals(entryId.toString())) {
+                        ResourceLocation biomeId = new ResourceLocation(parts[1]);
+                        if (matchLocation(biomeId, biomeQuery, exactMatch)) {
+                            if (!results.contains(entry)) results.add(entry);
+                        }
+                    }
+                }
+            }
+        }
+
+        for (Object entry : new ArrayList<>(results)) {
+            ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
+            if (entryId != null) {
+                for (String removal : ModConfig.get().biomeRemovals) {
+                    String[] parts = removal.split("\\|");
+                    if (parts.length == 2 && parts[0].equals(entryId.toString())) {
+                        ResourceLocation biomeId = new ResourceLocation(parts[1]);
+                        if (matchLocation(biomeId, biomeQuery, exactMatch)) {
+                            results.remove(entry);
+                        }
+                    }
+                }
+            }
+        }
+
         return results;
     }
 
