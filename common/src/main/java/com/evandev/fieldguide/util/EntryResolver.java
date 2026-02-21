@@ -178,6 +178,6 @@ public class EntryResolver {
     }
 
     private static boolean isPlant(Block block) {
-        return block instanceof BushBlock || block instanceof LeavesBlock || block instanceof VineBlock || block instanceof CactusBlock || block instanceof SugarCaneBlock || block instanceof WaterlilyBlock || block instanceof StemBlock;
+        return (block instanceof BushBlock && !(block instanceof StemBlock) && !(block instanceof AttachedStemBlock)) || block instanceof LeavesBlock || block instanceof VineBlock || block instanceof CactusBlock || block instanceof SugarCaneBlock || block instanceof WaterlilyBlock || block instanceof StemGrownBlock || block instanceof CoralFanBlock || block instanceof CoralPlantBlock;
     }
 }
