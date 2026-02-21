@@ -220,8 +220,6 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         loadVisuals(resourceManager, "visuals/entries", (derivedId, json) -> {
             ResourceLocation targetId = json.has("id") ? new ResourceLocation(GsonHelper.getAsString(json, "id")) : derivedId;
             EntryVisual visual = new EntryVisual();
-            if (json.has("auto_rotate")) visual.autoRotate = GsonHelper.getAsBoolean(json, "auto_rotate");
-            if (json.has("rotation_speed")) visual.rotationSpeed = GsonHelper.getAsFloat(json, "rotation_speed");
             if (json.has("custom_sound"))
                 visual.customSound = new ResourceLocation(GsonHelper.getAsString(json, "custom_sound"));
             if (json.has("alignment_icon"))

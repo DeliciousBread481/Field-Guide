@@ -9,8 +9,6 @@ public class EntryVisual {
     public float scale = 1.0f;
     public float yOffset = 0.0f;
     public float xOffset = 0.0f;
-    public Boolean autoRotate = null;
-    public Float rotationSpeed = null;
     public List<ResourceLocation> spawnBiomes = null;
 
     // Custom Sounds & Icons

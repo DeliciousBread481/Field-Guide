@@ -46,18 +46,6 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.hideUndiscoveredFromSearch = newValue)
                 .build());
 
-        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.auto_rotate_models"), config.autoRotateModels)
-                .setDefaultValue(false)
-                .setTooltip(Component.translatable("option.fieldguide.auto_rotate_models.tooltip"))
-                .setSaveConsumer(newValue -> config.autoRotateModels = newValue)
-                .build());
-
-        general.addEntry(entryBuilder.startFloatField(Component.translatable("option.fieldguide.rotation_speed"), config.rotationSpeed)
-                .setDefaultValue(15.0F)
-                .setTooltip(Component.translatable("option.fieldguide.rotation_speed.tooltip"))
-                .setSaveConsumer(newValue -> config.rotationSpeed = newValue)
-                .build());
-
         general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.require_spyglass"), config.requireSpyglass)
                 .setDefaultValue(true)
                 .setTooltip(Component.translatable("option.fieldguide.require_spyglass.tooltip"))

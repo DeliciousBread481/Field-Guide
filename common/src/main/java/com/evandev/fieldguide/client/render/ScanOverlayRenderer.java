@@ -7,16 +7,22 @@ import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -141,8 +147,14 @@ public class ScanOverlayRenderer {
                     ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("InverseModelViewMat").set(modelViewMat.invert());
                 }
 
-                MultiBufferSource depthSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForDepth(requestedType, false)), 1, 1, 1, 1);
-                mc.getBlockRenderer().renderSingleBlock(state, poseStack, depthSource, 15728880, OverlayTexture.pack(0, 10));
+                if (state.getRenderShape() == RenderShape.MODEL) {
+                    net.minecraft.client.renderer.RenderType type = ItemBlockRenderTypes.getRenderType(state, false);
+                    VertexConsumer depthConsumer = new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForDepth(type, false)), 1, 1, 1, 1);
+                    renderBlockModelAsShell(mc, state, pos, poseStack, depthConsumer, blocksToRender);
+                } else {
+                    MultiBufferSource depthSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForDepth(requestedType, false)), 1, 1, 1, 1);
+                    mc.getBlockRenderer().renderSingleBlock(state, poseStack, depthSource, 15728880, OverlayTexture.pack(0, 10));
+                }
 
                 poseStack.popPose();
             }
@@ -169,14 +181,44 @@ public class ScanOverlayRenderer {
                     ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("InverseModelViewMat").set(modelViewMat.invert());
                 }
 
-                MultiBufferSource tintedSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForScan(requestedType, false)), red, green, blue, alpha);
-                mc.getBlockRenderer().renderSingleBlock(state, poseStack, tintedSource, 15728880, OverlayTexture.pack(0, 10));
+                if (state.getRenderShape() == RenderShape.MODEL) {
+                    net.minecraft.client.renderer.RenderType typeColor = ItemBlockRenderTypes.getRenderType(state, false);
+                    VertexConsumer colorConsumer = new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForScan(typeColor, false)), red, green, blue, alpha);
+                    renderBlockModelAsShell(mc, state, pos, poseStack, colorConsumer, blocksToRender);
+                } else {
+                    MultiBufferSource tintedSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForScan(requestedType, false)), red, green, blue, alpha);
+                    mc.getBlockRenderer().renderSingleBlock(state, poseStack, tintedSource, 15728880, OverlayTexture.pack(0, 10));
+                }
 
                 poseStack.popPose();
             }
         }
 
         bufferSource.endBatch();
+    }
+
+    private static void renderBlockModelAsShell(Minecraft mc, BlockState state, BlockPos pos, PoseStack poseStack, VertexConsumer consumer, Set<BlockPos> blocksToRender) {
+        BakedModel model = mc.getBlockRenderer().getBlockModel(state);
+        RandomSource random = RandomSource.create();
+        long seed = state.getSeed(pos);
+        PoseStack.Pose pose = poseStack.last();
+
+        for (Direction dir : Direction.values()) {
+            if (blocksToRender.contains(pos.relative(dir))) {
+                BlockState neighborState = mc.level.getBlockState(pos.relative(dir));
+                if (neighborState.isCollisionShapeFullBlock(mc.level, pos.relative(dir))) {
+                    continue;
+                }
+            }
+            random.setSeed(seed);
+            for (BakedQuad quad : model.getQuads(state, dir, random)) {
+                consumer.putBulkData(pose, quad, 1.0f, 1.0f, 1.0f, 15728880, OverlayTexture.pack(0, 10));
+            }
+        }
+        random.setSeed(seed);
+        for (BakedQuad quad : model.getQuads(state, null, random)) {
+            consumer.putBulkData(pose, quad, 1.0f, 1.0f, 1.0f, 15728880, OverlayTexture.pack(0, 10));
+        }
     }
 
     private static void renderEntityOverlay(PoseStack poseStack, float partialTick, Vec3 camPos, MultiBufferSource.BufferSource bufferSource, Entity targetEntity, Entity outOfRangeEntity, FieldGuideScanner scanner, Minecraft mc, float red, float green, float blue, float alpha) {

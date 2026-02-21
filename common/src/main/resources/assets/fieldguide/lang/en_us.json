@@ -46,12 +46,6 @@
   "option.fieldguide.hide_undiscovered_from_search": "Hide Undiscovered From Search",
   "option.fieldguide.hide_undiscovered_from_search.tooltip": "If enabled, undiscovered entries will be hidden from search results.",
 
-  "option.fieldguide.auto_rotate_models": "Auto Rotate Models",
-  "option.fieldguide.auto_rotate_models.tooltip": "If enabled, the 3D models in the Field Guide will rotate automatically.",
-
-  "option.fieldguide.rotation_speed": "Rotation Speed",
-  "option.fieldguide.rotation_speed.tooltip": "Speed at which to rotate models in degrees per second, if model rotation is enabled.",
-
   "option.fieldguide.require_spyglass": "Require Spyglass",
   "option.fieldguide.require_spyglass.tooltip": "If disabled, you can scan entities and blocks simply by looking at them without needing to use a Spyglass.",
 
