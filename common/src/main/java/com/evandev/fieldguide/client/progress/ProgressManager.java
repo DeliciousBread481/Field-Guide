@@ -107,6 +107,11 @@ public class ProgressManager {
         return id != null ? discoveryTimes.getOrDefault(id.toString(), 0L) : 0L;
     }
 
+    public long getDiscoveryGameTime(Object entry) {
+        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        return id != null ? discoveryGameTimes.getOrDefault(id.toString(), 0L) : 0L;
+    }
+
     public String getCustomName(Object entry) {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
         return id != null ? customNames.get(id.toString()) : null;

@@ -40,6 +40,7 @@ public class FieldGuideScanner {
     private BlockPos fadingPos = null;
 
     private Object outOfRangeTarget = null;
+    private BlockPos outOfRangePos = null;
 
     private FieldGuideScanner() {
     }
@@ -84,6 +85,7 @@ public class FieldGuideScanner {
         );
 
         BlockHitResult blockHit = Objects.requireNonNull(minecraft.level).clip(new ClipContext(eyePos, endPos, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, minecraft.player));
+        BlockHitResult firstBlockHit = blockHit;
 
         while (blockHit.getType() == HitResult.Type.BLOCK) {
             BlockState state = minecraft.level.getBlockState(blockHit.getBlockPos());
@@ -124,14 +126,34 @@ public class FieldGuideScanner {
                 ResourceLocation originalId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
                 if (ModConfig.get().getRedirect(originalId) != null) foundTarget = hitEntity;
             }
-        } else if (blockHit.getType() == HitResult.Type.BLOCK) {
-            BlockState state = minecraft.level.getBlockState(blockHit.getBlockPos());
-            Block block = state.getBlock();
-            if (ClientFieldGuideManager.getValidEntries().contains(block) && !ProgressManager.getInstance().isUnlocked(block)) {
-                foundTarget = block;
-            } else if (!ProgressManager.getInstance().isUnlocked(block)) {
-                ResourceLocation originalId = BuiltInRegistries.BLOCK.getKey(block);
-                if (ModConfig.get().getRedirect(originalId) != null) foundTarget = block;
+        } else {
+            if (blockHit.getType() == HitResult.Type.BLOCK) {
+                BlockState state = minecraft.level.getBlockState(blockHit.getBlockPos());
+                Block block = state.getBlock();
+                if (ClientFieldGuideManager.getValidEntries().contains(block) && !ProgressManager.getInstance().isUnlocked(block)) {
+                    foundTarget = block;
+                } else if (!ProgressManager.getInstance().isUnlocked(block)) {
+                    ResourceLocation originalId = BuiltInRegistries.BLOCK.getKey(block);
+                    if (ModConfig.get().getRedirect(originalId) != null) foundTarget = block;
+                }
+            }
+
+            if (foundTarget == null && firstBlockHit.getType() == HitResult.Type.BLOCK && !firstBlockHit.getBlockPos().equals(blockHit.getBlockPos())) {
+                BlockState state = minecraft.level.getBlockState(firstBlockHit.getBlockPos());
+                Block block = state.getBlock();
+                boolean validTarget = false;
+                if (ClientFieldGuideManager.getValidEntries().contains(block) && !ProgressManager.getInstance().isUnlocked(block)) {
+                    validTarget = true;
+                } else if (!ProgressManager.getInstance().isUnlocked(block)) {
+                    ResourceLocation originalId = BuiltInRegistries.BLOCK.getKey(block);
+                    if (ModConfig.get().getRedirect(originalId) != null) validTarget = true;
+                }
+
+                if (validTarget) {
+                    foundTarget = block;
+                    blockHit = firstBlockHit;
+                    hitDistSq = eyePos.distanceToSqr(firstBlockHit.getLocation());
+                }
             }
         }
 
@@ -145,9 +167,11 @@ public class FieldGuideScanner {
 
             if (outOfRange) {
                 this.outOfRangeTarget = foundTarget;
+                this.outOfRangePos = (foundTarget instanceof Block) ? blockHit.getBlockPos() : null;
                 resetScanTicks();
             } else {
                 this.outOfRangeTarget = null;
+                this.outOfRangePos = null;
                 Object targetKey = (foundTarget instanceof Entity) ? ((Entity) foundTarget).getType() : foundTarget;
                 boolean sameTarget = (scanningTarget instanceof Entity && foundTarget instanceof Entity)
                         ? scanningTarget == foundTarget
@@ -221,6 +245,7 @@ public class FieldGuideScanner {
     private void resetScanState() {
         resetScanTicks();
         outOfRangeTarget = null;
+        outOfRangePos = null;
     }
 
     private void resetScanTicks() {
@@ -249,6 +274,10 @@ public class FieldGuideScanner {
 
     public Object getOutOfRangeTarget() {
         return outOfRangeTarget;
+    }
+
+    public BlockPos getOutOfRangePos() {
+        return outOfRangePos;
     }
 
     public Entity getOutOfRangeEntity() {

@@ -273,7 +273,14 @@ public class FieldGuideEntryScreen extends BookScreen {
         } else {
             long discoveryTime = ProgressManager.getInstance().getDiscoveryTime(entry);
             if (discoveryTime > 0) {
-                String dateStr = new SimpleDateFormat("MMM dd, yyyy").format(new Date(discoveryTime));
+                String dateStr;
+                if (ModConfig.get().useRealWorldDate) {
+                    dateStr = new SimpleDateFormat("MMM dd, yyyy").format(new Date(discoveryTime));
+                } else {
+                    long gameTime = ProgressManager.getInstance().getDiscoveryGameTime(entry);
+                    long days = gameTime / 24000L;
+                    dateStr = "Day " + days;
+                }
                 guiGraphics.drawString(this.font, Component.literal(dateStr), titleX, titleY + this.font.lineHeight + 2, ModConfig.get().getTextMutedColorInt(), false);
             }
 

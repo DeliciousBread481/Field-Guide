@@ -33,7 +33,8 @@ public class ScanOverlayRenderer {
 
         Entity outOfRangeEntity = scanner.getOutOfRangeEntity();
         Entity targetEntity = scanner.getScanningEntity() != null ? scanner.getScanningEntity() : (scanner.getFadingEntity() != null ? scanner.getFadingEntity() : outOfRangeEntity);
-        BlockPos targetBlock = (scanner.getScanningTarget() instanceof Block && scanner.getScanningPos() != null) ? scanner.getScanningPos() : scanner.getFadingPos();
+        BlockPos outOfRangePos = scanner.getOutOfRangePos();
+        BlockPos targetBlock = (scanner.getScanningTarget() instanceof Block && scanner.getScanningPos() != null) ? scanner.getScanningPos() : (scanner.getFadingPos() != null ? scanner.getFadingPos() : outOfRangePos);
 
         if (targetEntity == null && targetBlock == null) return;
         RenderSystem.clear(GL11.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
@@ -41,7 +42,7 @@ public class ScanOverlayRenderer {
         Vec3 camPos = camera.getPosition();
         float red, green, blue, alpha;
 
-        if (outOfRangeEntity != null && targetEntity == outOfRangeEntity) {
+        if ((outOfRangeEntity != null && targetEntity == outOfRangeEntity) || (outOfRangePos != null && targetBlock == outOfRangePos)) {
             red = 1.0F;
             green = 0.0F;
             blue = 0.0F;

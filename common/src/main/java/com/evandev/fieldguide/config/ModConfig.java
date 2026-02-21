@@ -58,7 +58,7 @@ public class ModConfig {
     public String detailsSilhouetteColor = "#DDC69B";
     public boolean useRealWorldDate = false;
 
-    public List<String> entityBlacklist = new ArrayList<>();
+    public List<String> entityBlacklist = getDefaultBlacklist();
 
     public List<String> lootRemovals = new ArrayList<>();
     public List<String> lootAdditions = getDefaultLootAdditions();
@@ -103,8 +103,6 @@ public class ModConfig {
         defaults.add("minecraft:armor_stand");
         defaults.add("minecraft:giant");
         defaults.add("minecraft:illusioner");
-        defaults.add("minecraft:grass");
-        defaults.add("minecraft:tall_grass");
         return defaults;
     }
 
@@ -137,6 +135,12 @@ public class ModConfig {
 
         // Ancient City Mobs
         defaults.add("minecraft:warden|minecraft:deep_dark");
+
+        // Bees
+        defaults.add("minecraft:bee|minecraft:meadow");
+        defaults.add("minecraft:bee|minecraft:flower_forest");
+        defaults.add("minecraft:bee|minecraft:sunflower_plains");
+        defaults.add("minecraft:bee|minecraft:plains");
 
         return defaults;
     }
@@ -180,7 +184,9 @@ public class ModConfig {
         return parseColor(textMutedColor, 0xC7A875);
     }
 
-    public int getTextNewColorInt() { return parseColor(textNewColor, 0x63B40C); }
+    public int getTextNewColorInt() {
+        return parseColor(textNewColor, 0x63B40C);
+    }
 
     public int getPageNumberColorInt() {
         return parseColor(pageNumberColor, 0xC7A875);
