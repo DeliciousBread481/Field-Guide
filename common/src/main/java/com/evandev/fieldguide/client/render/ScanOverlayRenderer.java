@@ -18,6 +18,7 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
@@ -29,10 +30,8 @@ import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
-import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.Queue;
-import java.util.Set;
 
 public class ScanOverlayRenderer {
     private static final float VERTICAL_BUFFER = 1.3f;
@@ -104,43 +103,74 @@ public class ScanOverlayRenderer {
 
         float fillHeight = scanner.getScanningTarget() != null ? progress : 1.0f;
 
-        Block targetBlockType = mc.level.getBlockState(targetBlock).getBlock();
+        BlockState targetState = mc.level.getBlockState(targetBlock);
+        Block targetBlockType = targetState.getBlock();
         Object entry = ClientFieldGuideManager.getInstance().getEntryForTarget(targetBlockType);
+
         Set<BlockPos> blocksToRender = new HashSet<>();
-        blocksToRender.add(targetBlock);
 
-        if (entry instanceof CompositeFieldGuideEntry composite) {
-            Queue<BlockPos> queue = new LinkedList<>();
-            queue.add(targetBlock);
-            int maxBlocks = 300;
+        if (targetState.is(BlockTags.LOGS) || targetState.is(BlockTags.LEAVES)) {
+            blocksToRender = gatherTreeBlocks(mc, targetBlock);
+        } else {
+            blocksToRender.add(targetBlock);
 
-            while (!queue.isEmpty() && blocksToRender.size() < maxBlocks) {
-                BlockPos pos = queue.poll();
-                for (Direction dir : Direction.values()) {
-                    BlockPos neighbor = pos.relative(dir);
-                    if (!blocksToRender.contains(neighbor)) {
-                        Block neighborBlock = mc.level.getBlockState(neighbor).getBlock();
-                        if (composite.components().contains(neighborBlock) || composite.displayEntry() == neighborBlock) {
-                            blocksToRender.add(neighbor);
-                            queue.add(neighbor);
+            if (entry instanceof CompositeFieldGuideEntry composite) {
+                Queue<BlockPos> queue = new PriorityQueue<>(Comparator.comparingDouble(p -> p.distSqr(targetBlock)));
+                queue.add(targetBlock);
+                int maxBlocks = 400;
+
+                while (!queue.isEmpty() && blocksToRender.size() < maxBlocks) {
+                    BlockPos pos = queue.poll();
+
+                    for (int dx = -1; dx <= 1; dx++) {
+                        for (int dy = -1; dy <= 1; dy++) {
+                            for (int dz = -1; dz <= 1; dz++) {
+                                if (dx == 0 && dy == 0 && dz == 0) continue;
+
+                                BlockPos neighbor = pos.offset(dx, dy, dz);
+
+                                int hDist = Math.max(Math.abs(neighbor.getX() - targetBlock.getX()), Math.abs(neighbor.getZ() - targetBlock.getZ()));
+                                int vDist = Math.abs(neighbor.getY() - targetBlock.getY());
+                                if (hDist > 6 || vDist > 32) continue;
+
+                                if (!blocksToRender.contains(neighbor)) {
+                                    Block neighborBlock = mc.level.getBlockState(neighbor).getBlock();
+                                    if (composite.components().contains(neighborBlock) || composite.displayEntry() == neighborBlock) {
+                                        blocksToRender.add(neighbor);
+                                        queue.add(neighbor);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-            }
-        } else if (isMultiblockPlant(targetBlockType)) {
-            Queue<BlockPos> queue = new LinkedList<>();
-            queue.add(targetBlock);
-            int maxBlocks = 100;
+            } else if (isMultiblockPlant(targetBlockType)) {
+                Queue<BlockPos> queue = new PriorityQueue<>(Comparator.comparingDouble(p -> p.distSqr(targetBlock)));
+                queue.add(targetBlock);
+                int maxBlocks = 150;
 
-            while (!queue.isEmpty() && blocksToRender.size() < maxBlocks) {
-                BlockPos pos = queue.poll();
-                for (Direction dir : Direction.values()) {
-                    BlockPos neighbor = pos.relative(dir);
-                    if (!blocksToRender.contains(neighbor)) {
-                        Block neighborBlock = mc.level.getBlockState(neighbor).getBlock();
-                        if (neighborBlock == targetBlockType) {
-                            blocksToRender.add(neighbor);
-                            queue.add(neighbor);
+                while (!queue.isEmpty() && blocksToRender.size() < maxBlocks) {
+                    BlockPos pos = queue.poll();
+
+                    for (int dx = -1; dx <= 1; dx++) {
+                        for (int dy = -1; dy <= 1; dy++) {
+                            for (int dz = -1; dz <= 1; dz++) {
+                                if (dx == 0 && dy == 0 && dz == 0) continue;
+
+                                BlockPos neighbor = pos.offset(dx, dy, dz);
+
+                                int hDist = Math.max(Math.abs(neighbor.getX() - targetBlock.getX()), Math.abs(neighbor.getZ() - targetBlock.getZ()));
+                                int vDist = Math.abs(neighbor.getY() - targetBlock.getY());
+                                if (hDist > 5 || vDist > 32) continue;
+
+                                if (!blocksToRender.contains(neighbor)) {
+                                    Block neighborBlock = mc.level.getBlockState(neighbor).getBlock();
+                                    if (neighborBlock == targetBlockType) {
+                                        blocksToRender.add(neighbor);
+                                        queue.add(neighbor);
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -232,6 +262,94 @@ public class ScanOverlayRenderer {
         }
 
         bufferSource.endBatch();
+    }
+
+    private static Set<BlockPos> gatherTreeBlocks(Minecraft mc, BlockPos startPos) {
+        Set<BlockPos> blocks = new HashSet<>();
+        BlockState startState = mc.level.getBlockState(startPos);
+        BlockPos trunkStart = startPos;
+
+        if (startState.is(BlockTags.LEAVES)) {
+            Queue<BlockPos> queue = new LinkedList<>();
+            Set<BlockPos> visited = new HashSet<>();
+            queue.add(startPos);
+            visited.add(startPos);
+
+            while (!queue.isEmpty() && visited.size() < 128) {
+                BlockPos pos = queue.poll();
+                if (mc.level.getBlockState(pos).is(BlockTags.LOGS)) {
+                    trunkStart = pos;
+                    break;
+                }
+                for (Direction dir : Direction.values()) {
+                    BlockPos neighbor = pos.relative(dir);
+                    if (!visited.contains(neighbor)) {
+                        visited.add(neighbor);
+                        BlockState neighborState = mc.level.getBlockState(neighbor);
+                        if (neighborState.is(BlockTags.LEAVES) || neighborState.is(BlockTags.LOGS)) {
+                            queue.add(neighbor);
+                        }
+                    }
+                }
+            }
+        }
+
+        Set<BlockPos> trunk = new HashSet<>();
+        Queue<BlockPos> trunkQueue = new LinkedList<>();
+        trunkQueue.add(trunkStart);
+        trunk.add(trunkStart);
+
+        while (!trunkQueue.isEmpty() && trunk.size() < 256) {
+            BlockPos pos = trunkQueue.poll();
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    for (int dz = -1; dz <= 1; dz++) {
+                        if (dx == 0 && dy == 0 && dz == 0) continue;
+                        BlockPos neighbor = pos.offset(dx, dy, dz);
+
+                        int hDist = Math.max(Math.abs(neighbor.getX() - trunkStart.getX()), Math.abs(neighbor.getZ() - trunkStart.getZ()));
+                        if (hDist <= 2 && !trunk.contains(neighbor) && mc.level.getBlockState(neighbor).is(BlockTags.LOGS)) {
+                            trunk.add(neighbor);
+                            trunkQueue.add(neighbor);
+                        }
+                    }
+                }
+            }
+        }
+
+        Set<BlockPos> leaves = new HashSet<>();
+        Map<BlockPos, Integer> leafDistances = new HashMap<>();
+        Queue<BlockPos> leafQueue = new LinkedList<>();
+
+        for (BlockPos logPos : trunk) {
+            leafQueue.add(logPos);
+            leafDistances.put(logPos, 0);
+        }
+
+        while (!leafQueue.isEmpty() && leaves.size() < 600) {
+            BlockPos pos = leafQueue.poll();
+            int currentDist = leafDistances.get(pos);
+
+            if (currentDist >= 5) continue;
+
+            for (Direction dir : Direction.values()) {
+                BlockPos neighbor = pos.relative(dir);
+                if (!leafDistances.containsKey(neighbor)) {
+                    BlockState neighborState = mc.level.getBlockState(neighbor);
+                    if (neighborState.is(BlockTags.LEAVES)) {
+                        leafDistances.put(neighbor, currentDist + 1);
+                        leaves.add(neighbor);
+                        leafQueue.add(neighbor);
+                    }
+                }
+            }
+        }
+
+        blocks.addAll(trunk);
+        blocks.addAll(leaves);
+        blocks.add(startPos);
+
+        return blocks;
     }
 
     private static void renderBlockModelAsShell(Minecraft mc, BlockState state, BlockPos pos, PoseStack poseStack, VertexConsumer consumer, Set<BlockPos> blocksToRender) {
