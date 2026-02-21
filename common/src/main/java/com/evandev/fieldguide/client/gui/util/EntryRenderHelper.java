@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.client.gui.util;
 
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -22,8 +23,9 @@ import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.Property;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -63,19 +65,76 @@ public class EntryRenderHelper {
         return Optional.empty();
     }
 
+    private static float getScaleFactorForEntity(LivingEntity entity) {
+        try {
+            float width = entity.getBbWidth();
+            float height = entity.getBbHeight();
+            float referenceSize = Math.max(width, height);
+
+            float scaleFactor = 1.0F / (referenceSize * referenceSize);
+            float calibrationFactor = 2.0F;
+            scaleFactor *= calibrationFactor;
+
+            float minScale = 0.1F;
+            float maxScale = 0.35F;
+
+            if (referenceSize >= 3.0F) {
+                float extraScaleFactor = 30.0F / referenceSize;
+                scaleFactor *= extraScaleFactor;
+                return Math.min(Math.max(scaleFactor, minScale * extraScaleFactor), maxScale);
+            } else {
+                return Math.min(Math.max(scaleFactor, minScale), maxScale) * 3.5F;
+            }
+        } catch (Exception e) {
+            return 0.35F;
+        }
+    }
+
+    private static void setupBlockLighting() {
+        Vector3f light0 = new Vector3f(0.2F, -1.0F, -0.7F).normalize();
+        Vector3f light1 = new Vector3f(-0.2F, 0.0F, 0.7F).normalize();
+        RenderSystem.setShaderLights(light0, light1);
+    }
+
+    private static void setupEntityLighting() {
+        Vector3f light0 = new Vector3f(-1.0F, -1.0F, 1.0F).normalize();
+        Vector3f light1 = new Vector3f(1.0F, -1.0F, 1.0F).normalize();
+        RenderSystem.setShaderLights(light0, light1);
+    }
+
     public static void renderEntityNormalized(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, int maxWidth, int maxHeight, float baseScale, boolean silhouette, int color, boolean isPage, float bounceScale) {
         Optional<ResourceLocation> textureOpt = getResourcePackOverride(entity.getType(), isPage);
 
         if (textureOpt.isEmpty()) {
             textureOpt = IconCacheManager.getOrGenerateIcon(entity.getType(), isPage, () -> {
-                PoseStack pose = new PoseStack();
+                ResourceLocation id = ClientFieldGuideManager.getEntryId(entity.getType());
+                EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(id);
 
-                pose.scale(70f, -70f, -70f);
+                float visualScale = visual.scale;
+                float yOff = visual.yOffset;
+                if (isPage) {
+                    if (visual.pageScale != null) visualScale = visual.pageScale;
+                    if (visual.pageYOffset != null) yOff = visual.pageYOffset;
+                } else {
+                    if (visual.gridScale != null) visualScale = visual.gridScale;
+                    if (visual.gridYOffset != null) yOff = visual.gridYOffset;
+                }
+
+                float dynamicFactor = getScaleFactorForEntity(entity);
+                float clampedScale = 85.0F * dynamicFactor * visualScale;
+                float entityHeight = entity.getBbHeight();
+
+                if (entityHeight * clampedScale > 230.0F) {
+                    clampedScale = 230.0F / entityHeight;
+                }
+
+                PoseStack pose = new PoseStack();
+                pose.scale(clampedScale, -clampedScale, -clampedScale);
 
                 pose.mulPose(Axis.XP.rotationDegrees(30.0F));
-                pose.mulPose(Axis.YP.rotationDegrees(330.0F));
+                pose.mulPose(Axis.YP.rotationDegrees(210.0F));
 
-                pose.translate(0, -0.2f, 0);
+                pose.translate(0, (entityHeight / -2.0F) + (yOff / clampedScale), 0);
 
                 entity.setYRot(0.0F);
                 entity.setXRot(0.0F);
@@ -89,6 +148,8 @@ public class EntryRenderHelper {
                 entity.walkAnimation.position(0.0F);
                 entity.attackAnim = 0.0F;
                 entity.oAttackAnim = 0.0F;
+
+                setupEntityLighting();
 
                 MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
                 Minecraft.getInstance().getEntityRenderDispatcher().render(entity, 0, 0, 0, 0.0F, 1.0F, pose, buffers, LightTexture.FULL_BRIGHT);
@@ -104,14 +165,27 @@ public class EntryRenderHelper {
 
         if (textureOpt.isEmpty()) {
             textureOpt = IconCacheManager.getOrGenerateIcon(block, isPage, () -> {
-                PoseStack pose = new PoseStack();
+                ResourceLocation id = ClientFieldGuideManager.getEntryId(block);
+                EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(id);
 
-                pose.scale(100f, -100f, -100f);
+                float visualScale = visual.scale;
+                if (isPage) {
+                    if (visual.pageScale != null) visualScale = visual.pageScale;
+                } else {
+                    if (visual.gridScale != null) visualScale = visual.gridScale;
+                }
+
+                float clampedScale = 100f * visualScale;
+
+                PoseStack pose = new PoseStack();
+                pose.scale(clampedScale, -clampedScale, -clampedScale);
 
                 pose.mulPose(Axis.XP.rotationDegrees(30.0F));
-                pose.mulPose(Axis.YP.rotationDegrees(330.0F));
+                pose.mulPose(Axis.YP.rotationDegrees(210.0F));
 
                 pose.translate(-0.5, -0.5, -0.5);
+
+                setupBlockLighting();
 
                 MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
                 BlockState state = block.defaultBlockState();
@@ -168,9 +242,11 @@ public class EntryRenderHelper {
                 pose.scale(30f, -30f, -30f);
 
                 pose.mulPose(Axis.XP.rotationDegrees(30.0F));
-                pose.mulPose(Axis.YP.rotationDegrees(330.0F));
+                pose.mulPose(Axis.YP.rotationDegrees(210.0F));
 
                 pose.translate(0, -2.0, 0);
+
+                setupBlockLighting();
 
                 MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
                 Block logBlock = null;
