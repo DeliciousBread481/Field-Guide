@@ -58,6 +58,9 @@ dependencies {
     // Immersive Overlays
     modRuntimeOnly "maven.modrinth:immersive-overlays:${immersive_overlays_version}-forge"
 
+    // Spyglass Improvements
+    modRuntimeOnly "maven.modrinth:spyglass-improvements:${spyglass_improvements_version}+forge"
+
     compileOnly project(":common")
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
 }

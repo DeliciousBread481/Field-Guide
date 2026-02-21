@@ -27,6 +27,11 @@ dependencies {
     // Immersive Overlays
     modRuntimeOnly "maven.modrinth:immersive-overlays:${immersive_overlays_version}-fabric"
 
+    // Spyglass Improvements
+    modRuntimeOnly "maven.modrinth:spyglass-improvements:${spyglass_improvements_version}+fabric"
+
+
+
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
     implementation project(":common")
 }
