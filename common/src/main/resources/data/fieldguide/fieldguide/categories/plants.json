@@ -87,7 +87,8 @@
     },
     {
       "type": "composite",
-      "id": "minecraft:crimson_fungus",
+      "id": "fieldguide:huge_crimson_fungus",
+      "display": "minecraft:crimson_stem",
       "structure_nbt": "fieldguide:crimson_fungus",
       "components": [
         "minecraft:crimson_stem",
@@ -97,7 +98,8 @@
     },
     {
       "type": "composite",
-      "id": "minecraft:warped_fungus",
+      "id": "fieldguide:huge_warped_fungus",
+      "display": "minecraft:warped_stem",
       "structure_nbt": "fieldguide:warped_fungus",
       "components": [
         "minecraft:warped_stem",
@@ -107,7 +109,8 @@
     },
     {
       "type": "composite",
-      "id": "minecraft:brown_mushroom",
+      "id": "fieldguide:huge_brown_mushroom",
+      "display": "minecraft:brown_mushroom_block",
       "structure_nbt": "fieldguide:huge_brown_mushroom",
       "components": [
         "minecraft:brown_mushroom_block",
@@ -116,7 +119,8 @@
     },
     {
       "type": "composite",
-      "id": "minecraft:red_mushroom",
+      "id": "fieldguide:huge_red_mushroom",
+      "display": "minecraft:red_mushroom_block",
       "structure_nbt": "fieldguide:huge_red_mushroom",
       "components": [
         "minecraft:red_mushroom_block",

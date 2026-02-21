@@ -109,50 +109,79 @@ public class FieldGuideScanner {
             if (hitEntity instanceof EnderDragonPart part) hitEntity = part.parentMob;
 
             EntityType<?> type = hitEntity.getType();
-            Object entryForTarget = ClientFieldGuideManager.getInstance().getEntryForTarget(type);
+            ResourceLocation originalId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+            ResourceLocation redirectId = ModConfig.get().getRedirect(originalId);
+
+            Object actualTargetKey = type;
+            if (redirectId != null) {
+                Optional<EntityType<?>> opt = BuiltInRegistries.ENTITY_TYPE.getOptional(redirectId);
+                if (opt.isPresent()) actualTargetKey = opt.get();
+                else {
+                    Optional<Block> optBlock = BuiltInRegistries.BLOCK.getOptional(redirectId);
+                    if (optBlock.isPresent()) actualTargetKey = optBlock.get();
+                }
+            }
+
+            Object entryForTarget = ClientFieldGuideManager.getInstance().getEntryForTarget(actualTargetKey);
             Category cat = ClientFieldGuideManager.getInstance().getCategoryForEntry(entryForTarget);
             boolean isScannable = cat != null;
 
             TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation("fieldguide", "kill_to_unlock"));
             boolean requiresKill = false;
-            var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type);
-            if (key.isPresent()) {
-                var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
-                if (holder.isPresent() && holder.get().is(killToUnlockTag)) requiresKill = true;
+            if (actualTargetKey instanceof EntityType<?> actualType) {
+                var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(actualType);
+                if (key.isPresent()) {
+                    var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
+                    if (holder.isPresent() && holder.get().is(killToUnlockTag)) requiresKill = true;
+                }
             }
 
             if (entryForTarget != null && !ProgressManager.getInstance().isUnlocked(entryForTarget) && isScannable && !requiresKill) {
                 foundTarget = hitEntity;
-            } else if (!ProgressManager.getInstance().isUnlocked(type) && isScannable && !requiresKill) {
-                ResourceLocation originalId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
-                if (ModConfig.get().getRedirect(originalId) != null) foundTarget = hitEntity;
             }
         } else {
             if (blockHit.getType() == HitResult.Type.BLOCK) {
                 BlockState state = minecraft.level.getBlockState(blockHit.getBlockPos());
                 Block block = state.getBlock();
-                Object entryForTarget = ClientFieldGuideManager.getInstance().getEntryForTarget(block);
+
+                ResourceLocation originalId = BuiltInRegistries.BLOCK.getKey(block);
+                ResourceLocation redirectId = ModConfig.get().getRedirect(originalId);
+
+                Object actualTargetKey = block;
+                if (redirectId != null) {
+                    Optional<Block> opt = BuiltInRegistries.BLOCK.getOptional(redirectId);
+                    if (opt.isPresent()) actualTargetKey = opt.get();
+                    else {
+                        Optional<EntityType<?>> optEntity = BuiltInRegistries.ENTITY_TYPE.getOptional(redirectId);
+                        if (optEntity.isPresent()) actualTargetKey = optEntity.get();
+                    }
+                }
+
+                Object entryForTarget = ClientFieldGuideManager.getInstance().getEntryForTarget(actualTargetKey);
                 if (entryForTarget != null && !ProgressManager.getInstance().isUnlocked(entryForTarget)) {
                     foundTarget = block;
-                } else if (!ProgressManager.getInstance().isUnlocked(block)) {
-                    ResourceLocation originalId = BuiltInRegistries.BLOCK.getKey(block);
-                    if (ModConfig.get().getRedirect(originalId) != null) foundTarget = block;
                 }
             }
 
             if (foundTarget == null && firstBlockHit.getType() == HitResult.Type.BLOCK && !firstBlockHit.getBlockPos().equals(blockHit.getBlockPos())) {
                 BlockState state = minecraft.level.getBlockState(firstBlockHit.getBlockPos());
                 Block block = state.getBlock();
-                Object entryForTarget = ClientFieldGuideManager.getInstance().getEntryForTarget(block);
-                boolean validTarget = false;
-                if (entryForTarget != null && !ProgressManager.getInstance().isUnlocked(entryForTarget)) {
-                    validTarget = true;
-                } else if (!ProgressManager.getInstance().isUnlocked(block)) {
-                    ResourceLocation originalId = BuiltInRegistries.BLOCK.getKey(block);
-                    if (ModConfig.get().getRedirect(originalId) != null) validTarget = true;
+
+                ResourceLocation originalId = BuiltInRegistries.BLOCK.getKey(block);
+                ResourceLocation redirectId = ModConfig.get().getRedirect(originalId);
+
+                Object actualTargetKey = block;
+                if (redirectId != null) {
+                    Optional<Block> opt = BuiltInRegistries.BLOCK.getOptional(redirectId);
+                    if (opt.isPresent()) actualTargetKey = opt.get();
+                    else {
+                        Optional<EntityType<?>> optEntity = BuiltInRegistries.ENTITY_TYPE.getOptional(redirectId);
+                        if (optEntity.isPresent()) actualTargetKey = optEntity.get();
+                    }
                 }
 
-                if (validTarget) {
+                Object entryForTarget = ClientFieldGuideManager.getInstance().getEntryForTarget(actualTargetKey);
+                if (entryForTarget != null && !ProgressManager.getInstance().isUnlocked(entryForTarget)) {
                     foundTarget = block;
                     blockHit = firstBlockHit;
                     hitDistSq = eyePos.distanceToSqr(firstBlockHit.getLocation());

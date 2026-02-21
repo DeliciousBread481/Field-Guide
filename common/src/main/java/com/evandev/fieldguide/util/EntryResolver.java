@@ -38,7 +38,8 @@ public class EntryResolver {
                     addedIds.add(entry.id());
                 });
             } else if (entry.type() == CategoryEntry.Type.COMPOSITE && entry.id() != null) {
-                resolveSingleEntry(entry.id(), config).ifPresent(displayEntry -> {
+                ResourceLocation displayLoc = entry.displayId() != null ? entry.displayId() : entry.id();
+                resolveSingleEntry(displayLoc, config).ifPresent(displayEntry -> {
                     List<Object> components = new ArrayList<>();
                     if (entry.components() != null) {
                         for (ResourceLocation compId : entry.components()) {
@@ -62,7 +63,16 @@ public class EntryResolver {
                 }
             }
         }
-        return new ArrayList<>(foundEntries);
+        List<Object> resolved = new ArrayList<>(foundEntries);
+        resolved.removeIf(e -> {
+            ResourceLocation id = null;
+            if (e instanceof EntityType<?> type) id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+            else if (e instanceof Block block) id = BuiltInRegistries.BLOCK.getKey(block);
+            else if (e instanceof CompositeFieldGuideEntry comp) id = comp.id();
+            return id != null && config.getRedirect(id) != null;
+        });
+
+        return resolved;
     }
 
     private static Optional<Object> resolveSingleEntry(ResourceLocation id, ModConfig config) {

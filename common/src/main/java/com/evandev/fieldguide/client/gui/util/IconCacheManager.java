@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class IconCacheManager {
     private static final Path CACHE_DIR = Services.PLATFORM.getConfigDirectory().resolve("../fieldguide_cache");
@@ -43,6 +44,16 @@ public class IconCacheManager {
             mc.getTextureManager().release(id);
         }
         TEXTURE_CACHE.clear();
+
+        if (Files.exists(CACHE_DIR)) {
+            try (Stream<Path> walk = Files.walk(CACHE_DIR)) {
+                walk.sorted(java.util.Comparator.reverseOrder())
+                        .map(Path::toFile)
+                        .forEach(File::delete);
+            } catch (IOException e) {
+                Constants.LOG.error("Failed to delete icon cache directory", e);
+            }
+        }
     }
 
     public static Optional<ResourceLocation> getOrGenerateIcon(Object entry, boolean isPage, Runnable renderAction) {

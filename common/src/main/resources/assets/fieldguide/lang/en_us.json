@@ -171,9 +171,9 @@
   "fieldguide.name.minecraft.dark_oak_sapling": "Dark Oak Tree",
   "fieldguide.name.minecraft.mangrove_propagule": "Mangrove Tree",
   "fieldguide.name.minecraft.cherry_sapling": "Cherry Tree",
-  "fieldguide.name.minecraft.azalea": "Azalea Tree",
-  "fieldguide.name.minecraft.crimson_fungus": "Huge Crimson Fungus",
-  "fieldguide.name.minecraft.warped_fungus": "Huge Warped Fungus",
-  "fieldguide.name.minecraft.brown_mushroom": "Huge Brown Mushroom",
-  "fieldguide.name.minecraft.red_mushroom": "Huge Red Mushroom"
+  "fieldguide.name.minecraft.azalea_tree": "Azalea Tree",
+  "fieldguide.name.fieldguide.huge_brown_mushroom": "Huge Brown Mushroom",
+  "fieldguide.name.fieldguide.huge_red_mushroom": "Huge Red Mushroom",
+  "fieldguide.name.fieldguide.huge_crimson_fungus": "Huge Crimson Fungus",
+  "fieldguide.name.fieldguide.huge_warped_fungus": "Huge Warped Fungus"
 }

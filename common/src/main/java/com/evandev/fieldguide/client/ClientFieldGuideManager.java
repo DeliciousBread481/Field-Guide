@@ -141,15 +141,30 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public Object getEntryForTarget(Object target) {
+        // Unique entries
         for (Object entry : getValidEntries()) {
             if (entry.equals(target)) return entry;
             if (entry instanceof CompositeFieldGuideEntry composite) {
-                if (composite.displayEntry().equals(target) || composite.components().contains(target)) {
+                if (composite.displayEntry() != null && composite.displayEntry().equals(target)) {
                     return entry;
                 }
             }
         }
-        return null;
+
+        // Ambiguous blocks
+        Object foundComponentEntry = null;
+        for (Object entry : getValidEntries()) {
+            if (entry instanceof CompositeFieldGuideEntry composite) {
+                if (composite.components() != null && composite.components().contains(target)) {
+                    if (foundComponentEntry != null) {
+                        return null;
+                    }
+                    foundComponentEntry = entry;
+                }
+            }
+        }
+
+        return foundComponentEntry;
     }
 
     public String getJournalTitle() {

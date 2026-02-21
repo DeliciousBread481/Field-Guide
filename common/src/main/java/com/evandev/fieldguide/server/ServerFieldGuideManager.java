@@ -55,9 +55,9 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
             if (resolved != null) {
                 for (Object obj : resolved) {
                     if (obj instanceof EntityType<?> type) {
-                        flatCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.ENTITY_TYPE.getKey(type), null, null, null));
+                        flatCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.ENTITY_TYPE.getKey(type), BuiltInRegistries.ENTITY_TYPE.getKey(type), null, null, null));
                     } else if (obj instanceof Block block) {
-                        flatCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.BLOCK.getKey(block), null, null, null));
+                        flatCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.BLOCK.getKey(block), BuiltInRegistries.BLOCK.getKey(block), null, null, null));
                     } else if (obj instanceof CompositeFieldGuideEntry comp) {
                         List<ResourceLocation> compIds = new ArrayList<>();
                         if (comp.components() != null) {
@@ -66,7 +66,13 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
                                 else if (c instanceof Block b) compIds.add(BuiltInRegistries.BLOCK.getKey(b));
                             }
                         }
-                        flatCat.addEntry(new CategoryEntry(CategoryEntry.Type.COMPOSITE, comp.id(), null, compIds, comp.structureNbt()));
+
+                        ResourceLocation displayId = null;
+                        if (comp.displayEntry() instanceof EntityType<?> t)
+                            displayId = BuiltInRegistries.ENTITY_TYPE.getKey(t);
+                        else if (comp.displayEntry() instanceof Block b) displayId = BuiltInRegistries.BLOCK.getKey(b);
+
+                        flatCat.addEntry(new CategoryEntry(CategoryEntry.Type.COMPOSITE, comp.id(), displayId, null, compIds, comp.structureNbt()));
                     }
                 }
             }
@@ -153,14 +159,15 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
                             switch (typeStr) {
                                 case "entry" -> {
                                     ResourceLocation id = new ResourceLocation(GsonHelper.getAsString(obj, "id"));
-                                    category.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, id, null, null, null));
+                                    category.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, id, id, null, null, null));
                                 }
                                 case "auto_populate" -> {
                                     String strategy = GsonHelper.getAsString(obj, "strategy");
-                                    category.addEntry(new CategoryEntry(CategoryEntry.Type.AUTO_POPULATE, null, strategy, null, null));
+                                    category.addEntry(new CategoryEntry(CategoryEntry.Type.AUTO_POPULATE, null, null, strategy, null, null));
                                 }
                                 case "composite", "structure" -> {
                                     ResourceLocation id = new ResourceLocation(GsonHelper.getAsString(obj, "id"));
+                                    ResourceLocation displayId = obj.has("display") ? new ResourceLocation(GsonHelper.getAsString(obj, "display")) : id;
                                     List<ResourceLocation> components = new ArrayList<>();
                                     if (obj.has("components")) {
                                         for (JsonElement comp : GsonHelper.getAsJsonArray(obj, "components")) {
@@ -168,7 +175,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
                                         }
                                     }
                                     ResourceLocation structureNbt = obj.has("structure_nbt") ? new ResourceLocation(GsonHelper.getAsString(obj, "structure_nbt")) : null;
-                                    category.addEntry(new CategoryEntry(CategoryEntry.Type.COMPOSITE, id, null, components, structureNbt));
+                                    category.addEntry(new CategoryEntry(CategoryEntry.Type.COMPOSITE, id, displayId, null, components, structureNbt));
                                 }
                             }
                         }
