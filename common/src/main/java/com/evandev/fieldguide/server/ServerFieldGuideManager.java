@@ -99,7 +99,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
 
         if ("plants".equalsIgnoreCase(strategy)) {
             results.addAll(BuiltInRegistries.BLOCK.stream()
-                    .filter(block -> block instanceof BushBlock || block instanceof LeavesBlock || block instanceof VineBlock || block instanceof CactusBlock || block instanceof SugarCaneBlock || block instanceof WaterlilyBlock || block instanceof StemBlock)
+                    .filter(block -> (block instanceof BushBlock && !(block instanceof StemBlock) && !(block instanceof AttachedStemBlock)) || block instanceof LeavesBlock || block instanceof VineBlock || block instanceof CactusBlock || block instanceof SugarCaneBlock || block instanceof WaterlilyBlock || block instanceof StemGrownBlock || block instanceof CoralFanBlock || block instanceof CoralPlantBlock)
                     .filter(block -> !config.isEntityBlacklisted(BuiltInRegistries.BLOCK.getKey(block)))
                     .sorted(Comparator.comparing(block -> BuiltInRegistries.BLOCK.getKey(block).toString()))
                     .toList());
@@ -114,7 +114,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
             String modId = strategy.substring(10);
             results.addAll(BuiltInRegistries.BLOCK.stream()
                     .filter(block -> BuiltInRegistries.BLOCK.getKey(block).getNamespace().equals(modId))
-                    .filter(block -> block instanceof BushBlock || block instanceof LeavesBlock || block instanceof VineBlock || block instanceof CactusBlock || block instanceof SugarCaneBlock || block instanceof WaterlilyBlock || block instanceof StemBlock)
+                    .filter(block -> (block instanceof BushBlock && !(block instanceof StemBlock) && !(block instanceof AttachedStemBlock)) || block instanceof LeavesBlock || block instanceof VineBlock || block instanceof CactusBlock || block instanceof SugarCaneBlock || block instanceof WaterlilyBlock || block instanceof StemGrownBlock || block instanceof CoralFanBlock || block instanceof CoralPlantBlock)
                     .filter(block -> !config.isEntityBlacklisted(BuiltInRegistries.BLOCK.getKey(block)))
                     .sorted(Comparator.comparing(block -> BuiltInRegistries.BLOCK.getKey(block).toString()))
                     .toList());
