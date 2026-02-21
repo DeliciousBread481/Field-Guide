@@ -28,7 +28,7 @@ dependencies {
     modRuntimeOnly "maven.modrinth:immersive-overlays:${immersive_overlays_version}-fabric"
 
     // Spyglass Improvements
-    modRuntimeOnly "maven.modrinth:spyglass-improvements:${spyglass_improvements_version}+fabric"
+    modRuntimeOnly "maven.modrinth:spyglass-improvements:${spyglass_improvements_fabric_version}+fabric"
 
 
 
