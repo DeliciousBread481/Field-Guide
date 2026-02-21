@@ -99,14 +99,10 @@ public class IconCacheManager {
         poseStack.translate(RENDER_SIZE / 2.0f, RENDER_SIZE / 2.0f, 1000.0f);
         RenderSystem.applyModelViewMatrix();
 
-        Lighting.setupForEntityInInventory();
-
         renderAction.run();
 
         poseStack.popPose();
         RenderSystem.applyModelViewMatrix();
-        Lighting.setupForFlatItems();
-
         RenderSystem.setProjectionMatrix(oldProjection, VertexSorting.ORTHOGRAPHIC_Z);
 
         renderTarget.unbindWrite();

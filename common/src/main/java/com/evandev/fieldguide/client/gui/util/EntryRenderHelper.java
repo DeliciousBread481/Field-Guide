@@ -90,23 +90,12 @@ public class EntryRenderHelper {
         }
     }
 
-    private static void setupBlockLighting() {
-        Vector3f light0 = new Vector3f(0.2F, -1.0F, -0.7F).normalize();
-        Vector3f light1 = new Vector3f(-0.2F, 0.0F, 0.7F).normalize();
-        RenderSystem.setShaderLights(light0, light1);
-    }
-
-    private static void setupEntityLighting() {
-        Vector3f light0 = new Vector3f(-1.0F, -1.0F, 1.0F).normalize();
-        Vector3f light1 = new Vector3f(1.0F, -1.0F, 1.0F).normalize();
-        RenderSystem.setShaderLights(light0, light1);
-    }
-
     public static void renderEntityNormalized(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, int maxWidth, int maxHeight, float baseScale, boolean silhouette, int color, boolean isPage, float bounceScale) {
         Optional<ResourceLocation> textureOpt = getResourcePackOverride(entity.getType(), isPage);
 
         if (textureOpt.isEmpty()) {
             textureOpt = IconCacheManager.getOrGenerateIcon(entity.getType(), isPage, () -> {
+                setupFieldGuideEntityLighting();
                 ResourceLocation id = ClientFieldGuideManager.getEntryId(entity.getType());
                 EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(id);
 
@@ -149,8 +138,6 @@ public class EntryRenderHelper {
                 entity.attackAnim = 0.0F;
                 entity.oAttackAnim = 0.0F;
 
-                setupEntityLighting();
-
                 MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
                 Minecraft.getInstance().getEntityRenderDispatcher().render(entity, 0, 0, 0, 0.0F, 1.0F, pose, buffers, LightTexture.FULL_BRIGHT);
                 buffers.endBatch();
@@ -165,6 +152,7 @@ public class EntryRenderHelper {
 
         if (textureOpt.isEmpty()) {
             textureOpt = IconCacheManager.getOrGenerateIcon(block, isPage, () -> {
+                setupFieldGuideBlockLighting();
                 ResourceLocation id = ClientFieldGuideManager.getEntryId(block);
                 EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(id);
 
@@ -184,8 +172,6 @@ public class EntryRenderHelper {
                 pose.mulPose(Axis.YP.rotationDegrees(210.0F));
 
                 pose.translate(-0.5, -0.5, -0.5);
-
-                setupBlockLighting();
 
                 MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
                 BlockState state = block.defaultBlockState();
@@ -237,6 +223,7 @@ public class EntryRenderHelper {
 
         if (textureOpt.isEmpty()) {
             textureOpt = IconCacheManager.getOrGenerateIcon(composite, isPage, () -> {
+                setupFieldGuideBlockLighting();
                 PoseStack pose = new PoseStack();
 
                 pose.scale(30f, -30f, -30f);
@@ -245,8 +232,6 @@ public class EntryRenderHelper {
                 pose.mulPose(Axis.YP.rotationDegrees(210.0F));
 
                 pose.translate(0, -2.0, 0);
-
-                setupBlockLighting();
 
                 MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
                 Block logBlock = null;
@@ -337,6 +322,18 @@ public class EntryRenderHelper {
         pose.translate(-0.5, leafBase + 3, -0.5);
         blockRenderer.renderSingleBlock(leaves, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
         pose.popPose();
+    }
+
+    private static void setupFieldGuideEntityLighting() {
+        Vector3f light0 = new Vector3f(1.0F, -1.0F, -1.0F).normalize();
+        Vector3f light1 = new Vector3f(-1.0F, -1.0F, -1.0F).normalize();
+        RenderSystem.setShaderLights(light0, light1);
+    }
+
+    private static void setupFieldGuideBlockLighting() {
+        Vector3f light0 = new Vector3f(0.2F, -1.0F, 0.7F).normalize();
+        Vector3f light1 = new Vector3f(-0.2F, 0.0F, -0.7F).normalize();
+        RenderSystem.setShaderLights(light0, light1);
     }
 
     private static void drawCachedTexture(GuiGraphics guiGraphics, ResourceLocation texture, int x, int y, int width, int height, boolean silhouette, int color, float bounceScale) {
