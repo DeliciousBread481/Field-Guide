@@ -104,6 +104,24 @@ public class ScanOverlayRenderer {
             }
         }
 
+        int minY = Integer.MAX_VALUE;
+        double maxAbsoluteY = Integer.MIN_VALUE;
+
+        for (BlockPos pos : blocksToRender) {
+            minY = Math.min(minY, pos.getY());
+            BlockState state = mc.level.getBlockState(pos);
+            double shapeHeight = 1.0;
+            if (mc.player != null && !state.isAir()) {
+                shapeHeight = state.isCollisionShapeFullBlock(mc.level, pos)
+                        ? 1.0
+                        : Math.max(1.0, state.getShape(mc.level, pos, CollisionContext.of(mc.player)).max(Direction.Axis.Y));
+            }
+            maxAbsoluteY = Math.max(maxAbsoluteY, pos.getY() + shapeHeight);
+        }
+
+        double totalHeight = maxAbsoluteY - minY;
+        double globalScanLimitY = fillHeight >= 1.0f ? 10000.0 : (minY + (totalHeight * fillHeight));
+
         for (BlockPos pos : blocksToRender) {
             BlockState state = mc.level.getBlockState(pos);
             if (!state.isAir()) {
@@ -115,11 +133,7 @@ public class ScanOverlayRenderer {
                 poseStack.pushPose();
                 poseStack.translate(x, y, z);
 
-                double shapeHeight = 0;
-                if (mc.player != null) {
-                    shapeHeight = state.isCollisionShapeFullBlock(mc.level, pos) ? 1.0 : Math.max(1.0, state.getShape(mc.level, pos, CollisionContext.of(mc.player)).max(Direction.Axis.Y));
-                }
-                float localScanLimitY = fillHeight >= 1.0f ? 10000.0f : (float) (shapeHeight * fillHeight);
+                float localScanLimitY = fillHeight >= 1.0f ? 10000.0f : (float) (globalScanLimitY - pos.getY());
 
                 if (ModRenderTypes.SCAN_BLOCK_SHADER != null) {
                     ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("ScanLimitY").set(localScanLimitY);
@@ -129,15 +143,40 @@ public class ScanOverlayRenderer {
 
                 MultiBufferSource depthSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForDepth(requestedType, false)), 1, 1, 1, 1);
                 mc.getBlockRenderer().renderSingleBlock(state, poseStack, depthSource, 15728880, OverlayTexture.pack(0, 10));
-                bufferSource.endBatch();
-
-                MultiBufferSource tintedSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForScan(requestedType, false)), red, green, blue, alpha);
-                mc.getBlockRenderer().renderSingleBlock(state, poseStack, tintedSource, 15728880, OverlayTexture.pack(0, 10));
-                bufferSource.endBatch();
 
                 poseStack.popPose();
             }
         }
+
+        bufferSource.endBatch();
+
+        for (BlockPos pos : blocksToRender) {
+            BlockState state = mc.level.getBlockState(pos);
+            if (!state.isAir()) {
+                Vec3 offset = state.getOffset(mc.level, pos);
+                double x = pos.getX() - camPos.x + offset.x;
+                double y = pos.getY() - camPos.y + offset.y;
+                double z = pos.getZ() - camPos.z + offset.z;
+
+                poseStack.pushPose();
+                poseStack.translate(x, y, z);
+
+                float localScanLimitY = fillHeight >= 1.0f ? 10000.0f : (float) (globalScanLimitY - pos.getY());
+
+                if (ModRenderTypes.SCAN_BLOCK_SHADER != null) {
+                    ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("ScanLimitY").set(localScanLimitY);
+                    Matrix4f modelViewMat = new Matrix4f(poseStack.last().pose());
+                    ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("InverseModelViewMat").set(modelViewMat.invert());
+                }
+
+                MultiBufferSource tintedSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForScan(requestedType, false)), red, green, blue, alpha);
+                mc.getBlockRenderer().renderSingleBlock(state, poseStack, tintedSource, 15728880, OverlayTexture.pack(0, 10));
+
+                poseStack.popPose();
+            }
+        }
+
+        bufferSource.endBatch();
     }
 
     private static void renderEntityOverlay(PoseStack poseStack, float partialTick, Vec3 camPos, MultiBufferSource.BufferSource bufferSource, Entity targetEntity, Entity outOfRangeEntity, FieldGuideScanner scanner, Minecraft mc, float red, float green, float blue, float alpha) {
