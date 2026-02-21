@@ -344,7 +344,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.getDisplayEntry() : entry;
 
         if (entry instanceof CompositeFieldGuideEntry composite && composite.getDisplayEntry() instanceof Block block) {
-            boolean isTree = block.getName().getString().endsWith(" Sapling") || block.getName().getString().endsWith(" Fungus") || block.getName().getString().endsWith(" Propagule");
+            boolean isTree = block.getName().getString().endsWith(" Sapling") || block.getName().getString().endsWith(" Fungus") || block.getName().getString().endsWith(" Propagule") || block.getName().getString().endsWith(" Mushroom");
             if (isTree) {
                 EntryRenderHelper.renderStructure(guiGraphics, composite, xPos, yPos, 80, !unlocked, true, bounce);
             } else {

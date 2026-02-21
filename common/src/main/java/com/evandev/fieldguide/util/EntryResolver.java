@@ -130,6 +130,10 @@ public class EntryResolver {
                 String key = id.getNamespace() + ":" + prefix;
                 saplings.put(key, block);
                 treeComponents.put(key, new ArrayList<>());
+            } else if (path.equals("brown_mushroom") || path.equals("red_mushroom")) {
+                String key = id.getNamespace() + ":" + path;
+                saplings.put(key, block);
+                treeComponents.put(key, new ArrayList<>());
             }
         }
 
@@ -154,6 +158,14 @@ public class EntryResolver {
                         treeComponents.get(key).add(block);
                         addedToTree = true;
                         break;
+                    }
+                    if (prefix.equals("brown_mushroom") && (path.equals("brown_mushroom_block") || path.equals("mushroom_stem"))) {
+                        treeComponents.get(key).add(block);
+                        addedToTree = true;
+                    }
+                    if (prefix.equals("red_mushroom") && (path.equals("red_mushroom_block") || path.equals("mushroom_stem"))) {
+                        treeComponents.get(key).add(block);
+                        addedToTree = true;
                     }
                 }
             }

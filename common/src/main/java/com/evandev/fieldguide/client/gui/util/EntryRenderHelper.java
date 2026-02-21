@@ -226,12 +226,21 @@ public class EntryRenderHelper {
                 setupFieldGuideBlockLighting();
                 PoseStack pose = new PoseStack();
 
-                pose.scale(30f, -30f, -30f);
+                boolean isFungus = composite.getDisplayEntry() instanceof Block b && BuiltInRegistries.BLOCK.getKey(b).getPath().endsWith("_fungus");
+                boolean isMushroom = composite.getDisplayEntry() instanceof Block b && BuiltInRegistries.BLOCK.getKey(b).getPath().endsWith("_mushroom");
+
+                // Scale proportionally so larger features fit into the 256x256 cache
+                float scale = isFungus ? 22f : (isMushroom ? 22f : 30f);
+                pose.scale(scale, -scale, -scale);
 
                 pose.mulPose(Axis.XP.rotationDegrees(30.0F));
                 pose.mulPose(Axis.YP.rotationDegrees(210.0F));
 
-                pose.translate(0, -2.0, 0);
+                if (isFungus || isMushroom) {
+                    pose.translate(0, -3.5, 0);
+                } else {
+                    pose.translate(0, -2.0, 0);
+                }
 
                 MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
                 Block logBlock = null;
@@ -241,10 +250,10 @@ public class EntryRenderHelper {
                 for (Object comp : composite.getComponents()) {
                     if (comp instanceof Block b) {
                         String path = BuiltInRegistries.BLOCK.getKey(b).getPath();
-                        if ((path.endsWith("_log") || path.endsWith("_stem") || path.endsWith("_hyphae") || path.endsWith("_wood")) && !path.startsWith("stripped_")) {
+                        if ((path.endsWith("_log") || path.endsWith("_stem") || path.endsWith("mushroom_stem") || path.endsWith("_hyphae") || path.endsWith("_wood")) && !path.startsWith("stripped_")) {
                             if (logBlock == null) logBlock = b;
                         }
-                        if (path.endsWith("_leaves") || path.endsWith("wart_block")) {
+                        if (path.endsWith("_leaves") || path.endsWith("wart_block") || path.endsWith("mushroom_block")) {
                             if (leavesBlock == null) leavesBlock = b;
                         }
                         if (path.endsWith("_roots") && !path.startsWith("potted_")) {
@@ -256,7 +265,13 @@ public class EntryRenderHelper {
                 if (logBlock == null) logBlock = (Block) composite.getDisplayEntry();
                 if (leavesBlock == null) leavesBlock = logBlock;
 
-                renderMiniTree(pose, buffers, logBlock.defaultBlockState(), leavesBlock.defaultBlockState(), rootsBlock != null ? rootsBlock.defaultBlockState() : null);
+                if (isFungus) {
+                    renderFungus(pose, buffers, logBlock.defaultBlockState(), leavesBlock.defaultBlockState(), rootsBlock != null ? rootsBlock.defaultBlockState() : null);
+                } else if (isMushroom) {
+                    renderMushroom(pose, buffers, logBlock.defaultBlockState(), leavesBlock.defaultBlockState());
+                } else {
+                    renderMiniTree(pose, buffers, logBlock.defaultBlockState(), leavesBlock.defaultBlockState(), rootsBlock != null ? rootsBlock.defaultBlockState() : null);
+                }
 
                 buffers.endBatch();
             });
@@ -322,6 +337,72 @@ public class EntryRenderHelper {
         pose.translate(-0.5, leafBase + 3, -0.5);
         blockRenderer.renderSingleBlock(leaves, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
         pose.popPose();
+    }
+
+    private static void renderFungus(PoseStack pose, MultiBufferSource.BufferSource buffers, BlockState stem, BlockState wart, BlockState roots) {
+        var blockRenderer = Minecraft.getInstance().getBlockRenderer();
+        if (roots != null) {
+            pose.pushPose();
+            pose.translate(-0.5, 0, -0.5);
+            blockRenderer.renderSingleBlock(roots, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
+            pose.popPose();
+        }
+
+        int trunkStart = roots != null ? 1 : 0;
+        for (int y = trunkStart; y <= trunkStart + 4; y++) {
+            pose.pushPose();
+            pose.translate(-0.5, y, -0.5);
+            blockRenderer.renderSingleBlock(stem, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
+            pose.popPose();
+        }
+
+        int hatBase = trunkStart + 3;
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                if (x == 0 && z == 0) continue;
+                pose.pushPose();
+                pose.translate(x - 0.5, hatBase, z - 0.5);
+                blockRenderer.renderSingleBlock(wart, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
+                pose.popPose();
+            }
+        }
+        for (int x = -2; x <= 2; x++) {
+            for (int z = -2; z <= 2; z++) {
+                if (Math.abs(x) == 2 && Math.abs(z) == 2) continue;
+                if (x == 0 && z == 0) continue;
+                pose.pushPose();
+                pose.translate(x - 0.5, hatBase + 1, z - 0.5);
+                blockRenderer.renderSingleBlock(wart, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
+                pose.popPose();
+            }
+        }
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                pose.pushPose();
+                pose.translate(x - 0.5, hatBase + 2, z - 0.5);
+                blockRenderer.renderSingleBlock(wart, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
+                pose.popPose();
+            }
+        }
+    }
+
+    private static void renderMushroom(PoseStack pose, MultiBufferSource.BufferSource buffers, BlockState stem, BlockState block) {
+        var blockRenderer = Minecraft.getInstance().getBlockRenderer();
+        for (int y = 0; y <= 3; y++) {
+            pose.pushPose();
+            pose.translate(-0.5, y, -0.5);
+            blockRenderer.renderSingleBlock(stem, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
+            pose.popPose();
+        }
+        int hatBase = 4;
+        for (int x = -2; x <= 2; x++) {
+            for (int z = -2; z <= 2; z++) {
+                pose.pushPose();
+                pose.translate(x - 0.5, hatBase, z - 0.5);
+                blockRenderer.renderSingleBlock(block, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
+                pose.popPose();
+            }
+        }
     }
 
     private static void setupFieldGuideEntityLighting() {

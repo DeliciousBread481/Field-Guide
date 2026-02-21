@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class IconCacheManager {
-    private static final Path CACHE_DIR = Services.PLATFORM.getConfigDirectory().resolve("../fieldguide_cache/entries");
+    private static final Path CACHE_DIR = Services.PLATFORM.getConfigDirectory().resolve("../fieldguide_cache");
     private static final Map<String, ResourceLocation> TEXTURE_CACHE = new HashMap<>();
     private static final int RENDER_SIZE = 256;
 
@@ -42,17 +42,21 @@ public class IconCacheManager {
     }
 
     public static Optional<ResourceLocation> getOrGenerateIcon(Object entry, boolean isPage, Runnable renderAction) {
-        String idStr = ClientFieldGuideManager.getEntryId(entry).toString().replace(":", "_").replace("/", "_");
-        String key = idStr + (isPage ? "_page" : "_grid");
+        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        String fileName = id.getPath() + (isPage ? "_page" : "_grid") + ".png";
+
+        String key = id.toString().replace(":", "_").replace("/", "_") + (isPage ? "_page" : "_grid");
 
         if (TEXTURE_CACHE.containsKey(key)) {
             return Optional.of(TEXTURE_CACHE.get(key));
         }
 
         if (!Files.exists(CACHE_DIR)) init();
-        File cachedFile = CACHE_DIR.resolve(key + ".png").toFile();
+        Path cachedFilePath = CACHE_DIR.resolve(id.getNamespace()).resolve("textures/fieldguide/entries").resolve(fileName);
+        File cachedFile = cachedFilePath.toFile();
 
         if (!cachedFile.exists()) {
+            cachedFile.getParentFile().mkdirs();
             generateAndSaveIcon(cachedFile, renderAction);
         }
 
@@ -74,12 +78,11 @@ public class IconCacheManager {
 
     private static void generateAndSaveIcon(File outputFile, Runnable renderAction) {
         Minecraft mc = Minecraft.getInstance();
-
         Matrix4f oldProjection = RenderSystem.getProjectionMatrix();
 
         RenderTarget renderTarget = new TextureTarget(RENDER_SIZE, RENDER_SIZE, true, Minecraft.ON_OSX);
 
-        renderTarget.setClearColor(1.0F, 0.0F, 1.0F, 0.0F);
+        renderTarget.setClearColor(0.0F, 0.0F, 0.0F, 0.0F);
         renderTarget.clear(Minecraft.ON_OSX);
 
         renderTarget.bindWrite(true);
@@ -103,6 +106,8 @@ public class IconCacheManager {
 
         poseStack.popPose();
         RenderSystem.applyModelViewMatrix();
+        Lighting.setupForFlatItems();
+
         RenderSystem.setProjectionMatrix(oldProjection, VertexSorting.ORTHOGRAPHIC_Z);
 
         renderTarget.unbindWrite();
@@ -115,25 +120,6 @@ public class IconCacheManager {
             RenderSystem.bindTexture(renderTarget.getColorTextureId());
             nativeImage.downloadTexture(0, false);
             nativeImage.flipY();
-
-            for (int y = 0; y < RENDER_SIZE; y++) {
-                for (int x = 0; x < RENDER_SIZE; x++) {
-                    int color = nativeImage.getPixelRGBA(x, y);
-                    int a = (color >> 24) & 0xFF;
-                    int b = (color >> 16) & 0xFF;
-                    int g = (color >> 8) & 0xFF;
-                    int r = color & 0xFF;
-
-                    if (a == 0) {
-                        if (r == 255 && g == 0 && b == 255) {
-                            nativeImage.setPixelRGBA(x, y, 0);
-                        } else {
-                            nativeImage.setPixelRGBA(x, y, color | 0xFF000000);
-                        }
-                    }
-                }
-            }
-
             nativeImage.writeToFile(outputFile);
         } catch (IOException e) {
             Constants.LOG.error("Failed to save generated icon", e);

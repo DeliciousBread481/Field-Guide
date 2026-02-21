@@ -29,6 +29,7 @@ public class FieldGuideCommand {
                         .then(Commands.literal("descriptions").executes(ctx -> export(ctx.getSource(), "descriptions")))
                         .then(Commands.literal("all").executes(ctx -> export(ctx.getSource(), "all")))
                 )
+                .then(Commands.literal("reload").executes(ctx -> reload(ctx.getSource())))
                 .then(Commands.literal("grant")
                         .then(Commands.argument("targets", EntityArgument.players())
                                 .then(Commands.literal("everything")
@@ -104,6 +105,15 @@ public class FieldGuideCommand {
             source.sendFailure(Component.literal("This command must be run by an in-game player."));
             return 0;
         }
+    }
+
+    private static int reload(CommandSourceStack source) {
+        ServerFieldGuideManager.getInstance().reload(source.getServer());
+        for (ServerPlayer player : source.getServer().getPlayerList().getPlayers()) {
+            Services.NETWORK.sendToPlayer(new ExportContentPacket("reload_cache"), player);
+        }
+        source.sendSuccess(() -> Component.literal("FieldGuide configuration and caches reloaded!"), true);
+        return 1;
     }
 
     private static int grantEntry(CommandSourceStack source, Collection<ServerPlayer> targets, ResourceLocation entryId) {

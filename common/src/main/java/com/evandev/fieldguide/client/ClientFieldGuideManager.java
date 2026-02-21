@@ -104,9 +104,11 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
                 if (name.endsWith(" Sapling")) {
                     return Component.literal(name.substring(0, name.length() - 8) + " Tree");
                 } else if (name.endsWith(" Fungus")) {
-                    return Component.literal( "Huge " + name.substring(0, name.length() - 7) + " Fungus");
+                    return Component.literal("Huge " + name.substring(0, name.length() - 7) + " Fungus");
                 } else if (name.endsWith(" Propagule")) {
                     return Component.literal(name.substring(0, name.length() - 10) + " Tree");
+                } else if (name.endsWith(" Mushroom")) {
+                    return Component.literal("Huge " + name.substring(0, name.length() - 9) + " Mushroom");
                 }
             }
             return block.getName();
@@ -130,6 +132,8 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
                     return name.substring(0, name.length() - 7) + " Tree";
                 } else if (name.endsWith(" Propagule")) {
                     return name.substring(0, name.length() - 10) + " Tree";
+                } else if (name.endsWith(" Mushroom")) {
+                    return name.substring(0, name.length() - 9) + " Mushroom";
                 }
             }
             return block.getName().getString();
