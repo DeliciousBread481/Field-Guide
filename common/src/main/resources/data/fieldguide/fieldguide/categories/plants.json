@@ -77,8 +77,8 @@
     },
     {
       "type": "composite",
-      "id": "minecraft:azalea_tree",
-      "structure_nbt": "fieldguide:azalea",
+      "id": "minecraft:azalea_leaves",
+      "structure_nbt": "fieldguide:azalea_tree",
       "components": [
         "minecraft:oak_log",
         "minecraft:azalea_leaves",
@@ -129,15 +129,43 @@
     },
     {
       "type": "composite",
-      "id": "minecraft:weeping_vines",
+      "id": "minecraft:big_dripleaf",
       "components": [
+        "minecraft:big_dripleaf",
+        "minecraft:big_dripleaf_stem"
+      ]
+    },
+    {
+      "type": "composite",
+      "id": "minecraft:cave_vines",
+      "render": [
+        "minecraft:cave_vines",
+        "minecraft:cave_vines_plant|berries=true"
+      ],
+      "components": [
+        "minecraft:cave_vines_plant",
+        "minecraft:cave_vines"
+      ]
+    },
+    {
+      "type": "composite",
+      "id": "minecraft:weeping_vines",
+      "render": [
         "minecraft:weeping_vines",
         "minecraft:weeping_vines_plant"
+      ],
+      "components": [
+        "minecraft:weeping_vines_plant",
+        "minecraft:weeping_vines"
       ]
     },
     {
       "type": "composite",
       "id": "minecraft:twisting_vines",
+      "render": [
+        "minecraft:twisting_vines_plant",
+        "minecraft:twisting_vines"
+      ],
       "components": [
         "minecraft:twisting_vines",
         "minecraft:twisting_vines_plant"
