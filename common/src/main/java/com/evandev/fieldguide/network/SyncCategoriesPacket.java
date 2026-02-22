@@ -10,9 +10,17 @@ import java.util.List;
 
 public class SyncCategoriesPacket {
     private final List<Category> categories;
+    private final List<String> biomeAdditions;
+    private final List<String> biomeRemovals;
+    private final List<String> lootAdditions;
+    private final List<String> lootRemovals;
 
-    public SyncCategoriesPacket(List<Category> categories) {
+    public SyncCategoriesPacket(List<Category> categories, List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals) {
         this.categories = categories;
+        this.biomeAdditions = biomeAdditions;
+        this.biomeRemovals = biomeRemovals;
+        this.lootAdditions = lootAdditions;
+        this.lootRemovals = lootRemovals;
     }
 
     public SyncCategoriesPacket(FriendlyByteBuf buf) {
@@ -43,6 +51,11 @@ public class SyncCategoriesPacket {
             }
             return cat;
         });
+
+        this.biomeAdditions = buf.readCollection(ArrayList::new, FriendlyByteBuf::readUtf);
+        this.biomeRemovals = buf.readCollection(ArrayList::new, FriendlyByteBuf::readUtf);
+        this.lootAdditions = buf.readCollection(ArrayList::new, FriendlyByteBuf::readUtf);
+        this.lootRemovals = buf.readCollection(ArrayList::new, FriendlyByteBuf::readUtf);
     }
 
     public void encode(FriendlyByteBuf buf) {
@@ -74,9 +87,30 @@ public class SyncCategoriesPacket {
                 if (entry.structureNbt() != null) b.writeResourceLocation(entry.structureNbt());
             }
         });
+
+        buf.writeCollection(biomeAdditions, FriendlyByteBuf::writeUtf);
+        buf.writeCollection(biomeRemovals, FriendlyByteBuf::writeUtf);
+        buf.writeCollection(lootAdditions, FriendlyByteBuf::writeUtf);
+        buf.writeCollection(lootRemovals, FriendlyByteBuf::writeUtf);
     }
 
     public List<Category> getCategories() {
         return categories;
+    }
+
+    public List<String> getBiomeAdditions() {
+        return biomeAdditions;
+    }
+
+    public List<String> getBiomeRemovals() {
+        return biomeRemovals;
+    }
+
+    public List<String> getLootAdditions() {
+        return lootAdditions;
+    }
+
+    public List<String> getLootRemovals() {
+        return lootRemovals;
     }
 }

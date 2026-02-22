@@ -1,7 +1,6 @@
 package com.evandev.fieldguide.server;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.server.loot.ParsedDrop;
 import com.evandev.fieldguide.server.loot.StaticLootParser;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -98,12 +97,15 @@ public class LootTableHelper {
     public static void applyConfigModifications(Object entry, List<ItemStack> distinctDrops) {
         ResourceLocation entryId = getEntryId(entry);
         if (entryId == null) return;
-        ModConfig config = ModConfig.get();
+
+        ServerFieldGuideManager manager = ServerFieldGuideManager.getInstance();
         Set<String> itemsToRemove = new HashSet<>();
-        for (String line : config.lootRemovals) {
+
+        for (String line : manager.getLootRemovals()) {
             String[] parts = line.split("\\|");
             if (parts.length == 2 && matchesTarget(entry, parts[0])) itemsToRemove.add(parts[1]);
         }
+
         if (!itemsToRemove.isEmpty()) {
             distinctDrops.removeIf(stack -> {
                 ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
@@ -119,8 +121,9 @@ public class LootTableHelper {
                 return false;
             });
         }
+
         boolean added = false;
-        for (String line : config.lootAdditions) {
+        for (String line : manager.getLootAdditions()) {
             String[] parts = line.split("\\|");
             if (parts.length == 2 && matchesTarget(entry, parts[0])) {
                 String target = parts[1];

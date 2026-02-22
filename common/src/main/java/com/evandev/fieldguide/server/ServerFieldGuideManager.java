@@ -30,11 +30,16 @@ import org.jetbrains.annotations.NotNull;
 import java.io.Reader;
 import java.util.*;
 
-public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<ResourceLocation, Category>> {
+public class ServerFieldGuideManager extends SimplePreparableReloadListener<ServerFieldGuideManager.ReloadData> {
     private static final ServerFieldGuideManager INSTANCE = new ServerFieldGuideManager();
     private final Map<ResourceLocation, List<Object>> resolvedCategoryEntries = new HashMap<>();
     private Map<ResourceLocation, Category> categories = new LinkedHashMap<>();
     private Map<ResourceLocation, List<ItemStack>> serverLootCache = new HashMap<>();
+
+    private List<String> biomeAdditions = new ArrayList<>();
+    private List<String> biomeRemovals = new ArrayList<>();
+    private List<String> lootAdditions = new ArrayList<>();
+    private List<String> lootRemovals = new ArrayList<>();
 
     public static ServerFieldGuideManager getInstance() {
         return INSTANCE;
@@ -42,6 +47,22 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
 
     public Map<ResourceLocation, Category> getCategories() {
         return categories;
+    }
+
+    public List<String> getBiomeAdditions() {
+        return biomeAdditions;
+    }
+
+    public List<String> getBiomeRemovals() {
+        return biomeRemovals;
+    }
+
+    public List<String> getLootAdditions() {
+        return lootAdditions;
+    }
+
+    public List<String> getLootRemovals() {
+        return lootRemovals;
     }
 
     public void syncToPlayer(ServerPlayer player) {
@@ -79,7 +100,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
             flattenedCategories.add(flatCat);
         }
 
-        Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(flattenedCategories), player);
+        Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(flattenedCategories, biomeAdditions, biomeRemovals, lootAdditions, lootRemovals), player);
 
         if (!serverLootCache.isEmpty()) {
             Services.NETWORK.sendToPlayer(new SyncLootPacket(serverLootCache), player);
@@ -124,8 +145,8 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
     }
 
     @Override
-    protected @NotNull Map<ResourceLocation, Category> prepare(ResourceManager resourceManager, @NotNull ProfilerFiller profiler) {
-        Map<ResourceLocation, Category> map = new LinkedHashMap<>();
+    protected @NotNull ReloadData prepare(ResourceManager resourceManager, @NotNull ProfilerFiller profiler) {
+        ReloadData data = new ReloadData();
 
         Map<ResourceLocation, List<Resource>> resources = resourceManager.listResourceStacks(
                 "fieldguide/categories",
@@ -136,12 +157,19 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
             ResourceLocation fileId = entry.getKey();
             String path = fileId.getPath();
             String idPath = path.substring("fieldguide/categories/".length(), path.length() - ".json".length());
-            ResourceLocation categoryId = new ResourceLocation(fileId.getNamespace(), idPath);
-            Category category = new Category(categoryId);
+            ResourceLocation defaultCategoryId = new ResourceLocation(fileId.getNamespace(), idPath);
 
             for (Resource resource : entry.getValue()) {
                 try (Reader reader = resource.openAsReader()) {
                     JsonObject json = GsonHelper.parse(reader);
+
+                    ResourceLocation categoryId = defaultCategoryId;
+                    if (json.has("target_category")) {
+                        categoryId = new ResourceLocation(GsonHelper.getAsString(json, "target_category"));
+                    }
+
+                    Category category = data.categories.computeIfAbsent(categoryId, Category::new);
+
                     if (GsonHelper.getAsBoolean(json, "replace", false)) {
                         category.getEntries().clear();
                     }
@@ -184,9 +212,78 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
                     Constants.LOG.error("Failed to load category: {}", fileId, e);
                 }
             }
-            map.put(categoryId, category);
         }
-        return map;
+
+        loadModifiers(resourceManager, "fieldguide/biome_modifiers", data.biomeAdditions, data.biomeRemovals);
+        loadModifiers(resourceManager, "fieldguide/loot_modifiers", data.lootAdditions, data.lootRemovals);
+
+        return data;
+    }
+
+    private void loadModifiers(ResourceManager resourceManager, String path, List<String> additions, List<String> removals) {
+        Map<ResourceLocation, List<Resource>> resources = resourceManager.listResourceStacks(path, id -> id.getPath().endsWith(".json"));
+        for (Map.Entry<ResourceLocation, List<Resource>> entry : resources.entrySet()) {
+            for (Resource resource : entry.getValue()) {
+                try (Reader reader = resource.openAsReader()) {
+                    JsonObject json = GsonHelper.parse(reader);
+
+                    if (GsonHelper.getAsBoolean(json, "replace", false)) {
+                        additions.clear();
+                        removals.clear();
+                    }
+
+                    if (json.has("additions")) {
+                        for (JsonElement el : GsonHelper.getAsJsonArray(json, "additions")) {
+                            JsonObject obj = el.getAsJsonObject();
+                            List<String> entryList = getAsList(obj, "entry", "entries");
+                            List<String> valueList = getAsList(obj, "value", "values");
+
+                            for (String e : entryList) {
+                                for (String v : valueList) {
+                                    additions.add(e + "|" + v);
+                                }
+                            }
+                        }
+                    }
+                    if (json.has("removals")) {
+                        for (JsonElement el : GsonHelper.getAsJsonArray(json, "removals")) {
+                            JsonObject obj = el.getAsJsonObject();
+                            List<String> entryList = getAsList(obj, "entry", "entries");
+                            List<String> valueList = getAsList(obj, "value", "values");
+
+                            for (String e : entryList) {
+                                for (String v : valueList) {
+                                    removals.add(e + "|" + v);
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    Constants.LOG.error("Failed to load modifiers from {}", entry.getKey(), e);
+                }
+            }
+        }
+    }
+
+    private List<String> getAsList(JsonObject obj, String singular, String plural) {
+        List<String> list = new ArrayList<>();
+        if (obj.has(singular)) {
+            JsonElement el = obj.get(singular);
+            if (el.isJsonArray()) {
+                for (JsonElement e : el.getAsJsonArray()) list.add(e.getAsString());
+            } else {
+                list.add(el.getAsString());
+            }
+        }
+        if (obj.has(plural)) {
+            JsonElement el = obj.get(plural);
+            if (el.isJsonArray()) {
+                for (JsonElement e : el.getAsJsonArray()) list.add(e.getAsString());
+            } else {
+                list.add(el.getAsString());
+            }
+        }
+        return list;
     }
 
     public void syncToAll(MinecraftServer server) {
@@ -207,8 +304,20 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Map<
     }
 
     @Override
-    protected void apply(@NotNull Map<ResourceLocation, Category> object, @NotNull ResourceManager resourceManager, @NotNull ProfilerFiller profiler) {
+    protected void apply(@NotNull ReloadData data, @NotNull ResourceManager resourceManager, @NotNull ProfilerFiller profiler) {
         ModConfig.load();
-        this.categories = object;
+        this.categories = data.categories;
+        this.biomeAdditions = data.biomeAdditions;
+        this.biomeRemovals = data.biomeRemovals;
+        this.lootAdditions = data.lootAdditions;
+        this.lootRemovals = data.lootRemovals;
+    }
+
+    public static class ReloadData {
+        public Map<ResourceLocation, Category> categories = new LinkedHashMap<>();
+        public List<String> biomeAdditions = new ArrayList<>();
+        public List<String> biomeRemovals = new ArrayList<>();
+        public List<String> lootAdditions = new ArrayList<>();
+        public List<String> lootRemovals = new ArrayList<>();
     }
 }

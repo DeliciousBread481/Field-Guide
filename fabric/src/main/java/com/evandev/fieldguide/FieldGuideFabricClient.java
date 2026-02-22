@@ -56,7 +56,18 @@ public class FieldGuideFabricClient implements ClientModInitializer {
 
         ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.SYNC_CATEGORIES_CHANNEL, (client, handler, buf, responseSender) -> {
             SyncCategoriesPacket packet = new SyncCategoriesPacket(buf);
-            client.execute(() -> ClientFieldGuideManager.getInstance().updateCategoriesFromServer(packet.getCategories()));
+
+            client.execute(() -> {
+                ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
+
+                manager.updateCategoriesFromServer(packet.getCategories());
+                manager.updateModifiers(
+                        packet.getBiomeAdditions(),
+                        packet.getBiomeRemovals(),
+                        packet.getLootAdditions(),
+                        packet.getLootRemovals()
+                );
+            });
         });
 
         ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.GRANT_CONTENT_CHANNEL, (client, handler, buf, responseSender) -> {

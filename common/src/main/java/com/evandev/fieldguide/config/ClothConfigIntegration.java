@@ -241,30 +241,6 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.discoveryRedirects = newValue)
                 .build());
 
-        contentCat.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.loot_removals"), config.lootRemovals)
-                .setDefaultValue(new ArrayList<>())
-                .setTooltip(Component.translatable("option.fieldguide.loot_removals.tooltip"))
-                .setSaveConsumer(newValue -> config.lootRemovals = newValue)
-                .build());
-
-        contentCat.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.loot_additions"), config.lootAdditions)
-                .setDefaultValue(ModConfig.getDefaultLootAdditions())
-                .setTooltip(Component.translatable("option.fieldguide.loot_additions.tooltip"))
-                .setSaveConsumer(newValue -> config.lootAdditions = newValue)
-                .build());
-
-        contentCat.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.biome_removals"), config.biomeRemovals)
-                .setDefaultValue(new ArrayList<>())
-                .setTooltip(Component.translatable("option.fieldguide.biome_removals.tooltip"))
-                .setSaveConsumer(newValue -> config.biomeRemovals = newValue)
-                .build());
-
-        contentCat.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.biome_additions"), config.biomeAdditions)
-                .setDefaultValue(ModConfig.getDefaultBiomeAdditions())
-                .setTooltip(Component.translatable("option.fieldguide.biome_additions.tooltip"))
-                .setSaveConsumer(newValue -> config.biomeAdditions = newValue)
-                .build());
-
         return builder.build();
     }
 }

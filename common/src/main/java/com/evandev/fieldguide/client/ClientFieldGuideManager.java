@@ -39,6 +39,11 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     private final Map<ResourceLocation, EntryVisual> entryVisuals = new HashMap<>();
     private final Map<Object, List<ItemStack>> dropCache = new HashMap<>();
 
+    private final List<String> biomeAdditions = new ArrayList<>();
+    private final List<String> biomeRemovals = new ArrayList<>();
+    private final List<String> lootAdditions = new ArrayList<>();
+    private final List<String> lootRemovals = new ArrayList<>();
+
     private ClientFieldGuideManager() {
     }
 
@@ -138,6 +143,33 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
     public static List<Object> getValidEntries() {
         return INSTANCE.resolvedCategoryEntries.values().stream().flatMap(List::stream).distinct().collect(Collectors.toList());
+    }
+
+    public List<String> getBiomeAdditions() {
+        return biomeAdditions;
+    }
+
+    public List<String> getBiomeRemovals() {
+        return biomeRemovals;
+    }
+
+    public List<String> getLootAdditions() {
+        return lootAdditions;
+    }
+
+    public List<String> getLootRemovals() {
+        return lootRemovals;
+    }
+
+    public void updateModifiers(List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals) {
+        this.biomeAdditions.clear();
+        this.biomeAdditions.addAll(biomeAdditions);
+        this.biomeRemovals.clear();
+        this.biomeRemovals.addAll(biomeRemovals);
+        this.lootAdditions.clear();
+        this.lootAdditions.addAll(lootAdditions);
+        this.lootRemovals.clear();
+        this.lootRemovals.addAll(lootRemovals);
     }
 
     public Object getEntryForTarget(Object target) {

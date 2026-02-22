@@ -132,14 +132,13 @@ public class FieldGuideEntryScreen extends BookScreen {
         }
 
         if (entryId != null) {
-            ModConfig config = ModConfig.get();
-            for (String removal : config.biomeRemovals) {
+            for (String removal : ClientFieldGuideManager.getInstance().getBiomeRemovals()) {
                 String[] parts = removal.split("\\|");
                 if (parts.length == 2 && parts[0].equals(entryId.toString())) {
                     spawnBiomes.remove(new ResourceLocation(parts[1]));
                 }
             }
-            for (String addition : config.biomeAdditions) {
+            for (String addition :ClientFieldGuideManager.getInstance().getBiomeAdditions()) {
                 String[] parts = addition.split("\\|");
                 if (parts.length == 2 && parts[0].equals(entryId.toString())) {
                     ResourceLocation biomeId = new ResourceLocation(parts[1]);

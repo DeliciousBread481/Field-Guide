@@ -1,0 +1,45 @@
+{
+  "replace": false,
+  "additions": [
+    {
+      "entries": [
+        "minecraft:blaze",
+        "minecraft:wither_skeleton",
+        "minecraft:piglin_brute"
+      ],
+      "value": "minecraft:nether_wastes"
+    },
+    {
+      "entries": [
+        "minecraft:guardian",
+        "minecraft:elder_guardian"
+      ],
+      "value": "minecraft:deep_ocean"
+    },
+    {
+      "entries": [
+        "minecraft:evoker",
+        "minecraft:vindicator",
+        "minecraft:vex"
+      ],
+      "value": "minecraft:dark_forest"
+    },
+    {
+      "entry": "minecraft:shulker",
+      "value": "minecraft:end_highlands"
+    },
+    {
+      "entry": "minecraft:warden",
+      "value": "minecraft:deep_dark"
+    },
+    {
+      "entry": "minecraft:bee",
+      "values": [
+        "minecraft:meadow",
+        "minecraft:flower_forest",
+        "minecraft:sunflower_plains",
+        "minecraft:plains"
+      ]
+    }
+  ]
+}

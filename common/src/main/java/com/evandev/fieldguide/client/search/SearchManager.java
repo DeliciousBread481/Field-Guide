@@ -107,7 +107,7 @@ public class SearchManager {
             if (ClientFieldGuideManager.hideFromSearch(entry)) continue;
             ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
             if (entryId != null) {
-                for (String addition : ModConfig.get().biomeAdditions) {
+                for (String addition : ClientFieldGuideManager.getInstance().getBiomeAdditions()) {
                     String[] parts = addition.split("\\|");
                     if (parts.length == 2 && parts[0].equals(entryId.toString())) {
                         ResourceLocation biomeId = new ResourceLocation(parts[1]);
@@ -122,7 +122,7 @@ public class SearchManager {
         for (Object entry : new ArrayList<>(results)) {
             ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
             if (entryId != null) {
-                for (String removal : ModConfig.get().biomeRemovals) {
+                for (String removal : ClientFieldGuideManager.getInstance().getBiomeRemovals()) {
                     String[] parts = removal.split("\\|");
                     if (parts.length == 2 && parts[0].equals(entryId.toString())) {
                         ResourceLocation biomeId = new ResourceLocation(parts[1]);

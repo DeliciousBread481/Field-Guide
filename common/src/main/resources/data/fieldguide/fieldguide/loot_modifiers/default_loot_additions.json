@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "additions": [
+    {
+      "entry": "minecraft:wither",
+      "value": "minecraft:nether_star"
+    }
+  ]
+}
