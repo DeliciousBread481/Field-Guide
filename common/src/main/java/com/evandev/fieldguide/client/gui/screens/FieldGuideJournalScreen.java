@@ -54,11 +54,13 @@ public class FieldGuideJournalScreen extends BookScreen {
             this.addRenderableWidget(journalTitleWidget);
         } else {
             JournalPage lPage = manager.getJournalPages().get(currentSpread * 2 - 1);
-            BookTextFieldWidget leftTitleWidget = new BookTextFieldWidget(this.font, textXLeft, titleY, 100, font.lineHeight, lPage.title, ModConfig.get().getTextTitleColorInt(), 100, text -> {
+
+            BookTextFieldWidget leftTitleWidget = new BookTextFieldWidget(this.font, textXLeft, titleY, textAreaWidth, font.lineHeight, lPage.title, ModConfig.get().getTextTitleColorInt(), textAreaWidth, text -> {
                 lPage.title = text;
                 manager.saveJournal();
             });
-            BookTextAreaWidget leftContentWidget = new BookTextAreaWidget(this.font, textXLeft, textY, textAreaWidth, textAreaHeight, 13, ModConfig.get().getTextColorInt(), false, lPage.content, text -> {
+
+            BookTextAreaWidget leftContentWidget = new BookTextAreaWidget(this.font, textXLeft, textY, textAreaWidth, textAreaHeight, 12, ModConfig.get().getTextColorInt(), false, lPage.content, text -> {
                 lPage.content = text;
                 manager.saveJournal();
             });
@@ -69,11 +71,13 @@ public class FieldGuideJournalScreen extends BookScreen {
 
         // Right Page
         JournalPage rPage = manager.getJournalPages().get(currentSpread == 0 ? 0 : currentSpread * 2);
-        BookTextFieldWidget rightTitleWidget = new BookTextFieldWidget(this.font, textXRight, titleY, 100, font.lineHeight, rPage.title, ModConfig.get().getTextTitleColorInt(), 100, text -> {
+
+        BookTextFieldWidget rightTitleWidget = new BookTextFieldWidget(this.font, textXRight, titleY, textAreaWidth, font.lineHeight, rPage.title, ModConfig.get().getTextTitleColorInt(), textAreaWidth, text -> {
             rPage.title = text;
             manager.saveJournal();
         });
-        BookTextAreaWidget rightContentWidget = new BookTextAreaWidget(this.font, textXRight, textY, textAreaWidth, textAreaHeight, 13, ModConfig.get().getTextColorInt(), false, rPage.content, text -> {
+
+        BookTextAreaWidget rightContentWidget = new BookTextAreaWidget(this.font, textXRight, textY, textAreaWidth, textAreaHeight, 12, ModConfig.get().getTextColorInt(), false, rPage.content, text -> {
             rPage.content = text;
             manager.saveJournal();
         });

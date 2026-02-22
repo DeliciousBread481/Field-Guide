@@ -35,8 +35,8 @@ public class FieldGuideToast implements Toast {
         guiGraphics.drawString(toastComponent.getMinecraft().font, name, 30, 7, ModConfig.get().getTextTitleColorInt(), false);
         guiGraphics.drawString(toastComponent.getMinecraft().font, discovered, 30, 17, 0xAF8C5C, false);
 
-        int iconX = 17;
-        int iconY = 15;
+        int iconX = 16;
+        int iconY = 17;
         Object coreEntry = this.entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : this.entry;
 
         if (!entityInitialized && coreEntry instanceof EntityType<?> type) {
@@ -46,20 +46,20 @@ public class FieldGuideToast implements Toast {
 
         if (this.entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() instanceof Block block) {
             if (composite.structureNbt() != null || (composite.stackedBlocks() != null && !composite.stackedBlocks().isEmpty())) {
-                EntryRenderHelper.renderStructure(guiGraphics, composite, iconX, iconY, 16, false, false, 1.0F);
+                EntryRenderHelper.renderStructure(guiGraphics, composite, iconX, iconY, 24, false, false, 1.0F);
             } else {
-                EntryRenderHelper.renderBlock(guiGraphics, block, iconX, iconY, 8.0F, false, false, 1.0F);
+                EntryRenderHelper.renderBlock(guiGraphics, block, iconX, iconY, 12.0F, false, false, 1.0F);
             }
         } else if (coreEntry instanceof EntityType<?>) {
             if (cachedEntity instanceof LivingEntity living) {
-                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, iconX, iconY, 16, 16, 16, false, 0, false, 1.0F);
+                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, iconX, iconY, 24, 24, 22, false, 0, false, 1.0F);
             } else {
-                guiGraphics.blit(Constants.TOAST_ICON, 9, 7, 0, 0, 16, 16, 16, 16);
+                guiGraphics.blit(Constants.TOAST_ICON, 8, 8, 0, 0, 16, 16, 16, 16);
             }
         } else if (coreEntry instanceof Block block) {
-            EntryRenderHelper.renderBlock(guiGraphics, block, iconX, iconY, 8.0F, false, false, 1.0F);
+            EntryRenderHelper.renderBlock(guiGraphics, block, iconX, iconY, 12.0F, false, false, 1.0F);
         } else {
-            guiGraphics.blit(Constants.TOAST_ICON, 9, 7, 0, 0, 16, 16, 16, 16);
+            guiGraphics.blit(Constants.TOAST_ICON, 8, 8, 0, 0, 16, 16, 16, 16);
         }
 
         return timeSinceLastVisible >= 5000L ? Visibility.HIDE : Visibility.SHOW;

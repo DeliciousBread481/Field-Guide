@@ -198,7 +198,7 @@
       "id": "minecraft:pitcher_plant",
       "components": [
         "minecraft:pitcher_plant",
-        "minecraft:pitcher_plant_crop"
+        "minecraft:pitcher_crop"
       ]
     },
     {

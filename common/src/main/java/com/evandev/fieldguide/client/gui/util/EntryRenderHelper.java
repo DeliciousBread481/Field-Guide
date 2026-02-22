@@ -250,15 +250,15 @@ public class EntryRenderHelper {
                 int length = maxZ - minZ + 1;
                 int maxDim = Math.max(width, Math.max(height, length));
 
-                float scale = 30.0f * (5.0f / maxDim);
+                float scale = 35.0f * (5.0f / maxDim);
                 pose.scale(scale, -scale, -scale);
 
                 pose.mulPose(Axis.XP.rotationDegrees(30.0F));
                 pose.mulPose(Axis.YP.rotationDegrees(210.0F));
 
-                float centerX = minX + (width - 1) / 2.0f;
-                float centerY = minY + (height - 1) / 2.0f;
-                float centerZ = minZ + (length - 1) / 2.0f;
+                float centerX = minX + width / 2.0f;
+                float centerY = minY + height / 2.0f;
+                float centerZ = minZ + length / 2.0f;
 
                 pose.translate(-centerX, -centerY, -centerZ);
 
