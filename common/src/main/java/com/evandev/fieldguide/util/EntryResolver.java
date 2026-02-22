@@ -12,7 +12,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.SpawnEggItem;
-import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.Block;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -119,24 +119,10 @@ public class EntryResolver {
         return BuiltInRegistries.BLOCK.stream()
                 .filter(b -> namespaceFilter.test(BuiltInRegistries.BLOCK.getKey(b)))
                 .filter(b -> isValidBlock(b, config))
-                .filter(EntryResolver::isPlant)
+                .filter(b -> b.defaultBlockState().is(ModTags.Blocks.PLANTS))
                 .sorted(Comparator.comparing(b -> BuiltInRegistries.BLOCK.getKey(b).toString()))
                 .map(Object.class::cast)
                 .toList();
     }
 
-    private static boolean isPlant(Block block) {
-        return (block instanceof BushBlock && !(block instanceof StemBlock) && !(block instanceof AttachedStemBlock))
-                || block instanceof BigDripleafBlock
-                || block instanceof VineBlock
-                || block instanceof CactusBlock
-                || block instanceof SugarCaneBlock
-                || block instanceof WaterlilyBlock
-                || block instanceof StemGrownBlock
-                || block instanceof CoralFanBlock
-                || block instanceof CoralPlantBlock
-                || block instanceof BambooStalkBlock
-                || block instanceof HangingRootsBlock
-                || block instanceof SporeBlossomBlock;
-    }
 }

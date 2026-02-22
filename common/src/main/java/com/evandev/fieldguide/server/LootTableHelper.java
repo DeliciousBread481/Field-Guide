@@ -25,10 +25,6 @@ public class LootTableHelper {
         for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
             ResourceLocation tableId = type.getDefaultLootTable();
 
-            if (type == EntityType.SHEEP) {
-                tableId = new ResourceLocation("minecraft", "entities/sheep/white");
-            }
-
             processEntry(level, type, tableId, lootMap);
         }
         for (Block block : BuiltInRegistries.BLOCK) {
@@ -45,11 +41,6 @@ public class LootTableHelper {
                 List<ParsedDrop> parsedDrops = StaticLootParser.parseTable(table, level);
                 for (ParsedDrop drop : parsedDrops) {
                     ItemStack stack = drop.stack.copy();
-
-                    if (entry == EntityType.MAGMA_CUBE &&
-                            (stack.is(Items.OCHRE_FROGLIGHT) || stack.is(Items.VERDANT_FROGLIGHT) || stack.is(Items.PEARLESCENT_FROGLIGHT))) {
-                        continue;
-                    }
 
                     CompoundTag tag = stack.getOrCreateTag();
                     tag.putFloat("FieldGuideDropChance", drop.chance * 100.0f);

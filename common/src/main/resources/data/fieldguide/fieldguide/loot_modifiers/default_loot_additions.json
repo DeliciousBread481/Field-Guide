@@ -4,6 +4,10 @@
     {
       "entry": "minecraft:wither",
       "value": "minecraft:nether_star"
+    },
+    {
+      "entry": "minecraft:sheep",
+      "value": "minecraft:white_wool"
     }
   ]
 }

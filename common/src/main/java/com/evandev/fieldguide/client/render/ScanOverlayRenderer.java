@@ -5,6 +5,7 @@ import com.evandev.fieldguide.client.ModRenderTypes;
 import com.evandev.fieldguide.client.scanning.FieldGuideScanner;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.util.ModTags;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -18,11 +19,15 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
@@ -77,25 +82,6 @@ public class ScanOverlayRenderer {
         }
     }
 
-    private static boolean isMultiblockPlant(Block block) {
-        return block instanceof CactusBlock ||
-                block instanceof SugarCaneBlock ||
-                block instanceof BambooStalkBlock ||
-                block instanceof KelpBlock ||
-                block instanceof KelpPlantBlock ||
-                block instanceof TallGrassBlock ||
-                block instanceof DoublePlantBlock ||
-                block instanceof VineBlock ||
-                block instanceof WeepingVinesBlock ||
-                block instanceof WeepingVinesPlantBlock ||
-                block instanceof TwistingVinesBlock ||
-                block instanceof TwistingVinesPlantBlock ||
-                block instanceof CaveVinesBlock ||
-                block instanceof CaveVinesPlantBlock ||
-                block instanceof ChorusPlantBlock ||
-                block instanceof ChorusFlowerBlock;
-    }
-
     private static void renderBlockOverlay(PoseStack poseStack, float partialTick, Vec3 camPos, MultiBufferSource.BufferSource bufferSource, BlockPos targetBlock, FieldGuideScanner scanner, Minecraft mc, float red, float green, float blue, float alpha) {
         boolean isOutOfRange = scanner.getOutOfRangePos() != null && targetBlock == scanner.getOutOfRangePos();
         float progress = isOutOfRange ? 1.0f : (scanner.getScanningTarget() != null ? scanner.getScanProgress(partialTick) : scanner.getFadeProgress(partialTick));
@@ -144,7 +130,7 @@ public class ScanOverlayRenderer {
                         }
                     }
                 }
-            } else if (isMultiblockPlant(targetBlockType)) {
+            } else if (targetState.is(ModTags.Blocks.MULTIBLOCK_SCAN)) {
                 Queue<BlockPos> queue = new PriorityQueue<>(Comparator.comparingDouble(p -> p.distSqr(targetBlock)));
                 queue.add(targetBlock);
                 int maxBlocks = 150;

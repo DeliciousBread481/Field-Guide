@@ -17,18 +17,6 @@
   "category.fieldguide.interface": "Interface",
   "category.fieldguide.content": "Content",
 
-  "option.fieldguide.loot_removals": "Loot Removals",
-  "option.fieldguide.loot_removals.tooltip": "Items to hide from the loot display.\nFormat: 'namespace:entity_id|namespace:item_id'",
-
-  "option.fieldguide.loot_additions": "Loot Additions",
-  "option.fieldguide.loot_additions.tooltip": "Items to add to the loot display.\nFormat: 'namespace:entity_id|namespace:item_id'",
-
-  "option.fieldguide.biome_removals": "Biome Removals",
-  "option.fieldguide.biome_removals.tooltip": "Biomes to hide from the display. Requires Immersive Overlays.\nFormat: 'namespace:entity_id|namespace:biome_id'",
-
-  "option.fieldguide.biome_additions": "Biome Additions",
-  "option.fieldguide.biome_additions.tooltip": "Biomes to add to the display. Requires Immersive Overlays.\nFormat: 'namespace:entity_id|namespace:biome_id'",
-
   "option.fieldguide.blacklist": "Entry Blacklist",
   "option.fieldguide.blacklist.tooltip": "Entries that should not appear in the Field Guide.\nSupports 'modid:entity_id', 'modid:block_id', or 'modid:*' for wildcards.",
 
