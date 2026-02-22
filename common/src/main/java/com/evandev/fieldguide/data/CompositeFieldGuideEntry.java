@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 public record CompositeFieldGuideEntry(ResourceLocation id, Object displayEntry, List<Object> components,
-                                       ResourceLocation structureNbt) {
+                                       ResourceLocation structureNbt, List<String> stackedBlocks) {
 
     @Override
     public boolean equals(Object o) {

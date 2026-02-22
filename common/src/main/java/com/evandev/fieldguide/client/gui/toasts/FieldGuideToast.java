@@ -45,7 +45,7 @@ public class FieldGuideToast implements Toast {
         }
 
         if (this.entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() instanceof Block block) {
-            if (composite.structureNbt() != null) {
+            if (composite.structureNbt() != null || (composite.stackedBlocks() != null && !composite.stackedBlocks().isEmpty())) {
                 EntryRenderHelper.renderStructure(guiGraphics, composite, iconX, iconY, 16, false, false, 1.0F);
             } else {
                 EntryRenderHelper.renderBlock(guiGraphics, block, iconX, iconY, 8.0F, false, false, 1.0F);

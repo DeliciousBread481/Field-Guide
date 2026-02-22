@@ -138,7 +138,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                     spawnBiomes.remove(new ResourceLocation(parts[1]));
                 }
             }
-            for (String addition :ClientFieldGuideManager.getInstance().getBiomeAdditions()) {
+            for (String addition : ClientFieldGuideManager.getInstance().getBiomeAdditions()) {
                 String[] parts = addition.split("\\|");
                 if (parts.length == 2 && parts[0].equals(entryId.toString())) {
                     ResourceLocation biomeId = new ResourceLocation(parts[1]);
@@ -343,7 +343,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
 
         if (entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() instanceof Block block) {
-            if (composite.structureNbt() != null) {
+            if (composite.structureNbt() != null || (composite.stackedBlocks() != null && !composite.stackedBlocks().isEmpty())) {
                 EntryRenderHelper.renderStructure(guiGraphics, composite, xPos, yPos, 80, !unlocked, true, bounce);
             } else {
                 EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 30.0F, !unlocked, true, bounce);

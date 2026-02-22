@@ -34,7 +34,11 @@ public class EntryResolver {
         for (CategoryEntry entry : category.getEntries()) {
             if (entry.type() == CategoryEntry.Type.ENTRY && entry.id() != null) {
                 resolveSingleEntry(entry.id(), config).ifPresent(e -> {
-                    foundEntries.add(e);
+                    if (entry.stackedBlocks() != null && !entry.stackedBlocks().isEmpty()) {
+                        foundEntries.add(new CompositeFieldGuideEntry(entry.id(), e, new ArrayList<>(), null, entry.stackedBlocks()));
+                    } else {
+                        foundEntries.add(e);
+                    }
                     addedIds.add(entry.id());
                 });
             } else if (entry.type() == CategoryEntry.Type.COMPOSITE && entry.id() != null) {
@@ -46,7 +50,7 @@ public class EntryResolver {
                             resolveSingleEntry(compId, config).ifPresent(components::add);
                         }
                     }
-                    foundEntries.add(new CompositeFieldGuideEntry(entry.id(), displayEntry, components, entry.structureNbt()));
+                    foundEntries.add(new CompositeFieldGuideEntry(entry.id(), displayEntry, components, entry.structureNbt(), entry.stackedBlocks()));
                     addedIds.add(entry.id());
                 });
             } else if (entry.type() == CategoryEntry.Type.AUTO_POPULATE) {

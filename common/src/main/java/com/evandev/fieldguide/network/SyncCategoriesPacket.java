@@ -47,7 +47,16 @@ public class SyncCategoriesPacket {
 
                 ResourceLocation structureNbt = b.readBoolean() ? b.readResourceLocation() : null;
 
-                cat.addEntry(new CategoryEntry(type, entryId, displayId, strategy, components, structureNbt));
+                List<String> stackedBlocks = null;
+                if (b.readBoolean()) {
+                    int stackCount = b.readInt();
+                    stackedBlocks = new ArrayList<>();
+                    for (int j = 0; j < stackCount; j++) {
+                        stackedBlocks.add(b.readUtf());
+                    }
+                }
+
+                cat.addEntry(new CategoryEntry(type, entryId, displayId, strategy, components, structureNbt, stackedBlocks));
             }
             return cat;
         });
@@ -85,6 +94,14 @@ public class SyncCategoriesPacket {
 
                 b.writeBoolean(entry.structureNbt() != null);
                 if (entry.structureNbt() != null) b.writeResourceLocation(entry.structureNbt());
+
+                b.writeBoolean(entry.stackedBlocks() != null);
+                if (entry.stackedBlocks() != null) {
+                    b.writeInt(entry.stackedBlocks().size());
+                    for (String blockStr : entry.stackedBlocks()) {
+                        b.writeUtf(blockStr);
+                    }
+                }
             }
         });
 

@@ -162,6 +162,62 @@
       ]
     },
     {
+      "type": "entry",
+      "id": "minecraft:bamboo",
+      "render": [
+        "minecraft:bamboo",
+        "minecraft:bamboo|leaves=large"
+      ]
+    },
+    {
+      "type": "entry",
+      "id": "minecraft:sugar_cane",
+      "render": [
+        "minecraft:sugar_cane",
+        "minecraft:sugar_cane"
+      ]
+    },
+    {
+      "type": "entry",
+      "id": "minecraft:cactus",
+      "render": [
+        "minecraft:cactus",
+        "minecraft:cactus"
+      ]
+    },
+    {
+      "type": "composite",
+      "id": "minecraft:torchflower",
+      "components": [
+        "minecraft:torchflower",
+        "minecraft:torchflower_crop"
+      ]
+    },
+    {
+      "type": "composite",
+      "id": "minecraft:pitcher_plant",
+      "components": [
+        "minecraft:pitcher_plant",
+        "minecraft:pitcher_plant_crop"
+      ]
+    },
+    {
+      "type": "composite",
+      "id": "minecraft:pumpkin",
+      "components": [
+        "minecraft:pumpkin",
+        "minecraft:pumpkin_stem"
+      ]
+    },
+    {
+      "type": "composite",
+      "id": "minecraft:melon",
+      "components": [
+        "minecraft:melon",
+        "minecraft:melon_stem"
+      ]
+    },
+    {
       "type": "auto_populate",
       "strategy": "plants"
     }

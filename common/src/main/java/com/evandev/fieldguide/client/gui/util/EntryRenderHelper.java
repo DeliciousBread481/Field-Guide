@@ -228,6 +228,9 @@ public class EntryRenderHelper {
                 PoseStack pose = new PoseStack();
 
                 Map<BlockPos, BlockState> blocks = StructureUtils.getStructureBlocks(composite);
+                if (blocks.isEmpty() && composite.stackedBlocks() != null && !composite.stackedBlocks().isEmpty()) {
+                    blocks = StructureUtils.getStackedBlocks(composite.stackedBlocks());
+                }
                 if (blocks.isEmpty()) return;
 
                 int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE, minZ = Integer.MAX_VALUE;
