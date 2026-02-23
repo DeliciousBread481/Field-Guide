@@ -3,117 +3,218 @@
     {
       "id": "minecraft:oak_sapling",
       "structure_nbt": "fieldguide:oak",
-      "components": ["minecraft:oak_log", "minecraft:oak_leaves"]
+      "components": [
+        "minecraft:oak_log",
+        "minecraft:oak_leaves"
+      ]
     },
     {
       "id": "minecraft:spruce_sapling",
       "structure_nbt": "fieldguide:spruce",
-      "components": ["minecraft:spruce_log", "minecraft:spruce_leaves"]
+      "components": [
+        "minecraft:spruce_log",
+        "minecraft:spruce_leaves"
+      ]
     },
     {
       "id": "minecraft:birch_sapling",
       "structure_nbt": "fieldguide:birch",
-      "components": ["minecraft:birch_log", "minecraft:birch_leaves"]
+      "components": [
+        "minecraft:birch_log",
+        "minecraft:birch_leaves"
+      ]
     },
     {
       "id": "minecraft:jungle_sapling",
       "structure_nbt": "fieldguide:jungle_tree_no_vine",
-      "components": ["minecraft:jungle_log", "minecraft:jungle_leaves"]
+      "components": [
+        "minecraft:jungle_log",
+        "minecraft:jungle_leaves"
+      ]
     },
     {
       "id": "minecraft:acacia_sapling",
       "structure_nbt": "fieldguide:acacia",
-      "components": ["minecraft:acacia_log", "minecraft:acacia_leaves"]
+      "components": [
+        "minecraft:acacia_log",
+        "minecraft:acacia_leaves"
+      ]
     },
     {
       "id": "minecraft:dark_oak_sapling",
       "structure_nbt": "fieldguide:dark_oak",
-      "components": ["minecraft:dark_oak_log", "minecraft:dark_oak_leaves"]
+      "components": [
+        "minecraft:dark_oak_log",
+        "minecraft:dark_oak_leaves"
+      ]
     },
     {
       "id": "minecraft:mangrove_propagule",
       "structure_nbt": "fieldguide:mangrove",
-      "components": ["minecraft:mangrove_log", "minecraft:mangrove_leaves", "minecraft:mangrove_roots", "minecraft:muddy_mangrove_roots"]
+      "components": [
+        "minecraft:mangrove_log",
+        "minecraft:mangrove_leaves",
+        "minecraft:mangrove_roots",
+        "minecraft:muddy_mangrove_roots"
+      ]
     },
     {
       "id": "minecraft:cherry_sapling",
       "structure_nbt": "fieldguide:cherry",
-      "components": ["minecraft:cherry_log", "minecraft:cherry_leaves"]
+      "components": [
+        "minecraft:cherry_log",
+        "minecraft:cherry_leaves"
+      ]
     },
     {
-      "id": "minecraft:azalea_tree",
-      "structure_nbt": "fieldguide:azalea",
-      "components": ["minecraft:oak_log", "minecraft:azalea_leaves", "minecraft:flowering_azalea_leaves"]
+      "id": "minecraft:azalea_leaves",
+      "structure_nbt": "fieldguide:azalea_tree",
+      "components": [
+        "minecraft:oak_log",
+        "minecraft:azalea_leaves",
+        "minecraft:flowering_azalea_leaves"
+      ]
     },
     {
       "id": "fieldguide:huge_crimson_fungus",
       "display": "minecraft:crimson_stem",
       "structure_nbt": "fieldguide:crimson_fungus",
-      "components": ["minecraft:crimson_stem", "minecraft:nether_wart_block", "minecraft:shroomlight"]
+      "components": [
+        "minecraft:crimson_stem",
+        "minecraft:nether_wart_block",
+        "minecraft:shroomlight"
+      ]
     },
     {
       "id": "fieldguide:huge_warped_fungus",
       "display": "minecraft:warped_stem",
       "structure_nbt": "fieldguide:warped_fungus",
-      "components": ["minecraft:warped_stem", "minecraft:warped_wart_block", "minecraft:shroomlight"]
+      "components": [
+        "minecraft:warped_stem",
+        "minecraft:warped_wart_block",
+        "minecraft:shroomlight"
+      ]
     },
     {
       "id": "fieldguide:huge_brown_mushroom",
       "display": "minecraft:brown_mushroom_block",
       "structure_nbt": "fieldguide:huge_brown_mushroom",
-      "components": ["minecraft:brown_mushroom_block", "minecraft:mushroom_stem"]
+      "components": [
+        "minecraft:brown_mushroom_block",
+        "minecraft:mushroom_stem"
+      ]
     },
     {
       "id": "fieldguide:huge_red_mushroom",
       "display": "minecraft:red_mushroom_block",
       "structure_nbt": "fieldguide:huge_red_mushroom",
-      "components": ["minecraft:red_mushroom_block", "minecraft:mushroom_stem"]
+      "components": [
+        "minecraft:red_mushroom_block",
+        "minecraft:mushroom_stem"
+      ]
     },
     {
-      "id": "minecraft:weeping_vines",
-      "components": ["minecraft:weeping_vines", "minecraft:weeping_vines_plant"]
+      "id": "minecraft:big_dripleaf",
+      "components": [
+        "minecraft:big_dripleaf",
+        "minecraft:big_dripleaf_stem"
+      ]
     },
     {
-      "id": "minecraft:twisting_vines",
-      "components": ["minecraft:twisting_vines", "minecraft:twisting_vines_plant"]
+      "id": "minecraft:cave_vines",
+      "render": [
+        "minecraft:cave_vines",
+        "minecraft:cave_vines_plant|berries=true"
+      ],
+      "components": [
+        "minecraft:cave_vines_plant",
+        "minecraft:cave_vines"
+      ]
+    },
+    {
+      "render": [
+        "minecraft:weeping_vines",
+        "minecraft:weeping_vines_plant"
+      ],
+      "components": [
+        "minecraft:weeping_vines_plant",
+        "minecraft:weeping_vines"
+      ]
+    },
+    {
+      "render": [
+        "minecraft:twisting_vines_plant",
+        "minecraft:twisting_vines"
+      ],
+      "components": [
+        "minecraft:twisting_vines",
+        "minecraft:twisting_vines_plant"
+      ]
     },
     {
       "id": "minecraft:chorus_plant",
       "structure_nbt": "fieldguide:chorus_plant",
-      "components": ["minecraft:chorus_plant", "minecraft:chorus_fruit"]
+      "components": [
+        "minecraft:chorus_plant",
+        "minecraft:chorus_fruit"
+      ]
     },
     {
       "id": "minecraft:kelp",
       "structure_nbt": "fieldguide:kelp",
-      "components": ["minecraft:kelp", "minecraft:kelp_plant"]
+      "components": [
+        "minecraft:kelp",
+        "minecraft:kelp_plant"
+      ]
     },
     {
       "id": "minecraft:bamboo",
-      "render": ["minecraft:bamboo", "minecraft:bamboo|leaves=large"]
+      "render": [
+        "minecraft:bamboo",
+        "minecraft:bamboo|leaves=large"
+      ]
     },
     {
       "id": "minecraft:sugar_cane",
-      "render": ["minecraft:sugar_cane", "minecraft:sugar_cane"]
+      "render": [
+        "minecraft:sugar_cane",
+        "minecraft:sugar_cane"
+      ]
     },
     {
       "id": "minecraft:cactus",
-      "render": ["minecraft:cactus", "minecraft:cactus"]
+      "render": [
+        "minecraft:cactus",
+        "minecraft:cactus"
+      ]
     },
     {
       "id": "minecraft:torchflower",
-      "components": ["minecraft:torchflower", "minecraft:torchflower_crop"]
+      "components": [
+        "minecraft:torchflower",
+        "minecraft:torchflower_crop"
+      ]
     },
     {
       "id": "minecraft:pitcher_plant",
-      "components": ["minecraft:pitcher_plant", "minecraft:pitcher_crop"]
+      "components": [
+        "minecraft:pitcher_plant",
+        "minecraft:pitcher_crop"
+      ]
     },
     {
       "id": "minecraft:pumpkin",
-      "components": ["minecraft:pumpkin", "minecraft:pumpkin_stem"]
+      "components": [
+        "minecraft:pumpkin",
+        "minecraft:pumpkin_stem"
+      ]
     },
     {
       "id": "minecraft:melon",
-      "components": ["minecraft:melon", "minecraft:melon_stem"]
+      "components": [
+        "minecraft:melon",
+        "minecraft:melon_stem"
+      ]
     }
   ]
 }
