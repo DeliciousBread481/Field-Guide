@@ -132,6 +132,7 @@
       ]
     },
     {
+      "id": "minecraft:weeping_vines",
       "render": [
         "minecraft:weeping_vines",
         "minecraft:weeping_vines_plant"
@@ -142,6 +143,7 @@
       ]
     },
     {
+      "id": "minecraft:twisting_vines",
       "render": [
         "minecraft:twisting_vines_plant",
         "minecraft:twisting_vines"

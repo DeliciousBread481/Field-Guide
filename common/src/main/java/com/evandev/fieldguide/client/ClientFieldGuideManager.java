@@ -12,6 +12,8 @@ import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.util.EntryResolver;
+import com.google.gson.JsonObject;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -273,7 +275,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         resolveAllEntries();
     }
 
-    private void loadVisuals(ResourceManager mgr, String folder, BiConsumer<ResourceLocation, com.google.gson.JsonObject> processor) {
+    private void loadVisuals(ResourceManager mgr, String folder, BiConsumer<ResourceLocation, JsonObject> processor) {
         mgr.listResourceStacks("fieldguide/" + folder, id -> id.getPath().endsWith(".json")).forEach((fileId, resources) -> {
             String path = fileId.getPath();
             String idPath = path.substring(("fieldguide/" + folder + "/").length(), path.length() - ".json".length());
@@ -362,7 +364,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         return tagA.equals(tagB);
     }
 
-    public void onClientTick(net.minecraft.client.Minecraft minecraft) {
+    public void onClientTick(Minecraft minecraft) {
         FieldGuideScanner.getInstance().onClientTick(minecraft);
     }
 
