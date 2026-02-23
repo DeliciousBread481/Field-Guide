@@ -13,6 +13,7 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
@@ -200,7 +201,7 @@ public class ScanOverlayRenderer {
                 }
 
                 if (state.getRenderShape() == RenderShape.MODEL) {
-                    net.minecraft.client.renderer.RenderType type = ItemBlockRenderTypes.getRenderType(state, false);
+                    RenderType type = ItemBlockRenderTypes.getRenderType(state, false);
                     VertexConsumer depthConsumer = new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForDepth(type, false)), 1, 1, 1, 1);
                     renderBlockModelAsShell(mc, state, pos, poseStack, depthConsumer, blocksToRender);
                 } else {
@@ -236,7 +237,7 @@ public class ScanOverlayRenderer {
                 }
 
                 if (state.getRenderShape() == RenderShape.MODEL) {
-                    net.minecraft.client.renderer.RenderType typeColor = ItemBlockRenderTypes.getRenderType(state, false);
+                    RenderType typeColor = ItemBlockRenderTypes.getRenderType(state, false);
                     VertexConsumer colorConsumer = new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForScan(typeColor, false)), red, green, blue, alpha);
                     renderBlockModelAsShell(mc, state, pos, poseStack, colorConsumer, blocksToRender);
                 } else {

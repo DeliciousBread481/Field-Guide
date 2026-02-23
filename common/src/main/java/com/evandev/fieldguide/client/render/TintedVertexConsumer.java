@@ -33,6 +33,28 @@ public class TintedVertexConsumer implements VertexConsumer {
     }
 
     @Override
+    public @NotNull VertexConsumer color(float r, float g, float b, float a) {
+        delegate.color(r * tintR, g * tintG, b * tintB, a * tintA);
+        return this;
+    }
+
+    @Override
+    public @NotNull VertexConsumer color(int argb) {
+        int a = (argb >> 24) & 0xFF;
+        int r = (argb >> 16) & 0xFF;
+        int g = (argb >> 8) & 0xFF;
+        int b = argb & 0xFF;
+
+        delegate.color(
+                (int) (r * tintR),
+                (int) (g * tintG),
+                (int) (b * tintB),
+                (int) (a * tintA)
+        );
+        return this;
+    }
+
+    @Override
     public @NotNull VertexConsumer uv(float u, float v) {
         delegate.uv(u, v);
         return this;
