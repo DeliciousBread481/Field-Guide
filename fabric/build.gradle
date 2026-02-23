@@ -30,6 +30,9 @@ dependencies {
     // Spyglass Improvements
     modRuntimeOnly "maven.modrinth:spyglass-improvements:${spyglass_improvements_fabric_version}+fabric"
 
+    // ETF
+    modCompileOnly "maven.modrinth:entitytexturefeatures:${etf_version}-fabric-1.20.1"
+
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
     implementation project(":common")
 }

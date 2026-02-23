@@ -3,8 +3,10 @@ package com.evandev.fieldguide.client.render;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.ModRenderTypes;
 import com.evandev.fieldguide.client.scanning.FieldGuideScanner;
+import com.evandev.fieldguide.compat.etf.EtfCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.ModTags;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -28,6 +30,7 @@ import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 
@@ -77,6 +80,13 @@ public class ScanOverlayRenderer {
         if (targetEntity != null && alpha > 0.01f) {
             renderEntityOverlay(poseStack, partialTick, camPos, bufferSource, targetEntity, outOfRangeEntity, scanner, mc, red, green, blue, alpha);
         }
+    }
+
+    private static VertexConsumer createTintedConsumer(VertexConsumer delegate, MultiBufferSource provider, float r, float g, float b, float a) {
+        if (Services.PLATFORM.isModLoaded("entity_texture_features")) {
+            return EtfCompat.createTintedConsumer(delegate, provider, r, g, b, a);
+        }
+        return new TintedVertexConsumer(delegate, r, g, b, a);
     }
 
     private static void renderBlockOverlay(PoseStack poseStack, float partialTick, Vec3 camPos, MultiBufferSource.BufferSource bufferSource, BlockPos targetBlock, FieldGuideScanner scanner, Minecraft mc, float red, float green, float blue, float alpha) {
@@ -202,10 +212,10 @@ public class ScanOverlayRenderer {
 
                 if (state.getRenderShape() == RenderShape.MODEL) {
                     RenderType type = ItemBlockRenderTypes.getRenderType(state, false);
-                    VertexConsumer depthConsumer = new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForDepth(type, false)), 1, 1, 1, 1);
+                    VertexConsumer depthConsumer = createTintedConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForDepth(type, false)), bufferSource, 1, 1, 1, 1);
                     renderBlockModelAsShell(mc, state, pos, poseStack, depthConsumer, blocksToRender);
                 } else {
-                    MultiBufferSource depthSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForDepth(requestedType, false)), 1, 1, 1, 1);
+                    MultiBufferSource depthSource = requestedType -> createTintedConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForDepth(requestedType, false)), bufferSource, 1, 1, 1, 1);
                     mc.getBlockRenderer().renderSingleBlock(state, poseStack, depthSource, 15728880, OverlayTexture.pack(0, 10));
                 }
 
@@ -238,10 +248,10 @@ public class ScanOverlayRenderer {
 
                 if (state.getRenderShape() == RenderShape.MODEL) {
                     RenderType typeColor = ItemBlockRenderTypes.getRenderType(state, false);
-                    VertexConsumer colorConsumer = new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForScan(typeColor, false)), red, green, blue, alpha);
+                    VertexConsumer colorConsumer = createTintedConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForScan(typeColor, false)), bufferSource, red, green, blue, alpha);
                     renderBlockModelAsShell(mc, state, pos, poseStack, colorConsumer, blocksToRender);
                 } else {
-                    MultiBufferSource tintedSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForScan(requestedType, false)), red, green, blue, alpha);
+                    MultiBufferSource tintedSource = requestedType -> createTintedConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForScan(requestedType, false)), bufferSource, red, green, blue, alpha);
                     mc.getBlockRenderer().renderSingleBlock(state, poseStack, tintedSource, 15728880, OverlayTexture.pack(0, 10));
                 }
 
@@ -387,7 +397,13 @@ public class ScanOverlayRenderer {
 
         float yaw = Mth.lerp(partialTick, targetEntity.yRotO, targetEntity.getYRot());
 
-        MultiBufferSource depthSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForDepth(requestedType, true)), 1, 1, 1, 1);
+        boolean isEtfLoaded = Services.PLATFORM.isModLoaded("entity_texture_features");
+
+        if (isEtfLoaded) {
+            EtfCompat.preventRenderLayerTextureModify();
+        }
+
+        MultiBufferSource depthSource = new ScanBufferSourceWrapper(bufferSource, 1, 1, 1, 1, true);
         mc.getEntityRenderDispatcher().render(targetEntity, 0.0D, 0.0D, 0.0D, yaw, partialTick, poseStack, depthSource, 15728880);
         bufferSource.endBatch();
 
@@ -395,10 +411,25 @@ public class ScanOverlayRenderer {
             ModRenderTypes.SCAN_ENTITY_SHADER.getUniform("ColorModulator").set(red, green, blue, alpha);
         }
 
-        MultiBufferSource forcedSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForScan(requestedType, true)), red, green, blue, alpha);
+        MultiBufferSource forcedSource = new ScanBufferSourceWrapper(bufferSource, red, green, blue, alpha, false);
         mc.getEntityRenderDispatcher().render(targetEntity, 0.0D, 0.0D, 0.0D, yaw, partialTick, poseStack, forcedSource, 15728880);
         bufferSource.endBatch();
 
+        if (isEtfLoaded) {
+            EtfCompat.allowRenderLayerTextureModify();
+        }
+
         poseStack.popPose();
+    }
+
+    private record ScanBufferSourceWrapper(BufferSource delegate, float r, float g, float b, float a,
+                                           boolean isDepth) implements MultiBufferSource {
+
+        @Override
+        public @NotNull VertexConsumer getBuffer(@NotNull RenderType type) {
+            RenderType wrappedType = isDepth ? ModRenderTypes.wrapForDepth(type, true) : ModRenderTypes.wrapForScan(type, true);
+            VertexConsumer buffer = delegate.getBuffer(wrappedType);
+            return createTintedConsumer(buffer, this, r, g, b, a);
+        }
     }
 }

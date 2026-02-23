@@ -61,6 +61,9 @@ dependencies {
     // Spyglass Improvements
     modRuntimeOnly "maven.modrinth:spyglass-improvements:${spyglass_improvements_forge_version}+forge"
 
+    // ETF
+    modCompileOnly "maven.modrinth:entitytexturefeatures:${etf_version}-forge-1.20.1"
+
     compileOnly project(":common")
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
 }
