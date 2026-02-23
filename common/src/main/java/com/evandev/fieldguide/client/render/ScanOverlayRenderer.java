@@ -194,6 +194,9 @@ public class ScanOverlayRenderer {
                     ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("ScanLimitY").set(localScanLimitY);
                     Matrix4f modelViewMat = new Matrix4f(poseStack.last().pose());
                     ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("InverseModelViewMat").set(modelViewMat.invert());
+                    if (ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("ColorModulator") != null) {
+                        ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("ColorModulator").set(1.0F, 1.0F, 1.0F, 1.0F);
+                    }
                 }
 
                 if (state.getRenderShape() == RenderShape.MODEL) {
@@ -206,10 +209,9 @@ public class ScanOverlayRenderer {
                 }
 
                 poseStack.popPose();
+                bufferSource.endBatch();
             }
         }
-
-        bufferSource.endBatch();
 
         for (BlockPos pos : blocksToRender) {
             BlockState state = mc.level.getBlockState(pos);
@@ -228,6 +230,9 @@ public class ScanOverlayRenderer {
                     ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("ScanLimitY").set(localScanLimitY);
                     Matrix4f modelViewMat = new Matrix4f(poseStack.last().pose());
                     ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("InverseModelViewMat").set(modelViewMat.invert());
+                    if (ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("ColorModulator") != null) {
+                        ModRenderTypes.SCAN_BLOCK_SHADER.getUniform("ColorModulator").set(red, green, blue, alpha);
+                    }
                 }
 
                 if (state.getRenderShape() == RenderShape.MODEL) {
@@ -240,10 +245,9 @@ public class ScanOverlayRenderer {
                 }
 
                 poseStack.popPose();
+                bufferSource.endBatch();
             }
         }
-
-        bufferSource.endBatch();
     }
 
     private static Set<BlockPos> gatherTreeBlocks(Minecraft mc, BlockPos startPos) {
@@ -375,6 +379,9 @@ public class ScanOverlayRenderer {
             ModRenderTypes.SCAN_ENTITY_SHADER.getUniform("ScanLimitY").set(localScanLimitY);
             Matrix4f modelViewMat = new Matrix4f(poseStack.last().pose());
             ModRenderTypes.SCAN_ENTITY_SHADER.getUniform("InverseModelViewMat").set(modelViewMat.invert());
+            if (ModRenderTypes.SCAN_ENTITY_SHADER.getUniform("ColorModulator") != null) {
+                ModRenderTypes.SCAN_ENTITY_SHADER.getUniform("ColorModulator").set(1.0F, 1.0F, 1.0F, 1.0F);
+            }
         }
 
         float yaw = Mth.lerp(partialTick, targetEntity.yRotO, targetEntity.getYRot());
@@ -382,6 +389,10 @@ public class ScanOverlayRenderer {
         MultiBufferSource depthSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForDepth(requestedType, true)), 1, 1, 1, 1);
         mc.getEntityRenderDispatcher().render(targetEntity, 0.0D, 0.0D, 0.0D, yaw, partialTick, poseStack, depthSource, 15728880);
         bufferSource.endBatch();
+
+        if (ModRenderTypes.SCAN_ENTITY_SHADER != null && ModRenderTypes.SCAN_ENTITY_SHADER.getUniform("ColorModulator") != null) {
+            ModRenderTypes.SCAN_ENTITY_SHADER.getUniform("ColorModulator").set(red, green, blue, alpha);
+        }
 
         MultiBufferSource forcedSource = requestedType -> new TintedVertexConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForScan(requestedType, true)), red, green, blue, alpha);
         mc.getEntityRenderDispatcher().render(targetEntity, 0.0D, 0.0D, 0.0D, yaw, partialTick, poseStack, forcedSource, 15728880);
