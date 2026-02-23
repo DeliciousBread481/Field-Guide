@@ -59,10 +59,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public static ResourceLocation getEntryId(Object entry) {
-        if (entry instanceof CompositeFieldGuideEntry composite) return composite.id();
-        if (entry instanceof EntityType<?> type) return BuiltInRegistries.ENTITY_TYPE.getKey(type);
-        if (entry instanceof Block block) return BuiltInRegistries.BLOCK.getKey(block);
-        return null;
+        return EntryResolver.getEntryId(entry);
     }
 
     public static boolean hideFromSearch(Object entry) {
@@ -173,30 +170,16 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public Object getEntryForTarget(Object target) {
-        // Unique entries
         for (Object entry : getValidEntries()) {
             if (entry.equals(target)) return entry;
             if (entry instanceof CompositeFieldGuideEntry composite) {
-                if (composite.displayEntry() != null && composite.displayEntry().equals(target)) {
+                if ((composite.displayEntry() != null && composite.displayEntry().equals(target)) ||
+                        (composite.components() != null && composite.components().contains(target))) {
                     return entry;
                 }
             }
         }
-
-        // Ambiguous blocks
-        Object foundComponentEntry = null;
-        for (Object entry : getValidEntries()) {
-            if (entry instanceof CompositeFieldGuideEntry composite) {
-                if (composite.components() != null && composite.components().contains(target)) {
-                    if (foundComponentEntry != null) {
-                        return null;
-                    }
-                    foundComponentEntry = entry;
-                }
-            }
-        }
-
-        return foundComponentEntry;
+        return null;
     }
 
     public String getJournalTitle() {
@@ -308,26 +291,11 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     private void resolveAllEntries() {
         resolvedCategoryEntries.clear();
         ModConfig config = ModConfig.get();
-        Set<Object> allCompositeComponents = new HashSet<>();
 
         syncedCategories.values().forEach(category -> {
-            List<Object> entries = EntryResolver.resolveCategoryEntries(category, config);
-            for (Object entry : entries) {
-                if (entry instanceof CompositeFieldGuideEntry composite) {
-                    if (composite.components() != null) {
-                        allCompositeComponents.addAll(composite.components());
-                    }
-                    if (composite.displayEntry() != null) {
-                        allCompositeComponents.add(composite.displayEntry());
-                    }
-                }
-            }
+            List<Object> entries = EntryResolver.resolveCategoryEntries(category, config, Collections.emptyList());
             resolvedCategoryEntries.put(category.getId(), entries);
         });
-
-        for (List<Object> entries : resolvedCategoryEntries.values()) {
-            entries.removeIf(entry -> !(entry instanceof CompositeFieldGuideEntry) && allCompositeComponents.contains(entry));
-        }
     }
 
     public List<Object> getEntriesForCategory(Category category) {

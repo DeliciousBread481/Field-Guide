@@ -4,6 +4,7 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CategoryEntry;
+import com.evandev.fieldguide.data.CompositeDefinition;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -27,7 +28,14 @@ public class EntryResolver {
         return !config.isEntityBlacklisted(BuiltInRegistries.BLOCK.getKey(block));
     }
 
-    public static List<Object> resolveCategoryEntries(Category category, ModConfig config) {
+    public static ResourceLocation getEntryId(Object obj) {
+        if (obj instanceof EntityType<?> type) return BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        if (obj instanceof Block block) return BuiltInRegistries.BLOCK.getKey(block);
+        if (obj instanceof CompositeFieldGuideEntry comp) return comp.id();
+        return null;
+    }
+
+    public static List<Object> resolveCategoryEntries(Category category, ModConfig config, List<CompositeDefinition> globalComposites) {
         Set<Object> foundEntries = new LinkedHashSet<>();
         Set<ResourceLocation> addedIds = new HashSet<>();
 
@@ -55,11 +63,7 @@ public class EntryResolver {
                 });
             } else if (entry.type() == CategoryEntry.Type.AUTO_POPULATE) {
                 for (Object obj : getEntriesForStrategy(entry.strategy(), config)) {
-                    ResourceLocation id = null;
-                    if (obj instanceof Block b) id = BuiltInRegistries.BLOCK.getKey(b);
-                    else if (obj instanceof EntityType<?> e) id = BuiltInRegistries.ENTITY_TYPE.getKey(e);
-                    else if (obj instanceof CompositeFieldGuideEntry c) id = c.id();
-
+                    ResourceLocation id = getEntryId(obj);
                     if (id != null && !addedIds.contains(id)) {
                         foundEntries.add(obj);
                         addedIds.add(id);
@@ -67,16 +71,62 @@ public class EntryResolver {
                 }
             }
         }
+
+        if (globalComposites != null && !globalComposites.isEmpty()) {
+            List<Object> groupedEntries = new ArrayList<>();
+            Set<ResourceLocation> processedComposites = new HashSet<>();
+
+            for (Object raw : foundEntries) {
+                if (raw instanceof CompositeFieldGuideEntry) {
+                    groupedEntries.add(raw);
+                    continue;
+                }
+
+                ResourceLocation id = getEntryId(raw);
+                CompositeDefinition matchingDef = findCompositeFor(id, globalComposites);
+
+                if (matchingDef != null) {
+                    if (processedComposites.add(matchingDef.id())) {
+                        resolveCompositeDefinition(matchingDef, config).ifPresent(groupedEntries::add);
+                    }
+                } else {
+                    groupedEntries.add(raw);
+                }
+            }
+            foundEntries.clear();
+            foundEntries.addAll(groupedEntries);
+        }
+
         List<Object> resolved = new ArrayList<>(foundEntries);
         resolved.removeIf(e -> {
-            ResourceLocation id = null;
-            if (e instanceof EntityType<?> type) id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
-            else if (e instanceof Block block) id = BuiltInRegistries.BLOCK.getKey(block);
-            else if (e instanceof CompositeFieldGuideEntry comp) id = comp.id();
+            ResourceLocation id = getEntryId(e);
             return id != null && config.getRedirect(id) != null;
         });
 
         return resolved;
+    }
+
+    private static CompositeDefinition findCompositeFor(ResourceLocation id, List<CompositeDefinition> composites) {
+        if (id == null) return null;
+        for (CompositeDefinition def : composites) {
+            if (id.equals(def.displayId()) || (def.components() != null && def.components().contains(id))) {
+                return def;
+            }
+        }
+        return null;
+    }
+
+    private static Optional<CompositeFieldGuideEntry> resolveCompositeDefinition(CompositeDefinition def, ModConfig config) {
+        ResourceLocation displayLoc = def.displayId() != null ? def.displayId() : def.id();
+        return resolveSingleEntry(displayLoc, config).map(displayEntry -> {
+            List<Object> components = new ArrayList<>();
+            if (def.components() != null) {
+                for (ResourceLocation compId : def.components()) {
+                    resolveSingleEntry(compId, config).ifPresent(components::add);
+                }
+            }
+            return new CompositeFieldGuideEntry(def.id(), displayEntry, components, def.structureNbt(), def.stackedBlocks());
+        });
     }
 
     private static Optional<Object> resolveSingleEntry(ResourceLocation id, ModConfig config) {
@@ -128,5 +178,4 @@ public class EntryResolver {
                 .map(Object.class::cast)
                 .toList();
     }
-
 }

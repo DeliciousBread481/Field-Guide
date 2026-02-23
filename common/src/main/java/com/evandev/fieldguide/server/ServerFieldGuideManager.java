@@ -4,6 +4,7 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CategoryEntry;
+import com.evandev.fieldguide.data.CompositeDefinition;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
@@ -34,6 +35,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     private static final ServerFieldGuideManager INSTANCE = new ServerFieldGuideManager();
     private final Map<ResourceLocation, List<Object>> resolvedCategoryEntries = new HashMap<>();
     private Map<ResourceLocation, Category> categories = new LinkedHashMap<>();
+    private List<CompositeDefinition> composites = new ArrayList<>();
     private Map<ResourceLocation, List<ItemStack>> serverLootCache = new HashMap<>();
 
     private List<String> biomeAdditions = new ArrayList<>();
@@ -113,7 +115,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         Set<Object> allCompositeComponents = new HashSet<>();
 
         for (Category cat : categories.values()) {
-            List<Object> entries = EntryResolver.resolveCategoryEntries(cat, config);
+            List<Object> entries = EntryResolver.resolveCategoryEntries(cat, config, composites);
             for (Object entry : entries) {
                 if (entry instanceof CompositeFieldGuideEntry composite) {
                     if (composite.components() != null) {
@@ -148,12 +150,12 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     protected @NotNull ReloadData prepare(ResourceManager resourceManager, @NotNull ProfilerFiller profiler) {
         ReloadData data = new ReloadData();
 
-        Map<ResourceLocation, List<Resource>> resources = resourceManager.listResourceStacks(
+        Map<ResourceLocation, List<Resource>> categoryResources = resourceManager.listResourceStacks(
                 "fieldguide/categories",
                 id -> id.getPath().endsWith(".json")
         );
 
-        for (Map.Entry<ResourceLocation, List<Resource>> entry : resources.entrySet()) {
+        for (Map.Entry<ResourceLocation, List<Resource>> entry : categoryResources.entrySet()) {
             ResourceLocation fileId = entry.getKey();
             String path = fileId.getPath();
             String idPath = path.substring("fieldguide/categories/".length(), path.length() - ".json".length());
@@ -187,45 +189,58 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                             switch (typeStr) {
                                 case "entry" -> {
                                     ResourceLocation id = new ResourceLocation(GsonHelper.getAsString(obj, "id"));
-                                    List<String> stackedBlocks = null;
-                                    if (obj.has("render")) {
-                                        stackedBlocks = new ArrayList<>();
-                                        for (JsonElement el2 : GsonHelper.getAsJsonArray(obj, "render")) {
-                                            stackedBlocks.add(el2.getAsString());
-                                        }
-                                    }
-                                    category.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, id, id, null, null, null, stackedBlocks));
+                                    category.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, id, id, null, null, null, null));
                                 }
                                 case "auto_populate" -> {
                                     String strategy = GsonHelper.getAsString(obj, "strategy");
                                     category.addEntry(new CategoryEntry(CategoryEntry.Type.AUTO_POPULATE, null, null, strategy, null, null, null));
-                                }
-                                case "composite", "structure" -> {
-                                    ResourceLocation id = new ResourceLocation(GsonHelper.getAsString(obj, "id"));
-                                    ResourceLocation displayId = obj.has("display") ? new ResourceLocation(GsonHelper.getAsString(obj, "display")) : id;
-                                    List<ResourceLocation> components = new ArrayList<>();
-                                    if (obj.has("components")) {
-                                        for (JsonElement comp : GsonHelper.getAsJsonArray(obj, "components")) {
-                                            components.add(new ResourceLocation(comp.getAsString()));
-                                        }
-                                    }
-                                    ResourceLocation structureNbt = obj.has("structure_nbt") ? new ResourceLocation(GsonHelper.getAsString(obj, "structure_nbt")) : null;
-
-                                    List<String> stackedBlocks = null;
-                                    if (obj.has("render")) {
-                                        stackedBlocks = new ArrayList<>();
-                                        for (JsonElement el2 : GsonHelper.getAsJsonArray(obj, "render")) {
-                                            stackedBlocks.add(el2.getAsString());
-                                        }
-                                    }
-
-                                    category.addEntry(new CategoryEntry(CategoryEntry.Type.COMPOSITE, id, displayId, null, components, structureNbt, stackedBlocks));
                                 }
                             }
                         }
                     }
                 } catch (Exception e) {
                     Constants.LOG.error("Failed to load category: {}", fileId, e);
+                }
+            }
+        }
+
+        Map<ResourceLocation, List<Resource>> compositeResources = resourceManager.listResourceStacks(
+                "fieldguide/composites",
+                id -> id.getPath().endsWith(".json")
+        );
+
+        for (Map.Entry<ResourceLocation, List<Resource>> entry : compositeResources.entrySet()) {
+            for (Resource resource : entry.getValue()) {
+                try (Reader reader = resource.openAsReader()) {
+                    JsonObject json = GsonHelper.parse(reader);
+                    if (json.has("values")) {
+                        for (JsonElement el : GsonHelper.getAsJsonArray(json, "values")) {
+                            JsonObject obj = el.getAsJsonObject();
+                            ResourceLocation id = new ResourceLocation(GsonHelper.getAsString(obj, "id"));
+                            ResourceLocation displayId = obj.has("display") ? new ResourceLocation(GsonHelper.getAsString(obj, "display")) : id;
+
+                            List<ResourceLocation> components = new ArrayList<>();
+                            if (obj.has("components")) {
+                                for (JsonElement comp : GsonHelper.getAsJsonArray(obj, "components")) {
+                                    components.add(new ResourceLocation(comp.getAsString()));
+                                }
+                            }
+
+                            ResourceLocation structureNbt = obj.has("structure_nbt") ? new ResourceLocation(GsonHelper.getAsString(obj, "structure_nbt")) : null;
+
+                            List<String> stackedBlocks = null;
+                            if (obj.has("render")) {
+                                stackedBlocks = new ArrayList<>();
+                                for (JsonElement el2 : GsonHelper.getAsJsonArray(obj, "render")) {
+                                    stackedBlocks.add(el2.getAsString());
+                                }
+                            }
+
+                            data.composites.add(new CompositeDefinition(id, displayId, components, structureNbt, stackedBlocks));
+                        }
+                    }
+                } catch (Exception e) {
+                    Constants.LOG.error("Failed to load composite: {}", entry.getKey(), e);
                 }
             }
         }
@@ -323,6 +338,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     protected void apply(@NotNull ReloadData data, @NotNull ResourceManager resourceManager, @NotNull ProfilerFiller profiler) {
         ModConfig.load();
         this.categories = data.categories;
+        this.composites = data.composites;
         this.biomeAdditions = data.biomeAdditions;
         this.biomeRemovals = data.biomeRemovals;
         this.lootAdditions = data.lootAdditions;
@@ -331,6 +347,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
     public static class ReloadData {
         public Map<ResourceLocation, Category> categories = new LinkedHashMap<>();
+        public List<CompositeDefinition> composites = new ArrayList<>();
         public List<String> biomeAdditions = new ArrayList<>();
         public List<String> biomeRemovals = new ArrayList<>();
         public List<String> lootAdditions = new ArrayList<>();
