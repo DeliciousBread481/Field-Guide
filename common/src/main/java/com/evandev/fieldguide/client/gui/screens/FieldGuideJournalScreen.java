@@ -13,6 +13,7 @@ import com.evandev.fieldguide.data.Category;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -31,6 +32,10 @@ public class FieldGuideJournalScreen extends BookScreen {
         this.setSelectedCategory(category);
         this.currentSpread = pageIndex;
         lastOpenedJournalPage = pageIndex;
+    }
+
+    private String getDefaultJournalText() {
+        return I18n.get("fieldguide.journal.default");
     }
 
     @Override
@@ -106,7 +111,7 @@ public class FieldGuideJournalScreen extends BookScreen {
     private void ensurePagesExist(ClientFieldGuideManager manager) {
         int targetSize = currentSpread == 0 ? 1 : currentSpread * 2 + 1;
         while (manager.getJournalPages().size() < targetSize) {
-            manager.getJournalPages().add(new JournalPage("", "", System.currentTimeMillis()));
+            manager.getJournalPages().add(new JournalPage("", getDefaultJournalText(), System.currentTimeMillis()));
         }
     }
 
@@ -119,7 +124,7 @@ public class FieldGuideJournalScreen extends BookScreen {
     private void handleSpillover(String spill, int targetPageIndex) {
         ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
         while (manager.getJournalPages().size() <= targetPageIndex) {
-            manager.getJournalPages().add(new JournalPage("", "", System.currentTimeMillis()));
+            manager.getJournalPages().add(new JournalPage("", getDefaultJournalText(), System.currentTimeMillis()));
         }
         JournalPage targetPage = manager.getJournalPages().get(targetPageIndex);
         targetPage.content = spill + targetPage.content;
@@ -132,7 +137,8 @@ public class FieldGuideJournalScreen extends BookScreen {
         ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
         List<JournalPage> pages = manager.getJournalPages();
         for (int i = pages.size() - 1; i > 0; i--) {
-            if (pages.get(i).title.trim().isEmpty() && pages.get(i).content.trim().isEmpty()) pages.remove(i);
+            if (pages.get(i).title.trim().isEmpty() && (pages.get(i).content.trim().isEmpty() || pages.get(i).content.equals(getDefaultJournalText())))
+                pages.remove(i);
             else break;
         }
         manager.saveJournal();

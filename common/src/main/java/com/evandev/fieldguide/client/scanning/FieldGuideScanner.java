@@ -339,6 +339,29 @@ public class FieldGuideScanner {
             Services.NETWORK.sendToServer(new ClaimXpPacket(ModConfig.get().xpAmountOnScan));
         }
 
+        // Run commands when unlocked
+        List<String> commandsToRun = new ArrayList<>(ModConfig.get().globalScanCommands);
+        if (targetId != null) {
+            String idStr = targetId.toString();
+            if (ModConfig.get().entryScanCommands.containsKey(idStr)) {
+                commandsToRun.addAll(ModConfig.get().entryScanCommands.get(idStr));
+            }
+            Category cat = ClientFieldGuideManager.getInstance().getCategoryForEntry(targetKey);
+            if (cat != null && ModConfig.get().categoryScanCommands.containsKey(cat.getId().toString())) {
+                commandsToRun.addAll(ModConfig.get().categoryScanCommands.get(cat.getId().toString()));
+            }
+        }
+
+        for (String cmd : commandsToRun) {
+            String formattedCmd = cmd.replace("@p", minecraft.player.getGameProfile().getName());
+            if (formattedCmd.startsWith("/")) {
+                formattedCmd = formattedCmd.substring(1);
+            }
+            if (minecraft.getConnection() != null) {
+                minecraft.getConnection().sendCommand(formattedCmd);
+            }
+        }
+
         fadingTarget = foundTarget;
         fadingPos = (foundTarget instanceof Block) ? scanningPos : null;
         fadeTicks = FADE_DURATION;

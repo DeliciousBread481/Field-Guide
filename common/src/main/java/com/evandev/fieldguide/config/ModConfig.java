@@ -11,7 +11,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ModConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -31,6 +33,9 @@ public class ModConfig {
     public boolean showInventoryButton = true;
     public int inventoryButtonXOffset = 126;
     public int inventoryButtonYOffset = 61;
+
+    public String defaultScreen = "last_opened";
+    public boolean hideTabsUntilUnlocked = false;
 
     public boolean requireSpyglass = true;
     public boolean showUndiscoveredNames = false;
@@ -61,6 +66,10 @@ public class ModConfig {
 
     public List<String> discoveryRedirects = getDefaultDiscoveryRedirects();
 
+    public List<String> globalScanCommands = new ArrayList<>();
+    public Map<String, List<String>> categoryScanCommands = new HashMap<>();
+    public Map<String, List<String>> entryScanCommands = new HashMap<>();
+
     public static ModConfig get() {
         if (INSTANCE == null) {
             load();
@@ -72,6 +81,9 @@ public class ModConfig {
         if (CONFIG_FILE.exists()) {
             try (FileReader reader = new FileReader(CONFIG_FILE)) {
                 INSTANCE = GSON.fromJson(reader, ModConfig.class);
+                if (INSTANCE.categoryScanCommands == null) INSTANCE.categoryScanCommands = new HashMap<>();
+                if (INSTANCE.entryScanCommands == null) INSTANCE.entryScanCommands = new HashMap<>();
+                if (INSTANCE.globalScanCommands == null) INSTANCE.globalScanCommands = new ArrayList<>();
             } catch (Exception e) {
                 Constants.LOG.error("Failed to load fieldguide.json", e);
                 INSTANCE = new ModConfig();

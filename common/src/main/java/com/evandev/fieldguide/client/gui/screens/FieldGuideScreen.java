@@ -99,9 +99,25 @@ public class FieldGuideScreen extends BookScreen {
 
     @Override
     protected void init() {
+        if (this.getSelectedCategory() == null && this.searchQuery.isEmpty()) {
+            String defaultMode = ModConfig.get().defaultScreen;
+            if ("biome".equals(defaultMode) && this.minecraft != null && this.minecraft.level != null && this.minecraft.player != null) {
+                var biomeOpt = this.minecraft.level.getBiome(this.minecraft.player.blockPosition()).unwrapKey();
+                biomeOpt.ifPresent(biomeResourceKey -> this.searchQuery = "=!" + biomeResourceKey.location());
+            } else if (!"last_opened".equals(defaultMode) && !defaultMode.isEmpty()) {
+                ResourceLocation catId = ResourceLocation.tryParse(defaultMode);
+                if (catId != null) {
+                    Category cat = ClientFieldGuideManager.getCategories().get(catId);
+                    if (cat != null) {
+                        this.setSelectedCategory(cat);
+                    }
+                }
+            }
+        }
+
         super.init();
 
-        if (this.getSelectedCategory() == null) {
+        if (this.getSelectedCategory() == null && this.searchQuery.isEmpty()) {
             if (lastOpenedCategory != null) {
                 this.setSelectedCategory(ClientFieldGuideManager.getCategories().get(lastOpenedCategory));
             }
@@ -127,7 +143,9 @@ public class FieldGuideScreen extends BookScreen {
             return;
         }
 
-        lastOpenedCategory = this.getSelectedCategory().getId();
+        if (this.getSelectedCategory() != null) {
+            lastOpenedCategory = this.getSelectedCategory().getId();
+        }
 
         // Pagination Buttons
         this.prevPageButton = new PageTurnButton(
@@ -457,14 +475,7 @@ public class FieldGuideScreen extends BookScreen {
                         renderTitle(guiGraphics, Component.translatable("gui.fieldguide.searching_drops"));
                     }
                 } else {
-                    Component title = Component.translatable("gui.fieldguide.searching_name");
-                    if (searchQuery.startsWith("^")) {
-                        title = Component.translatable("gui.fieldguide.searching_drops");
-                    } else if (searchQuery.startsWith("!")) {
-                        title = Component.translatable("gui.fieldguide.searching_biomes");
-                    } else if (searchQuery.startsWith("#")) {
-                        title = Component.translatable("gui.fieldguide.searching_tags");
-                    }
+                    Component title = getBiomeTitle();
                     renderTitle(guiGraphics, title);
                 }
             } else {
@@ -497,6 +508,18 @@ public class FieldGuideScreen extends BookScreen {
         if (currentPage > 0 || isSearching) {
             renderGrid(guiGraphics, mouseX, mouseY);
         }
+    }
+
+    private @NotNull Component getBiomeTitle() {
+        Component title = Component.translatable("gui.fieldguide.searching_name");
+        if (searchQuery.startsWith("^")) {
+            title = Component.translatable("gui.fieldguide.searching_drops");
+        } else if (searchQuery.startsWith("!")) {
+            title = Component.translatable("gui.fieldguide.searching_biomes");
+        } else if (searchQuery.startsWith("#")) {
+            title = Component.translatable("gui.fieldguide.searching_tags");
+        }
+        return title;
     }
 
     private void renderTitle(GuiGraphics guiGraphics, Component text) {

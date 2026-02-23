@@ -5,6 +5,7 @@ import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.widget.TabButton;
+import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
@@ -62,7 +63,19 @@ public abstract class BookScreen extends Screen {
             List<Object> entries = ClientFieldGuideManager.getInstance().getEntriesForCategory(cat);
             boolean isIntro = cat.getId().getPath().equals("intro");
 
-            if (isIntro || (entries != null && !entries.isEmpty())) {
+            boolean hasUnlocked = false;
+            if (ModConfig.get().hideTabsUntilUnlocked && !isIntro && entries != null) {
+                for (Object entry : entries) {
+                    if (ClientFieldGuideManager.isUnlocked(entry)) {
+                        hasUnlocked = true;
+                        break;
+                    }
+                }
+            } else {
+                hasUnlocked = true;
+            }
+
+            if ((isIntro || (entries != null && !entries.isEmpty())) && hasUnlocked) {
                 this.sortedCategories.add(cat);
             }
         }

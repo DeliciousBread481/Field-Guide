@@ -6,6 +6,7 @@ import com.evandev.fieldguide.client.data.JournalPage;
 import com.evandev.fieldguide.client.gui.toasts.FieldGuideToast;
 import com.google.gson.*;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -156,7 +157,10 @@ public class ProgressManager {
     }
 
     public List<JournalPage> getJournalPages() {
-        if (journalPages.isEmpty()) journalPages.add(new JournalPage("", "", System.currentTimeMillis()));
+        if (journalPages.isEmpty()) {
+            String defaultText = I18n.get("fieldguide.journal.default");
+            journalPages.add(new JournalPage("", defaultText, System.currentTimeMillis()));
+        }
         return journalPages;
     }
 

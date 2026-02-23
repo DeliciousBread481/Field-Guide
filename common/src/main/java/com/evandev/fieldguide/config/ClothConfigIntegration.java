@@ -34,6 +34,18 @@ public class ClothConfigIntegration {
         // General
         ConfigCategory general = builder.getOrCreateCategory(Component.translatable("category.fieldguide.general"));
 
+        general.addEntry(entryBuilder.startStrField(Component.translatable("option.fieldguide.default_screen"), config.defaultScreen)
+                .setDefaultValue("last_opened")
+                .setTooltip(Component.translatable("option.fieldguide.default_screen.tooltip"))
+                .setSaveConsumer(newValue -> config.defaultScreen = newValue)
+                .build());
+
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.hide_tabs_until_unlocked"), config.hideTabsUntilUnlocked)
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("option.fieldguide.hide_tabs_until_unlocked.tooltip"))
+                .setSaveConsumer(newValue -> config.hideTabsUntilUnlocked = newValue)
+                .build());
+
         general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.show_undiscovered_names"), config.showUndiscoveredNames)
                 .setDefaultValue(false)
                 .setTooltip(Component.translatable("option.fieldguide.show_undiscovered_names.tooltip"))
@@ -239,6 +251,12 @@ public class ClothConfigIntegration {
                 .setDefaultValue(new ArrayList<>())
                 .setTooltip(Component.translatable("option.fieldguide.discovery_redirects.tooltip"))
                 .setSaveConsumer(newValue -> config.discoveryRedirects = newValue)
+                .build());
+
+        contentCat.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.global_scan_commands"), config.globalScanCommands)
+                .setDefaultValue(new ArrayList<>())
+                .setTooltip(Component.translatable("option.fieldguide.global_scan_commands.tooltip"))
+                .setSaveConsumer(newValue -> config.globalScanCommands = newValue)
                 .build());
 
         return builder.build();
