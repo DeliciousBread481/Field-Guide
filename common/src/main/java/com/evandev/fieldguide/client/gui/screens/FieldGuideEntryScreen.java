@@ -197,7 +197,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private void setupNavigationButtons() {
-        this.addRenderableWidget(new PageTurnButton(this.bounds.right() - 15, this.bounds.top() + 26, 24, 24, 0, 0, 24, Constants.BACK_TEXTURE, 24, 48, b -> {
+        this.addRenderableWidget(new PageTurnButton(this.bounds.right() - 13, this.bounds.top() + 26, 24, 24, 0, 0, 24, Constants.BACK_TEXTURE, 24, 48, b -> {
             if (this.minecraft != null) this.minecraft.setScreen(parent);
         }));
 

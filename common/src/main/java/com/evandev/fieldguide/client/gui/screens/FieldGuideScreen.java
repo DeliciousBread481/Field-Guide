@@ -151,7 +151,7 @@ public class FieldGuideScreen extends BookScreen {
 
         // Back Button
         this.backButton = new PageTurnButton(
-                this.bounds.right() + 9 - 24,
+                this.bounds.right() - 13,
                 this.bounds.top() + 26,
                 24,
                 24,
