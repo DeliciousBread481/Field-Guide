@@ -25,9 +25,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
@@ -353,9 +351,42 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
         } else if (renderEntry instanceof EntityType && renderedEntity instanceof LivingEntity living) {
             EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, !unlocked, ModConfig.get().getDetailsSilhouetteColorInt(), true, bounce);
-            if (unlocked) renderAttributes(guiGraphics, living);
+            if (unlocked) {
+                renderAttributes(guiGraphics, living);
+                renderAlignment(guiGraphics, living, mouseX, mouseY);
+            }
         } else if (renderEntry instanceof Block block) {
             EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 30.0F, !unlocked, true, bounce);
+        }
+    }
+
+    private void renderAlignment(GuiGraphics guiGraphics, LivingEntity entity, int mouseX, int mouseY) {
+        if (entry instanceof EntityType<?> type) {
+            ResourceLocation icon;
+            Component typeComponent;
+
+            if (entity instanceof NeutralMob) {
+                icon = Constants.NEUTRAL_ICON;
+                typeComponent = Component.translatable("fieldguide.alignment.neutral");
+            } else if (type.getCategory() == MobCategory.MONSTER) {
+                icon = Constants.HOSTILE_ICON;
+                typeComponent = Component.translatable("fieldguide.alignment.hostile");
+            } else {
+                icon = Constants.PASSIVE_ICON;
+                typeComponent = Component.translatable("fieldguide.alignment.passive");
+            }
+
+            int titleY = this.leftPageBounds.top() + 8;
+            int iconX = this.rightPageBounds.right() - 12;
+            int iconY = titleY + 7;
+
+            RenderSystem.enableBlend();
+            guiGraphics.blit(icon, iconX, iconY, 0, 0, 12, 12, 12, 12);
+            RenderSystem.disableBlend();
+
+            if (Bounds.isMouseOver(mouseX, mouseY, iconX, iconY, 12, 12)) {
+                guiGraphics.renderTooltip(this.font, typeComponent, mouseX, mouseY);
+            }
         }
     }
 
