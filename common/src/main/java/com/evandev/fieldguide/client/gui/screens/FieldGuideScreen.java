@@ -406,6 +406,23 @@ public class FieldGuideScreen extends BookScreen {
     }
 
     @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (super.mouseScrolled(mouseX, mouseY, delta)) {
+            return true;
+        }
+
+        if (delta > 0) {
+            this.prevPage();
+            return true;
+        } else if (delta < 0) {
+            this.nextPage();
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(guiGraphics);
         RenderSystem.setShaderTexture(0, Constants.BOOK_TEXTURE);
