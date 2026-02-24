@@ -393,15 +393,6 @@ public class FieldGuideScreen extends BookScreen {
             return true;
         }
 
-        if (this.isSearching && keyCode == GLFW.GLFW_KEY_ESCAPE) {
-            if (parent != null) {
-                Minecraft.getInstance().setScreen(parent);
-            } else {
-                this.searchBox.setValue("");
-            }
-            return true;
-        }
-
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
