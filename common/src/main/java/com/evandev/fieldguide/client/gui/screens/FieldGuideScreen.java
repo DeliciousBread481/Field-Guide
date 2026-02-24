@@ -542,6 +542,8 @@ public class FieldGuideScreen extends BookScreen {
             title = Component.translatable("gui.fieldguide.searching_drops");
         } else if (searchQuery.startsWith("!")) {
             title = Component.translatable("gui.fieldguide.searching_biomes");
+        } else if (searchQuery.startsWith("@")) {
+            title = Component.translatable("gui.fieldguide.searching_mod");
         } else if (searchQuery.startsWith("#")) {
             title = Component.translatable("gui.fieldguide.searching_tags");
         }
