@@ -1,0 +1,42 @@
+{
+  "values": [
+    {
+      "id": "autumnity:maple_sapling",
+      "structure_nbt": "autumnity:maple_tree",
+      "components": [
+        "autumnity:maple_log",
+        "autumnity:maple_leaves"
+      ]
+    },
+    {
+      "id": "autumnity:red_maple_sapling",
+      "structure_nbt": "autumnity:maple_tree_red",
+      "components": [
+        "autumnity:maple_log",
+        "autumnity:red_maple_leaves"
+      ]
+    },
+    {
+      "id": "autumnity:orange_maple_sapling",
+      "structure_nbt": "autumnity:maple_tree_orange",
+      "components": [
+        "autumnity:maple_log",
+        "autumnity:orange_maple_leaves"
+      ]
+    },
+    {
+      "id": "autumnity:yellow_maple_sapling",
+      "structure_nbt": "autumnity:maple_tree_yellow",
+      "components": [
+        "autumnity:maple_log",
+        "autumnity:yellow_maple_leaves"
+      ]
+    },
+    {
+      "id": "autumnity:large_pumpkin_slice",
+      "components": [
+        "autumnity:large_pumpkin_slice"
+      ]
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
+    "minecraft:#tall_flowers",
     "minecraft:cactus",
     "minecraft:sugar_cane",
     "minecraft:bamboo",
@@ -21,6 +22,9 @@
     "minecraft:cave_vines",
     "minecraft:cave_vines_plant",
     "minecraft:chorus_plant",
-    "minecraft:chorus_flower"
+    "minecraft:chorus_flower",
+    "farmersdelight:tomatoes",
+    "supplementaries:stick_tomatoes",
+    "supplementaries:rope_tomatoes"
   ]
 }
