@@ -34,7 +34,7 @@ public class ModConfig {
     public int inventoryButtonXOffset = 126;
     public int inventoryButtonYOffset = 61;
 
-    public String defaultScreen = "last_opened";
+    public String defaultScreen = "last_opened_screen";
     public boolean hideTabsUntilUnlocked = false;
 
     public boolean requireSpyglass = true;

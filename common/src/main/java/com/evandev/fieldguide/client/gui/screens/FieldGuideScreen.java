@@ -102,10 +102,10 @@ public class FieldGuideScreen extends BookScreen {
     protected void init() {
         if (this.getSelectedCategory() == null && this.searchQuery.isEmpty()) {
             String defaultMode = ModConfig.get().defaultScreen;
-            if ("biome".equals(defaultMode) && this.minecraft != null && this.minecraft.level != null && this.minecraft.player != null) {
+            if ("current_biome".equals(defaultMode) && this.minecraft != null && this.minecraft.level != null && this.minecraft.player != null) {
                 var biomeOpt = this.minecraft.level.getBiome(this.minecraft.player.blockPosition()).unwrapKey();
                 biomeOpt.ifPresent(biomeResourceKey -> this.searchQuery = "=!" + biomeResourceKey.location());
-            } else if (!"last_opened".equals(defaultMode) && !defaultMode.isEmpty()) {
+            } else if (!"last_opened_category".equals(defaultMode) && !defaultMode.isEmpty()) {
                 ResourceLocation catId = ResourceLocation.tryParse(defaultMode);
                 if (catId != null) {
                     Category cat = ClientFieldGuideManager.getCategories().get(catId);

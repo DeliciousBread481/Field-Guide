@@ -59,7 +59,12 @@ public class FieldGuideClient {
                         minecraft.setScreen(new FieldGuideEntryScreen(mainScreen, lastEntry));
                     }
                 } else {
-                    minecraft.setScreen(new FieldGuideScreen());
+                    String defaultMode = ModConfig.get().defaultScreen;
+                    if ("last_opened_screen".equals(defaultMode) && BookScreen.lastOpenedScreen != null) {
+                        minecraft.setScreen(BookScreen.lastOpenedScreen);
+                    } else {
+                        minecraft.setScreen(new FieldGuideScreen());
+                    }
                 }
             }
         }

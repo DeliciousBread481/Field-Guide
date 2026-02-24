@@ -111,7 +111,7 @@
   "option.fieldguide.disable_editing_names.tooltip": "Prevents players from modifying the name of discovered entries.",
 
   "option.fieldguide.default_screen": "Default Open Screen",
-  "option.fieldguide.default_screen.tooltip": "The screen shown when first opening the guide. Options: 'last_opened', 'biome' (searches current biome), or a category ID (e.g., 'fieldguide:monsters').",
+  "option.fieldguide.default_screen.tooltip": "The screen shown when first opening the guide. Options: 'last_opened_screen', 'last_opened_category', 'current_biome', or a category ID (e.g., 'fieldguide:monsters').",
 
   "option.fieldguide.hide_tabs_until_unlocked": "Hide Locked Tabs",
   "option.fieldguide.hide_tabs_until_unlocked.tooltip": "If true, category tabs will not appear in the sidebar until you have unlocked at least one entry within that category.",
