@@ -2,9 +2,7 @@
   <img src="images/banner_image.png" width="800">
 </p>
 
-# Field Guide
-
-An exploration-focused encyclopedia that lets you scan mobs and blocks to build your own in-game compendium!
+**Universal Field Guide** is an exploration-focused mod that lets you scan monsters, animals and plants to unlock entries in your own in-game Field Guide!
 
 <div align="center">
 <a href='https://files.minecraftforge.net'><img alt="forge" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/forge_vector.svg"></a>
