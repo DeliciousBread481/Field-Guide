@@ -11,6 +11,7 @@ import com.evandev.fieldguide.client.gui.widget.PageTurnButton;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.platform.Services;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -433,14 +434,22 @@ public class FieldGuideScreen extends BookScreen {
                 if (searchQuery.startsWith("=!")) {
                     ResourceLocation biomeId = ResourceLocation.tryParse(searchQuery.substring(2));
                     if (biomeId != null) {
-                        ResourceLocation texture = new ResourceLocation(biomeId.getNamespace(), "textures/immersiveoverlays/" + biomeId.getPath() + ".png");
-                        int iconSize = 16;
-                        int iconY = titleY - 5;
-                        int iconX = this.leftPageBounds.left() + 3;
-                        guiGraphics.blit(texture, iconX, iconY, 0, 0, iconSize, iconSize, iconSize, iconSize);
-                        Component searchTitle = Component.translatable("biome." + biomeId.getNamespace() + "." + biomeId.getPath());
+                        int titleColor = ModConfig.get().getTextColorInt();
+                        int iconOffset = 0;
 
-                        renderTitle(guiGraphics, searchTitle, iconSize, ModConfig.get().getTextColorInt());
+                        if (Services.PLATFORM.isModLoaded("immersiveoverlays")) {
+                            ResourceLocation texture = new ResourceLocation(biomeId.getNamespace(), "textures/immersiveoverlays/" + biomeId.getPath() + ".png");
+                            if (Minecraft.getInstance().getResourceManager().getResource(texture).isPresent()) {
+                                int iconSize = 16;
+                                int iconY = titleY - 5;
+                                int iconX = this.leftPageBounds.left() + 3;
+                                guiGraphics.blit(texture, iconX, iconY, 0, 0, iconSize, iconSize, iconSize, iconSize);
+                                iconOffset = iconSize;
+                            }
+                        }
+
+                        Component searchTitle = Component.translatable("biome." + biomeId.getNamespace() + "." + biomeId.getPath());
+                        renderTitle(guiGraphics, searchTitle, iconOffset, titleColor);
                     }
                 } else if (searchQuery.startsWith("=^")) {
                     String dropQuery = searchQuery.substring(2).toLowerCase(Locale.ROOT);

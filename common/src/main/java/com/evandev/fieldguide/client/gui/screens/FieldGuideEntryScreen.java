@@ -151,17 +151,20 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private void setupBiomeWidget(boolean unlocked) {
-        if (ModConfig.get().disableBiomeDisplay) return;
+        if (ModConfig.get().disableBiomeDisplay || !Services.PLATFORM.isModLoaded("immersiveoverlays")) return;
 
         if (unlocked && !spawnBiomes.isEmpty()) {
             int itemSize = 20;
             this.addRenderableWidget(new PaginatedGridWidget<>(this.rightPageBounds.left() + 2, this.rightPageBounds.bottom() - 33, this.rightPageBounds.width() - 4, itemSize, 5, itemSize, 0, spawnBiomes, (graphics, item, x, y, mouseX, mouseY) -> {
                 ResourceLocation texture = new ResourceLocation(item.getNamespace(), "textures/immersiveoverlays/" + item.getPath() + ".png");
-                graphics.blit(Constants.BIOME_BACKGROUND_TEXTURE, x, y, 0, 0, itemSize, itemSize, itemSize, itemSize);
-                int offset = (itemSize - 16) / 2;
-                graphics.blit(texture, x + offset, y + offset, 0, 0, 16, 16, 16, 16);
-                if (Bounds.isMouseOver(mouseX, mouseY, x + offset, y + offset, 16, 16)) {
-                    graphics.renderTooltip(this.font, Component.translatable("biome." + item.getNamespace() + "." + item.getPath()), mouseX, mouseY);
+
+                if (Minecraft.getInstance().getResourceManager().getResource(texture).isPresent()) {
+                    graphics.blit(Constants.BIOME_BACKGROUND_TEXTURE, x, y, 0, 0, itemSize, itemSize, itemSize, itemSize);
+                    int offset = (itemSize - 16) / 2;
+                    graphics.blit(texture, x + offset, y + offset, 0, 0, 16, 16, 16, 16);
+                    if (Bounds.isMouseOver(mouseX, mouseY, x + offset, y + offset, 16, 16)) {
+                        graphics.renderTooltip(this.font, Component.translatable("biome." + item.getNamespace() + "." + item.getPath()), mouseX, mouseY);
+                    }
                 }
             }, item -> {
                 if (this.minecraft != null) this.minecraft.setScreen(new FieldGuideScreen("=!" + item, this));
