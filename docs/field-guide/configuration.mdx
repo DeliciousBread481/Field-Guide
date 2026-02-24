@@ -18,10 +18,18 @@ Sometimes you may want scanning one entity to unlock the entry for a different o
 
 `enemyexpansion:vampire_biter|enemyexpansion:vampire`
 
-### Loot & Biome Modifications
+### General & UI Settings
+You can customize various aspects of the guide's behavior and interface:
+* **Scanning & Discovery:**
+  * `requireSpyglass`: Whether a spyglass is strictly required to scan entities (default `true`).
+  * `hideTabsUntilUnlocked`: If true, category tabs remain hidden until a player unlocks at least one entry inside them.
+  * `showUndiscoveredNames` / `hideUndiscoveredFromSearch`: Controls the visibility of un-scanned entities in the book's lists and search results.
+* **Information Display:**
+  * `disableLootDisplay` / `disableBiomeDisplay`: Hides the drop and habitat information from entry pages entirely.
+  * `disableEditingDescriptions` / `disableEditingNames`: Locks the in-game text editing features so players cannot change default text.
 
-For `lootRemovals`, `lootAdditions`, `biomeRemovals`, and `biomeAdditions`, strings must be formatted as: `namespace:entity_id|namespace:target_id`
-
-* **Example Loot Removal:** `minecraft:skeleton|minecraft:bone` (Hides Bones from Skeleton page)
-* **Example Loot Addition:** `minecraft:cow|minecraft:milk_bucket` (Adds Milk Bucket to Cow page)
-* **Example Biome Addition:** `minecraft:warden|minecraft:deep_dark` (Ensures the Deep Dark is listed as the Warden's habitat)
+### Scan Commands
+You can configure the server to automatically execute commands when a player successfully scans an entry.
+* `globalScanCommands`: A list of commands run whenever *any* entry is scanned.
+* `categoryScanCommands`: Commands run when entries from a specific category are scanned (Format: `"namespace:category_id": ["/command1", "/command2"]`).
+* `entryScanCommands`: Commands run when a specific entry is scanned (Format: `"namespace:entity_id": ["/command"]`).

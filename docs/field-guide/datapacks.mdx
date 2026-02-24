@@ -68,6 +68,32 @@ The Field Guide automatically hides empty categories.
 * `mod_plants:<mod_id>`: All plant-like blocks from a specific mod. (Automatically groups tree saplings, logs, leaves, wood, and stems into a single entry)
 * `tag:<tag_id>`: All entities with a specific tag (e.g. tag:minecraft:raiders).
 
+3. **Composite Entry:** A special entry type that allows you to combine multiple entities, render a structure from an NBT file, or display a stack of blocks.
+
+```json
+{
+  "type": "composite",
+  "id": "mypack:custom_boss_encounter",
+  "display_id": "minecraft:zombie",
+  "components": [
+    "minecraft:zombie",
+    "minecraft:skeleton"
+  ],
+  "structure_nbt": "mypack:structures/spawner_room",
+  "stacked_blocks": [
+    "minecraft:cobblestone",
+    "minecraft:mossy_cobblestone"
+  ]
+}
+
+```
+
+* `id`: The unique identifier for this custom entry.
+* `display_id` *(Optional)*: The primary entity or block ID to represent this entry in the UI.
+* `components` *(Optional)*: An array of entity/block IDs that make up this composite entry. Scanning any of these will relate back to this entry.
+* `structure_nbt` *(Optional)*: The resource location of an NBT structure file to render in the book.
+* `stacked_blocks` *(Optional)*: An array of block IDs to render stacked on top of each other.
+
 #### Example: Custom Category
 
 `data/mypack/fieldguide/categories/swamp_life.json`
@@ -99,3 +125,65 @@ Field Guide uses specific entity tags that you can add to your datapacks to chan
 
 * `fieldguide:bosses`: Entities with this tag are excluded from the `monsters` and `animals` auto-populate strategies, and are moved to a special `bosses` category.
 * `fieldguide:kill_to_unlock`: Entities with this tag can't be scanned with a spyglass: you have to kill them to unlock their entry (defaults to all bosses).
+
+### Biome & Loot Modifiers
+
+Field Guide uses datapacks to modify which biomes and loot drops appear on an entry's page. This is useful for correcting missing information or hiding unwanted drops.
+
+#### File Locations
+* **Biome Modifiers:** `data/<namespace>/fieldguide/biome_modifiers/<filename>.json`
+* **Loot Modifiers:** `data/<namespace>/fieldguide/loot_modifiers/<filename>.json`
+
+#### JSON Structure
+Both biome and loot modifiers use the exact same layout. You can define `additions` and `removals` within the same file.
+
+You can use either `entry` (single string) or `entries` (array of strings) to define the target pages, and `value` or `values` to define the biomes/items being added or removed.
+
+**Example Biome Modifier:** (`data/mypack/fieldguide/biome_modifiers/warden_fix.json`)
+```json
+{
+  "replace": false,
+  "additions": [
+    {
+      "entry": "minecraft:warden",
+      "values": [
+        "minecraft:deep_dark"
+      ]
+    }
+  ],
+  "removals": [
+    {
+      "entries": [
+        "minecraft:pig",
+        "minecraft:cow"
+      ],
+      "value": "minecraft:badlands"
+    }
+  ]
+}
+
+```
+
+**Example Loot Modifier:** (`data/mypack/fieldguide/loot_modifiers/cow_milk.json`)
+```json
+{
+  "additions": [
+    {
+      "entry": "minecraft:cow",
+      "value": "minecraft:milk_bucket"
+    }
+  ],
+  "removals": [
+    {
+      "entry": "minecraft:skeleton",
+      "values": [
+        "minecraft:arrow",
+        "minecraft:bone"
+      ]
+    }
+  ]
+}
+
+```
+
+*Note: Setting `"replace": true` at the root of the JSON will clear all previously loaded modifiers of that type (from the mod or other datapacks) before applying yours.*
