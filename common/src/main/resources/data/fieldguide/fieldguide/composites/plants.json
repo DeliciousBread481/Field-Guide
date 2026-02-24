@@ -163,7 +163,10 @@
     },
     {
       "id": "minecraft:kelp",
-      "structure_nbt": "fieldguide:kelp",
+      "render": [
+        "minecraft:kelp_plant",
+        "minecraft:kelp"
+      ],
       "components": [
         "minecraft:kelp",
         "minecraft:kelp_plant"
