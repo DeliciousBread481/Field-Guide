@@ -1,4 +1,6 @@
-![Field Guide Banner](images/banner_image.png)
+<p align="center">
+  <img src="images/banner_image.png" width="800">
+</p>
 
 # Field Guide
 
