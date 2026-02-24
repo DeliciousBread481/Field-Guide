@@ -20,7 +20,9 @@
       "entries": [
         "minecraft:evoker",
         "minecraft:vindicator",
-        "minecraft:vex"
+        "minecraft:vex",
+        "minecraft:allay",
+        "minecraft:pillager"
       ],
       "value": "minecraft:dark_forest"
     },
@@ -40,6 +42,27 @@
         "minecraft:sunflower_plains",
         "minecraft:plains"
       ]
+    },
+    {
+      "entry": "minecraft:villager",
+      "values": [
+        "minecraft:plains",
+        "minecraft:savanna",
+        "minecraft:snowy_plains",
+        "minecraft:taiga",
+        "minecraft:desert"
+      ]
+    },
+    {
+      "entry": "minecraft:silverfish",
+      "values": [
+        "minecraft:stony_peaks",
+        "minecraft:windswept_hills"
+      ]
+    },
+    {
+      "entry": "minecraft:ender_dragon",
+      "value": "minecraft:the_end"
     }
   ]
 }
