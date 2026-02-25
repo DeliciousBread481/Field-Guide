@@ -22,26 +22,18 @@ public class Constants {
     // Buttons
     public static final ResourceLocation BUTTON_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/fieldguide_button.png");
     public static final ResourceLocation INVENTORY_BUTTON_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/fieldguide_inventory_button.png");
-    public static final ResourceLocation BIOME_PAGINATION_BUTTONS_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/arrows.png");
 
     // Elements
-    public static final ResourceLocation NEXT_PAGE_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/next_page.png");
-    public static final ResourceLocation PREV_PAGE_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/prev_page.png");
+    public static final ResourceLocation WIDGETS_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/widgets.png");
     public static final ResourceLocation BACK_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/back.png");
     public static final ResourceLocation TAB_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/tab.png");
-    public static final ResourceLocation SCROLL_UP_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/scroll_up.png");
-    public static final ResourceLocation SCROLL_DOWN_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/scroll_down.png");
-
-    public static final ResourceLocation CELL_BACKGROUND_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/cell_background.png");
+    public static final ResourceLocation BUTTONS_UP_DOWN_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/buttons_up_down.png");
+    public static final ResourceLocation LIST_ENTRY_BACKGROUND_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/list_entry_background.png");
     public static final ResourceLocation ITEM_BACKGROUND_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/item_background.png");
     public static final ResourceLocation BIOME_BACKGROUND_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/biome_background.png");
-    public static final ResourceLocation CELL_BACKGROUND_HOVER_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/cell_background_hover.png");
-    public static final ResourceLocation HEALTH_FRAME_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/health_frame.png");
-    public static final ResourceLocation PROGRESS_BAR_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/progress_bar.png");
 
     // Icons
     public static final ResourceLocation DEFAULT_ICON = new ResourceLocation(MOD_ID, "textures/gui/icons/book.png");
-    public static final ResourceLocation SEARCH_ICON = new ResourceLocation(MOD_ID, "textures/gui/icons/search.png");
     public static final ResourceLocation TOAST_ICON = new ResourceLocation(MOD_ID, "textures/gui/book_icon.png");
     public static final ResourceLocation ATTRIBUTES_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/attributes.png");
     public static final ResourceLocation SCANNING_ICON_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/scanning.png");

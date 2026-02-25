@@ -92,8 +92,8 @@ public class FieldGuideJournalScreen extends BookScreen {
         this.addRenderableWidget(rightContentWidget);
 
         // Navigation
-        PageTurnButton prevButton = new PageTurnButton(this.bounds.left() + 15, this.leftPageBounds.bottom() - 15, 16, 16, 0, 0, 16, Constants.PREV_PAGE_TEXTURE, 16, 32, b -> changeSpread(-1));
-        PageTurnButton nextButton = new PageTurnButton(this.bounds.right() - 30, this.rightPageBounds.bottom() - 15, 16, 16, 0, 0, 16, Constants.NEXT_PAGE_TEXTURE, 16, 32, b -> changeSpread(1));
+        PageTurnButton prevButton = new PageTurnButton(this.bounds.left() + 15, this.leftPageBounds.bottom() - 15, 16, 16, 32, 16, 16, Constants.WIDGETS_TEXTURE, b -> changeSpread(-1));
+        PageTurnButton nextButton = new PageTurnButton(this.bounds.right() - 30, this.rightPageBounds.bottom() - 15, 16, 16, 48, 16, 16, Constants.WIDGETS_TEXTURE, b -> changeSpread(1));
         prevButton.visible = currentSpread > 0;
         this.addRenderableWidget(prevButton);
         this.addRenderableWidget(nextButton);

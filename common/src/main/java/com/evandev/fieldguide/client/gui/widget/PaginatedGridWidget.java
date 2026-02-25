@@ -33,8 +33,8 @@ public class PaginatedGridWidget<T> extends AbstractWidget {
         int buttonSize = 16;
         int buttonYOffset = (itemSize - buttonSize) / 2;
 
-        this.prevButton = new ImageButton(x, y + buttonYOffset, buttonSize, buttonSize, 0, 0, 16, Constants.BIOME_PAGINATION_BUTTONS_TEXTURE, 32, 48, b -> setPage(currentPage - 1));
-        this.nextButton = new ImageButton(x + width - 16, y + buttonYOffset, buttonSize, buttonSize, 16, 0, 16, Constants.BIOME_PAGINATION_BUTTONS_TEXTURE, 32, 48, b -> setPage(currentPage + 1));
+        this.prevButton = new ImageButton(x, y + buttonYOffset, buttonSize, buttonSize, 0, 16, 16, Constants.WIDGETS_TEXTURE, b -> setPage(currentPage - 1));
+        this.nextButton = new ImageButton(x + width - 16, y + buttonYOffset, buttonSize, buttonSize, 16, 16, 16, Constants.WIDGETS_TEXTURE, b -> setPage(currentPage + 1));
         updateButtons();
     }
 

@@ -104,14 +104,14 @@ public abstract class BookScreen extends Screen {
         this.tabUpButton = new ImageButton(
                 xPos, upY, ARROW_WIDTH, ARROW_HEIGHT,
                 0, 0, ARROW_HEIGHT,
-                Constants.SCROLL_UP_TEXTURE, ARROW_WIDTH, ARROW_HEIGHT * 2,
+                Constants.BUTTONS_UP_DOWN_TEXTURE, ARROW_WIDTH * 2, ARROW_HEIGHT * 2,
                 b -> scrollTabs(-1)
         );
 
         this.tabDownButton = new ImageButton(
                 xPos, downY, ARROW_WIDTH, ARROW_HEIGHT,
-                0, 0, ARROW_HEIGHT,
-                Constants.SCROLL_DOWN_TEXTURE, ARROW_WIDTH, ARROW_HEIGHT * 2,
+                ARROW_WIDTH, 0, ARROW_HEIGHT,
+                Constants.BUTTONS_UP_DOWN_TEXTURE, ARROW_WIDTH * 2, ARROW_HEIGHT * 2,
                 b -> scrollTabs(1)
         );
 

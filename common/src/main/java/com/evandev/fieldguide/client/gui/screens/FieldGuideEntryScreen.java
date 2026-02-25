@@ -207,11 +207,11 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (!entries.isEmpty()) {
             int index = entries.indexOf(this.entry);
 
-            PageTurnButton prevEntryButton = new PageTurnButton(this.bounds.left() + 15, this.leftPageBounds.bottom() - 15, 16, 16, 0, 0, 16, Constants.PREV_PAGE_TEXTURE, 16, 32, b -> {
+            PageTurnButton prevEntryButton = new PageTurnButton(this.bounds.left() + 15, this.leftPageBounds.bottom() - 15, 16, 16, 32, 16, 16, Constants.WIDGETS_TEXTURE, b -> {
                 if (index > 0 && this.minecraft != null)
                     this.minecraft.setScreen(new FieldGuideEntryScreen(parent, entries.get(index - 1)));
             });
-            PageTurnButton nextEntryButton = new PageTurnButton(this.bounds.right() - 30, this.rightPageBounds.bottom() - 15, 16, 16, 0, 0, 16, Constants.NEXT_PAGE_TEXTURE, 16, 32, b -> {
+            PageTurnButton nextEntryButton = new PageTurnButton(this.bounds.right() - 30, this.rightPageBounds.bottom() - 15, 16, 16, 48, 16, 16, Constants.WIDGETS_TEXTURE, b -> {
                 if (index >= 0 && index < entries.size() - 1 && this.minecraft != null)
                     this.minecraft.setScreen(new FieldGuideEntryScreen(parent, entries.get(index + 1)));
             });

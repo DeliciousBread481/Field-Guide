@@ -152,16 +152,16 @@ public class FieldGuideScreen extends BookScreen {
         this.prevPageButton = new PageTurnButton(
                 this.bounds.left() + 15,
                 this.leftPageBounds.bottom() - 15,
-                16, 16, 0, 0, 16,
-                Constants.PREV_PAGE_TEXTURE, 16, 32,
+                16, 16, 32, 16, 16,
+                Constants.WIDGETS_TEXTURE,
                 b -> prevPage()
         );
 
         this.nextPageButton = new PageTurnButton(
                 this.bounds.right() - 14 - 16,
                 this.rightPageBounds.bottom() - 15,
-                16, 16, 0, 0, 16,
-                Constants.NEXT_PAGE_TEXTURE, 16, 32,
+                16, 16, 48, 16, 16,
+                Constants.WIDGETS_TEXTURE,
                 b -> nextPage()
         );
 
@@ -597,7 +597,7 @@ public class FieldGuideScreen extends BookScreen {
 
                 int progressWidth = (int) ((float) unlocked / total * barWidth);
                 progressWidth = Math.max(progressWidth, 6);
-                guiGraphics.blitNineSliced(Constants.PROGRESS_BAR_TEXTURE, barX, barY, progressWidth, barHeight, 3, 7, 7, 0, 0);
+                guiGraphics.blitNineSliced(Constants.WIDGETS_TEXTURE, barX, barY, progressWidth, barHeight, 3, 83, 7, 0, 0);
             }
         }
     }
@@ -616,9 +616,9 @@ public class FieldGuideScreen extends BookScreen {
 
             boolean hovered = bounds.contains(mouseX, mouseY);
             if (hovered) {
-                guiGraphics.blit(Constants.CELL_BACKGROUND_HOVER_TEXTURE, bounds.x(), bounds.y(), 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                guiGraphics.blit(Constants.LIST_ENTRY_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE * 2);
             } else {
-                guiGraphics.blit(Constants.CELL_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                guiGraphics.blit(Constants.LIST_ENTRY_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE * 2);
             }
 
             renderEntryInGrid(guiGraphics, entry, bounds.x_center(), bounds.y_center(), 30, true);
@@ -658,9 +658,9 @@ public class FieldGuideScreen extends BookScreen {
                 boolean hovered = bounds.contains(mouseX, mouseY);
 
                 if (hovered) {
-                    guiGraphics.blit(Constants.CELL_BACKGROUND_HOVER_TEXTURE, bounds.x(), bounds.y(), 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    guiGraphics.blit(Constants.LIST_ENTRY_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE * 2);
                 } else {
-                    guiGraphics.blit(Constants.CELL_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    guiGraphics.blit(Constants.LIST_ENTRY_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE * 2);
                 }
 
                 renderEntryInGrid(guiGraphics, entry, bounds.x_center(), bounds.y_center(), 30, unlocked);
