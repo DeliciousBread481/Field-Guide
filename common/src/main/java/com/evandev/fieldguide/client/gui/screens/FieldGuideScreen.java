@@ -492,7 +492,7 @@ public class FieldGuideScreen extends BookScreen {
                         renderTitle(guiGraphics, Component.translatable("gui.fieldguide.searching_drops"));
                     }
                 } else {
-                    Component title = getBiomeTitle();
+                    Component title = getSearchTitle();
                     renderTitle(guiGraphics, title);
                 }
             } else {
@@ -527,7 +527,7 @@ public class FieldGuideScreen extends BookScreen {
         }
     }
 
-    private @NotNull Component getBiomeTitle() {
+    private @NotNull Component getSearchTitle() {
         Component title = Component.translatable("gui.fieldguide.searching_name");
         if (searchQuery.startsWith("^")) {
             title = Component.translatable("gui.fieldguide.searching_drops");
