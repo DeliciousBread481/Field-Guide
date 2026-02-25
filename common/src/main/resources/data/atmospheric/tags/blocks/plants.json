@@ -1,0 +1,12 @@
+{
+  "replace": false,
+  "values": [
+    "atmospheric:golden_growth",
+    "atmospheric:arid_sprouts",
+    "atmospheric:agave",
+    "atmospheric:passion_vine",
+    "atmospheric:dragon_roots",
+    "atmospheric:barrel_cactus",
+    "atmospheric:aloe_vera"
+  ]
+}

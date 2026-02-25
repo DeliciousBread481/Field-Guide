@@ -34,23 +34,6 @@
     "minecraft:vine",
     "minecraft:glow_lichen",
     "minecraft:melon",
-    "minecraft:pumpkin",
-
-    "autumnity:large_pumpkin_slice",
-    "farmersdelight:tomatoes",
-    "farmersdelight:brown_mushroom_colony",
-    "farmersdelight:red_mushroom_colony",
-    "windswept:yellow_petals",
-    "windswept:gelisol_grass",
-    "windswept:snowy_sprouts",
-    "windswept:mossy_sprouts",
-    "windswept:dry_mossy_sprouts",
-    "atmospheric:golden_growth",
-    "atmospheric:arid_sprouts",
-    "atmospheric:agave",
-    "atmospheric:passion_vine",
-    "atmospheric:dragon_roots",
-    "atmospheric:barrel_cactus",
-    "atmospheric:aloe_vera"
+    "minecraft:pumpkin"
   ]
 }

@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "windswept:yellow_petals",
+    "windswept:gelisol_grass",
+    "windswept:snowy_sprouts",
+    "windswept:mossy_sprouts",
+    "windswept:dry_mossy_sprouts"
+  ]
+}
