@@ -17,6 +17,7 @@ The filename becomes the ID of the category (e.g., `wetlands.json` becomes `<nam
 | Field        | Type    | Description                                                                          |
 |--------------|---------|--------------------------------------------------------------------------------------|
 | `sort_index` | Integer | Determines the tab order (lower numbers are first).                                  |
+| `icon`       | String  | (Optional) The Resource Location for the category's tab icon.                        |
 | `replace`    | Boolean | (Optional) If true, clears existing entries in this category before adding new ones. |
 | `contents`   | Array   | A list of entry objects.                                                             |
 
@@ -63,12 +64,52 @@ The Field Guide automatically hides empty categories.
 
 * `animals`: All animals.
 * `monsters`: All monsters.
-* `plants`: All vanilla-like plants. (Automatically groups tree saplings, logs, leaves, wood, and stems into a single entry)
+* `plants`: All vanilla-like plants.
 * `mod:<mod_id>`: All entities from a specific mod.
-* `mod_plants:<mod_id>`: All plant-like blocks from a specific mod. (Automatically groups tree saplings, logs, leaves, wood, and stems into a single entry)
+* `mod_plants:<mod_id>`: All plant-like blocks from a specific mod.
 * `tag:<tag_id>`: All entities with a specific tag (e.g. tag:minecraft:raiders).
 
-3. **Composite Entry:** A special entry type that allows you to combine multiple entities, render a structure from an NBT file, or display a stack of blocks.
+---
+
+### For Mod Developers & Pack Makers
+
+If you are a mod developer, you can ensure your mod plays nicely with Field Guide by providing your own built-in datapack data. Here are some tips and advanced entry types to help you integrate seamlessly.
+
+#### Special Entity Tags
+
+Field Guide uses specific entity tags to handle default scanning and categorization behaviors. Apply these tags to your mod's entities where appropriate:
+
+* `fieldguide:bosses`: Entities with this tag are excluded from the `monsters` and `animals` auto-populate strategies, and are moved to a special `bosses` category.
+* `fieldguide:kill_to_unlock`: Entities with this tag can't be scanned with a spyglass: the player must kill them to unlock their entry (defaults to all bosses).
+
+#### Discovery Redirects
+
+Sometimes you may want scanning one entity to unlock the entry for a different one. This is useful for entities that have multiple variations or distinct parts (like multi-part bosses) where scanning any part should unlock the main entry.
+
+You can define these redirects by creating a JSON file at:
+`data/<namespace>/fieldguide/redirects/<filename>.json`
+
+```json
+{
+  "entries": [
+    {
+      "source": "minecraft:bamboo_sapling",
+      "target": "minecraft:bamboo"
+    },
+    {
+      "source": "enemyexpansion:vampire_biter",
+      "target": "enemyexpansion:vampire"
+    }
+  ]
+}
+
+```
+
+#### Composite Entries
+
+A **Composite Entry** is a powerful feature that allows you to group multiple entities or blocks into a single book page, or render custom scenes using NBT structures.
+
+This is highly recommended for multi-block entries, structures, or grouped concepts (like grouping all tree blocks for a specific tree).
 
 ```json
 {
@@ -90,56 +131,30 @@ The Field Guide automatically hides empty categories.
 
 * `id`: The unique identifier for this custom entry.
 * `display_id` *(Optional)*: The primary entity or block ID to represent this entry in the UI.
-* `components` *(Optional)*: An array of entity/block IDs that make up this composite entry. Scanning any of these will relate back to this entry.
-* `structure_nbt` *(Optional)*: The resource location of an NBT structure file to render in the book.
+* `components` *(Optional)*: An array of entity/block IDs that make up this composite entry.
+* `structure_nbt` *(Optional)*: The resource location of an NBT structure file to render in the book. *(Tip: You can use the `/fieldguide export feature <feature_id>` command in-game to easily generate an NBT file of a worldgen feature!)*
 * `stacked_blocks` *(Optional)*: An array of block IDs to render stacked on top of each other.
 
-#### Example: Custom Category
-
-`data/mypack/fieldguide/categories/swamp_life.json`
-
-```json
-{
-  "sort_index": 5,
-  "contents": [
-    {
-      "type": "entry",
-      "id": "minecraft:frog"
-    },
-    {
-      "type": "entry",
-      "id": "minecraft:witch"
-    },
-    {
-      "type": "entry",
-      "id": "minecraft:lily_pad"
-    }
-  ]
-}
-
-```
-
-### Special Entity Tags
-
-Field Guide uses specific entity tags that you can add to your datapacks to change scanning behavior:
-
-* `fieldguide:bosses`: Entities with this tag are excluded from the `monsters` and `animals` auto-populate strategies, and are moved to a special `bosses` category.
-* `fieldguide:kill_to_unlock`: Entities with this tag can't be scanned with a spyglass: you have to kill them to unlock their entry (defaults to all bosses).
+---
 
 ### Biome & Loot Modifiers
 
-Field Guide uses datapacks to modify which biomes and loot drops appear on an entry's page. This is useful for correcting missing information or hiding unwanted drops.
+Field Guide uses datapacks to modify which biomes and loot drops appear on an entry's page.
+This is useful for correcting missing information or hiding unwanted drops.
 
 #### File Locations
+
 * **Biome Modifiers:** `data/<namespace>/fieldguide/biome_modifiers/<filename>.json`
 * **Loot Modifiers:** `data/<namespace>/fieldguide/loot_modifiers/<filename>.json`
 
 #### JSON Structure
-Both biome and loot modifiers use the exact same layout. You can define `additions` and `removals` within the same file.
 
+Both biome and loot modifiers use the exact same layout.
+You can define `additions` and `removals` within the same file.
 You can use either `entry` (single string) or `entries` (array of strings) to define the target pages, and `value` or `values` to define the biomes/items being added or removed.
 
 **Example Biome Modifier:** (`data/mypack/fieldguide/biome_modifiers/warden_fix.json`)
+
 ```json
 {
   "replace": false,
@@ -165,6 +180,7 @@ You can use either `entry` (single string) or `entries` (array of strings) to de
 ```
 
 **Example Loot Modifier:** (`data/mypack/fieldguide/loot_modifiers/cow_milk.json`)
+
 ```json
 {
   "additions": [

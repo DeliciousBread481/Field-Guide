@@ -2,31 +2,21 @@
 title: Configuration
 hide_meta: true
 ---
-The configuration file is located at `.minecraft/config/fieldguide.json`. You can also edit these settings in-game if you have **Cloth Config** installed.
+The configuration file is located at `.minecraft/config/fieldguide.json`.
+
+We highly recommend installing **Cloth Config**. The in-game configuration menu provides detailed tooltips for every UI, color, and gameplay option!
 
 ### Entity Blacklist Format
 You can blacklist specific entities or entire mods from appearing in the guide entirely.
-
 * **Specific ID:** `minecraft:armor_stand`
 * **Wildcard:** `mod_id:*` (Blacklists everything from that mod)
 
-### Discovery Redirects
-Sometimes you may want scanning one entity to unlock the entry for a different one. This is useful for entities that have multiple variations or distinct parts (like multi-part bosses) where scanning any part should unlock the main entry.
-**Format**: `namespace:scanned_id|namespace:unlock_id`
-
-* **Example**: Scanning a Vampire Biter from Enemy Expansion unlocks the Vampire entry.
-
-`enemyexpansion:vampire_biter|enemyexpansion:vampire`
-
 ### General & UI Settings
-You can customize various aspects of the guide's behavior and interface:
-* **Scanning & Discovery:**
-  * `requireSpyglass`: Whether a spyglass is strictly required to scan entities (default `true`).
-  * `hideTabsUntilUnlocked`: If true, category tabs remain hidden until a player unlocks at least one entry inside them.
-  * `showUndiscoveredNames` / `hideUndiscoveredFromSearch`: Controls the visibility of un-scanned entities in the book's lists and search results.
-* **Information Display:**
-  * `disableLootDisplay` / `disableBiomeDisplay`: Hides the drop and habitat information from entry pages entirely.
-  * `disableEditingDescriptions` / `disableEditingNames`: Locks the in-game text editing features so players cannot change default text.
+Through the config file or the in-game Cloth Config menu, you can fully customize:
+* **Menu Integrations:** Toggle the Field Guide button in your inventory or pause menus.
+* **Scanning Behavior:** Adjust the required items (e.g., Spyglass), scan duration, max distance, and XP rewards.
+* **Visibility:** Choose whether to hide undiscovered entries, or disable the display of loot and biomes on entry pages.
+* **Colors:** Customize the hex colors of the UI, text, and scanning overlays.
 
 ### Scan Commands
 You can configure the server to automatically execute commands when a player successfully scans an entry.
