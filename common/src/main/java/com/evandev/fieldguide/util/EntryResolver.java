@@ -14,6 +14,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.BushBlock;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -35,7 +36,8 @@ public class EntryResolver {
         return null;
     }
 
-    public static List<Object> resolveCategoryEntries(Category category, ModConfig config, List<CompositeDefinition> globalComposites, Map<ResourceLocation, ResourceLocation> redirects) {        Set<Object> foundEntries = new LinkedHashSet<>();
+    public static List<Object> resolveCategoryEntries(Category category, ModConfig config, List<CompositeDefinition> globalComposites, Map<ResourceLocation, ResourceLocation> redirects) {
+        Set<Object> foundEntries = new LinkedHashSet<>();
         Set<ResourceLocation> addedIds = new HashSet<>();
 
         for (CategoryEntry entry : category.getEntries()) {
@@ -172,7 +174,7 @@ public class EntryResolver {
         return BuiltInRegistries.BLOCK.stream()
                 .filter(b -> namespaceFilter.test(BuiltInRegistries.BLOCK.getKey(b)))
                 .filter(b -> isValidBlock(b, config))
-                .filter(b -> b.defaultBlockState().is(ModTags.Blocks.PLANTS))
+                .filter(b -> b.defaultBlockState().is(ModTags.Blocks.PLANTS) || b instanceof BushBlock)
                 .sorted(Comparator.comparing(b -> BuiltInRegistries.BLOCK.getKey(b).toString()))
                 .map(Object.class::cast)
                 .toList();

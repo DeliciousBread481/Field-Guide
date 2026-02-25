@@ -7,17 +7,6 @@
     "#minecraft:corals",
     "#minecraft:tall_flowers",
     "#minecraft:leaves",
-    "minecraft:grass",
-    "minecraft:fern",
-    "minecraft:tall_grass",
-    "minecraft:large_fern",
-    "minecraft:brown_mushroom",
-    "minecraft:red_mushroom",
-    "minecraft:crimson_fungus",
-    "minecraft:warped_fungus",
-    "minecraft:crimson_roots",
-    "minecraft:warped_roots",
-    "minecraft:nether_sprouts",
     "minecraft:weeping_vines",
     "minecraft:twisting_vines",
     "minecraft:sugar_cane",
@@ -29,8 +18,6 @@
     "minecraft:hanging_roots",
     "minecraft:big_dripleaf",
     "minecraft:small_dripleaf",
-    "minecraft:azalea",
-    "minecraft:flowering_azalea",
     "minecraft:vine",
     "minecraft:glow_lichen",
     "minecraft:melon",
@@ -43,17 +30,12 @@
     { "id": "farmersdelight:red_mushroom_colony", "required": false },
 
     { "id": "atmospheric:golden_growth", "required": false },
-    { "id": "atmospheric:arid_sprouts", "required": false },
     { "id": "atmospheric:agave", "required": false },
     { "id": "atmospheric:passion_vine", "required": false },
     { "id": "atmospheric:dragon_roots", "required": false },
     { "id": "atmospheric:barrel_cactus", "required": false },
     { "id": "atmospheric:aloe_vera", "required": false },
 
-    { "id": "windswept:yellow_petals", "required": false },
-    { "id": "windswept:gelisol_grass", "required": false },
-    { "id": "windswept:snowy_sprouts", "required": false },
-    { "id": "windswept:mossy_sprouts", "required": false },
-    { "id": "windswept:dry_mossy_sprouts", "required": false }
+    { "id": "windswept:yellow_petals", "required": false }
   ]
 }
