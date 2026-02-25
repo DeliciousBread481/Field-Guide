@@ -459,6 +459,8 @@ public class FieldGuideScreen extends BookScreen {
                         Component searchTitle = Component.translatable("biome." + biomeId.getNamespace() + "." + biomeId.getPath());
                         renderTitle(guiGraphics, searchTitle, iconOffset, titleColor);
                     }
+                } else if (searchQuery.startsWith("=#")) {
+                    renderTitle(guiGraphics, Component.literal("#" + searchQuery.substring(2)), 0, ModConfig.get().getTextColorInt());
                 } else if (searchQuery.startsWith("=^")) {
                     String dropQuery = searchQuery.substring(2).toLowerCase(Locale.ROOT);
                     ItemStack displayStack = ItemStack.EMPTY;
