@@ -113,7 +113,7 @@ public class FieldGuideScanner {
 
             EntityType<?> type = hitEntity.getType();
             ResourceLocation originalId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
-            ResourceLocation redirectId = ModConfig.get().getRedirect(originalId);
+            ResourceLocation redirectId = ClientFieldGuideManager.getInstance().getRedirect(originalId);
 
             Object actualTargetKey = type;
             if (redirectId != null) {
@@ -148,7 +148,7 @@ public class FieldGuideScanner {
                 Block block = state.getBlock();
 
                 ResourceLocation originalId = BuiltInRegistries.BLOCK.getKey(block);
-                ResourceLocation redirectId = ModConfig.get().getRedirect(originalId);
+                ResourceLocation redirectId = ClientFieldGuideManager.getInstance().getRedirect(originalId);
 
                 Object actualTargetKey = block;
                 if (redirectId != null) {
@@ -171,7 +171,7 @@ public class FieldGuideScanner {
                 Block block = state.getBlock();
 
                 ResourceLocation originalId = BuiltInRegistries.BLOCK.getKey(block);
-                ResourceLocation redirectId = ModConfig.get().getRedirect(originalId);
+                ResourceLocation redirectId = ClientFieldGuideManager.getInstance().getRedirect(originalId);
 
                 Object actualTargetKey = block;
                 if (redirectId != null) {
@@ -320,7 +320,7 @@ public class FieldGuideScanner {
     private void completeScan(Minecraft minecraft, Object targetKey, Object foundTarget) {
         ResourceLocation targetId = ClientFieldGuideManager.getEntryId(targetKey);
         if (targetId != null) {
-            ResourceLocation redirectId = ModConfig.get().getRedirect(targetId);
+            ResourceLocation redirectId = ClientFieldGuideManager.getInstance().getRedirect(targetId);
             if (redirectId != null) {
                 Optional<EntityType<?>> entityType = BuiltInRegistries.ENTITY_TYPE.getOptional(redirectId);
                 if (entityType.isPresent()) {
@@ -328,6 +328,11 @@ public class FieldGuideScanner {
                 } else {
                     Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(redirectId);
                     if (block.isPresent()) targetKey = block.get();
+                }
+
+                Object resolvedTarget = ClientFieldGuideManager.getInstance().getEntryForTarget(targetKey);
+                if (resolvedTarget != null) {
+                    targetKey = resolvedTarget;
                 }
             }
         }

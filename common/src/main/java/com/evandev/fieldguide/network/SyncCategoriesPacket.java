@@ -7,6 +7,7 @@ import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class SyncCategoriesPacket {
     private final List<Category> categories;
@@ -14,13 +15,15 @@ public class SyncCategoriesPacket {
     private final List<String> biomeRemovals;
     private final List<String> lootAdditions;
     private final List<String> lootRemovals;
+    private final Map<ResourceLocation, ResourceLocation> redirects;
 
-    public SyncCategoriesPacket(List<Category> categories, List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals) {
+    public SyncCategoriesPacket(List<Category> categories, List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals, Map<ResourceLocation, ResourceLocation> redirects) {
         this.categories = categories;
         this.biomeAdditions = biomeAdditions;
         this.biomeRemovals = biomeRemovals;
         this.lootAdditions = lootAdditions;
         this.lootRemovals = lootRemovals;
+        this.redirects = redirects;
     }
 
     public SyncCategoriesPacket(FriendlyByteBuf buf) {
@@ -28,6 +31,7 @@ public class SyncCategoriesPacket {
             ResourceLocation id = b.readResourceLocation();
             Category cat = new Category(id);
             cat.setSortIndex(b.readInt());
+            cat.setIcon(b.readResourceLocation());
 
             int entryCount = b.readInt();
             for (int i = 0; i < entryCount; i++) {
@@ -65,13 +69,14 @@ public class SyncCategoriesPacket {
         this.biomeRemovals = buf.readCollection(ArrayList::new, FriendlyByteBuf::readUtf);
         this.lootAdditions = buf.readCollection(ArrayList::new, FriendlyByteBuf::readUtf);
         this.lootRemovals = buf.readCollection(ArrayList::new, FriendlyByteBuf::readUtf);
+        this.redirects = buf.readMap(FriendlyByteBuf::readResourceLocation, FriendlyByteBuf::readResourceLocation);
     }
 
     public void encode(FriendlyByteBuf buf) {
         buf.writeCollection(categories, (b, cat) -> {
             b.writeResourceLocation(cat.getId());
             b.writeInt(cat.getSortIndex());
-
+            b.writeResourceLocation(cat.getIcon());
             b.writeInt(cat.getEntries().size());
             for (CategoryEntry entry : cat.getEntries()) {
                 b.writeEnum(entry.type());
@@ -109,6 +114,7 @@ public class SyncCategoriesPacket {
         buf.writeCollection(biomeRemovals, FriendlyByteBuf::writeUtf);
         buf.writeCollection(lootAdditions, FriendlyByteBuf::writeUtf);
         buf.writeCollection(lootRemovals, FriendlyByteBuf::writeUtf);
+        buf.writeMap(redirects, FriendlyByteBuf::writeResourceLocation, FriendlyByteBuf::writeResourceLocation);
     }
 
     public List<Category> getCategories() {
@@ -129,5 +135,9 @@ public class SyncCategoriesPacket {
 
     public List<String> getLootRemovals() {
         return lootRemovals;
+    }
+
+    public Map<ResourceLocation, ResourceLocation> getRedirects() {
+        return redirects;
     }
 }

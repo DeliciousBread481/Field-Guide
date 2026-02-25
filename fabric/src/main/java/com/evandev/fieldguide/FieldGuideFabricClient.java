@@ -60,7 +60,7 @@ public class FieldGuideFabricClient implements ClientModInitializer {
             client.execute(() -> {
                 ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
 
-                manager.updateCategoriesFromServer(packet.getCategories());
+                manager.updateCategoriesFromServer(packet.getCategories(), packet.getRedirects());
                 manager.updateModifiers(
                         packet.getBiomeAdditions(),
                         packet.getBiomeRemovals(),

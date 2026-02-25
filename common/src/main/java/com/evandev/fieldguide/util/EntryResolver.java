@@ -35,8 +35,7 @@ public class EntryResolver {
         return null;
     }
 
-    public static List<Object> resolveCategoryEntries(Category category, ModConfig config, List<CompositeDefinition> globalComposites) {
-        Set<Object> foundEntries = new LinkedHashSet<>();
+    public static List<Object> resolveCategoryEntries(Category category, ModConfig config, List<CompositeDefinition> globalComposites, Map<ResourceLocation, ResourceLocation> redirects) {        Set<Object> foundEntries = new LinkedHashSet<>();
         Set<ResourceLocation> addedIds = new HashSet<>();
 
         for (CategoryEntry entry : category.getEntries()) {
@@ -100,7 +99,7 @@ public class EntryResolver {
         List<Object> resolved = new ArrayList<>(foundEntries);
         resolved.removeIf(e -> {
             ResourceLocation id = getEntryId(e);
-            return id != null && config.getRedirect(id) != null;
+            return id != null && redirects.containsKey(id);
         });
 
         return resolved;

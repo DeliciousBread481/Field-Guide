@@ -64,8 +64,6 @@ public class ModConfig {
 
     public List<String> entityBlacklist = getDefaultBlacklist();
 
-    public List<String> discoveryRedirects = getDefaultDiscoveryRedirects();
-
     public List<String> globalScanCommands = new ArrayList<>();
     public Map<String, List<String>> categoryScanCommands = new HashMap<>();
     public Map<String, List<String>> entryScanCommands = new HashMap<>();
@@ -111,13 +109,6 @@ public class ModConfig {
         return defaults;
     }
 
-    public static List<String> getDefaultDiscoveryRedirects() {
-        List<String> defaults = new ArrayList<>();
-        defaults.add("minecraft:bamboo_sapling|minecraft:bamboo");
-
-        return defaults;
-    }
-
     public boolean isEntityBlacklisted(ResourceLocation location) {
         String id = location.toString();
         String namespace = location.getNamespace();
@@ -125,20 +116,6 @@ public class ModConfig {
         if (entityBlacklist.contains(id)) return true;
 
         return entityBlacklist.contains(namespace + ":*");
-    }
-
-    public ResourceLocation getRedirect(ResourceLocation source) {
-        String sourceStr = source.toString();
-        for (String line : discoveryRedirects) {
-            String[] parts = line.split("\\|");
-            if (parts.length == 2 && parts[0].equals(sourceStr)) {
-                try {
-                    return new ResourceLocation(parts[1]);
-                } catch (Exception ignored) {
-                }
-            }
-        }
-        return null;
     }
 
     public int getScanOverlayColorInt() {

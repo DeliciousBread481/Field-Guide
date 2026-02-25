@@ -22,6 +22,11 @@
     "minecraft:cave_vines",
     "minecraft:cave_vines_plant",
     "minecraft:chorus_plant",
-    "minecraft:chorus_flower"
+    "minecraft:chorus_flower",
+
+    { "id": "farmersdelight:tomatoes", "required": false },
+
+    { "id": "supplementaries:stick_tomatoes", "required": false },
+    { "id": "supplementaries:rope_tomatoes", "required": false }
   ]
 }

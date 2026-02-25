@@ -29,7 +29,7 @@ public class FieldGuideForgeClient {
     }
 
     public static void handleSyncCategories(SyncCategoriesPacket packet) {
-        ClientFieldGuideManager.getInstance().updateCategoriesFromServer(packet.getCategories());
+        ClientFieldGuideManager.getInstance().updateCategoriesFromServer(packet.getCategories(), packet.getRedirects());
 
         ClientFieldGuideManager.getInstance().updateModifiers(
                 packet.getBiomeAdditions(),

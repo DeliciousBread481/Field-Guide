@@ -2,7 +2,6 @@ package com.evandev.fieldguide.client.gui.widget;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
-import com.evandev.fieldguide.client.data.CategoryVisual;
 import com.evandev.fieldguide.client.gui.screens.BookScreen;
 import com.evandev.fieldguide.data.Category;
 import net.minecraft.client.gui.GuiGraphics;
@@ -16,14 +15,11 @@ import net.minecraft.sounds.SoundEvents;
 public class TabButton extends ImageButton {
     private final Category category;
     private final BookScreen parent;
-    private final CategoryVisual visual;
 
     public TabButton(int x, int y, int width, int height, Category category, BookScreen parent) {
         super(x, y, width, height, 0, 0, 0, Constants.TAB_TEXTURE, 24, 40, (btn) -> parent.onTabClick(category));
         this.category = category;
         this.parent = parent;
-
-        this.visual = ClientFieldGuideManager.getInstance().getCategoryVisual(category.getId());
 
         Component tooltipText = category.getId().getPath().equals("intro")
                 ? Component.literal(ClientFieldGuideManager.getInstance().getJournalTitle())
@@ -43,7 +39,7 @@ public class TabButton extends ImageButton {
         int iconY = this.getY() + 4;
         if (isSelected) iconX = iconX + 1;
 
-        guiGraphics.blit(visual.icon, iconX, iconY, 0, 0, 16, 16, 16, 16);
+        guiGraphics.blit(category.getIcon(), iconX, iconY, 0, 0, 16, 16, 16, 16);
     }
 
     @Override

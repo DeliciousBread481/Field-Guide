@@ -37,6 +37,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     private Map<ResourceLocation, Category> categories = new LinkedHashMap<>();
     private List<CompositeDefinition> composites = new ArrayList<>();
     private Map<ResourceLocation, List<ItemStack>> serverLootCache = new HashMap<>();
+    private Map<ResourceLocation, ResourceLocation> redirects = new HashMap<>();
 
     private List<String> biomeAdditions = new ArrayList<>();
     private List<String> biomeRemovals = new ArrayList<>();
@@ -49,6 +50,10 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
     public Map<ResourceLocation, Category> getCategories() {
         return categories;
+    }
+
+    public Map<ResourceLocation, ResourceLocation> getRedirects() {
+        return redirects;
     }
 
     public List<String> getBiomeAdditions() {
@@ -73,6 +78,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         for (Category rawCat : categories.values()) {
             Category flatCat = new Category(rawCat.getId());
             flatCat.setSortIndex(rawCat.getSortIndex());
+            flatCat.setIcon(rawCat.getIcon());
             List<Object> resolved = resolvedCategoryEntries.get(rawCat.getId());
 
             if (resolved != null) {
@@ -102,7 +108,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             flattenedCategories.add(flatCat);
         }
 
-        Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(flattenedCategories, biomeAdditions, biomeRemovals, lootAdditions, lootRemovals), player);
+        Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(flattenedCategories, biomeAdditions, biomeRemovals, lootAdditions, lootRemovals, redirects), player);
 
         if (!serverLootCache.isEmpty()) {
             Services.NETWORK.sendToPlayer(new SyncLootPacket(serverLootCache), player);
@@ -115,7 +121,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         Set<Object> allCompositeComponents = new HashSet<>();
 
         for (Category cat : categories.values()) {
-            List<Object> entries = EntryResolver.resolveCategoryEntries(cat, config, composites);
+            List<Object> entries = EntryResolver.resolveCategoryEntries(cat, config, composites, redirects);
             for (Object entry : entries) {
                 if (entry instanceof CompositeFieldGuideEntry composite) {
                     if (composite.components() != null) {
@@ -178,6 +184,10 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
                     if (json.has("sort_index")) {
                         category.setSortIndex(GsonHelper.getAsInt(json, "sort_index"));
+                    }
+
+                    if (json.has("icon")) {
+                        category.setIcon(new ResourceLocation(GsonHelper.getAsString(json, "icon")));
                     }
 
                     if (json.has("contents")) {
@@ -247,6 +257,28 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
         loadModifiers(resourceManager, "fieldguide/biome_modifiers", data.biomeAdditions, data.biomeRemovals);
         loadModifiers(resourceManager, "fieldguide/loot_modifiers", data.lootAdditions, data.lootRemovals);
+
+        Map<ResourceLocation, List<Resource>> redirectResources = resourceManager.listResourceStacks(
+                "fieldguide/redirects",
+                id -> id.getPath().endsWith(".json")
+        );
+        for (Map.Entry<ResourceLocation, List<Resource>> entry : redirectResources.entrySet()) {
+            for (Resource resource : entry.getValue()) {
+                try (Reader reader = resource.openAsReader()) {
+                    JsonObject json = GsonHelper.parse(reader);
+                    if (json.has("entries")) {
+                        for (JsonElement el : GsonHelper.getAsJsonArray(json, "entries")) {
+                            JsonObject obj = el.getAsJsonObject();
+                            ResourceLocation source = new ResourceLocation(GsonHelper.getAsString(obj, "source"));
+                            ResourceLocation target = new ResourceLocation(GsonHelper.getAsString(obj, "target"));
+                            data.redirects.put(source, target);
+                        }
+                    }
+                } catch (Exception e) {
+                    Constants.LOG.error("Failed to load redirect: {}", entry.getKey(), e);
+                }
+            }
+        }
 
         return data;
     }
@@ -343,6 +375,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         this.biomeRemovals = data.biomeRemovals;
         this.lootAdditions = data.lootAdditions;
         this.lootRemovals = data.lootRemovals;
+        this.redirects = data.redirects;
     }
 
     public static class ReloadData {
@@ -352,5 +385,6 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         public List<String> biomeRemovals = new ArrayList<>();
         public List<String> lootAdditions = new ArrayList<>();
         public List<String> lootRemovals = new ArrayList<>();
+        public Map<ResourceLocation, ResourceLocation> redirects = new HashMap<>();
     }
 }

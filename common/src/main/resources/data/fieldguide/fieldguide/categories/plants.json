@@ -1,5 +1,6 @@
 {
   "sort_index": 1,
+  "icon": "fieldguide:textures/gui/icons/azalea.png",
   "contents": [
     {
       "type": "auto_populate",

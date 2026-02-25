@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.data;
 
+import com.evandev.fieldguide.Constants;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ public class Category {
     private final ResourceLocation id;
     private final List<CategoryEntry> entries = new ArrayList<>();
     private int sortIndex = 0;
+    private ResourceLocation icon = Constants.DEFAULT_ICON;
 
     public Category(ResourceLocation id) {
         this.id = id;
@@ -34,4 +36,11 @@ public class Category {
         this.entries.add(entry);
     }
 
+    public ResourceLocation getIcon() {
+        return icon;
+    }
+
+    public void setIcon(ResourceLocation icon) {
+        this.icon = icon;
+    }
 }

@@ -1,5 +1,6 @@
 {
   "sort_index": 3,
+  "icon": "fieldguide:textures/gui/icons/creeper.png",
   "contents": [
     {
       "type": "auto_populate",

@@ -1,7 +1,6 @@
 package com.evandev.fieldguide.client;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.client.data.CategoryVisual;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.data.JournalPage;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
@@ -37,9 +36,9 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
     private final Map<ResourceLocation, Category> syncedCategories = new LinkedHashMap<>();
     private final Map<ResourceLocation, List<Object>> resolvedCategoryEntries = new HashMap<>();
-    private final Map<ResourceLocation, CategoryVisual> categoryVisuals = new HashMap<>();
     private final Map<ResourceLocation, EntryVisual> entryVisuals = new HashMap<>();
     private final Map<Object, List<ItemStack>> dropCache = new HashMap<>();
+    private final Map<ResourceLocation, ResourceLocation> redirects = new HashMap<>();
 
     private final List<String> biomeAdditions = new ArrayList<>();
     private final List<String> biomeRemovals = new ArrayList<>();
@@ -222,7 +221,9 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         ProgressManager.getInstance().exportToLang(type);
     }
 
-    public void updateCategoriesFromServer(List<Category> categories) {
+    public void updateCategoriesFromServer(List<Category> categories, Map<ResourceLocation, ResourceLocation> redirects) {
+        this.redirects.clear();
+        this.redirects.putAll(redirects);
         this.syncedCategories.clear();
         categories.sort(Comparator.comparingInt(Category::getSortIndex).thenComparing(Category::getId));
         for (Category cat : categories) this.syncedCategories.put(cat.getId(), cat);
@@ -240,34 +241,21 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         }
     }
 
-    public CategoryVisual getCategoryVisual(ResourceLocation categoryId) {
-        return categoryVisuals.getOrDefault(categoryId, CategoryVisual.DEFAULT);
-    }
-
     public EntryVisual getEntryVisual(ResourceLocation entryId) {
         return entryVisuals.getOrDefault(entryId, new EntryVisual());
+    }
+
+    public ResourceLocation getRedirect(ResourceLocation source) {
+        return redirects.get(source);
     }
 
     @Override
     public void onResourceManagerReload(@NotNull ResourceManager resourceManager) {
         ModConfig.load();
-        categoryVisuals.clear();
         entryVisuals.clear();
         EntryRenderHelper.clearCache();
 
-        loadVisuals(resourceManager, "visuals/categories", (id, json) -> {
-            CategoryVisual visual = new CategoryVisual();
-            if (json.has("icon")) visual.icon = new ResourceLocation(GsonHelper.getAsString(json, "icon"));
-            if (json.has("hostile_icon"))
-                visual.hostileIcon = new ResourceLocation(GsonHelper.getAsString(json, "hostile_icon"));
-            if (json.has("passive_icon"))
-                visual.passiveIcon = new ResourceLocation(GsonHelper.getAsString(json, "passive_icon"));
-            if (json.has("neutral_icon"))
-                visual.neutralIcon = new ResourceLocation(GsonHelper.getAsString(json, "neutral_icon"));
-            categoryVisuals.put(id, visual);
-        });
-
-        loadVisuals(resourceManager, "visuals/entries", (derivedId, json) -> {
+        loadVisuals(resourceManager, (derivedId, json) -> {
             ResourceLocation targetId = json.has("id") ? new ResourceLocation(GsonHelper.getAsString(json, "id")) : derivedId;
             EntryVisual visual = new EntryVisual();
             if (json.has("custom_sound"))
@@ -293,16 +281,16 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         resolveAllEntries();
     }
 
-    private void loadVisuals(ResourceManager mgr, String folder, BiConsumer<ResourceLocation, JsonObject> processor) {
-        mgr.listResourceStacks("fieldguide/" + folder, id -> id.getPath().endsWith(".json")).forEach((fileId, resources) -> {
+    private void loadVisuals(ResourceManager mgr, BiConsumer<ResourceLocation, JsonObject> processor) {
+        mgr.listResourceStacks("fieldguide/entries", id -> id.getPath().endsWith(".json")).forEach((fileId, resources) -> {
             String path = fileId.getPath();
-            String idPath = path.substring(("fieldguide/" + folder + "/").length(), path.length() - ".json".length());
+            String idPath = path.substring(("fieldguide/entries" + "/").length(), path.length() - ".json".length());
             ResourceLocation targetId = new ResourceLocation(fileId.getNamespace(), idPath);
             resources.forEach(resource -> {
                 try (Reader reader = resource.openAsReader()) {
                     processor.accept(targetId, GsonHelper.parse(reader));
                 } catch (Exception e) {
-                    Constants.LOG.error("Error loading visual: {}", fileId, e);
+                    Constants.LOG.error("Error loading entry visuals: {}", fileId, e);
                 }
             });
         });
@@ -313,7 +301,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         ModConfig config = ModConfig.get();
 
         syncedCategories.values().forEach(category -> {
-            List<Object> entries = EntryResolver.resolveCategoryEntries(category, config, Collections.emptyList());
+            List<Object> entries = EntryResolver.resolveCategoryEntries(category, config, Collections.emptyList(), this.redirects);
             resolvedCategoryEntries.put(category.getId(), entries);
         });
     }

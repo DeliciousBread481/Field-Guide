@@ -34,6 +34,26 @@
     "minecraft:vine",
     "minecraft:glow_lichen",
     "minecraft:melon",
-    "minecraft:pumpkin"
+    "minecraft:pumpkin",
+
+    { "id": "autumnity:large_pumpkin_slice", "required": false },
+
+    { "id": "farmersdelight:tomatoes", "required": false },
+    { "id": "farmersdelight:brown_mushroom_colony", "required": false },
+    { "id": "farmersdelight:red_mushroom_colony", "required": false },
+
+    { "id": "atmospheric:golden_growth", "required": false },
+    { "id": "atmospheric:arid_sprouts", "required": false },
+    { "id": "atmospheric:agave", "required": false },
+    { "id": "atmospheric:passion_vine", "required": false },
+    { "id": "atmospheric:dragon_roots", "required": false },
+    { "id": "atmospheric:barrel_cactus", "required": false },
+    { "id": "atmospheric:aloe_vera", "required": false },
+
+    { "id": "windswept:yellow_petals", "required": false },
+    { "id": "windswept:gelisol_grass", "required": false },
+    { "id": "windswept:snowy_sprouts", "required": false },
+    { "id": "windswept:mossy_sprouts", "required": false },
+    { "id": "windswept:dry_mossy_sprouts", "required": false }
   ]
 }

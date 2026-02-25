@@ -1,5 +1,6 @@
 {
   "sort_index": 2,
+  "icon": "fieldguide:textures/gui/icons/chicken.png",
   "contents": [
     {
       "type": "auto_populate",

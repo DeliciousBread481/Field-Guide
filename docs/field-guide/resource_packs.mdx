@@ -5,28 +5,12 @@ hide_meta: true
 
 You can customize the appearance of categories, render settings for entities, and descriptions using **Resource Packs**.
 
-### Category Visuals
-To customize the icons of a category tab, create a JSON file at:
-`assets/fieldguide/visuals/categories/<category_name>.json`
-
-*Note: The filename must match the path of the category ID.*
-
-```json
-{
-  "icon": "minecraft:textures/item/slime_ball.png",
-  "hostile_icon": "fieldguide:textures/gui/icons/hostile.png",
-  "passive_icon": "fieldguide:textures/gui/icons/passive.png",
-  "neutral_icon": "fieldguide:textures/gui/icons/neutral.png"
-}
-
-```
-
 ### Entry Configuration (Scaling & Offsets)
 
 Sometimes entities or blocks render too large, too small, or off-center in the book. You can adjust this by creating a JSON file at:
-`assets/<namespace>/fieldguide/visuals/entries/<entry_id>.json`
+`assets/<namespace>/fieldguide/entries/<entry_id>.json`
 
-For example: `assets/minecraft/fieldguide/visuals/entries/pig.json` makes adjustments to `minecraft:pig`.
+For example: `assets/minecraft/fieldguide/entries/pig.json` makes adjustments to `minecraft:pig`.
 
 #### JSON Structure
 
