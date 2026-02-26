@@ -14,6 +14,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.BushBlock;
 
 import java.util.*;
@@ -78,8 +79,17 @@ public class EntryResolver {
             Set<ResourceLocation> processedComposites = new HashSet<>();
 
             for (Object raw : foundEntries) {
-                if (raw instanceof CompositeFieldGuideEntry) {
-                    groupedEntries.add(raw);
+                if (raw instanceof CompositeFieldGuideEntry autoComposite) {
+                    ResourceLocation displayId = getEntryId(autoComposite.displayEntry());
+                    CompositeDefinition matchingDef = findCompositeFor(displayId, globalComposites);
+
+                    if (matchingDef != null) {
+                        if (processedComposites.add(matchingDef.id())) {
+                            resolveCompositeDefinition(matchingDef, config).ifPresent(groupedEntries::add);
+                        }
+                    } else {
+                        groupedEntries.add(raw);
+                    }
                     continue;
                 }
 
@@ -149,6 +159,11 @@ public class EntryResolver {
         } else if (strategy.startsWith("mod_plants:")) {
             String modId = strategy.substring(10);
             results.addAll(getPlants(id -> id.getNamespace().equals(modId), config));
+        } else if ("trees".equalsIgnoreCase(strategy)) {
+            results.addAll(getAutoTrees(id -> true, config));
+        } else if (strategy.startsWith("mod_trees:")) {
+            String modId = strategy.substring(10);
+            results.addAll(getAutoTrees(id -> id.getNamespace().equals(modId), config));
         } else if (strategy.startsWith("tag:")) {
             try {
                 TagKey<EntityType<?>> tagKey = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(strategy.substring(4)));
@@ -166,6 +181,56 @@ public class EntryResolver {
                     return type.getCategory() != MobCategory.MONSTER && (type.getCategory() != MobCategory.MISC || SpawnEggItem.byId(type) != null) && !isBoss;
                 return false;
             }).filter(type -> isValidEntity(type, config)).sorted(Comparator.comparing(type -> BuiltInRegistries.ENTITY_TYPE.getKey(type).toString())).toList());
+        }
+        return results;
+    }
+
+    private static List<Object> getAutoTrees(Predicate<ResourceLocation> namespaceFilter, ModConfig config) {
+        List<Object> results = new ArrayList<>();
+
+        for (Block block : BuiltInRegistries.BLOCK) {
+            ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
+            if (!namespaceFilter.test(id) || !isValidBlock(block, config)) continue;
+
+            if (id.getPath().endsWith("_sapling")) {
+                String baseName = id.getPath().replace("_sapling", "");
+
+                Block leaves = BuiltInRegistries.BLOCK.get(new ResourceLocation(id.getNamespace(), baseName + "_leaves"));
+                if (leaves == Blocks.AIR) continue;
+
+                Block log = BuiltInRegistries.BLOCK.get(new ResourceLocation(id.getNamespace(), baseName + "_log"));
+                if (log == Blocks.AIR) {
+                    String[] parts = baseName.split("_", 2);
+                    if (parts.length > 1) {
+                        log = BuiltInRegistries.BLOCK.get(new ResourceLocation(id.getNamespace(), parts[1] + "_log"));
+                    }
+                }
+                if (log == Blocks.AIR) continue;
+
+                String logId = BuiltInRegistries.BLOCK.getKey(log).toString();
+                String leavesId = BuiltInRegistries.BLOCK.getKey(leaves).toString();
+
+                List<String> treeStructure = Arrays.asList(
+                        "0,0,0|" + logId,
+                        "0,1,0|" + logId,
+                        "-1,2,0|" + leavesId,
+                        "1,2,0|" + leavesId,
+                        "0,2,-1|" + leavesId,
+                        "0,2,1|" + leavesId,
+                        "0,2,0|" + leavesId,
+                        "0,3,0|" + leavesId
+                );
+
+                List<Object> components = Arrays.asList(block, leaves, log);
+
+                results.add(new CompositeFieldGuideEntry(
+                        new ResourceLocation(id.getNamespace(), baseName + "_tree"),
+                        block,
+                        components,
+                        null,
+                        treeStructure
+                ));
+            }
         }
         return results;
     }

@@ -51,25 +51,39 @@ public class StructureUtils {
 
     public static Map<BlockPos, BlockState> getStackedBlocks(List<String> stackedBlocks) {
         Map<BlockPos, BlockState> blocks = new HashMap<>();
-        int y = 0;
+        int defaultY = 0;
+
         for (String blockStr : stackedBlocks) {
             String[] parts = blockStr.split("\\|");
-            ResourceLocation id = new ResourceLocation(parts[0]);
+            BlockPos pos = new BlockPos(0, defaultY, 0);
+            String blockIdPart = parts[0];
+            int propIndex = 1;
+
+            // Check if the first part is coordinates
+            if (parts[0].contains(",")) {
+                String[] coords = parts[0].split(",");
+                if (coords.length == 3) {
+                    pos = new BlockPos(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]), Integer.parseInt(coords[2]));
+                }
+                blockIdPart = parts[1];
+                propIndex = 2;
+            }
+
+            ResourceLocation id = new ResourceLocation(blockIdPart);
             Block block = BuiltInRegistries.BLOCK.get(id);
             if (block != net.minecraft.world.level.block.Blocks.AIR) {
                 BlockState state = block.defaultBlockState();
-                if (parts.length > 1) {
-                    String[] props = parts[1].split(",");
+                if (parts.length > propIndex) {
+                    String[] props = parts[propIndex].split(",");
                     for (String propStr : props) {
                         String[] kv = propStr.split("=");
-                        if (kv.length == 2) {
-                            state = setProperty(state, kv[0], kv[1]);
-                        }
+                        if (kv.length == 2) state = setProperty(state, kv[0], kv[1]);
                     }
                 }
-                blocks.put(new BlockPos(0, y, 0), state);
+                blocks.put(pos, state);
             }
-            y++;
+
+            if (!parts[0].contains(",")) defaultY++;
         }
         return blocks;
     }

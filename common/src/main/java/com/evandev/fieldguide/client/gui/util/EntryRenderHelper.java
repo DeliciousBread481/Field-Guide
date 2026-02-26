@@ -197,6 +197,8 @@ public class EntryRenderHelper {
                     Minecraft.getInstance().getBlockRenderer().renderSingleBlock(state, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
                 } else {
                     Collection<?> values = verticalProp.getPossibleValues();
+                    pose.translate(0.0F, -0.5F * (values.size() - 1), 0.0F);
+
                     if (!values.isEmpty() && values.iterator().next() instanceof Comparable) {
                         @SuppressWarnings("unchecked")
                         Collection<Comparable<?>> sorted = (Collection<Comparable<?>>) values;

@@ -5,6 +5,10 @@
     {
       "type": "auto_populate",
       "strategy": "plants"
+    },
+    {
+      "type": "auto_populate",
+      "strategy": "trees"
     }
   ]
 }

@@ -211,14 +211,16 @@
       "id": "minecraft:pumpkin",
       "components": [
         "minecraft:pumpkin",
-        "minecraft:pumpkin_stem"
+        "minecraft:pumpkin_stem",
+        "minecraft:attached_pumpkin_stem"
       ]
     },
     {
       "id": "minecraft:melon",
       "components": [
         "minecraft:melon",
-        "minecraft:melon_stem"
+        "minecraft:melon_stem",
+        "minecraft:attached_melon_stem"
       ]
     }
   ]
