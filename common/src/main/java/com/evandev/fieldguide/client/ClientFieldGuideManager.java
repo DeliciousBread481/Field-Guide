@@ -302,7 +302,12 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
         syncedCategories.values().forEach(category -> {
             List<Object> entries = EntryResolver.resolveCategoryEntries(category, config, Collections.emptyList(), this.redirects);
-            resolvedCategoryEntries.put(category.getId(), entries);
+
+            // Group entries
+            List<Object> groupedEntries = SearchManager.groupByQueries(entries, category.getGroupByQueries());
+            Constants.LOG.info("queries: {}", category.getGroupByQueries());
+
+            resolvedCategoryEntries.put(category.getId(), groupedEntries);
         });
     }
 

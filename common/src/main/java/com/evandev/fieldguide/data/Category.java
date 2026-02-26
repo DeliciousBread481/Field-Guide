@@ -9,6 +9,7 @@ import java.util.List;
 public class Category {
     private final ResourceLocation id;
     private final List<CategoryEntry> entries = new ArrayList<>();
+    private List<String> groupByQueries = new ArrayList<>();
     private int sortIndex = 0;
     private ResourceLocation icon = Constants.DEFAULT_ICON;
 
@@ -42,5 +43,13 @@ public class Category {
 
     public void setIcon(ResourceLocation icon) {
         this.icon = icon;
+    }
+
+    public List<String> getGroupByQueries() {
+        return groupByQueries;
+    }
+
+    public void setGroupByQueries(List<String> groupByQueries) {
+        this.groupByQueries = groupByQueries;
     }
 }

@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.client.search;
 
+import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
@@ -19,7 +20,26 @@ import java.util.Locale;
 
 public class SearchManager {
 
+    public static List<Object> groupByQueries(List<Object> entries, List<String> queries) {
+        List<Object> remainingEntries = new ArrayList<>(entries);
+        List<Object> groupedResults = new ArrayList<>(entries.size());
+
+        for (String query : queries) {
+            List<Object> results = searchEntries(query, remainingEntries);
+            Constants.LOG.info("{} results: {}", query, results.toString());
+            groupedResults.addAll(results);
+            remainingEntries.removeAll(results);
+        }
+
+        groupedResults.addAll(remainingEntries);
+        return groupedResults;
+    }
+
     public static List<Object> searchEntries(String query) {
+        return searchEntries(query, ClientFieldGuideManager.getValidEntries());
+    }
+
+    public static List<Object> searchEntries(String query, List<Object> entries) {
         String processedQuery = query.toLowerCase(Locale.ROOT).trim();
         List<Object> results = new ArrayList<>();
         if (processedQuery.isEmpty()) return results;
@@ -30,19 +50,19 @@ public class SearchManager {
             processedQuery = processedQuery.substring(1);
         }
 
-        if (processedQuery.startsWith("#")) return searchByTag(processedQuery.substring(1), exactMatch);
-        if (processedQuery.startsWith("^")) return searchByDrop(processedQuery.substring(1), exactMatch);
-        if (processedQuery.startsWith("!")) return searchByBiome(processedQuery.substring(1), exactMatch);
-        if (processedQuery.startsWith("@")) return searchByModId(processedQuery.substring(1), exactMatch);
+        if (processedQuery.startsWith("#")) return searchByTag(processedQuery.substring(1), entries, exactMatch);
+        if (processedQuery.startsWith("^")) return searchByDrop(processedQuery.substring(1), entries, exactMatch);
+        if (processedQuery.startsWith("!")) return searchByBiome(processedQuery.substring(1), entries, exactMatch);
+        if (processedQuery.startsWith("@")) return searchByModId(processedQuery.substring(1), entries, exactMatch);
 
-        return searchByNameOrId(processedQuery, exactMatch);
+        return searchByNameOrId(processedQuery, entries, exactMatch);
     }
 
-    private static List<Object> searchByTag(String tagQuery, boolean exactMatch) {
+    private static List<Object> searchByTag(String tagQuery, List<Object> entries, boolean exactMatch) {
         List<Object> results = new ArrayList<>();
         if (tagQuery.isEmpty()) return results;
 
-        for (Object entry : ClientFieldGuideManager.getValidEntries()) {
+        for (Object entry : entries) {
             if (ClientFieldGuideManager.hideFromSearch(entry)) continue;
 
             Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
@@ -64,11 +84,11 @@ public class SearchManager {
         return results;
     }
 
-    private static List<Object> searchByDrop(String dropQuery, boolean exactMatch) {
+    private static List<Object> searchByDrop(String dropQuery, List<Object> entries, boolean exactMatch) {
         List<Object> results = new ArrayList<>();
         if (dropQuery.isEmpty()) return results;
 
-        for (Object entry : ClientFieldGuideManager.getValidEntries()) {
+        for (Object entry : entries) {
             if (ClientFieldGuideManager.hideFromSearch(entry)) continue;
 
             List<ItemStack> drops = ClientFieldGuideManager.getInstance().getDrops(entry);
@@ -81,7 +101,7 @@ public class SearchManager {
         return results;
     }
 
-    private static List<Object> searchByBiome(String biomeQuery, boolean exactMatch) {
+    private static List<Object> searchByBiome(String biomeQuery, List<Object> entries, boolean exactMatch) {
         List<Object> results = new ArrayList<>();
         if (biomeQuery.isEmpty() || Minecraft.getInstance().level == null) return results;
 
@@ -95,7 +115,7 @@ public class SearchManager {
                         if (ClientFieldGuideManager.getInstance().isValidEntity(spawn.type, ModConfig.get())) {
                             if (!ClientFieldGuideManager.hideFromSearch(spawn.type) && !results.contains(spawn.type)) {
                                 Object entry = ClientFieldGuideManager.getInstance().getEntryForTarget(spawn.type);
-                                if (entry != null && !results.contains(entry)) results.add(entry);
+                                if (entry != null && !results.contains(entry) && entries.contains(entry)) results.add(entry);
                             }
                         }
                     }
@@ -103,7 +123,7 @@ public class SearchManager {
             }
         }
 
-        for (Object entry : ClientFieldGuideManager.getValidEntries()) {
+        for (Object entry : entries) {
             if (ClientFieldGuideManager.hideFromSearch(entry)) continue;
             ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
             if (entryId != null) {
@@ -137,11 +157,11 @@ public class SearchManager {
         return results;
     }
 
-    private static List<Object> searchByModId(String modQuery, boolean exactMatch) {
+    private static List<Object> searchByModId(String modQuery, List<Object> entries, boolean exactMatch) {
         List<Object> results = new ArrayList<>();
         if (modQuery.isEmpty()) return results;
 
-        for (Object entry : ClientFieldGuideManager.getValidEntries()) {
+        for (Object entry : entries) {
             if (ClientFieldGuideManager.hideFromSearch(entry)) continue;
             ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
             if (id != null) {
@@ -152,9 +172,9 @@ public class SearchManager {
         return results;
     }
 
-    private static List<Object> searchByNameOrId(String query, boolean exactMatch) {
+    private static List<Object> searchByNameOrId(String query, List<Object> entries, boolean exactMatch) {
         List<Object> results = new ArrayList<>();
-        for (Object entry : ClientFieldGuideManager.getValidEntries()) {
+        for (Object entry : entries) {
             if (ClientFieldGuideManager.hideFromSearch(entry)) continue;
             ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
             if (id == null) continue;

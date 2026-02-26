@@ -1,6 +1,26 @@
 {
   "sort_index": 1,
   "icon": "fieldguide:textures/gui/icons/azalea.png",
+  "group_by": [
+    "tree",
+    "azalea",
+    "#small_flowers",
+    "#tall_flowers",
+    "petal",
+    "blossom",
+    "flower",
+    "grass",
+    "#replaceable",
+    "#crops",
+    "crops",
+    "pumpkin",
+    "melon",
+    "bush",
+    "vine",
+    "mushroom",
+    "fungus",
+    "#coral"
+  ],
   "contents": [
     {
       "type": "auto_populate",

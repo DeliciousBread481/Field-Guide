@@ -32,7 +32,12 @@ public class SyncCategoriesPacket {
             Category cat = new Category(id);
             cat.setSortIndex(b.readInt());
             cat.setIcon(b.readResourceLocation());
-
+            int queryCount = b.readInt();
+            ArrayList<String> queries = new ArrayList<>();
+            for (int i = 0; i < queryCount; i++) {
+                queries.add(b.readUtf());
+            }
+            cat.setGroupByQueries(queries);
             int entryCount = b.readInt();
             for (int i = 0; i < entryCount; i++) {
                 CategoryEntry.Type type = b.readEnum(CategoryEntry.Type.class);
@@ -77,6 +82,10 @@ public class SyncCategoriesPacket {
             b.writeResourceLocation(cat.getId());
             b.writeInt(cat.getSortIndex());
             b.writeResourceLocation(cat.getIcon());
+            b.writeInt(cat.getGroupByQueries().size());
+            for (String query : cat.getGroupByQueries()) {
+                b.writeUtf(query);
+            }
             b.writeInt(cat.getEntries().size());
             for (CategoryEntry entry : cat.getEntries()) {
                 b.writeEnum(entry.type());

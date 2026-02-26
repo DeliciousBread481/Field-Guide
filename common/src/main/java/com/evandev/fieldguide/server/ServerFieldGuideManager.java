@@ -79,6 +79,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             Category flatCat = new Category(rawCat.getId());
             flatCat.setSortIndex(rawCat.getSortIndex());
             flatCat.setIcon(rawCat.getIcon());
+            flatCat.setGroupByQueries(rawCat.getGroupByQueries());
             List<Object> resolved = resolvedCategoryEntries.get(rawCat.getId());
 
             if (resolved != null) {
@@ -188,6 +189,16 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
                     if (json.has("icon")) {
                         category.setIcon(new ResourceLocation(GsonHelper.getAsString(json, "icon")));
+                    }
+
+                    if (json.has("group_by")) {
+                        JsonArray groupBy = GsonHelper.getAsJsonArray(json, "group_by");
+                        List<String> queries = new ArrayList<>(groupBy.size());
+                        for (JsonElement query : groupBy) {
+                            queries.add(query.getAsString());
+                        }
+
+                        category.setGroupByQueries(queries);
                     }
 
                     if (json.has("contents")) {

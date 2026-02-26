@@ -1,6 +1,16 @@
 {
   "sort_index": 2,
   "icon": "fieldguide:textures/gui/icons/chicken.png",
+  "group_by": [
+    "#aquatic",
+    "#can_breathe_under_water",
+    "fish",
+    "squid",
+    "!ocean",
+    "!beach",
+    "!plains",
+    "golem"
+  ],
   "contents": [
     {
       "type": "auto_populate",
