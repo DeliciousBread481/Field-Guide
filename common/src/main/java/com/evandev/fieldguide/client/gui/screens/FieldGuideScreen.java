@@ -18,6 +18,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
@@ -27,6 +29,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
@@ -44,6 +47,7 @@ public class FieldGuideScreen extends BookScreen {
     private static final int SEARCH_WIDTH = 140;
     private static final int SEARCH_HEIGHT = 20;
     public static int lastOpenedJournalPage = 0;
+    private static Registry<Biome> biomeRegistry;
     private static ResourceLocation lastOpenedCategory = null;
     private final Map<EntityType<?>, Entity> entryCache = new HashMap<>();
     public boolean isSearching = false;
@@ -117,6 +121,10 @@ public class FieldGuideScreen extends BookScreen {
         }
 
         super.init();
+
+        if (this.minecraft != null && this.minecraft.level != null) {
+            biomeRegistry = this.minecraft.level.registryAccess().registryOrThrow(Registries.BIOME);
+        }
 
         if (this.getSelectedCategory() == null && this.searchQuery.isEmpty()) {
             if (lastOpenedCategory != null) {
@@ -441,7 +449,7 @@ public class FieldGuideScreen extends BookScreen {
                 // Biome Title
                 if (searchQuery.startsWith("=!")) {
                     ResourceLocation biomeId = ResourceLocation.tryParse(searchQuery.substring(2));
-                    if (biomeId != null) {
+                    if (biomeId != null && biomeRegistry.containsKey(biomeId)) {
                         int titleColor = ModConfig.get().getTextColorInt();
                         int iconOffset = 0;
 
@@ -458,6 +466,8 @@ public class FieldGuideScreen extends BookScreen {
 
                         Component searchTitle = Component.translatable("biome." + biomeId.getNamespace() + "." + biomeId.getPath());
                         renderTitle(guiGraphics, searchTitle, iconOffset, titleColor);
+                    } else {
+                        renderTitle(guiGraphics, Component.translatable("gui.fieldguide.searching_biomes"));
                     }
                 } else if (searchQuery.startsWith("=#")) {
                     renderTitle(guiGraphics, Component.literal("#" + searchQuery.substring(2)), 0, ModConfig.get().getTextColorInt());
