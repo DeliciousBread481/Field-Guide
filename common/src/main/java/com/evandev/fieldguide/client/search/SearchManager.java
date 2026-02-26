@@ -111,20 +111,23 @@ public class SearchManager {
 
     private static List<Object> matchByBiome(String biomeQuery, List<Object> entries, boolean exactMatch) {
         List<Object> results = new ArrayList<>();
-        if (biomeQuery.isEmpty() || Minecraft.getInstance().level == null) return results;
+        if (biomeQuery.isEmpty()) return results;
 
-        var biomeRegistry = Minecraft.getInstance().level.registryAccess().registryOrThrow(Registries.BIOME);
+        var connection = Minecraft.getInstance().getConnection();
+        if (connection != null) {
+            var biomeRegistry = connection.registryAccess().registryOrThrow(Registries.BIOME);
 
-        for (var biomeEntry : biomeRegistry.entrySet()) {
-            if (matchLocation(biomeEntry.getKey().location(), biomeQuery, exactMatch)) {
-                Biome biome = biomeEntry.getValue();
-                for (MobCategory cat : MobCategory.values()) {
-                    for (var spawn : biome.getMobSettings().getMobs(cat).unwrap()) {
-                        if (ClientFieldGuideManager.getInstance().isValidEntity(spawn.type, ModConfig.get())) {
-                            if (!results.contains(spawn.type)) {
-                                Object entry = ClientFieldGuideManager.getInstance().getEntryForTarget(spawn.type);
-                                if (entry != null && !results.contains(entry) && entries.contains(entry))
-                                    results.add(entry);
+            for (var biomeEntry : biomeRegistry.entrySet()) {
+                if (matchLocation(biomeEntry.getKey().location(), biomeQuery, exactMatch)) {
+                    Biome biome = biomeEntry.getValue();
+                    for (MobCategory cat : MobCategory.values()) {
+                        for (var spawn : biome.getMobSettings().getMobs(cat).unwrap()) {
+                            if (ClientFieldGuideManager.getInstance().isValidEntity(spawn.type, ModConfig.get())) {
+                                if (!results.contains(spawn.type)) {
+                                    Object entry = ClientFieldGuideManager.getInstance().getEntryForTarget(spawn.type);
+                                    if (entry != null && !results.contains(entry) && entries.contains(entry))
+                                        results.add(entry);
+                                }
                             }
                         }
                     }

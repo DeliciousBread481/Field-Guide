@@ -3,16 +3,13 @@
   "icon": "fieldguide:textures/gui/icons/creeper.png",
   "group_by": [
     "#skeleton",
-    "skeleton",
     "#zombie",
-    "zombie",
     "=drowned",
     "=husk",
     "#raiders",
     "illager",
     "=!nether_wastes",
     "=!soul_sand_valley",
-    "piglin",
     "#aquatic",
     "#can_breathe_under_water",
     "!ocean"
