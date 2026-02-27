@@ -17,7 +17,7 @@ public class TabButton extends ImageButton {
     private final BookScreen parent;
 
     public TabButton(int x, int y, int width, int height, Category category, BookScreen parent) {
-        super(x, y, width, height, 0, 0, 0, Constants.TAB_TEXTURE, 24, 40, (btn) -> parent.onTabClick(category));
+        super(x, y, width, height, 0, 144, 0, Constants.WIDGETS_TEXTURE, (btn) -> parent.onTabClick(category));
         this.category = category;
         this.parent = parent;
 
@@ -33,9 +33,9 @@ public class TabButton extends ImageButton {
         boolean isSelected = (category == parent.getSelectedCategory());
         int vOffset = isSelected ? 24 : 0;
 
-        guiGraphics.blit(Constants.TAB_TEXTURE, this.getX(), this.getY(), 0, vOffset, this.width, this.height, 24, 48);
+        guiGraphics.blit(Constants.WIDGETS_TEXTURE, this.getX(), this.getY(), 0, 144 + vOffset, this.width, this.height);
 
-        int iconX = this.getX() + 2;
+        int iconX = this.getX() + 3;
         int iconY = this.getY() + 4;
         if (isSelected) iconX = iconX + 1;
 

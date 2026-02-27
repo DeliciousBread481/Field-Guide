@@ -174,10 +174,9 @@ public class FieldGuideJournalScreen extends BookScreen {
 
         if (currentSpread == 0) {
             guiGraphics.blit(Constants.JOURNAL_TITLE_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
-            guiGraphics.blit(Constants.JOURNAL_PAGE_RIGHT_TEXTURE, this.rightPageBounds.left(), this.rightPageBounds.top(), 0, 0, this.rightPageBounds.width(), this.rightPageBounds.height(), this.rightPageBounds.width(), this.rightPageBounds.height());
+            guiGraphics.blit(Constants.JOURNAL_PAGE_TEXTURE, this.bounds.x_center(), this.bounds.top(), this.bounds.width() / 2.0F, 0, this.bounds.width() / 2, this.bounds.height(), this.bounds.width(), this.bounds.height());
         } else {
-            guiGraphics.blit(Constants.JOURNAL_PAGE_LEFT_TEXTURE, this.leftPageBounds.left(), this.leftPageBounds.top(), 0, 0, this.leftPageBounds.width(), this.leftPageBounds.height(), this.leftPageBounds.width(), this.leftPageBounds.height());
-            guiGraphics.blit(Constants.JOURNAL_PAGE_RIGHT_TEXTURE, this.rightPageBounds.left(), this.rightPageBounds.top(), 0, 0, this.rightPageBounds.width(), this.rightPageBounds.height(), this.rightPageBounds.width(), this.rightPageBounds.height());
+            guiGraphics.blit(Constants.JOURNAL_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
         }
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);

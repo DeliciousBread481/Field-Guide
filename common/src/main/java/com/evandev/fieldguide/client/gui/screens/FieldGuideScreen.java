@@ -182,12 +182,10 @@ public class FieldGuideScreen extends BookScreen {
                 this.bounds.top() + 26,
                 24,
                 24,
-                0,
-                0,
                 24,
-                Constants.BACK_TEXTURE,
+                144,
                 24,
-                24 * 2,
+                Constants.WIDGETS_TEXTURE,
                 b -> {
                     if (parent != null) {
                         Objects.requireNonNull(this.minecraft).setScreen(parent);
@@ -603,13 +601,13 @@ public class FieldGuideScreen extends BookScreen {
             // Progress Bar
             if (unlocked > 0) {
                 int barWidth = 83;
-                int barHeight = 7;
+                int barHeight = 6;
                 int barX = x - barWidth / 2 - 1;
                 int barY = y + 15;
 
                 int progressWidth = (int) ((float) unlocked / total * barWidth);
                 progressWidth = Math.max(progressWidth, 6);
-                guiGraphics.blitNineSliced(Constants.WIDGETS_TEXTURE, barX, barY, progressWidth, barHeight, 3, 83, 7, 0, 0);
+                guiGraphics.blitNineSliced(Constants.WIDGETS_TEXTURE, barX, barY, progressWidth, barHeight, 3, 32, 6, 0, 0);
             }
         }
     }

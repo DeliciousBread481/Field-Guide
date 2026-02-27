@@ -108,15 +108,17 @@ public class PaginatedGridWidget<T> extends AbstractWidget {
         nextButton.render(guiGraphics, mouseX, mouseY, partialTick);
 
         if (getTotalPages() > 1) {
-            int barY = this.getY() + itemSize + 2;
+            int barY = this.getY() + itemSize;
             int barWidth = (itemSize + spacing) * itemsPerPage - spacing;
             int barStartX = this.getX() + (width / 2) - (barWidth / 2);
 
             float progressStart = (float) (currentPage - 1) / getTotalPages();
             float progressEnd = (float) currentPage / getTotalPages();
+            int progressWidth = (int) (barWidth * progressEnd) - (int) (barWidth * progressStart);
+            int barHeight = 5;
 
-            guiGraphics.fill(barStartX, barY, barStartX + barWidth, barY + 1, 0xFFF9EED0);
-            guiGraphics.fill(barStartX + (int) (barWidth * progressStart), barY, barStartX + (int) (barWidth * progressEnd), barY + 1, 0xFFE0D2AE);
+            guiGraphics.blitNineSliced(Constants.WIDGETS_TEXTURE, barStartX, barY, barWidth, barHeight, 2, 2,32, 5, 0, 6);
+            guiGraphics.blitNineSliced(Constants.WIDGETS_TEXTURE, barStartX + (int) (barWidth * progressStart), barY, progressWidth, barHeight, 2, 3,32, 5, 0, 11);
         }
     }
 

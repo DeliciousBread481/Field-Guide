@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.client.gui.widget;
 
+import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.config.ModConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -448,14 +449,19 @@ public class BookTextAreaWidget extends AbstractWidget {
         }
 
         if (scrollable && totalLines > maxVisibleLines) {
-            int scrollbarX = this.getX() + this.width + 2;
-            int scrollbarHeight = (maxVisibleLines * this.font.lineHeight) - 2;
+            int scrollbarY = this.getY() - 1;
+            int scrollbarX = this.getX() + this.width + 1;
+            int scrollbarHeight = (maxVisibleLines * this.font.lineHeight);
             float progress = (float) scrollOffset / (totalLines - maxVisibleLines);
             int thumbHeight = Math.max(4, (int) ((float) maxVisibleLines / totalLines * scrollbarHeight));
-            int thumbY = this.getY() + (int) (progress * (scrollbarHeight - thumbHeight));
-            int thumbColor = (isDraggingScrollbar || isScrollbarHovered(mouseX, mouseY)) ? 0xFF8B5A2B : 0xFFBC986A;
-            guiGraphics.fill(scrollbarX, this.getY(), scrollbarX + 2, this.getY() + scrollbarHeight, 0xFFF9EED0);
-            guiGraphics.fill(scrollbarX, thumbY, scrollbarX + 2, thumbY + thumbHeight, thumbColor);
+            int thumbY = scrollbarY + (int) (progress * (scrollbarHeight - thumbHeight));
+
+            int thumbTextureOffset = 4;
+            if (isDraggingScrollbar || isScrollbarHovered(mouseX, mouseY)) {
+                thumbTextureOffset = 8;
+            }
+            guiGraphics.blitNineSliced(Constants.WIDGETS_TEXTURE, scrollbarX, scrollbarY, 4, scrollbarHeight, 2, 2,4, 16, 32, 0);
+            guiGraphics.blitNineSliced(Constants.WIDGETS_TEXTURE, scrollbarX, thumbY, 4, thumbHeight, 2, 3,4, 16, 32 + thumbTextureOffset, 0);
         }
     }
 

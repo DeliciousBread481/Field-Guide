@@ -157,7 +157,9 @@ public class FieldGuideEntryScreen extends BookScreen {
                 ResourceLocation texture = new ResourceLocation(item.getNamespace(), "textures/immersiveoverlays/" + item.getPath() + ".png");
 
                 if (Minecraft.getInstance().getResourceManager().getResource(texture).isPresent()) {
-                    graphics.blit(Constants.BIOME_BACKGROUND_TEXTURE, x, y, 0, 0, itemSize, itemSize, itemSize, itemSize);
+                    boolean mouseOver = Bounds.isMouseOver(mouseX, mouseY, x, y, itemSize, itemSize);
+                    int backgroundOffset = mouseOver ? itemSize : 0;
+                    graphics.blit(Constants.WIDGETS_TEXTURE, x, y, 20, 64 + backgroundOffset, itemSize, itemSize);
                     int offset = (itemSize - 16) / 2;
                     graphics.blit(texture, x + offset, y + offset, 0, 0, 16, 16, 16, 16);
                     if (Bounds.isMouseOver(mouseX, mouseY, x + offset, y + offset, 16, 16)) {
@@ -177,11 +179,13 @@ public class FieldGuideEntryScreen extends BookScreen {
             int dropItemSize = 20;
             this.addRenderableWidget(new PaginatedGridWidget<>(this.leftPageBounds.left() + 2, this.leftPageBounds.bottom() - 33, this.leftPageBounds.width() - 4, dropItemSize, 5, dropItemSize, 0, drops, (graphics, stack, x, y, mouseX, mouseY) -> {
                 RenderSystem.enableDepthTest();
-                graphics.blit(Constants.ITEM_BACKGROUND_TEXTURE, x, y, 0, 0, dropItemSize, dropItemSize, dropItemSize, dropItemSize);
+                boolean mouseOver = Bounds.isMouseOver(mouseX, mouseY, x, y, dropItemSize, dropItemSize);
+                int backgroundOffset = mouseOver ? dropItemSize : 0;
+                graphics.blit(Constants.WIDGETS_TEXTURE, x, y, 0, 64 + backgroundOffset, dropItemSize, dropItemSize);
                 int offset = (dropItemSize - 16) / 2;
                 graphics.renderItem(stack, x + offset, y + offset);
                 graphics.renderItemDecorations(this.font, stack, x + offset, y + offset, "");
-                if (Bounds.isMouseOver(mouseX, mouseY, x, y, dropItemSize, dropItemSize)) {
+                if (mouseOver) {
                     Minecraft mc = Minecraft.getInstance();
                     List<Component> tooltip = new ArrayList<>(Screen.getTooltipFromItem(mc, stack));
                     CompoundTag tag = stack.getTag();
@@ -198,7 +202,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private void setupNavigationButtons() {
-        this.addRenderableWidget(new PageTurnButton(this.bounds.right() - 13, this.bounds.top() + 26, 24, 24, 0, 0, 24, Constants.BACK_TEXTURE, 24, 48, b -> {
+        this.addRenderableWidget(new PageTurnButton(this.bounds.right() - 13, this.bounds.top() + 26, 24, 24, 24, 144, 24, Constants.WIDGETS_TEXTURE, b -> {
             if (this.minecraft != null) this.minecraft.setScreen(parent);
         }));
 

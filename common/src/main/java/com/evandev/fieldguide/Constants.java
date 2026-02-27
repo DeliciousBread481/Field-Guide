@@ -15,9 +15,8 @@ public class Constants {
     public static final ResourceLocation LIST_PAGE_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/page_list.png");
     public static final ResourceLocation DETAILS_PAGE_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/page_details.png");
     public static final ResourceLocation TOAST_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/toast.png");
-    public static final ResourceLocation JOURNAL_TITLE_PAGE_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/journal_title_page.png");
-    public static final ResourceLocation JOURNAL_PAGE_RIGHT_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/journal_lines_right.png");
-    public static final ResourceLocation JOURNAL_PAGE_LEFT_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/journal_lines_left.png");
+    public static final ResourceLocation JOURNAL_TITLE_PAGE_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/page_journal_title.png");
+    public static final ResourceLocation JOURNAL_PAGE_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/page_journal.png");
 
     // Buttons
     public static final ResourceLocation BUTTON_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/fieldguide_button.png");
@@ -25,12 +24,7 @@ public class Constants {
 
     // Elements
     public static final ResourceLocation WIDGETS_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/widgets.png");
-    public static final ResourceLocation BACK_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/back.png");
-    public static final ResourceLocation TAB_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/tab.png");
-    public static final ResourceLocation BUTTONS_UP_DOWN_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/buttons_up_down.png");
     public static final ResourceLocation LIST_ENTRY_BACKGROUND_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/list_entry_background.png");
-    public static final ResourceLocation ITEM_BACKGROUND_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/item_background.png");
-    public static final ResourceLocation BIOME_BACKGROUND_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/biome_background.png");
 
     // Icons
     public static final ResourceLocation DEFAULT_ICON = new ResourceLocation(MOD_ID, "textures/gui/icons/book.png");
