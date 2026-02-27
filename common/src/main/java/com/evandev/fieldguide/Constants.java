@@ -25,6 +25,7 @@ public class Constants {
     // Elements
     public static final ResourceLocation WIDGETS_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/widgets.png");
     public static final ResourceLocation LIST_ENTRY_BACKGROUND_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/list_entry_background.png");
+    public static final ResourceLocation LIST_ENTRY_NEW_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/list_entry_new.png");
 
     // Icons
     public static final ResourceLocation DEFAULT_ICON = new ResourceLocation(MOD_ID, "textures/gui/icons/book.png");

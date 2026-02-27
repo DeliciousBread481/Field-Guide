@@ -699,9 +699,11 @@ public class FieldGuideScreen extends BookScreen {
         int textWidth = this.font.width(newText);
         int textX = bounds.x_center() - textWidth / 2;
         int textY = bounds.bottom() - 8;
+
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0, 0, 200);
-        guiGraphics.drawString(this.font, newText, textX, textY, ModConfig.get().getTextNewColorInt(), false);
+        guiGraphics.blit(Constants.LIST_ENTRY_NEW_TEXTURE, bounds.x(), bounds.y(), 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE);
+        //guiGraphics.drawString(this.font, newText, textX, textY, ModConfig.get().getTextNewColorInt(), false);
         guiGraphics.pose().popPose();
     }
 
