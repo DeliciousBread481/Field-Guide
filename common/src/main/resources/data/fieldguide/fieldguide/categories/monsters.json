@@ -4,6 +4,8 @@
   "group_by": [
     "#skeleton",
     "#zombie",
+    "zombie",
+    "skeleton",
     "=drowned",
     "=husk",
     "#raiders",
