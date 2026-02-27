@@ -381,8 +381,8 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
 
             int titleY = this.leftPageBounds.top() + 8;
-            int iconX = this.rightPageBounds.right() - 12;
-            int iconY = titleY + 7;
+            int iconX = this.rightPageBounds.right() - 14;
+            int iconY = titleY - 3;
 
             RenderSystem.enableBlend();
             guiGraphics.blit(icon, iconX, iconY, 0, 0, 12, 12, 12, 12);
