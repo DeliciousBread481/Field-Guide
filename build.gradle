@@ -5,6 +5,7 @@ plugins {
 }
 
 wiki {
+    wikiAccessToken = System.getenv("WIKI_ACCESS_TOKEN")
     docs.create("field-guide") {
         root = file("docs/")
     }
