@@ -2,35 +2,49 @@
   <img src="images/banner_image.png" width="800">
 </p>
 
-**Universal Field Guide** is an exploration-focused mod that lets you scan monsters, animals and plants to unlock entries in your own in-game Field Guide!
-
 <div align="center">
 <a href='https://files.minecraftforge.net'><img alt="forge" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/forge_vector.svg"></a>
 <a href='https://fabricmc.net'><img alt="fabric" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/fabric_vector.svg"></a>
 <a href='https://neoforged.net/'><img alt="neoforge" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/supported/neoforge_vector.svg"></a>
 </div>
 
-Ever wondered what makes a Creeper tick? Or what that weird glowing block deep in the caves is? Grab your spyglass,
-adventurer: it's time to start taking notes!
+_Ever wondered what makes a Creeper tick? Or what that weird glowing block deep in the caves is? Grab your spyglass,
+adventurer: it's time to start taking notes!_
 
-By looking at mobs and plants through your trusty Spyglass, you can scan them to unlock entries in your own personal
-Field Guide.
+**Field Guide** is an exploration-focused mod that lets you scan and discover monsters, animals and plants with your trusty spyglass to unlock them in your own in-game Field Guide!
+  
 
-![Scanning a Mob in action](images/scanning.gif)
+![List view](images/list_view.png)
 
 ---
 
 ## Features
+![Scanning in action](images/scanning_view.png)
 
 * **Finally, Spyglasses have a use**! Scan plants and critters at a distance using a spyglass.
 * **Your own personal encyclopedia!** Every successful scan unlocks a brand-new entry in your Field Guide.
 * **Reward your curiosity!** Gives true explorers a reason to seek out every rare creature and biome.
 * **Gotta scan 'em all!** Works seamlessly with almost _every_ modded entity, no configuration necessary!
 * **Multiplayer-friendly!** Your progress is saved on a per-server basis. Build your Field Guide with friends!
+* **Take notes!** Write your own notes for each entry, or add [Item Descriptions](https://modrinth.com/mod/item-descriptions) to prefill them with useful information!
 
-![Field Guide UI Screenshot](images/entry_page.png)
+![Details view](images/details_view.png)
 
 ---
+
+## Easily Configurable. Made for modpacks!
+Whether you are using it for your personal game or designing a modpack, Field Guide can be configured how you want it!
+
+* Categories and their contents are fully controlled by datapacks, and can contain any entity, block or even multiblock structures like trees! 
+* Allow scanning without a spyglass or require players to defeat a monster to discover it.
+* Grant XP or run commands when a player makes a discovery.
+* Add your own descriptions to provide players with clues and lore.
+* Hide names, entries or whole categories until they are discovered.
+* And much more...
+
+For full information, tutorials, and examples, please refer to the **[Field Guide Wiki](https://moddedmc.wiki/en/project/field-guide/latest/docs/field-guide)**.
+
+![Modded setup](images/modded_view.png)
 
 ## Optional Integrations (Recommended)
 
@@ -42,16 +56,6 @@ mods:
 | <img src="images/immersive_overlays.jpg" width="64"> | **[Immersive Overlays](https://modrinth.com/mod/immersive-overlays)**      | **Biome Displays** — Shows beautiful spawn details for entities.     |
 | <img src="images/item_descriptions.jpg" width="64">  | **[Item Descriptions](https://modrinth.com/mod/item-descriptions)**        | **Entry Descriptions** — Automatically fills in entry lore.          |
 | <img src="images/mod_descriptions.jpg" width="64">   | **[Mod Descriptions](https://modrinth.com/resourcepack/mod-descriptions)** | **Modded Support** — Adds automatic descriptions for modded entries. |
-
----
-
-## Usage & Documentation
-
-For full information, tutorials, and examples, please refer to the wiki:
-
-**[Field Guide Wiki](https://moddedmc.wiki/en/project/field-guide/latest/docs/field-guide)**
-
-![Field Guide UI Screenshot](images/categories_page.png)
 
 ---
 
@@ -105,6 +109,8 @@ from [Nekomaster](https://www.curseforge.com/members/nekomaster1000).
 
 The book texture is modified from mortuusar's [Scholar](https://modrinth.com/mod/scholar), with permission, which also
 works well when used alongside Field Guide!
+
+The banner image uses textures from the [Bare Bones](https://modrinth.com/resourcepack/bare-bones) texture pack.
 
 ---
 
