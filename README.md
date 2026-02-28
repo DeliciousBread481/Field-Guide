@@ -59,35 +59,19 @@ mods:
 
 ---
 
-## Future Plans (By Priority)
+## Future Plans
 
 ### 1.21.1+ Update
 
-* 1.21.1 will be supported soon — please don't ask for it!
+1.21.1 port is planned and will happen soon! — please don't ask for it!
 
-### Exposure Compat
+### Expanded integration with other mods
 
-* Unlock entries by taking photos, and add photos to your Field Guide.
+We've got exciting features planned for integrations with mods like Jade/WAILA, EMI, Reliable Remover, Exposure and Scholar - Stay tuned!
 
-### Jade/WAILA Compat
+### More features...
 
-* Config option to hide name of blocks/entities until they have been discovered.
-
-### Reliable Remover Compat
-
-* Removed items/blocks won't show up in the Field Guide.
-
-### Extended EMI Compat
-
-* Items in the Field Guide will be optionally hidden in EMI, until you unlock them.
-
-### Scholar Compat
-
-* Field Guide's edit text UI will inherit from the Scholar way of editing text when installed.
-
-### Logbook
-
-* Page that displays when and where you discovered entries.
+More configuration options, logbook, more multiplayer features - We've got a lot of ideas!
 
 ---
 
