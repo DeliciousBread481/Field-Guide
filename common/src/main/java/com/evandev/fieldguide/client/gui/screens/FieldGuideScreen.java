@@ -452,7 +452,7 @@ public class FieldGuideScreen extends BookScreen {
                         int iconOffset = 0;
 
                         if (Services.PLATFORM.isModLoaded("immersiveoverlays")) {
-                            ResourceLocation texture = new ResourceLocation(biomeId.getNamespace(), "textures/immersiveoverlays/" + biomeId.getPath() + ".png");
+                            ResourceLocation texture = ResourceLocation.parse(biomeId.getNamespace(), "textures/immersiveoverlays/" + biomeId.getPath() + ".png");
                             if (Minecraft.getInstance().getResourceManager().getResource(texture).isPresent()) {
                                 int iconSize = 16;
                                 int iconY = titleY - 5;

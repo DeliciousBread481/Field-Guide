@@ -7,13 +7,18 @@ import net.minecraft.world.level.storage.loot.providers.number.NumberProvider;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
+import java.util.List;
+
 @Mixin(LootPool.class)
 public interface LootPoolAccessor {
-    @Accessor("entries")
-    LootPoolEntryContainer[] fieldguide$getEntries();
-
     @Accessor("rolls")
     NumberProvider fieldguide$getRolls();
+
+    @Accessor("entries")
+    List<LootPoolEntryContainer> fieldguide$getEntries();
+
+    @Accessor("pools")
+    public abstract List<LootPool> fieldguide$getPools();
 
     @Accessor("conditions")
     LootItemCondition[] fieldguide$getConditions();

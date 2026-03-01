@@ -88,21 +88,24 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                         flatCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.ENTITY_TYPE.getKey(type), BuiltInRegistries.ENTITY_TYPE.getKey(type), null, null, null, null));
                     } else if (obj instanceof Block block) {
                         flatCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.BLOCK.getKey(block), BuiltInRegistries.BLOCK.getKey(block), null, null, null, null));
-                    } else if (obj instanceof CompositeFieldGuideEntry comp) {
+                    } else if (obj instanceof CompositeFieldGuideEntry(
+                            ResourceLocation id, Object displayEntry, List<Object> components,
+                            ResourceLocation structureNbt, List<String> stackedBlocks
+                    )) {
                         List<ResourceLocation> compIds = new ArrayList<>();
-                        if (comp.components() != null) {
-                            for (Object c : comp.components()) {
+                        if (components != null) {
+                            for (Object c : components) {
                                 if (c instanceof EntityType<?> t) compIds.add(BuiltInRegistries.ENTITY_TYPE.getKey(t));
                                 else if (c instanceof Block b) compIds.add(BuiltInRegistries.BLOCK.getKey(b));
                             }
                         }
 
                         ResourceLocation displayId = null;
-                        if (comp.displayEntry() instanceof EntityType<?> t)
+                        if (displayEntry instanceof EntityType<?> t)
                             displayId = BuiltInRegistries.ENTITY_TYPE.getKey(t);
-                        else if (comp.displayEntry() instanceof Block b) displayId = BuiltInRegistries.BLOCK.getKey(b);
+                        else if (displayEntry instanceof Block b) displayId = BuiltInRegistries.BLOCK.getKey(b);
 
-                        flatCat.addEntry(new CategoryEntry(CategoryEntry.Type.COMPOSITE, comp.id(), displayId, null, compIds, comp.structureNbt(), comp.stackedBlocks()));
+                        flatCat.addEntry(new CategoryEntry(CategoryEntry.Type.COMPOSITE, id, displayId, null, compIds, structureNbt, stackedBlocks));
                     }
                 }
             }
@@ -166,7 +169,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             ResourceLocation fileId = entry.getKey();
             String path = fileId.getPath();
             String idPath = path.substring("fieldguide/categories/".length(), path.length() - ".json".length());
-            ResourceLocation defaultCategoryId = new ResourceLocation(fileId.getNamespace(), idPath);
+            ResourceLocation defaultCategoryId = ResourceLocation.fromNamespaceAndPath(fileId.getNamespace(), idPath);
 
             for (Resource resource : entry.getValue()) {
                 try (Reader reader = resource.openAsReader()) {
@@ -174,7 +177,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
                     ResourceLocation categoryId = defaultCategoryId;
                     if (json.has("target_category")) {
-                        categoryId = new ResourceLocation(GsonHelper.getAsString(json, "target_category"));
+                        categoryId = ResourceLocation.parse(GsonHelper.getAsString(json, "target_category"));
                     }
 
                     Category category = data.categories.computeIfAbsent(categoryId, Category::new);
@@ -188,7 +191,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                     }
 
                     if (json.has("icon")) {
-                        category.setIcon(new ResourceLocation(GsonHelper.getAsString(json, "icon")));
+                        category.setIcon(ResourceLocation.parse(GsonHelper.getAsString(json, "icon")));
                     }
 
                     if (json.has("group_by")) {
@@ -209,7 +212,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
                             switch (typeStr) {
                                 case "entry" -> {
-                                    ResourceLocation id = new ResourceLocation(GsonHelper.getAsString(obj, "id"));
+                                    ResourceLocation id = ResourceLocation.parse(GsonHelper.getAsString(obj, "id"));
                                     category.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, id, id, null, null, null, null));
                                 }
                                 case "auto_populate" -> {
@@ -237,17 +240,17 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                     if (json.has("values")) {
                         for (JsonElement el : GsonHelper.getAsJsonArray(json, "values")) {
                             JsonObject obj = el.getAsJsonObject();
-                            ResourceLocation id = new ResourceLocation(GsonHelper.getAsString(obj, "id"));
-                            ResourceLocation displayId = obj.has("display") ? new ResourceLocation(GsonHelper.getAsString(obj, "display")) : id;
+                            ResourceLocation id = ResourceLocation.parse(GsonHelper.getAsString(obj, "id"));
+                            ResourceLocation displayId = obj.has("display") ? ResourceLocation.parse(GsonHelper.getAsString(obj, "display")) : id;
 
                             List<ResourceLocation> components = new ArrayList<>();
                             if (obj.has("components")) {
                                 for (JsonElement comp : GsonHelper.getAsJsonArray(obj, "components")) {
-                                    components.add(new ResourceLocation(comp.getAsString()));
+                                    components.add(ResourceLocation.parse(comp.getAsString()));
                                 }
                             }
 
-                            ResourceLocation structureNbt = obj.has("structure_nbt") ? new ResourceLocation(GsonHelper.getAsString(obj, "structure_nbt")) : null;
+                            ResourceLocation structureNbt = obj.has("structure_nbt") ? ResourceLocation.parse(GsonHelper.getAsString(obj, "structure_nbt")) : null;
 
                             List<String> stackedBlocks = null;
                             if (obj.has("render")) {
@@ -280,8 +283,8 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                     if (json.has("entries")) {
                         for (JsonElement el : GsonHelper.getAsJsonArray(json, "entries")) {
                             JsonObject obj = el.getAsJsonObject();
-                            ResourceLocation source = new ResourceLocation(GsonHelper.getAsString(obj, "source"));
-                            ResourceLocation target = new ResourceLocation(GsonHelper.getAsString(obj, "target"));
+                            ResourceLocation source = ResourceLocation.parse(GsonHelper.getAsString(obj, "source"));
+                            ResourceLocation target = ResourceLocation.parse(GsonHelper.getAsString(obj, "target"));
                             data.redirects.put(source, target);
                         }
                     }

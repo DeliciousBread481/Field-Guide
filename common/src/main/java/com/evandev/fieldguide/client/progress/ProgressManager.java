@@ -287,14 +287,14 @@ public class ProgressManager {
 
             if (exportNames) {
                 for (Map.Entry<String, String> entry : customNames.entrySet()) {
-                    ResourceLocation id = new ResourceLocation(entry.getKey());
+                    ResourceLocation id = ResourceLocation.parse(entry.getKey());
                     String key = BuiltInRegistries.ENTITY_TYPE.containsKey(id) ? "entity." + id.getNamespace() + "." + id.getPath() : "block." + id.getNamespace() + "." + id.getPath();
                     langJson.addProperty(key, entry.getValue());
                 }
             }
             if (exportDesc) {
                 for (Map.Entry<String, String> entry : customDescriptions.entrySet()) {
-                    ResourceLocation id = new ResourceLocation(entry.getKey());
+                    ResourceLocation id = ResourceLocation.parse(entry.getKey());
                     langJson.addProperty("fieldguide." + id.getNamespace() + "." + id.getPath() + ".description", entry.getValue());
                 }
             }

@@ -24,7 +24,7 @@ public class StructureUtils {
 
         if (entry.structureNbt() != null) {
             ResourceLocation nbtLocation = entry.structureNbt();
-            ResourceLocation path = new ResourceLocation(nbtLocation.getNamespace(), "structures/" + nbtLocation.getPath() + ".nbt");
+            ResourceLocation path = ResourceLocation.parse(nbtLocation.getNamespace(), "structures/" + nbtLocation.getPath() + ".nbt");
 
             try {
                 var res = Minecraft.getInstance().getResourceManager().getResource(path);
@@ -69,7 +69,7 @@ public class StructureUtils {
                 propIndex = 2;
             }
 
-            ResourceLocation id = new ResourceLocation(blockIdPart);
+            ResourceLocation id = ResourceLocation.parse(blockIdPart);
             Block block = BuiltInRegistries.BLOCK.get(id);
             if (block != net.minecraft.world.level.block.Blocks.AIR) {
                 BlockState state = block.defaultBlockState();

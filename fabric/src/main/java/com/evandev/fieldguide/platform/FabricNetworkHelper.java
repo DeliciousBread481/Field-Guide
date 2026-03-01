@@ -11,11 +11,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
 public class FabricNetworkHelper implements INetworkHelper {
-    public static final ResourceLocation SYNC_CATEGORIES_CHANNEL = new ResourceLocation(Constants.MOD_ID, "sync_categories");
-    public static final ResourceLocation GRANT_CONTENT_CHANNEL = new ResourceLocation(Constants.MOD_ID, "grant_content");
-    public static final ResourceLocation SYNC_LOOT_CHANNEL = new ResourceLocation(Constants.MOD_ID, "sync_loot");
-    public static final ResourceLocation CLAIM_XP_CHANNEL = new ResourceLocation(Constants.MOD_ID, "claim_xp");
-    public static final ResourceLocation EXPORT_CONTENT_CHANNEL = new ResourceLocation(Constants.MOD_ID, "export_content");
+    public static final ResourceLocation SYNC_CATEGORIES_CHANNEL = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "sync_categories");
+    public static final ResourceLocation GRANT_CONTENT_CHANNEL = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "grant_content");
+    public static final ResourceLocation SYNC_LOOT_CHANNEL = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "sync_loot");
+    public static final ResourceLocation CLAIM_XP_CHANNEL = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "claim_xp");
+    public static final ResourceLocation EXPORT_CONTENT_CHANNEL = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "export_content");
 
     @Override
     public void sendToServer(Object packet) {

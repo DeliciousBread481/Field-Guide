@@ -79,7 +79,7 @@ public class IconCacheManager {
             try {
                 NativeImage image = NativeImage.read(Files.newInputStream(cachedFile.toPath()));
                 DynamicTexture texture = new DynamicTexture(image);
-                ResourceLocation texLoc = new ResourceLocation(Constants.MOD_ID, "generated_icon/" + key);
+                ResourceLocation texLoc = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "generated_icon/" + key);
                 Minecraft.getInstance().getTextureManager().register(texLoc, texture);
                 TEXTURE_CACHE.put(key, texLoc);
                 return Optional.of(texLoc);

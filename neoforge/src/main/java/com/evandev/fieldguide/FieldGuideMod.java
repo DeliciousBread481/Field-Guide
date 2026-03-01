@@ -103,7 +103,7 @@ public class FieldGuideMod {
     @SubscribeEvent
     public void onLivingDeath(LivingDeathEvent event) {
         if (event.getSource().getEntity() instanceof ServerPlayer player) {
-            TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(Constants.MOD_ID, "kill_to_unlock"));
+            TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "kill_to_unlock"));
 
             var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(event.getEntity().getType());
             if (key.isPresent()) {

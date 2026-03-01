@@ -3,9 +3,11 @@ package com.evandev.fieldguide.server;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.server.loot.ParsedDrop;
 import com.evandev.fieldguide.server.loot.StaticLootParser;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.TagKey;
@@ -13,6 +15,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.storage.loot.LootTable;
 
@@ -23,7 +26,7 @@ public class LootTableHelper {
     public static Map<ResourceLocation, List<ItemStack>> generateLootMap(ServerLevel level) {
         Map<ResourceLocation, List<ItemStack>> lootMap = new HashMap<>();
         for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
-            ResourceLocation tableId = type.getDefaultLootTable();
+            ResourceKey<LootTable> tableId = type.getDefaultLootTable();
 
             processEntry(level, type, tableId, lootMap);
         }
@@ -33,19 +36,22 @@ public class LootTableHelper {
         return lootMap;
     }
 
-    private static void processEntry(ServerLevel level, Object entry, ResourceLocation tableId, Map<ResourceLocation, List<ItemStack>> lootMap) {
+    private static void processEntry(ServerLevel level, Object entry, ResourceKey<LootTable> tableId, Map<ResourceLocation, List<ItemStack>> lootMap) {
         List<ItemStack> formattedDrops = new ArrayList<>();
         if (tableId != null && !tableId.toString().equals("minecraft:empty")) {
             try {
-                LootTable table = level.getServer().getLootData().getLootTable(tableId);
+                LootTable table = level.getServer().reloadableRegistries().getLootTable(tableId);
                 List<ParsedDrop> parsedDrops = StaticLootParser.parseTable(table, level);
                 for (ParsedDrop drop : parsedDrops) {
                     ItemStack stack = drop.stack.copy();
 
-                    CompoundTag tag = stack.getOrCreateTag();
+                    CustomData customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+                    CompoundTag tag = customData.copyTag();
                     tag.putFloat("FieldGuideDropChance", drop.chance * 100.0f);
                     tag.putInt("FieldGuideMin", drop.minCount);
                     tag.putInt("FieldGuideMax", drop.maxCount);
+                    stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+
                     formattedDrops.add(stack);
                 }
             } catch (Exception e) {
@@ -72,7 +78,7 @@ public class LootTableHelper {
         if (entryId == null) return false;
         if (targetStr.startsWith("#")) {
             try {
-                ResourceLocation tagId = new ResourceLocation(targetStr.substring(1));
+                ResourceLocation tagId = ResourceLocation.parse(targetStr.substring(1));
                 if (entry instanceof EntityType<?> type) {
                     return BuiltInRegistries.ENTITY_TYPE.getHolder(BuiltInRegistries.ENTITY_TYPE.getResourceKey(type).get()).get().is(TagKey.create(Registries.ENTITY_TYPE, tagId));
                 } else if (entry instanceof Block block) {
@@ -103,7 +109,7 @@ public class LootTableHelper {
                 for (String t : itemsToRemove) {
                     if (t.startsWith("#")) {
                         try {
-                            if (stack.is(TagKey.create(Registries.ITEM, new ResourceLocation(t.substring(1)))))
+                            if (stack.is(TagKey.create(Registries.ITEM, ResourceLocation.parse(t.substring(1)))))
                                 return true;
                         } catch (Exception ignored) {
                         }
@@ -120,19 +126,25 @@ public class LootTableHelper {
                 String target = parts[1];
                 if (target.startsWith("#")) {
                     try {
-                        for (var holder : BuiltInRegistries.ITEM.getTagOrEmpty(TagKey.create(Registries.ITEM, new ResourceLocation(target.substring(1))))) {
+                        for (var holder : BuiltInRegistries.ITEM.getTagOrEmpty(TagKey.create(Registries.ITEM, ResourceLocation.parse(target.substring(1))))) {
                             ItemStack s = new ItemStack(holder.value());
-                            s.getOrCreateTag().putFloat("FieldGuideDropChance", 100.0f);
+                            CustomData customData = s.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+                            CompoundTag tag = customData.copyTag();
+                            tag.putFloat("FieldGuideDropChance", 100.0f);
+                            s.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
                             distinctDrops.add(s);
                             added = true;
                         }
                     } catch (Exception ignored) {
                     }
                 } else {
-                    Item i = BuiltInRegistries.ITEM.get(new ResourceLocation(target));
+                    Item i = BuiltInRegistries.ITEM.get(ResourceLocation.parse(target));
                     if (i != Items.AIR) {
                         ItemStack s = new ItemStack(i);
-                        s.getOrCreateTag().putFloat("FieldGuideDropChance", 100.0f);
+                        CustomData customData = s.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+                        CompoundTag tag = customData.copyTag();
+                        tag.putFloat("FieldGuideDropChance", 100.0f);
+                        s.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
                         distinctDrops.add(s);
                         added = true;
                     }

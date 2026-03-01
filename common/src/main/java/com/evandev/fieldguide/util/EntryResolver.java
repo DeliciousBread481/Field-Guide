@@ -166,7 +166,7 @@ public class EntryResolver {
             results.addAll(getAutoTrees(id -> id.getNamespace().equals(modId), config));
         } else if (strategy.startsWith("tag:")) {
             try {
-                TagKey<EntityType<?>> tagKey = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(strategy.substring(4)));
+                TagKey<EntityType<?>> tagKey = TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.parse(strategy.substring(4)));
                 BuiltInRegistries.ENTITY_TYPE.forEach(type -> BuiltInRegistries.ENTITY_TYPE.getResourceKey(type).flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder).filter(h -> h.is(tagKey) && isValidEntity(type, config)).ifPresent(h -> results.add(type)));
                 results.sort(Comparator.comparing(o -> BuiltInRegistries.ENTITY_TYPE.getKey((EntityType<?>) o).toString()));
             } catch (Exception e) {
@@ -195,14 +195,14 @@ public class EntryResolver {
             if (id.getPath().endsWith("_sapling")) {
                 String baseName = id.getPath().replace("_sapling", "");
 
-                Block leaves = BuiltInRegistries.BLOCK.get(new ResourceLocation(id.getNamespace(), baseName + "_leaves"));
+                Block leaves = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(id.getNamespace(), baseName + "_leaves"));
                 if (leaves == Blocks.AIR) continue;
 
-                Block log = BuiltInRegistries.BLOCK.get(new ResourceLocation(id.getNamespace(), baseName + "_log"));
+                Block log = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(id.getNamespace(), baseName + "_log"));
                 if (log == Blocks.AIR) {
                     String[] parts = baseName.split("_", 2);
                     if (parts.length > 1) {
-                        log = BuiltInRegistries.BLOCK.get(new ResourceLocation(id.getNamespace(), parts[1] + "_log"));
+                        log = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(id.getNamespace(), parts[1] + "_log"));
                     }
                 }
                 if (log == Blocks.AIR) continue;
@@ -224,7 +224,7 @@ public class EntryResolver {
                 List<Object> components = Arrays.asList(block, leaves, log);
 
                 results.add(new CompositeFieldGuideEntry(
-                        new ResourceLocation(id.getNamespace(), baseName + "_tree"),
+                        ResourceLocation.fromNamespaceAndPath(id.getNamespace(), baseName + "_tree"),
                         block,
                         components,
                         null,

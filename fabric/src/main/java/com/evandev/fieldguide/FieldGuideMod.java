@@ -39,7 +39,7 @@ public class FieldGuideMod implements ModInitializer {
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new IdentifiableResourceReloadListener() {
             @Override
             public ResourceLocation getFabricId() {
-                return new ResourceLocation(Constants.MOD_ID, "server_data");
+                return ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "server_data");
             }
 
             @Override
@@ -59,7 +59,7 @@ public class FieldGuideMod implements ModInitializer {
 
         ServerEntityCombatEvents.AFTER_KILLED_OTHER_ENTITY.register((world, entity, killedEntity) -> {
             if (entity instanceof ServerPlayer player) {
-                TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(Constants.MOD_ID, "kill_to_unlock"));
+                TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "kill_to_unlock"));
 
                 var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(killedEntity.getType());
                 if (key.isPresent()) {

@@ -1,7 +1,6 @@
 package com.evandev.fieldguide;
 
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
-import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.ModRenderTypes;
 import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.network.GrantContentPacket;
@@ -26,16 +25,16 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class FieldGuideFabricClient implements ClientModInitializer {
+public class FieldGuideClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
-        FieldGuideClient.init();
-        KeyBindingHelper.registerKeyBinding(FieldGuideClient.OPEN_GUIDE_KEY);
+        com.evandev.fieldguide.client.FieldGuideClient.init();
+        KeyBindingHelper.registerKeyBinding(com.evandev.fieldguide.client.FieldGuideClient.OPEN_GUIDE_KEY);
 
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
             @Override
             public ResourceLocation getFabricId() {
-                return new ResourceLocation(Constants.MOD_ID, "mob_data");
+                return ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "mob_data");
             }
 
             @Override
@@ -46,7 +45,7 @@ public class FieldGuideFabricClient implements ClientModInitializer {
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             ClientFieldGuideManager.getInstance().onClientTick(client);
-            FieldGuideClient.onClientTick(client);
+            com.evandev.fieldguide.client.FieldGuideClient.onClientTick(client);
         });
 
         ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.SYNC_LOOT_CHANNEL, (client, handler, buf, responseSender) -> {
@@ -78,13 +77,13 @@ public class FieldGuideFabricClient implements ClientModInitializer {
         CoreShaderRegistrationCallback.EVENT.register(context -> {
             try {
                 context.register(
-                        new ResourceLocation(Constants.MOD_ID, "fieldguide_scan_block"),
+                        ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "fieldguide_scan_block"),
                         DefaultVertexFormat.BLOCK,
                         program -> ModRenderTypes.SCAN_BLOCK_SHADER = program
                 );
 
                 context.register(
-                        new ResourceLocation(Constants.MOD_ID, "fieldguide_scan_entity"),
+                        ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "fieldguide_scan_entity"),
                         DefaultVertexFormat.NEW_ENTITY,
                         program -> ModRenderTypes.SCAN_ENTITY_SHADER = program
                 );

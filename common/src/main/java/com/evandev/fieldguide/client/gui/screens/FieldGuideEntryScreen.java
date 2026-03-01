@@ -20,13 +20,14 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
@@ -123,7 +124,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                 var spawns = biomeEntry.getValue().getMobSettings().getMobs(entityType.getCategory());
                 if (spawns.unwrap().stream().anyMatch(s -> s.type == entityType)) {
                     ResourceLocation id = biomeEntry.getKey().location();
-                    ResourceLocation texture = new ResourceLocation(id.getNamespace(), "textures/immersiveoverlays/" + id.getPath() + ".png");
+                    ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(id.getNamespace(), "textures/immersiveoverlays/" + id.getPath() + ".png");
                     if (this.minecraft.getResourceManager().getResource(texture).isPresent()) spawnBiomes.add(id);
                 }
             }
@@ -133,13 +134,13 @@ public class FieldGuideEntryScreen extends BookScreen {
             for (String removal : ClientFieldGuideManager.getInstance().getBiomeRemovals()) {
                 String[] parts = removal.split("\\|");
                 if (parts.length == 2 && parts[0].equals(entryId.toString())) {
-                    spawnBiomes.remove(new ResourceLocation(parts[1]));
+                    spawnBiomes.remove(ResourceLocation.parse(parts[1]));
                 }
             }
             for (String addition : ClientFieldGuideManager.getInstance().getBiomeAdditions()) {
                 String[] parts = addition.split("\\|");
                 if (parts.length == 2 && parts[0].equals(entryId.toString())) {
-                    ResourceLocation biomeId = new ResourceLocation(parts[1]);
+                    ResourceLocation biomeId = ResourceLocation.parse(parts[1]);
                     if (!spawnBiomes.contains(biomeId)) {
                         spawnBiomes.add(biomeId);
                     }
@@ -154,7 +155,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (unlocked && !spawnBiomes.isEmpty()) {
             int itemSize = 20;
             this.addRenderableWidget(new PaginatedGridWidget<>(this.rightPageBounds.left() + 2, this.rightPageBounds.bottom() - 33, this.rightPageBounds.width() - 4, itemSize, 5, itemSize, 0, spawnBiomes, (graphics, item, x, y, mouseX, mouseY) -> {
-                ResourceLocation texture = new ResourceLocation(item.getNamespace(), "textures/immersiveoverlays/" + item.getPath() + ".png");
+                ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(item.getNamespace(), "textures/immersiveoverlays/" + item.getPath() + ".png");
 
                 if (Minecraft.getInstance().getResourceManager().getResource(texture).isPresent()) {
                     boolean mouseOver = Bounds.isMouseOver(mouseX, mouseY, x, y, itemSize, itemSize);
@@ -188,9 +189,9 @@ public class FieldGuideEntryScreen extends BookScreen {
                 if (mouseOver) {
                     Minecraft mc = Minecraft.getInstance();
                     List<Component> tooltip = new ArrayList<>(Screen.getTooltipFromItem(mc, stack));
-                    CompoundTag tag = stack.getTag();
-                    if (tag != null && tag.contains("FieldGuideDropChance")) {
-                        tooltip.add(Component.literal(String.format(Locale.ROOT, "%.2f%%", tag.getFloat("FieldGuideDropChance"))).withStyle(ChatFormatting.GRAY));
+                    CustomData customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+                    if (customData.contains("FieldGuideDropChance")) {
+                        tooltip.add(Component.literal(String.format(Locale.ROOT, "%.2f%%", customData.copyTag().getFloat("FieldGuideDropChance"))).withStyle(ChatFormatting.GRAY));
                     }
                     graphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
                 }

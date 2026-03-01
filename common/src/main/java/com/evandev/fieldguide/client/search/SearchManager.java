@@ -141,7 +141,7 @@ public class SearchManager {
                 for (String addition : ClientFieldGuideManager.getInstance().getBiomeAdditions()) {
                     String[] parts = addition.split("\\|");
                     if (parts.length == 2 && parts[0].equals(entryId.toString())) {
-                        ResourceLocation biomeId = new ResourceLocation(parts[1]);
+                        ResourceLocation biomeId = ResourceLocation.parse(parts[1]);
                         if (matchLocation(biomeId, biomeQuery, exactMatch)) {
                             if (!results.contains(entry)) results.add(entry);
                         }
@@ -156,7 +156,7 @@ public class SearchManager {
                 for (String removal : ClientFieldGuideManager.getInstance().getBiomeRemovals()) {
                     String[] parts = removal.split("\\|");
                     if (parts.length == 2 && parts[0].equals(entryId.toString())) {
-                        ResourceLocation biomeId = new ResourceLocation(parts[1]);
+                        ResourceLocation biomeId = ResourceLocation.parse(parts[1]);
                         if (matchLocation(biomeId, biomeQuery, exactMatch)) {
                             results.remove(entry);
                         }

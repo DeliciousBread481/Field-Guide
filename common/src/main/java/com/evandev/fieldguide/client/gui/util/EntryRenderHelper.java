@@ -50,8 +50,8 @@ public class EntryRenderHelper {
 
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
         if (id != null) {
-            ResourceLocation specificLoc = new ResourceLocation(id.getNamespace(), "textures/fieldguide/entries/" + id.getPath() + (isPage ? "_page.png" : "_grid.png"));
-            ResourceLocation defaultLoc = new ResourceLocation(id.getNamespace(), "textures/fieldguide/entries/" + id.getPath() + ".png");
+            ResourceLocation specificLoc = ResourceLocation.fromNamespaceAndPath(id.getNamespace(), "textures/fieldguide/entries/" + id.getPath() + (isPage ? "_page.png" : "_grid.png"));
+            ResourceLocation defaultLoc = ResourceLocation.fromNamespaceAndPath(id.getNamespace(), "textures/fieldguide/entries/" + id.getPath() + ".png");
 
             if (Minecraft.getInstance().getResourceManager().getResource(specificLoc).isPresent()) {
                 OVERRIDE_CACHE.put(key, Optional.of(specificLoc));
