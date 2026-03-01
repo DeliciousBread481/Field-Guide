@@ -25,17 +25,22 @@ import java.nio.file.Path;
 public class FieldGuideNeoForgeClient {
 
     public static void handleSyncLoot(SyncLootPacket packet) {
-        ClientFieldGuideManager.getInstance().updateLootCache(packet.lootCache());
+        ClientFieldGuideManager.getInstance().updateLootCache(packet.lootCache(), packet.clearCache());
     }
 
     public static void handleSyncCategories(SyncCategoriesPacket packet) {
-        ClientFieldGuideManager.getInstance().updateCategoriesFromServer(packet.getCategories(), packet.getRedirects());
+        ClientFieldGuideManager.getInstance().updateCategoriesFromServer(
+                packet.getCategories(),
+                packet.getRedirects(),
+                packet.isClearCache()
+        );
 
         ClientFieldGuideManager.getInstance().updateModifiers(
                 packet.getBiomeAdditions(),
                 packet.getBiomeRemovals(),
                 packet.getLootAdditions(),
-                packet.getLootRemovals()
+                packet.getLootRemovals(),
+                packet.isClearCache()
         );
     }
 

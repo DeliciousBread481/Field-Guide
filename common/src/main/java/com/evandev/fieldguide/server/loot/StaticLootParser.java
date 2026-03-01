@@ -100,6 +100,8 @@ public class StaticLootParser {
                         NumberProvider provider = ((SetItemCountFunctionAccessor) countFunc).fieldguide$getValue();
                         min = Math.max(0, Math.round(getMinRolls(provider)));
                         max = Math.max(min, Math.round(getMaxRolls(provider)));
+
+                        continue;
                     }
                     try {
                         stack = function.apply(stack, context);

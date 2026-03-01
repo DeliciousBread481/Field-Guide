@@ -116,10 +116,59 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             flattenedCategories.add(flatCat);
         }
 
-        Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(flattenedCategories, biomeAdditions, biomeRemovals, lootAdditions, lootRemovals, redirects), player);
+        boolean isFirst = true;
+        int batchSize = 3;
+        List<Category> currentBatch = new ArrayList<>();
+
+        for (Category cat : flattenedCategories) {
+            currentBatch.add(cat);
+            if (currentBatch.size() >= batchSize) {
+                Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(
+                        new ArrayList<>(currentBatch),
+                        isFirst ? biomeAdditions : Collections.emptyList(),
+                        isFirst ? biomeRemovals : Collections.emptyList(),
+                        isFirst ? lootAdditions : Collections.emptyList(),
+                        isFirst ? lootRemovals : Collections.emptyList(),
+                        isFirst ? redirects : Collections.emptyMap(),
+                        isFirst
+                ), player);
+                currentBatch.clear();
+                isFirst = false;
+            }
+        }
+
+        if (!currentBatch.isEmpty() || isFirst) {
+            Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(
+                    new ArrayList<>(currentBatch),
+                    isFirst ? biomeAdditions : Collections.emptyList(),
+                    isFirst ? biomeRemovals : Collections.emptyList(),
+                    isFirst ? lootAdditions : Collections.emptyList(),
+                    isFirst ? lootRemovals : Collections.emptyList(),
+                    isFirst ? redirects : Collections.emptyMap(),
+                    isFirst
+            ), player);
+        }
 
         if (!serverLootCache.isEmpty()) {
-            Services.NETWORK.sendToPlayer(new SyncLootPacket(serverLootCache), player);
+            Map<ResourceLocation, List<ItemStack>> batch = new HashMap<>();
+            int count = 0;
+            boolean isFirstLoot = true;
+
+            for (Map.Entry<ResourceLocation, List<ItemStack>> entry : serverLootCache.entrySet()) {
+                batch.put(entry.getKey(), entry.getValue());
+                count++;
+
+                if (count >= 100) {
+                    Services.NETWORK.sendToPlayer(new SyncLootPacket(batch, isFirstLoot), player);
+                    batch = new HashMap<>();
+                    count = 0;
+                    isFirstLoot = false;
+                }
+            }
+
+            if (!batch.isEmpty()) {
+                Services.NETWORK.sendToPlayer(new SyncLootPacket(batch, isFirstLoot), player);
+            }
         }
     }
 

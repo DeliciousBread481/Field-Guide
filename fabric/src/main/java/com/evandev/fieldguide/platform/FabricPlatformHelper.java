@@ -1,10 +1,7 @@
 package com.evandev.fieldguide.platform;
 
 import com.evandev.fieldguide.platform.services.IPlatformHelper;
-import net.fabricmc.fabric.api.entity.FakePlayer;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 
 import java.nio.file.Path;
 

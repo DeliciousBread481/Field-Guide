@@ -19,6 +19,7 @@ public class SyncCategoriesPacket implements CustomPacketPayload {
     public static final Type<SyncCategoriesPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "sync_categories"));
     public static final StreamCodec<RegistryFriendlyByteBuf, SyncCategoriesPacket> CODEC = StreamCodec.ofMember(SyncCategoriesPacket::encode, SyncCategoriesPacket::new);
 
+    private final boolean clearCache;
     private final List<Category> categories;
     private final List<String> biomeAdditions;
     private final List<String> biomeRemovals;
@@ -26,16 +27,19 @@ public class SyncCategoriesPacket implements CustomPacketPayload {
     private final List<String> lootRemovals;
     private final Map<ResourceLocation, ResourceLocation> redirects;
 
-    public SyncCategoriesPacket(List<Category> categories, List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals, Map<ResourceLocation, ResourceLocation> redirects) {
+    public SyncCategoriesPacket(List<Category> categories, List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals, Map<ResourceLocation, ResourceLocation> redirects, boolean clearCache) {
         this.categories = categories;
         this.biomeAdditions = biomeAdditions;
         this.biomeRemovals = biomeRemovals;
         this.lootAdditions = lootAdditions;
         this.lootRemovals = lootRemovals;
         this.redirects = redirects;
+        this.clearCache = clearCache;
     }
 
     public SyncCategoriesPacket(RegistryFriendlyByteBuf buf) {
+        this.clearCache = buf.readBoolean();
+
         this.categories = buf.readCollection(ArrayList::new, b -> {
             ResourceLocation id = b.readResourceLocation();
             Category cat = new Category(id);
@@ -88,6 +92,7 @@ public class SyncCategoriesPacket implements CustomPacketPayload {
     }
 
     public void encode(RegistryFriendlyByteBuf buf) {
+        buf.writeBoolean(clearCache);
         buf.writeCollection(categories, (b, cat) -> {
             b.writeResourceLocation(cat.getId());
             b.writeInt(cat.getSortIndex());
@@ -139,6 +144,10 @@ public class SyncCategoriesPacket implements CustomPacketPayload {
     @Override
     public @NotNull Type<? extends CustomPacketPayload> type() {
         return TYPE;
+    }
+
+    public boolean isClearCache() {
+        return clearCache;
     }
 
     public List<Category> getCategories() {

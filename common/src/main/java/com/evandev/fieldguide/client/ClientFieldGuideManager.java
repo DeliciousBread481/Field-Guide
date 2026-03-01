@@ -161,15 +161,30 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         return lootRemovals;
     }
 
-    public void updateModifiers(List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals) {
-        this.biomeAdditions.clear();
+    public void updateModifiers(List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals, boolean clearCache) {
+        if (clearCache) {
+            this.biomeAdditions.clear();
+            this.biomeRemovals.clear();
+            this.lootAdditions.clear();
+            this.lootRemovals.clear();
+        }
         this.biomeAdditions.addAll(biomeAdditions);
-        this.biomeRemovals.clear();
         this.biomeRemovals.addAll(biomeRemovals);
-        this.lootAdditions.clear();
         this.lootAdditions.addAll(lootAdditions);
-        this.lootRemovals.clear();
         this.lootRemovals.addAll(lootRemovals);
+    }
+
+    public void updateCategoriesFromServer(List<Category> categories, Map<ResourceLocation, ResourceLocation> redirects, boolean clearCache) {
+        if (clearCache) {
+            this.redirects.clear();
+            this.syncedCategories.clear();
+        }
+
+        this.redirects.putAll(redirects);
+        for (Category cat : categories) {
+            this.syncedCategories.put(cat.getId(), cat);
+        }
+        resolveAllEntries();
     }
 
     public Object getEntryForTarget(Object target) {
@@ -232,8 +247,10 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         resolveAllEntries();
     }
 
-    public void updateLootCache(Map<ResourceLocation, List<ItemStack>> lootCache) {
-        this.dropCache.clear();
+    public void updateLootCache(Map<ResourceLocation, List<ItemStack>> lootCache, boolean clearCache) {
+        if (clearCache) {
+            this.dropCache.clear();
+        }
 
         for (Map.Entry<ResourceLocation, List<ItemStack>> entry : lootCache.entrySet()) {
             ResourceLocation id = entry.getKey();
@@ -307,7 +324,6 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
             // Group entries
             List<Object> groupedEntries = SearchManager.groupByQueries(entries, category.getGroupByQueries());
-            Constants.LOG.info("queries: {}", category.getGroupByQueries());
 
             resolvedCategoryEntries.put(category.getId(), groupedEntries);
         });

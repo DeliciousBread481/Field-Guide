@@ -13,12 +13,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public record SyncLootPacket(Map<ResourceLocation, List<ItemStack>> lootCache) implements CustomPacketPayload {
+public record SyncLootPacket(Map<ResourceLocation, List<ItemStack>> lootCache,
+                             boolean clearCache) implements CustomPacketPayload {
     public static final Type<SyncLootPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "sync_loot"));
     public static final StreamCodec<RegistryFriendlyByteBuf, SyncLootPacket> CODEC = StreamCodec.ofMember(SyncLootPacket::encode, SyncLootPacket::new);
 
     public SyncLootPacket(RegistryFriendlyByteBuf buf) {
-        this(decodeCache(buf));
+        this(decodeCache(buf), buf.readBoolean());
     }
 
     private static Map<ResourceLocation, List<ItemStack>> decodeCache(RegistryFriendlyByteBuf buf) {
@@ -52,6 +53,8 @@ public record SyncLootPacket(Map<ResourceLocation, List<ItemStack>> lootCache) i
                 ItemStack.STREAM_CODEC.encode(buf, item);
             }
         }
+
+        buf.writeBoolean(this.clearCache);
     }
 
     @Override
