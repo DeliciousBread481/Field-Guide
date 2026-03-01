@@ -233,7 +233,7 @@ public class FieldGuideScanner {
                     this.scanningPos = (scanningTarget instanceof Block) ? blockHit.getBlockPos() : null;
 
                     if (ModConfig.get().playScanningSound) {
-                        Objects.requireNonNull(minecraft.player).playSound(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 1.0F, 1.0F);
+                        Objects.requireNonNull(minecraft.player).playSound(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 0.5F, 1.0F);
                     }
                     scanTicks = 0;
                 }
