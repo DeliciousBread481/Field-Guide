@@ -95,6 +95,7 @@ public class EntryRenderHelper {
         Optional<ResourceLocation> textureOpt = getResourcePackOverride(entity.getType(), isPage);
 
         if (textureOpt.isEmpty()) {
+            guiGraphics.flush();
             textureOpt = IconCacheManager.getOrGenerateIcon(entity.getType(), isPage, () -> {
                 setupFieldGuideEntityLighting();
                 ResourceLocation id = ClientFieldGuideManager.getEntryId(entity.getType());
@@ -152,6 +153,7 @@ public class EntryRenderHelper {
         Optional<ResourceLocation> textureOpt = getResourcePackOverride(block, isPage);
 
         if (textureOpt.isEmpty()) {
+            guiGraphics.flush();
             textureOpt = IconCacheManager.getOrGenerateIcon(block, isPage, () -> {
                 setupFieldGuideBlockLighting();
                 ResourceLocation id = ClientFieldGuideManager.getEntryId(block);
@@ -225,6 +227,7 @@ public class EntryRenderHelper {
         Optional<ResourceLocation> textureOpt = getResourcePackOverride(composite, isPage);
 
         if (textureOpt.isEmpty()) {
+            guiGraphics.flush();
             textureOpt = IconCacheManager.getOrGenerateIcon(composite, isPage, () -> {
                 setupFieldGuideBlockLighting();
                 PoseStack pose = new PoseStack();

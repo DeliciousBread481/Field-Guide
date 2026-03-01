@@ -173,6 +173,10 @@ public class FieldGuideJournalScreen extends BookScreen {
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
+
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(0, 0, 50);
+
         guiGraphics.blit(Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
 
         if (currentSpread == 0) {
@@ -201,5 +205,7 @@ public class FieldGuideJournalScreen extends BookScreen {
 
         JournalPage rPage = ClientFieldGuideManager.getInstance().getJournalPages().get(currentSpread == 0 ? 0 : currentSpread * 2);
         guiGraphics.drawString(this.font, dateFormat.format(new Date(rPage.timestamp)), this.rightPageBounds.left() + 6, dateY, ModConfig.get().getTextMutedColorInt(), false);
+
+        guiGraphics.pose().popPose();
     }
 }

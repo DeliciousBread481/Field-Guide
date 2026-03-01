@@ -14,7 +14,9 @@ import com.evandev.fieldguide.util.EntryResolver;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -24,7 +26,9 @@ import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 
@@ -147,6 +151,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     public void onServerStarted(MinecraftServer server) {
         resolveAllCategories();
         this.serverLootCache = LootTableHelper.generateLootMap(server.overworld());
+        generateAutoBiomeAdditions(server);
     }
 
     public Category getCategoryForEntry(Object entry) {
@@ -297,6 +302,24 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         return data;
     }
 
+    private void generateAutoBiomeAdditions(MinecraftServer server) {
+        Registry<Biome> biomeRegistry = server.registryAccess().registryOrThrow(Registries.BIOME);
+        for (var biomeEntry : biomeRegistry.entrySet()) {
+            ResourceLocation biomeId = biomeEntry.getKey().location();
+            Biome biome = biomeEntry.getValue();
+
+            for (MobCategory cat : MobCategory.values()) {
+                for (var spawn : biome.getMobSettings().getMobs(cat).unwrap()) {
+                    ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(spawn.type);
+                    String addition = entityId + "|" + biomeId;
+                    if (!this.biomeAdditions.contains(addition)) {
+                        this.biomeAdditions.add(addition);
+                    }
+                }
+            }
+        }
+    }
+
     private void loadModifiers(ResourceManager resourceManager, String path, List<String> additions, List<String> removals) {
         Map<ResourceLocation, List<Resource>> resources = resourceManager.listResourceStacks(path, id -> id.getPath().endsWith(".json"));
         for (Map.Entry<ResourceLocation, List<Resource>> entry : resources.entrySet()) {
@@ -376,6 +399,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
         resolveAllCategories();
         this.serverLootCache = LootTableHelper.generateLootMap(server.overworld());
+        generateAutoBiomeAdditions(server);
 
         syncToAll(server);
     }

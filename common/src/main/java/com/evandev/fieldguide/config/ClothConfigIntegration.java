@@ -35,7 +35,7 @@ public class ClothConfigIntegration {
         ConfigCategory general = builder.getOrCreateCategory(Component.translatable("category.fieldguide.general"));
 
         general.addEntry(entryBuilder.startStrField(Component.translatable("option.fieldguide.default_screen"), config.defaultScreen)
-                .setDefaultValue("last_opened")
+                .setDefaultValue("last_opened_screen")
                 .setTooltip(Component.translatable("option.fieldguide.default_screen.tooltip"))
                 .setSaveConsumer(newValue -> config.defaultScreen = newValue)
                 .build());

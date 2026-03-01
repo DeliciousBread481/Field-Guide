@@ -31,7 +31,7 @@ dependencies {
     modCompileOnly "maven.modrinth:entitytexturefeatures:${etf_version}-fabric-1.21"
 
     // Reliable Remover
-    modImplementation "maven.modrinth:reliable-remover:${reliable_remover_version}-fabric-1.21.1"
+    modCompileOnly "maven.modrinth:reliable-remover:${reliable_remover_version}-fabric-1.21.1"
 
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
