@@ -44,9 +44,9 @@ publishMods {
         projectId = "1470590"
         minecraftVersions.add("${minecraft_version}")
 
-        optional { slug = "item-descriptions" }
+        required { slug = "item-descriptions" }
         optional { slug = "cloth-config" }
-        optional { slug = "immersive-overlays" }
+        required { slug = "immersive-overlays" }
     }
 
     modrinth {
@@ -54,8 +54,8 @@ publishMods {
         projectId = "72RRCWM6"
         minecraftVersions.add("${minecraft_version}")
 
-        optional { slug = "item-descriptions" }
+        required { slug = "item-descriptions" }
         optional { slug = "cloth-config" }
-        optional { slug = "immersive-overlays" }
+        required { slug = "immersive-overlays" }
     }
 }
