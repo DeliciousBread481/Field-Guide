@@ -221,13 +221,40 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         ProgressManager.getInstance().exportToLang(type);
     }
 
-    public void updateCategoriesFromServer(List<Category> categories, Map<ResourceLocation, ResourceLocation> redirects) {
-        this.redirects.clear();
+    public void updateCategoriesFromServer(List<Category> categories, Map<ResourceLocation, ResourceLocation> redirects, boolean clearCache, boolean resolveEntries) {
+        if (clearCache) {
+            this.redirects.clear();
+            this.syncedCategories.clear();
+        }
+
         this.redirects.putAll(redirects);
-        this.syncedCategories.clear();
-        categories.sort(Comparator.comparingInt(Category::getSortIndex).thenComparing(Category::getId));
-        for (Category cat : categories) this.syncedCategories.put(cat.getId(), cat);
-        resolveAllEntries();
+
+        for (Category cat : categories) {
+            this.syncedCategories.put(cat.getId(), cat);
+        }
+
+        if (resolveEntries) {
+            List<Category> sorted = new ArrayList<>(this.syncedCategories.values());
+            sorted.sort(Comparator.comparingInt(Category::getSortIndex).thenComparing(Category::getId));
+            this.syncedCategories.clear();
+            for (Category cat : sorted) this.syncedCategories.put(cat.getId(), cat);
+
+            resolveAllEntries();
+        }
+    }
+
+    public void updateModifiers(List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals, boolean clearCache) {
+        if (clearCache) {
+            this.biomeAdditions.clear();
+            this.biomeRemovals.clear();
+            this.lootAdditions.clear();
+            this.lootRemovals.clear();
+        }
+
+        if (!biomeAdditions.isEmpty()) this.biomeAdditions.addAll(biomeAdditions);
+        if (!biomeRemovals.isEmpty()) this.biomeRemovals.addAll(biomeRemovals);
+        if (!lootAdditions.isEmpty()) this.lootAdditions.addAll(lootAdditions);
+        if (!lootRemovals.isEmpty()) this.lootRemovals.addAll(lootRemovals);
     }
 
     public void updateLootCache(Map<ResourceLocation, List<ItemStack>> lootCache) {

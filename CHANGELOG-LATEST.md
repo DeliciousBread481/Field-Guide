@@ -1,3 +1,3 @@
 ### Fixed
 
-- Fixed too large payloads in heavily modded environments.
+- Fixed category syncing in heavily modded environments.

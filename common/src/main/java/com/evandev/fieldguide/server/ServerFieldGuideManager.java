@@ -24,6 +24,7 @@ import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
@@ -88,12 +89,16 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                         flatCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.ENTITY_TYPE.getKey(type), BuiltInRegistries.ENTITY_TYPE.getKey(type), null, null, null, null));
                     } else if (obj instanceof Block block) {
                         flatCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.BLOCK.getKey(block), BuiltInRegistries.BLOCK.getKey(block), null, null, null, null));
+                    } else if (obj instanceof Item item) {
+                        flatCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.ITEM.getKey(item), BuiltInRegistries.ITEM.getKey(item), null, null, null, null));
                     } else if (obj instanceof CompositeFieldGuideEntry comp) {
                         List<ResourceLocation> compIds = new ArrayList<>();
                         if (comp.components() != null) {
                             for (Object c : comp.components()) {
                                 if (c instanceof EntityType<?> t) compIds.add(BuiltInRegistries.ENTITY_TYPE.getKey(t));
                                 else if (c instanceof Block b) compIds.add(BuiltInRegistries.BLOCK.getKey(b));
+                                else if (c instanceof Item i)
+                                    compIds.add(BuiltInRegistries.ITEM.getKey(i));
                             }
                         }
 
@@ -101,6 +106,8 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                         if (comp.displayEntry() instanceof EntityType<?> t)
                             displayId = BuiltInRegistries.ENTITY_TYPE.getKey(t);
                         else if (comp.displayEntry() instanceof Block b) displayId = BuiltInRegistries.BLOCK.getKey(b);
+                        else if (comp.displayEntry() instanceof Item i)
+                            displayId = BuiltInRegistries.ITEM.getKey(i);
 
                         flatCat.addEntry(new CategoryEntry(CategoryEntry.Type.COMPOSITE, comp.id(), displayId, null, compIds, comp.structureNbt(), comp.stackedBlocks()));
                     }
@@ -109,7 +116,29 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             flattenedCategories.add(flatCat);
         }
 
-        Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(flattenedCategories, biomeAdditions, biomeRemovals, lootAdditions, lootRemovals, redirects), player);
+        if (flattenedCategories.isEmpty()) {
+            Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), biomeAdditions, biomeRemovals, lootAdditions, lootRemovals, redirects, true, true), player);
+        } else {
+            int chunkSize = 2;
+            List<Category> chunk = new ArrayList<>();
+            for (int i = 0; i < flattenedCategories.size(); i++) {
+                chunk.add(flattenedCategories.get(i));
+
+                if (chunk.size() >= chunkSize || i == flattenedCategories.size() - 1) {
+                    boolean isFirst = (i < chunkSize);
+                    boolean isLast = (i == flattenedCategories.size() - 1);
+
+                    List<String> bAdd = isFirst ? biomeAdditions : new ArrayList<>();
+                    List<String> bRem = isFirst ? biomeRemovals : new ArrayList<>();
+                    List<String> lAdd = isFirst ? lootAdditions : new ArrayList<>();
+                    List<String> lRem = isFirst ? lootRemovals : new ArrayList<>();
+                    Map<ResourceLocation, ResourceLocation> red = isFirst ? redirects : new HashMap<>();
+
+                    Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(chunk, bAdd, bRem, lAdd, lRem, red, isFirst, isLast), player);
+                    chunk.clear();
+                }
+            }
+        }
 
         if (!serverLootCache.isEmpty()) {
             Map<ResourceLocation, List<ItemStack>> chunk = new HashMap<>();

@@ -29,13 +29,19 @@ public class FieldGuideForgeClient {
     }
 
     public static void handleSyncCategories(SyncCategoriesPacket packet) {
-        ClientFieldGuideManager.getInstance().updateCategoriesFromServer(packet.getCategories(), packet.getRedirects());
+        ClientFieldGuideManager.getInstance().updateCategoriesFromServer(
+                packet.getCategories(),
+                packet.getRedirects(),
+                packet.shouldClearCache(),
+                packet.shouldResolveEntries()
+        );
 
         ClientFieldGuideManager.getInstance().updateModifiers(
                 packet.getBiomeAdditions(),
                 packet.getBiomeRemovals(),
                 packet.getLootAdditions(),
-                packet.getLootRemovals()
+                packet.getLootRemovals(),
+                packet.shouldClearCache()
         );
     }
 

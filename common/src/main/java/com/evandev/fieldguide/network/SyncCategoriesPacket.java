@@ -16,14 +16,18 @@ public class SyncCategoriesPacket {
     private final List<String> lootAdditions;
     private final List<String> lootRemovals;
     private final Map<ResourceLocation, ResourceLocation> redirects;
+    private final boolean clearCache;
+    private final boolean resolveEntries;
 
-    public SyncCategoriesPacket(List<Category> categories, List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals, Map<ResourceLocation, ResourceLocation> redirects) {
+    public SyncCategoriesPacket(List<Category> categories, List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals, Map<ResourceLocation, ResourceLocation> redirects, boolean clearCache, boolean resolveEntries) {
         this.categories = categories;
         this.biomeAdditions = biomeAdditions;
         this.biomeRemovals = biomeRemovals;
         this.lootAdditions = lootAdditions;
         this.lootRemovals = lootRemovals;
         this.redirects = redirects;
+        this.clearCache = clearCache;
+        this.resolveEntries = resolveEntries;
     }
 
     public SyncCategoriesPacket(FriendlyByteBuf buf) {
@@ -75,6 +79,8 @@ public class SyncCategoriesPacket {
         this.lootAdditions = buf.readCollection(ArrayList::new, FriendlyByteBuf::readUtf);
         this.lootRemovals = buf.readCollection(ArrayList::new, FriendlyByteBuf::readUtf);
         this.redirects = buf.readMap(FriendlyByteBuf::readResourceLocation, FriendlyByteBuf::readResourceLocation);
+        this.clearCache = buf.readBoolean();
+        this.resolveEntries = buf.readBoolean();
     }
 
     public void encode(FriendlyByteBuf buf) {
@@ -124,6 +130,8 @@ public class SyncCategoriesPacket {
         buf.writeCollection(lootAdditions, FriendlyByteBuf::writeUtf);
         buf.writeCollection(lootRemovals, FriendlyByteBuf::writeUtf);
         buf.writeMap(redirects, FriendlyByteBuf::writeResourceLocation, FriendlyByteBuf::writeResourceLocation);
+        buf.writeBoolean(clearCache);
+        buf.writeBoolean(resolveEntries);
     }
 
     public List<Category> getCategories() {
@@ -148,5 +156,13 @@ public class SyncCategoriesPacket {
 
     public Map<ResourceLocation, ResourceLocation> getRedirects() {
         return redirects;
+    }
+
+    public boolean shouldClearCache() {
+        return clearCache;
+    }
+
+    public boolean shouldResolveEntries() {
+        return resolveEntries;
     }
 }
