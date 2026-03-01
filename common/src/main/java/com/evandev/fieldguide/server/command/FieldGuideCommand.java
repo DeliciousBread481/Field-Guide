@@ -108,7 +108,7 @@ public class FieldGuideCommand {
 
     private static int grantEverything(CommandSourceStack source, Collection<ServerPlayer> targets) {
         for (ServerPlayer player : targets) {
-            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.Type.EVERYTHING, null), player);
+            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.TypeEnum.EVERYTHING, null), player);
         }
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.everything.success", targets.size()), true);
         return targets.size();
@@ -121,7 +121,7 @@ public class FieldGuideCommand {
             return 0;
         }
         for (ServerPlayer player : targets) {
-            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.Type.CATEGORY, categoryId), player);
+            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.TypeEnum.CATEGORY, categoryId), player);
         }
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.category.success", categoryId, targets.size()), true);
         return targets.size();
@@ -236,7 +236,7 @@ public class FieldGuideCommand {
 
     private static int grantEntry(CommandSourceStack source, Collection<ServerPlayer> targets, ResourceLocation entryId) {
         for (ServerPlayer player : targets) {
-            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.Type.ENTRY, entryId), player);
+            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.TypeEnum.ENTRY, entryId), player);
         }
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.entry.success", entryId), true);
         return targets.size();
@@ -244,7 +244,7 @@ public class FieldGuideCommand {
 
     private static int revokeEverything(CommandSourceStack source, Collection<ServerPlayer> targets) {
         for (ServerPlayer player : targets) {
-            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.REVOKE, GrantContentPacket.Type.EVERYTHING, null), player);
+            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.REVOKE, GrantContentPacket.TypeEnum.EVERYTHING, null), player);
         }
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.revoke.everything.success"), true);
         return targets.size();
@@ -252,7 +252,7 @@ public class FieldGuideCommand {
 
     private static int revokeCategory(CommandSourceStack source, Collection<ServerPlayer> targets, ResourceLocation categoryId) {
         for (ServerPlayer player : targets) {
-            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.REVOKE, GrantContentPacket.Type.CATEGORY, categoryId), player);
+            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.REVOKE, GrantContentPacket.TypeEnum.CATEGORY, categoryId), player);
         }
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.revoke.category.success", categoryId, targets.size()), true);
         return targets.size();
@@ -260,7 +260,7 @@ public class FieldGuideCommand {
 
     private static int revokeEntry(CommandSourceStack source, Collection<ServerPlayer> targets, ResourceLocation entryId) {
         for (ServerPlayer player : targets) {
-            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.REVOKE, GrantContentPacket.Type.ENTRY, entryId), player);
+            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.REVOKE, GrantContentPacket.TypeEnum.ENTRY, entryId), player);
         }
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.revoke.entry.success", entryId), true);
         return targets.size();

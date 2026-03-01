@@ -9,6 +9,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
@@ -176,11 +177,11 @@ public class BookTextAreaWidget extends AbstractWidget {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (!scrollable || !this.isMouseOver(mouseX, mouseY)) return false;
         List<FormattedCharSequence> lines = this.font.split(Component.literal(text), this.width);
         if (lines.size() > maxVisibleLines) {
-            scrollOffset = Math.max(0, Math.min(scrollOffset - (int) Math.signum(delta), lines.size() - maxVisibleLines));
+            scrollOffset = Math.max(0, Math.min(scrollOffset - (int) Math.signum(scrollY), lines.size() - maxVisibleLines));
             return true;
         }
         return false;
@@ -456,12 +457,11 @@ public class BookTextAreaWidget extends AbstractWidget {
             int thumbHeight = Math.max(4, (int) ((float) maxVisibleLines / totalLines * scrollbarHeight));
             int thumbY = scrollbarY + (int) (progress * (scrollbarHeight - thumbHeight));
 
-            int thumbTextureOffset = 4;
-            if (isDraggingScrollbar || isScrollbarHovered(mouseX, mouseY)) {
-                thumbTextureOffset = 8;
-            }
-            guiGraphics.blitNineSliced(Constants.WIDGETS_TEXTURE, scrollbarX, scrollbarY, 4, scrollbarHeight, 2, 2,4, 16, 32, 0);
-            guiGraphics.blitNineSliced(Constants.WIDGETS_TEXTURE, scrollbarX, thumbY, 4, thumbHeight, 2, 3,4, 16, 32 + thumbTextureOffset, 0);
+            ResourceLocation trackSprite = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/scrollbar_track");
+            ResourceLocation thumbSprite = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/scrollbar_thumb" + (isDraggingScrollbar || isScrollbarHovered(mouseX, mouseY) ? "_hovered" : ""));
+
+            guiGraphics.blitSprite(trackSprite, scrollbarX, scrollbarY, 4, scrollbarHeight);
+            guiGraphics.blitSprite(thumbSprite, scrollbarX, thumbY, 4, thumbHeight);
         }
     }
 

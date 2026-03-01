@@ -6,16 +6,22 @@ import com.evandev.fieldguide.client.gui.screens.FieldGuideScreen;
 import com.evandev.fieldguide.config.ModConfig;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ImageButton;
+import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PauseScreen.class)
 public class PauseScreenMixin extends Screen {
+
+    @Unique
+    private static final WidgetSprites PAUSE_BUTTON_SPRITES = new WidgetSprites(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/pause_button"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/pause_button_highlighted"));
 
     protected PauseScreenMixin(Component title) {
         super(title);
@@ -30,12 +36,6 @@ public class PauseScreenMixin extends Screen {
 
         int buttonSize = 20;
         int margin = 4;
-
-        int xTexStart = 0;
-        int yTexStart = 0;
-        int yDiffTex = 20;
-        int textureWidth = 20;
-        int textureHeight = 40;
 
         Component message = Component.translatable("gui.fieldguide.open");
 
@@ -57,27 +57,16 @@ public class PauseScreenMixin extends Screen {
         int finalX = (columnX - buttonSize - margin) + config.pauseButtonXOffset;
         int finalY = targetY + config.pauseButtonYOffset;
 
-        ImageButton guideButton = new ImageButton(
-                finalX,
-                finalY,
-                buttonSize,
-                buttonSize,
-                xTexStart,
-                yTexStart,
-                yDiffTex,
-                Constants.BUTTON_TEXTURE,
-                textureWidth,
-                textureHeight,
-                (button) -> {
-                    if (this.minecraft != null) {
-                        String defaultMode = ModConfig.get().defaultScreen;
-                        if ("last_opened_screen".equals(defaultMode) && BookScreen.lastOpenedScreen != null) {
-                            this.minecraft.setScreen(BookScreen.lastOpenedScreen);
-                        } else {
-                            this.minecraft.setScreen(new FieldGuideScreen());
-                        }
-                    }
-                },
+        ImageButton guideButton = new ImageButton(finalX, finalY, buttonSize, buttonSize, PAUSE_BUTTON_SPRITES, (button) -> {
+            if (this.minecraft != null) {
+                String defaultMode = ModConfig.get().defaultScreen;
+                if ("last_opened_screen".equals(defaultMode) && BookScreen.lastOpenedScreen != null) {
+                    this.minecraft.setScreen(BookScreen.lastOpenedScreen);
+                } else {
+                    this.minecraft.setScreen(new FieldGuideScreen());
+                }
+            }
+        },
                 message
         );
 

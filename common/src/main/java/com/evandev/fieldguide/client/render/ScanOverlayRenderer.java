@@ -364,12 +364,12 @@ public class ScanOverlayRenderer {
             }
             random.setSeed(seed);
             for (BakedQuad quad : model.getQuads(state, dir, random)) {
-                consumer.putBulkData(pose, quad, 1.0f, 1.0f, 1.0f, 15728880, OverlayTexture.pack(0, 10));
+                consumer.putBulkData(pose, quad, 1.0f, 1.0f, 1.0f, 1.0f, 15728880, OverlayTexture.pack(0, 10));
             }
         }
         random.setSeed(seed);
         for (BakedQuad quad : model.getQuads(state, null, random)) {
-            consumer.putBulkData(pose, quad, 1.0f, 1.0f, 1.0f, 15728880, OverlayTexture.pack(0, 10));
+            consumer.putBulkData(pose, quad, 1.0f, 1.0f, 1.0f, 1.0f, 15728880, OverlayTexture.pack(0, 10));
         }
     }
 

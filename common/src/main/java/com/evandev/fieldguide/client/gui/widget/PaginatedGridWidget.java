@@ -6,10 +6,14 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.function.Consumer;
+
+import static com.evandev.fieldguide.Constants.NEXT_SPRITES;
+import static com.evandev.fieldguide.Constants.PREV_SPRITES;
 
 public class PaginatedGridWidget<T> extends AbstractWidget {
     private final List<T> items;
@@ -33,8 +37,8 @@ public class PaginatedGridWidget<T> extends AbstractWidget {
         int buttonSize = 16;
         int buttonYOffset = (itemSize - buttonSize) / 2;
 
-        this.prevButton = new ImageButton(x, y + buttonYOffset, buttonSize, buttonSize, 0, 16, 16, Constants.WIDGETS_TEXTURE, b -> setPage(currentPage - 1));
-        this.nextButton = new ImageButton(x + width - 16, y + buttonYOffset, buttonSize, buttonSize, 16, 16, 16, Constants.WIDGETS_TEXTURE, b -> setPage(currentPage + 1));
+        this.prevButton = new ImageButton(x, y + buttonYOffset, buttonSize, buttonSize, PREV_SPRITES, b -> setPage(currentPage - 1));
+        this.nextButton = new ImageButton(x + width - 16, y + buttonYOffset, buttonSize, buttonSize, NEXT_SPRITES, b -> setPage(currentPage + 1));
         updateButtons();
     }
 
@@ -80,9 +84,9 @@ public class PaginatedGridWidget<T> extends AbstractWidget {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (this.isHoveredOrFocused()) {
-            setPage(currentPage - (int) Math.signum(delta));
+            setPage(currentPage - (int) Math.signum(scrollY));
             return true;
         }
         return false;
@@ -117,8 +121,8 @@ public class PaginatedGridWidget<T> extends AbstractWidget {
             int progressWidth = (int) (barWidth * progressEnd) - (int) (barWidth * progressStart);
             int barHeight = 5;
 
-            guiGraphics.blitNineSliced(Constants.WIDGETS_TEXTURE, barStartX, barY, barWidth, barHeight, 2, 2,32, 5, 0, 6);
-            guiGraphics.blitNineSliced(Constants.WIDGETS_TEXTURE, barStartX + (int) (barWidth * progressStart), barY, progressWidth, barHeight, 2, 3,32, 5, 0, 11);
+            guiGraphics.blitSprite(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_bar_bg"), barStartX, barY, barWidth, barHeight);
+            guiGraphics.blitSprite(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_bar_fill"), barStartX + (int) (barWidth * progressStart), barY, progressWidth, barHeight);
         }
     }
 

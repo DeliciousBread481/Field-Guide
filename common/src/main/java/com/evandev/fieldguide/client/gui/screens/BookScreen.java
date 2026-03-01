@@ -1,6 +1,5 @@
 package com.evandev.fieldguide.client.gui.screens;
 
-import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.gui.util.Bounds;
@@ -19,20 +18,21 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import static com.evandev.fieldguide.Constants.TAB_DOWN_SPRITES;
+import static com.evandev.fieldguide.Constants.TAB_UP_SPRITES;
+
 public abstract class BookScreen extends Screen {
     private static final int BG_WIDTH = 300;
     private static final int BG_HEIGHT = 200;
     private static final int PAGE_WIDTH = 134;
     private static final int PAGE_HEIGHT = 164;
 
-    private static final int ARROW_WIDTH = 24;
-    private static final int ARROW_HEIGHT = 12;
-
     private static final int TAB_WIDTH = 24;
     private static final int TAB_HEIGHT = 24;
     private static final int TAB_GAP = -1;
     private static final int TAB_Y_OFFSET = 32;
     private static final int MAX_TABS = 6;
+    public static BookScreen lastOpenedScreen;
     private static int tabStartIndex = 0;
     private final List<TabButton> tabButtons = new ArrayList<>();
     private final List<Category> sortedCategories = new ArrayList<>();
@@ -42,7 +42,6 @@ public abstract class BookScreen extends Screen {
     private Button tabUpButton;
     private Button tabDownButton;
     private Category selectedCategory;
-    public static BookScreen lastOpenedScreen;
 
     protected BookScreen(Component title) {
         super(title);
@@ -89,7 +88,6 @@ public abstract class BookScreen extends Screen {
 
         this.tabButtons.clear();
         int xPos = this.bounds.left() - 8;
-        int startY = this.bounds.top() + TAB_Y_OFFSET;
 
         // Generate all tab widgets
         for (Category category : sortedCategories) {
@@ -98,21 +96,18 @@ public abstract class BookScreen extends Screen {
             this.addRenderableWidget(tab);
         }
 
-        int upY = startY - ARROW_HEIGHT;
-        int downY = startY + (MAX_TABS * (TAB_HEIGHT + TAB_GAP)) + 1;
-
         this.tabUpButton = new ImageButton(
-                xPos, upY, ARROW_WIDTH, ARROW_HEIGHT,
-                0, 112, ARROW_HEIGHT,
-                Constants.WIDGETS_TEXTURE,
-                b -> scrollTabs(-1)
+                this.bounds.left() - 24, this.bounds.top() + 10,
+                24, 20,
+                TAB_UP_SPRITES,
+                (b) -> scrollTabs(-1)
         );
 
         this.tabDownButton = new ImageButton(
-                xPos, downY, ARROW_WIDTH, ARROW_HEIGHT,
-                ARROW_WIDTH, 112, ARROW_HEIGHT,
-                Constants.WIDGETS_TEXTURE,
-                b -> scrollTabs(1)
+                this.bounds.left() - 24, this.bounds.bottom() - 30,
+                24, 20,
+                TAB_DOWN_SPRITES,
+                (b) -> scrollTabs(1)
         );
 
         this.addRenderableWidget(tabUpButton);

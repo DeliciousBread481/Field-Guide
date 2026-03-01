@@ -22,6 +22,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
+import static com.evandev.fieldguide.Constants.NEXT_PAGE_SPRITES;
+import static com.evandev.fieldguide.Constants.PREV_PAGE_SPRITES;
+
 public class FieldGuideJournalScreen extends BookScreen {
     public static int lastOpenedJournalPage = 0;
     private int currentSpread;
@@ -92,8 +95,8 @@ public class FieldGuideJournalScreen extends BookScreen {
         this.addRenderableWidget(rightContentWidget);
 
         // Navigation
-        PageTurnButton prevButton = new PageTurnButton(this.bounds.left() + 15, this.leftPageBounds.bottom() - 15, 16, 16, 32, 16, 16, Constants.WIDGETS_TEXTURE, b -> changeSpread(-1));
-        PageTurnButton nextButton = new PageTurnButton(this.bounds.right() - 30, this.rightPageBounds.bottom() - 15, 16, 16, 48, 16, 16, Constants.WIDGETS_TEXTURE, b -> changeSpread(1));
+        PageTurnButton prevButton = new PageTurnButton(this.bounds.left() + 15, this.leftPageBounds.bottom() - 15, 16, 16, PREV_PAGE_SPRITES, b -> changeSpread(-1));
+        PageTurnButton nextButton = new PageTurnButton(this.bounds.right() - 30, this.rightPageBounds.bottom() - 15, 16, 16, NEXT_PAGE_SPRITES, b -> changeSpread(1));
         prevButton.visible = currentSpread > 0;
         this.addRenderableWidget(prevButton);
         this.addRenderableWidget(nextButton);
@@ -169,7 +172,7 @@ public class FieldGuideJournalScreen extends BookScreen {
 
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics);
+        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         guiGraphics.blit(Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
 
         if (currentSpread == 0) {

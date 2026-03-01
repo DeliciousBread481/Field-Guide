@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
@@ -24,19 +25,19 @@ public class StructureUtils {
 
         if (entry.structureNbt() != null) {
             ResourceLocation nbtLocation = entry.structureNbt();
-            ResourceLocation path = ResourceLocation.parse(nbtLocation.getNamespace(), "structures/" + nbtLocation.getPath() + ".nbt");
+            ResourceLocation path = ResourceLocation.fromNamespaceAndPath(nbtLocation.getNamespace(), "structures/" + nbtLocation.getPath() + ".nbt");
 
             try {
                 var res = Minecraft.getInstance().getResourceManager().getResource(path);
                 if (res.isPresent()) {
-                    CompoundTag tag = NbtIo.readCompressed(res.get().open());
+                    CompoundTag tag = NbtIo.readCompressed(res.get().open(), NbtAccounter.unlimitedHeap());
                     StructureTemplate template = new StructureTemplate();
                     template.load(BuiltInRegistries.BLOCK.asLookup(), tag);
 
                     List<StructureTemplate.Palette> palettes = ((StructureTemplateAccessor) template).getPalettes();
 
                     if (!palettes.isEmpty()) {
-                        for (StructureTemplate.StructureBlockInfo info : palettes.get(0).blocks()) {
+                        for (StructureTemplate.StructureBlockInfo info : palettes.getFirst().blocks()) {
                             blocks.put(info.pos(), info.state());
                         }
                     }

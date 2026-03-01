@@ -38,6 +38,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import static com.evandev.fieldguide.Constants.*;
+
 public class FieldGuideEntryScreen extends BookScreen {
     private final FieldGuideScreen parent;
     private final Object entry;
@@ -203,7 +205,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private void setupNavigationButtons() {
-        this.addRenderableWidget(new PageTurnButton(this.bounds.right() - 13, this.bounds.top() + 26, 24, 24, 24, 144, 24, Constants.WIDGETS_TEXTURE, b -> {
+        this.addRenderableWidget(new PageTurnButton(this.bounds.right() - 13, this.bounds.top() + 26, 24, 24, BACK_SPRITES, b -> {
             if (this.minecraft != null) this.minecraft.setScreen(parent);
         }));
 
@@ -212,11 +214,11 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (!entries.isEmpty()) {
             int index = entries.indexOf(this.entry);
 
-            PageTurnButton prevEntryButton = new PageTurnButton(this.bounds.left() + 15, this.leftPageBounds.bottom() - 15, 16, 16, 32, 16, 16, Constants.WIDGETS_TEXTURE, b -> {
+            PageTurnButton prevEntryButton = new PageTurnButton(this.bounds.left() + 15, this.leftPageBounds.bottom() - 15, 16, 16, PREV_PAGE_SPRITES, b -> {
                 if (index > 0 && this.minecraft != null)
                     this.minecraft.setScreen(new FieldGuideEntryScreen(parent, entries.get(index - 1)));
             });
-            PageTurnButton nextEntryButton = new PageTurnButton(this.bounds.right() - 30, this.rightPageBounds.bottom() - 15, 16, 16, 48, 16, 16, Constants.WIDGETS_TEXTURE, b -> {
+            PageTurnButton nextEntryButton = new PageTurnButton(this.bounds.right() - 30, this.rightPageBounds.bottom() - 15, 16, 16, NEXT_PAGE_SPRITES, b -> {
                 if (index >= 0 && index < entries.size() - 1 && this.minecraft != null)
                     this.minecraft.setScreen(new FieldGuideEntryScreen(parent, entries.get(index + 1)));
             });
@@ -284,7 +286,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics);
+        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         RenderSystem.setShaderTexture(0, Constants.BOOK_TEXTURE);
         guiGraphics.blit(Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
         guiGraphics.blit(Constants.DETAILS_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());

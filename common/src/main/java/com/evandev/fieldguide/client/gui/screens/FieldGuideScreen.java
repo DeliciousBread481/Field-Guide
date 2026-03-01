@@ -36,6 +36,8 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
 
+import static com.evandev.fieldguide.Constants.*;
+
 public class FieldGuideScreen extends BookScreen {
     private static final int ITEMS_PER_PAGE = 9;
     private static final int ITEMS_PER_VIEW = ITEMS_PER_PAGE * 2;
@@ -140,7 +142,7 @@ public class FieldGuideScreen extends BookScreen {
                 if (intro != null) {
                     this.setSelectedCategory(intro);
                 } else if (!this.getSortedCategories().isEmpty()) {
-                    this.setSelectedCategory(this.getSortedCategories().get(0));
+                    this.setSelectedCategory(this.getSortedCategories().getFirst());
                 }
             }
         }
@@ -157,43 +159,18 @@ public class FieldGuideScreen extends BookScreen {
         }
 
         // Pagination Buttons
-        this.prevPageButton = new PageTurnButton(
-                this.bounds.left() + 15,
-                this.leftPageBounds.bottom() - 15,
-                16, 16, 32, 16, 16,
-                Constants.WIDGETS_TEXTURE,
-                b -> prevPage()
-        );
-
-        this.nextPageButton = new PageTurnButton(
-                this.bounds.right() - 14 - 16,
-                this.rightPageBounds.bottom() - 15,
-                16, 16, 48, 16, 16,
-                Constants.WIDGETS_TEXTURE,
-                b -> nextPage()
-        );
+        this.prevPageButton = new PageTurnButton(this.bounds.left() + 15, this.leftPageBounds.bottom() - 15, 16, 16, PREV_PAGE_SPRITES, b -> prevPage());
+        this.nextPageButton = new PageTurnButton(this.bounds.right() - 14 - 16, this.rightPageBounds.bottom() - 15, 16, 16, NEXT_PAGE_SPRITES, b -> nextPage());
 
         this.addRenderableWidget(prevPageButton);
         this.addRenderableWidget(nextPageButton);
 
         // Back Button
-        this.backButton = new PageTurnButton(
-                this.bounds.right() - 13,
-                this.bounds.top() + 26,
-                24,
-                24,
-                24,
-                144,
-                24,
-                Constants.WIDGETS_TEXTURE,
-                b -> {
-                    if (parent != null) {
-                        Objects.requireNonNull(this.minecraft).setScreen(parent);
-                    } else {
-                        this.searchBox.setValue("");
-                    }
-                }
-        );
+        this.backButton = new PageTurnButton(this.bounds.right() - 13, this.bounds.top() + 26, 24, 24, BACK_SPRITES, b -> {
+            if (parent != null) Objects.requireNonNull(this.minecraft).setScreen(parent);
+            else this.searchBox.setValue("");
+        });
+
         backButton.visible = false;
         this.addRenderableWidget(backButton);
 
@@ -403,15 +380,15 @@ public class FieldGuideScreen extends BookScreen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        if (super.mouseScrolled(mouseX, mouseY, delta)) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (super.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) {
             return true;
         }
 
-        if (delta > 0) {
+        if (scrollY > 0) {
             this.prevPage();
             return true;
-        } else if (delta < 0) {
+        } else if (scrollY < 0) {
             this.nextPage();
             return true;
         }
@@ -421,7 +398,7 @@ public class FieldGuideScreen extends BookScreen {
 
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics);
+        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         RenderSystem.setShaderTexture(0, Constants.BOOK_TEXTURE);
         guiGraphics.blit(Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
 
@@ -452,7 +429,7 @@ public class FieldGuideScreen extends BookScreen {
                         int iconOffset = 0;
 
                         if (Services.PLATFORM.isModLoaded("immersiveoverlays")) {
-                            ResourceLocation texture = ResourceLocation.parse(biomeId.getNamespace(), "textures/immersiveoverlays/" + biomeId.getPath() + ".png");
+                            ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(biomeId.getNamespace(), "textures/immersiveoverlays/" + biomeId.getPath() + ".png");
                             if (Minecraft.getInstance().getResourceManager().getResource(texture).isPresent()) {
                                 int iconSize = 16;
                                 int iconY = titleY - 5;
@@ -607,7 +584,7 @@ public class FieldGuideScreen extends BookScreen {
 
                 int progressWidth = (int) ((float) unlocked / total * barWidth);
                 progressWidth = Math.max(progressWidth, 6);
-                guiGraphics.blitNineSliced(Constants.WIDGETS_TEXTURE, barX, barY, progressWidth, barHeight, 3, 32, 6, 0, 0);
+                guiGraphics.blitSprite(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/progress_bar"), barX, barY, progressWidth, barHeight);
             }
         }
     }

@@ -1,8 +1,6 @@
 package com.evandev.fieldguide;
 
-import com.evandev.fieldguide.network.ClaimXpPacket;
-import com.evandev.fieldguide.network.GrantContentPacket;
-import com.evandev.fieldguide.platform.FabricNetworkHelper;
+import com.evandev.fieldguide.network.*;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.command.FieldGuideCommand;
@@ -10,6 +8,7 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityCombatEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
@@ -34,8 +33,14 @@ public class FieldGuideMod implements ModInitializer {
     public void onInitialize() {
         CommonClass.init();
 
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> FieldGuideCommand.register(dispatcher));
+        PayloadTypeRegistry.playS2C().register(SyncCategoriesPacket.TYPE, SyncCategoriesPacket.CODEC);
+        PayloadTypeRegistry.playS2C().register(GrantContentPacket.TYPE, GrantContentPacket.CODEC);
+        PayloadTypeRegistry.playS2C().register(SyncLootPacket.TYPE, SyncLootPacket.CODEC);
+        PayloadTypeRegistry.playS2C().register(ExportContentPacket.TYPE, ExportContentPacket.CODEC);
 
+        PayloadTypeRegistry.playC2S().register(ClaimXpPacket.TYPE, ClaimXpPacket.CODEC);
+
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> FieldGuideCommand.register(dispatcher));
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new IdentifiableResourceReloadListener() {
             @Override
             public ResourceLocation getFabricId() {
@@ -52,9 +57,8 @@ public class FieldGuideMod implements ModInitializer {
 
         ServerLifecycleEvents.SERVER_STARTED.register(server -> ServerFieldGuideManager.getInstance().onServerStarted(server));
 
-        ServerPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.CLAIM_XP_CHANNEL, (server, player, handler, buf, responseSender) -> {
-            ClaimXpPacket packet = new ClaimXpPacket(buf);
-            server.execute(() -> packet.handleServer(player));
+        ServerPlayNetworking.registerGlobalReceiver(ClaimXpPacket.TYPE, (packet, context) -> {
+            context.server().execute(() -> packet.handleServer(context.player()));
         });
 
         ServerEntityCombatEvents.AFTER_KILLED_OTHER_ENTITY.register((world, entity, killedEntity) -> {
@@ -66,7 +70,7 @@ public class FieldGuideMod implements ModInitializer {
                     var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
                     if (holder.isPresent() && holder.get().is(killToUnlockTag)) {
                         ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(killedEntity.getType());
-                        Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.Type.ENTRY, entityId), player);
+                        Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.TypeEnum.ENTRY, entityId), player);
                     }
                 }
             }

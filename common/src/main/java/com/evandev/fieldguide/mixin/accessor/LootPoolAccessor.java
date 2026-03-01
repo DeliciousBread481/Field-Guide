@@ -17,9 +17,6 @@ public interface LootPoolAccessor {
     @Accessor("entries")
     List<LootPoolEntryContainer> fieldguide$getEntries();
 
-    @Accessor("pools")
-    public abstract List<LootPool> fieldguide$getPools();
-
     @Accessor("conditions")
-    LootItemCondition[] fieldguide$getConditions();
+    List<LootItemCondition> fieldguide$getConditions();
 }

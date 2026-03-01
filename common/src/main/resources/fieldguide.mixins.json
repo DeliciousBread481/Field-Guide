@@ -10,6 +10,7 @@
     "accessor.LootPoolAccessor",
     "accessor.LootPoolEntryContainerAccessor",
     "accessor.LootPoolSingletonContainerAccessor",
+    "accessor.LootTableAccessor",
     "accessor.MobAccessor",
     "accessor.NestedLootTableAccessor",
     "accessor.SetItemCountFunctionAccessor",

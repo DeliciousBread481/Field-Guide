@@ -1,7 +1,6 @@
 package com.evandev.fieldguide;
 
 import com.evandev.fieldguide.network.*;
-import com.evandev.fieldguide.platform.ForgeNetworkHelper;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.command.FieldGuideCommand;
@@ -11,71 +10,51 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.AddReloadListenerEvent;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.server.ServerStartedEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.network.NetworkEvent;
-
-import java.util.function.Supplier;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 @Mod(Constants.MOD_ID)
 public class FieldGuideMod {
 
-    public FieldGuideMod() {
+    public FieldGuideMod(IEventBus modEventBus) {
         CommonClass.init();
-        MinecraftForge.EVENT_BUS.register(this);
 
-        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-        modEventBus.addListener(this::commonSetup);
+        NeoForge.EVENT_BUS.register(this);
+        modEventBus.addListener(this::registerPayloads);
     }
 
-    public static void handleGrantContent(GrantContentPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();
-        context.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> FieldGuideForgeClient.handleGrantContent(packet)));
-        context.setPacketHandled(true);
-    }
+    private void registerPayloads(final RegisterPayloadHandlersEvent event) {
+        final PayloadRegistrar registrar = event.registrar(Constants.MOD_ID).versioned("1.0");
 
-    public static void handleSyncLoot(SyncLootPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();
-        context.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> FieldGuideForgeClient.handleSyncLoot(packet)));
-        context.setPacketHandled(true);
-    }
+        registrar.playToClient(SyncLootPacket.TYPE, SyncLootPacket.CODEC, (packet, context) ->
+                context.enqueueWork(() -> FieldGuideForgeClient.handleSyncLoot(packet))
+        );
+        registrar.playToClient(SyncCategoriesPacket.TYPE, SyncCategoriesPacket.CODEC, (packet, context) ->
+                context.enqueueWork(() -> FieldGuideForgeClient.handleSyncCategories(packet))
+        );
+        registrar.playToClient(GrantContentPacket.TYPE, GrantContentPacket.CODEC, (packet, context) ->
+                context.enqueueWork(() -> FieldGuideForgeClient.handleGrantContent(packet))
+        );
+        registrar.playToClient(ExportContentPacket.TYPE, ExportContentPacket.CODEC, (packet, context) ->
+                context.enqueueWork(packet::handleClient)
+        );
 
-    public static void handleSyncCategories(SyncCategoriesPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();
-        context.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> FieldGuideForgeClient.handleSyncCategories(packet)));
-        context.setPacketHandled(true);
-    }
-
-    public static void handleExportContent(ExportContentPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();
-        context.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> packet::handleClient));
-        context.setPacketHandled(true);
-    }
-
-    public static void handleClaimXp(ClaimXpPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
-        NetworkEvent.Context context = contextSupplier.get();
-        context.enqueueWork(() -> {
-            ServerPlayer player = context.getSender();
-            if (player != null) {
-                packet.handleServer(player);
-            }
-        });
-        context.setPacketHandled(true);
-    }
-
-    private void commonSetup(final FMLCommonSetupEvent event) {
-        ForgeNetworkHelper.register();
+        registrar.playToServer(ClaimXpPacket.TYPE, ClaimXpPacket.CODEC, (packet, context) ->
+                context.enqueueWork(() -> {
+                    if (context.player() instanceof ServerPlayer sp) {
+                        packet.handleServer(sp);
+                    }
+                })
+        );
     }
 
     @SubscribeEvent
@@ -110,7 +89,7 @@ public class FieldGuideMod {
                 var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
                 if (holder.isPresent() && holder.get().is(killToUnlockTag)) {
                     ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType());
-                    Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.Type.ENTRY, entityId), player);
+                    Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.TypeEnum.ENTRY, entityId), player);
                 }
             }
         }

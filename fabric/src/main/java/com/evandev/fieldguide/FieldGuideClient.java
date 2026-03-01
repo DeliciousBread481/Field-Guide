@@ -6,7 +6,6 @@ import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.network.GrantContentPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
-import com.evandev.fieldguide.platform.FabricNetworkHelper;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -48,30 +47,27 @@ public class FieldGuideClient implements ClientModInitializer {
             com.evandev.fieldguide.client.FieldGuideClient.onClientTick(client);
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.SYNC_LOOT_CHANNEL, (client, handler, buf, responseSender) -> {
-            SyncLootPacket packet = new SyncLootPacket(buf);
-            client.execute(() -> ClientFieldGuideManager.getInstance().updateLootCache(packet.getLootCache()));
+        ClientPlayNetworking.registerGlobalReceiver(SyncLootPacket.TYPE, (SyncLootPacket packet, ClientPlayNetworking.Context context) -> {
+            context.client().execute(() -> ClientFieldGuideManager.getInstance().updateLootCache(packet.lootCache()));
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.SYNC_CATEGORIES_CHANNEL, (client, handler, buf, responseSender) -> {
-            SyncCategoriesPacket packet = new SyncCategoriesPacket(buf);
-
-            client.execute(() -> {
+        ClientPlayNetworking.registerGlobalReceiver(SyncCategoriesPacket.TYPE, (SyncCategoriesPacket packet, ClientPlayNetworking.Context context) -> {
+            context.client().execute(() -> {
                 ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
-
                 manager.updateCategoriesFromServer(packet.getCategories(), packet.getRedirects());
                 manager.updateModifiers(
-                        packet.getBiomeAdditions(),
-                        packet.getBiomeRemovals(),
-                        packet.getLootAdditions(),
-                        packet.getLootRemovals()
+                        packet.getBiomeAdditions(), packet.getBiomeRemovals(),
+                        packet.getLootAdditions(), packet.getLootRemovals()
                 );
             });
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.GRANT_CONTENT_CHANNEL, (client, handler, buf, responseSender) -> {
-            GrantContentPacket packet = new GrantContentPacket(buf);
-            client.execute(packet::handleClient);
+        ClientPlayNetworking.registerGlobalReceiver(GrantContentPacket.TYPE, (GrantContentPacket packet, ClientPlayNetworking.Context context) -> {
+            context.client().execute(packet::handleClient);
+        });
+
+        ClientPlayNetworking.registerGlobalReceiver(ExportContentPacket.TYPE, (ExportContentPacket packet, ClientPlayNetworking.Context context) -> {
+            context.client().execute(packet::handleClient);
         });
 
         CoreShaderRegistrationCallback.EVENT.register(context -> {
@@ -91,11 +87,6 @@ public class FieldGuideClient implements ClientModInitializer {
             } catch (IOException e) {
                 throw new RuntimeException("Failed to register fieldguide shaders", e);
             }
-        });
-
-        ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.EXPORT_CONTENT_CHANNEL, (client, handler, buf, responseSender) -> {
-            ExportContentPacket packet = new ExportContentPacket(buf);
-            client.execute(packet::handleClient);
         });
 
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {

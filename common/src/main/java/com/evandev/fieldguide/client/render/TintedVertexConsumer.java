@@ -16,14 +16,14 @@ public class TintedVertexConsumer implements VertexConsumer {
     }
 
     @Override
-    public @NotNull VertexConsumer vertex(double x, double y, double z) {
-        delegate.vertex(x, y, z);
+    public @NotNull VertexConsumer addVertex(float x, float y, float z) {
+        delegate.addVertex(x, y, z);
         return this;
     }
 
     @Override
-    public @NotNull VertexConsumer color(int red, int green, int blue, int alpha) {
-        delegate.color(
+    public @NotNull VertexConsumer setColor(int red, int green, int blue, int alpha) {
+        delegate.setColor(
                 (int) (255 * tintR),
                 (int) (255 * tintG),
                 (int) (255 * tintB),
@@ -33,68 +33,26 @@ public class TintedVertexConsumer implements VertexConsumer {
     }
 
     @Override
-    public @NotNull VertexConsumer color(float r, float g, float b, float a) {
-        delegate.color(r * tintR, g * tintG, b * tintB, a * tintA);
+    public @NotNull VertexConsumer setUv(float u, float v) {
+        delegate.setUv(u, v);
         return this;
     }
 
     @Override
-    public @NotNull VertexConsumer color(int argb) {
-        int a = (argb >> 24) & 0xFF;
-        int r = (argb >> 16) & 0xFF;
-        int g = (argb >> 8) & 0xFF;
-        int b = argb & 0xFF;
-
-        delegate.color(
-                (int) (r * tintR),
-                (int) (g * tintG),
-                (int) (b * tintB),
-                (int) (a * tintA)
-        );
+    public @NotNull VertexConsumer setUv1(int i, int i1) {
+        delegate.setUv1(i, i1);
         return this;
     }
 
     @Override
-    public @NotNull VertexConsumer uv(float u, float v) {
-        delegate.uv(u, v);
+    public @NotNull VertexConsumer setUv2(int i, int i1) {
+        delegate.setUv2(i, i1);
         return this;
     }
 
     @Override
-    public @NotNull VertexConsumer overlayCoords(int u, int v) {
-        delegate.overlayCoords(u, v);
+    public @NotNull VertexConsumer setNormal(float x, float y, float z) {
+        delegate.setNormal(x, y, z);
         return this;
-    }
-
-    @Override
-    public @NotNull VertexConsumer uv2(int u, int v) {
-        delegate.uv2(u, v);
-        return this;
-    }
-
-    @Override
-    public @NotNull VertexConsumer normal(float x, float y, float z) {
-        delegate.normal(x, y, z);
-        return this;
-    }
-
-    @Override
-    public void endVertex() {
-        delegate.endVertex();
-    }
-
-    @Override
-    public void defaultColor(int red, int green, int blue, int alpha) {
-        delegate.defaultColor(
-                (int) (255 * tintR),
-                (int) (255 * tintG),
-                (int) (255 * tintB),
-                (int) (alpha * tintA)
-        );
-    }
-
-    @Override
-    public void unsetDefaultColor() {
-        delegate.unsetDefaultColor();
     }
 }

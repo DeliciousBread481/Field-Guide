@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.util;
 
+import com.evandev.fieldguide.Constants;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
@@ -12,7 +13,7 @@ public class ModTags {
         public static final TagKey<Block> PLANTS = tag("plants");
 
         private static TagKey<Block> tag(String name) {
-            return TagKey.create(Registries.BLOCK, new ResourceLocation("fieldguide", name));
+            return TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, name));
         }
     }
 }

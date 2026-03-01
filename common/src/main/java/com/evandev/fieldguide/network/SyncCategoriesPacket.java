@@ -1,15 +1,24 @@
 package com.evandev.fieldguide.network;
 
+import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CategoryEntry;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SyncCategoriesPacket {
+public class SyncCategoriesPacket implements CustomPacketPayload {
+    public static final Type<SyncCategoriesPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "sync_categories"));
+    public static final StreamCodec<RegistryFriendlyByteBuf, SyncCategoriesPacket> CODEC = StreamCodec.ofMember(SyncCategoriesPacket::encode, SyncCategoriesPacket::new);
+
     private final List<Category> categories;
     private final List<String> biomeAdditions;
     private final List<String> biomeRemovals;
@@ -26,7 +35,7 @@ public class SyncCategoriesPacket {
         this.redirects = redirects;
     }
 
-    public SyncCategoriesPacket(FriendlyByteBuf buf) {
+    public SyncCategoriesPacket(RegistryFriendlyByteBuf buf) {
         this.categories = buf.readCollection(ArrayList::new, b -> {
             ResourceLocation id = b.readResourceLocation();
             Category cat = new Category(id);
@@ -74,10 +83,11 @@ public class SyncCategoriesPacket {
         this.biomeRemovals = buf.readCollection(ArrayList::new, FriendlyByteBuf::readUtf);
         this.lootAdditions = buf.readCollection(ArrayList::new, FriendlyByteBuf::readUtf);
         this.lootRemovals = buf.readCollection(ArrayList::new, FriendlyByteBuf::readUtf);
-        this.redirects = buf.readMap(FriendlyByteBuf::readResourceLocation, FriendlyByteBuf::readResourceLocation);
+
+        this.redirects = buf.readMap(HashMap::new, FriendlyByteBuf::readResourceLocation, FriendlyByteBuf::readResourceLocation);
     }
 
-    public void encode(FriendlyByteBuf buf) {
+    public void encode(RegistryFriendlyByteBuf buf) {
         buf.writeCollection(categories, (b, cat) -> {
             b.writeResourceLocation(cat.getId());
             b.writeInt(cat.getSortIndex());
@@ -124,6 +134,11 @@ public class SyncCategoriesPacket {
         buf.writeCollection(lootAdditions, FriendlyByteBuf::writeUtf);
         buf.writeCollection(lootRemovals, FriendlyByteBuf::writeUtf);
         buf.writeMap(redirects, FriendlyByteBuf::writeResourceLocation, FriendlyByteBuf::writeResourceLocation);
+    }
+
+    @Override
+    public @NotNull Type<? extends CustomPacketPayload> type() {
+        return TYPE;
     }
 
     public List<Category> getCategories() {

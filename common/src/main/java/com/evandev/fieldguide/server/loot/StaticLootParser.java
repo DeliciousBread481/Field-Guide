@@ -22,75 +22,99 @@ import net.minecraft.world.level.storage.loot.providers.number.NumberProvider;
 import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
 public class StaticLootParser {
 
+
+    private static List<ParsedDrop> mergeDrops(List<ParsedDrop> drops) {
+        List<ParsedDrop> merged = new ArrayList<>();
+        for (ParsedDrop drop : drops) {
+            ParsedDrop existing = merged.stream()
+                    .filter(d -> ItemStack.isSameItemSameComponents(d.stack, drop.stack))
+                    .findFirst().orElse(null);
+            if (existing != null) {
+                existing.chance += drop.chance;
+                existing.minCount = Math.min(existing.minCount, drop.minCount);
+                existing.maxCount = Math.max(existing.maxCount, drop.maxCount);
+            } else {
+                merged.add(new ParsedDrop(drop.stack, drop.chance, drop.minCount, drop.maxCount));
+            }
+        }
+
+        for (ParsedDrop drop : merged) {
+            if (drop.chance > 1.0f) {
+                drop.minCount = Math.round(drop.minCount * drop.chance);
+                drop.maxCount = Math.round(drop.maxCount * drop.chance);
+                drop.chance = 1.0f;
+            }
+        }
+
+        merged.sort(Comparator.comparing(a -> a.stack.getHoverName().getString()));
+        return merged;
+    }
+
     public static List<ParsedDrop> parseTable(LootTable table, ServerLevel level) {
         List<ParsedDrop> allDrops = new ArrayList<>();
-        List<LootPool> pools = ((LootPoolAccessor) table).fieldguide$getPools();
+        List<LootPool> pools = ((LootTableAccessor) table).fieldguide$getPools();
 
         LootParams params = new LootParams.Builder(level).create(LootContextParamSets.EMPTY);
         LootContext context = new LootContext.Builder(params).create(java.util.Optional.empty());
 
         for (LootPool pool : pools) {
-            float poolRolls = getExpectedRolls(((LootPoolAccessor) pool).fieldguide$getRolls());
-            float poolChance = getConditionChance(((LootPoolAccessor) pool).fieldguide$getConditions());
+            LootPoolAccessor poolAcc = (LootPoolAccessor) pool;
+            float poolRolls = getExpectedRolls(poolAcc.fieldguide$getRolls());
+            float poolChance = getConditionChance(poolAcc.fieldguide$getConditions());
 
-            LootPoolEntryContainer[] entries = ((LootPoolAccessor) pool).fieldguide$getEntries().toArray(new LootPoolEntryContainer[0]);
-
-            int totalWeight = Arrays.stream(entries).mapToInt(StaticLootParser::getEntryWeight).sum();
+            List<LootPoolEntryContainer> entries = poolAcc.fieldguide$getEntries();
+            int totalWeight = entries.stream().mapToInt(StaticLootParser::getEntryWeight).sum();
 
             for (LootPoolEntryContainer entry : entries) {
                 parseEntry(entry, allDrops, poolRolls * poolChance, totalWeight, context);
             }
         }
-
         return mergeDrops(allDrops);
     }
 
     private static void parseEntry(LootPoolEntryContainer entry, List<ParsedDrop> drops, float parentChance, int totalWeight, LootContext context) {
+        List<LootItemCondition> conditions = ((LootPoolEntryContainerAccessor) entry).fieldguide$getConditions();
+        float entryConditionChance = getConditionChance(conditions);
+
         int weight = getEntryWeight(entry);
-        float entryConditionChance = getConditionChance(((LootPoolEntryContainerAccessor) entry).fieldguide$getConditions());
         float selectionChance = totalWeight > 0 ? ((float) weight / totalWeight) : 1f;
         float branchChance = parentChance * selectionChance * entryConditionChance;
 
         if (branchChance <= 0) return;
 
         switch (entry) {
-            case NestedLootTable reference -> handleReference(reference, drops, branchChance, context);
-            case LootPoolSingletonContainer singleton -> {
-                LootItemFunction[] functions = ((LootPoolSingletonContainerAccessor) singleton).fieldguide$getFunctions().toArray(new LootItemFunction[0]);
+            case LootItem lootItem -> {
+                Item item = ((LootItemAccessor) lootItem).fieldguide$getItem().value();
+                ItemStack stack = new ItemStack(item);
 
-                if (entry instanceof LootItem lootItem) {
-                    Item item = ((LootItemAccessor) lootItem).fieldguide$getItem();
-                    ItemStack stack = new ItemStack(item);
-                    int min = 1, max = 1;
+                List<LootItemFunction> functions = ((LootPoolSingletonContainerAccessor) lootItem).fieldguide$getFunctions();
 
-                    for (LootItemFunction function : functions) {
-                        if (function instanceof SetItemCountFunction countFunc) {
-                            NumberProvider provider = ((SetItemCountFunctionAccessor) countFunc).fieldguide$getValue();
-                            min = Math.max(0, Math.round(getMinRolls(provider)));
-                            max = Math.max(min, Math.round(getMaxRolls(provider)));
-                        }
-                        try {
-                            stack = function.apply(stack, context);
-                        } catch (Exception ignored) {
-                        }
+                int min = 1, max = 1;
+                for (LootItemFunction function : functions) {
+                    if (function instanceof SetItemCountFunction countFunc) {
+                        NumberProvider provider = ((SetItemCountFunctionAccessor) countFunc).fieldguide$getValue();
+                        min = Math.max(0, Math.round(getMinRolls(provider)));
+                        max = Math.max(min, Math.round(getMaxRolls(provider)));
                     }
-
-                    if (stack.isEmpty()) stack.setCount(1);
-                    if (!stack.is(Items.AIR)) {
-                        drops.add(new ParsedDrop(stack, branchChance, min, max));
+                    try {
+                        stack = function.apply(stack, context);
+                    } catch (Exception ignored) {
                     }
-                } else if (entry instanceof NestedLootTable reference) {
-                    handleReference(reference, drops, branchChance, context);
+                }
+
+                if (!stack.is(Items.AIR)) {
+                    drops.add(new ParsedDrop(stack, branchChance, min, max));
                 }
             }
+            case NestedLootTable reference -> handleReference(reference, drops, branchChance, context);
             case CompositeEntryBase composite -> {
-                LootPoolEntryContainer[] children = ((CompositeEntryBaseAccessor) composite).fieldguide$getChildren().toArray(new LootPoolEntryContainer[0]);
+                List<LootPoolEntryContainer> children = ((CompositeEntryBaseAccessor) composite).fieldguide$getChildren();
+
                 for (LootPoolEntryContainer child : children) {
                     parseEntry(child, drops, branchChance, 1, context);
                 }
@@ -100,7 +124,8 @@ public class StaticLootParser {
         }
     }
 
-    private static void handleReference(NestedLootTable reference, List<ParsedDrop> drops, float branchChance, LootContext context) {
+    private static void handleReference(NestedLootTable reference, List<ParsedDrop> drops,
+                                        float branchChance, LootContext context) {
         ((NestedLootTableAccessor) reference).fieldguide$getContents().left().ifPresent(tableKey -> {
             LootTable nestedTable = context.getLevel().getServer().reloadableRegistries().getLootTable(tableKey);
             if (nestedTable != LootTable.EMPTY) {
@@ -146,11 +171,12 @@ public class StaticLootParser {
         return 1f;
     }
 
-    private static float getConditionChance(LootItemCondition[] conditions) {
+    private static float getConditionChance(List<LootItemCondition> conditions) {
         float chance = 1.0f;
         for (LootItemCondition condition : conditions) {
-            if (condition instanceof LootItemRandomChanceCondition(NumberProvider chance1)) {
-                chance *= getExpectedRolls(chance1);
+            if (condition instanceof LootItemRandomChanceCondition) {
+                NumberProvider chanceProvider = ((LootItemRandomChanceCondition) condition).chance();
+                chance *= getExpectedRolls(chanceProvider);
             } else if (condition instanceof LootItemRandomChanceWithEnchantedBonusCondition lc) {
                 chance *= lc.unenchantedChance();
             } else if (condition instanceof BonusLevelTableCondition tc) {
@@ -158,32 +184,5 @@ public class StaticLootParser {
             }
         }
         return chance;
-    }
-
-    private static List<ParsedDrop> mergeDrops(List<ParsedDrop> drops) {
-        List<ParsedDrop> merged = new ArrayList<>();
-        for (ParsedDrop drop : drops) {
-            ParsedDrop existing = merged.stream()
-                    .filter(d -> ItemStack.isSameItemSameComponents(d.stack, drop.stack))
-                    .findFirst().orElse(null);
-            if (existing != null) {
-                existing.chance += drop.chance;
-                existing.minCount = Math.min(existing.minCount, drop.minCount);
-                existing.maxCount = Math.max(existing.maxCount, drop.maxCount);
-            } else {
-                merged.add(new ParsedDrop(drop.stack, drop.chance, drop.minCount, drop.maxCount));
-            }
-        }
-
-        for (ParsedDrop drop : merged) {
-            if (drop.chance > 1.0f) {
-                drop.minCount = Math.round(drop.minCount * drop.chance);
-                drop.maxCount = Math.round(drop.maxCount * drop.chance);
-                drop.chance = 1.0f;
-            }
-        }
-
-        merged.sort(Comparator.comparing(a -> a.stack.getHoverName().getString()));
-        return merged;
     }
 }
