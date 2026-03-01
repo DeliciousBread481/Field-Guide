@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.client.gui.widget;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.client.ClientConstants;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ImageButton;
@@ -11,9 +12,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.function.Consumer;
-
-import static com.evandev.fieldguide.Constants.NEXT_SPRITES;
-import static com.evandev.fieldguide.Constants.PREV_SPRITES;
 
 public class PaginatedGridWidget<T> extends AbstractWidget {
     private final List<T> items;
@@ -37,8 +35,8 @@ public class PaginatedGridWidget<T> extends AbstractWidget {
         int buttonSize = 16;
         int buttonYOffset = (itemSize - buttonSize) / 2;
 
-        this.prevButton = new ImageButton(x, y + buttonYOffset, buttonSize, buttonSize, PREV_SPRITES, b -> setPage(currentPage - 1));
-        this.nextButton = new ImageButton(x + width - 16, y + buttonYOffset, buttonSize, buttonSize, NEXT_SPRITES, b -> setPage(currentPage + 1));
+        this.prevButton = new ImageButton(x, y + buttonYOffset, buttonSize, buttonSize, ClientConstants.PREV_SPRITES, b -> setPage(currentPage - 1));
+        this.nextButton = new ImageButton(x + width - 16, y + buttonYOffset, buttonSize, buttonSize, ClientConstants.NEXT_SPRITES, b -> setPage(currentPage + 1));
         updateButtons();
     }
 

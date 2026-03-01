@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.client.gui.screens;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.client.ClientConstants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.data.JournalPage;
@@ -21,9 +22,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-
-import static com.evandev.fieldguide.Constants.NEXT_PAGE_SPRITES;
-import static com.evandev.fieldguide.Constants.PREV_PAGE_SPRITES;
 
 public class FieldGuideJournalScreen extends BookScreen {
     public static int lastOpenedJournalPage = 0;
@@ -95,8 +93,8 @@ public class FieldGuideJournalScreen extends BookScreen {
         this.addRenderableWidget(rightContentWidget);
 
         // Navigation
-        PageTurnButton prevButton = new PageTurnButton(this.bounds.left() + 15, this.leftPageBounds.bottom() - 15, 16, 16, PREV_PAGE_SPRITES, b -> changeSpread(-1));
-        PageTurnButton nextButton = new PageTurnButton(this.bounds.right() - 30, this.rightPageBounds.bottom() - 15, 16, 16, NEXT_PAGE_SPRITES, b -> changeSpread(1));
+        PageTurnButton prevButton = new PageTurnButton(this.bounds.left() + 15, this.leftPageBounds.bottom() - 15, 16, 16, ClientConstants.PREV_PAGE_SPRITES, b -> changeSpread(-1));
+        PageTurnButton nextButton = new PageTurnButton(this.bounds.right() - 30, this.rightPageBounds.bottom() - 15, 16, 16, ClientConstants.NEXT_PAGE_SPRITES, b -> changeSpread(1));
         prevButton.visible = currentSpread > 0;
         this.addRenderableWidget(prevButton);
         this.addRenderableWidget(nextButton);

@@ -1,6 +1,5 @@
 package com.evandev.fieldguide;
 
-import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,13 +23,6 @@ public class Constants {
     public static final ResourceLocation LIST_ENTRY_BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/list_entry_background.png");
     public static final ResourceLocation LIST_ENTRY_NEW_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/list_entry_new.png");
 
-    public static final WidgetSprites PREV_PAGE_SPRITES = new WidgetSprites(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/page_prev"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/page_prev_highlighted"));
-    public static final WidgetSprites NEXT_PAGE_SPRITES = new WidgetSprites(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/page_next"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/page_next_highlighted"));
-    public static final WidgetSprites BACK_SPRITES = new WidgetSprites(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/back_button"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/back_button_highlighted"));
-
-    public static final WidgetSprites PREV_SPRITES = new WidgetSprites(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_prev"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_prev_disabled"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_prev_highlighted"));
-    public static final WidgetSprites NEXT_SPRITES = new WidgetSprites(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_next"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_next_disabled"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_next_highlighted"));
-
     // Icons
     public static final ResourceLocation DEFAULT_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/book.png");
     public static final ResourceLocation TOAST_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/book_icon.png");
@@ -41,12 +33,4 @@ public class Constants {
     public static final ResourceLocation HOSTILE_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/hostile.png");
     public static final ResourceLocation PASSIVE_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/passive.png");
     public static final ResourceLocation NEUTRAL_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/neutral.png");
-    public static final WidgetSprites TAB_UP_SPRITES = new WidgetSprites(
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/tab_up"),
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/tab_up_highlighted")
-    );
-    public static final WidgetSprites TAB_DOWN_SPRITES = new WidgetSprites(
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/tab_down"),
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/tab_down_highlighted")
-    );
 }

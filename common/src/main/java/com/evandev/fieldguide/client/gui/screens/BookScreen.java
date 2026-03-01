@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.client.gui.screens;
 
+import com.evandev.fieldguide.client.ClientConstants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.gui.util.Bounds;
@@ -19,9 +20,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-
-import static com.evandev.fieldguide.Constants.TAB_DOWN_SPRITES;
-import static com.evandev.fieldguide.Constants.TAB_UP_SPRITES;
 
 public abstract class BookScreen extends Screen {
     private static final int BG_WIDTH = 300;
@@ -101,14 +99,14 @@ public abstract class BookScreen extends Screen {
         this.tabUpButton = new ImageButton(
                 this.bounds.left() - 24, this.bounds.top() + 10,
                 24, 20,
-                TAB_UP_SPRITES,
+                ClientConstants.TAB_UP_SPRITES,
                 (b) -> scrollTabs(-1)
         );
 
         this.tabDownButton = new ImageButton(
                 this.bounds.left() - 24, this.bounds.bottom() - 30,
                 24, 20,
-                TAB_DOWN_SPRITES,
+                ClientConstants.TAB_DOWN_SPRITES,
                 (b) -> scrollTabs(1)
         );
 

@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.client.gui.screens;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.client.ClientConstants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.data.EntryVisual;
@@ -34,8 +35,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-
-import static com.evandev.fieldguide.Constants.*;
 
 public class FieldGuideEntryScreen extends BookScreen {
     private final FieldGuideScreen parent;
@@ -200,7 +199,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private void setupNavigationButtons() {
-        this.addRenderableWidget(new PageTurnButton(this.bounds.right() - 13, this.bounds.top() + 26, 24, 24, BACK_SPRITES, b -> {
+        this.addRenderableWidget(new PageTurnButton(this.bounds.right() - 13, this.bounds.top() + 26, 24, 24, ClientConstants.BACK_SPRITES, b -> {
             if (this.minecraft != null) this.minecraft.setScreen(parent);
         }));
 
@@ -209,11 +208,11 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (!entries.isEmpty()) {
             int index = entries.indexOf(this.entry);
 
-            PageTurnButton prevEntryButton = new PageTurnButton(this.bounds.left() + 15, this.leftPageBounds.bottom() - 15, 16, 16, PREV_PAGE_SPRITES, b -> {
+            PageTurnButton prevEntryButton = new PageTurnButton(this.bounds.left() + 15, this.leftPageBounds.bottom() - 15, 16, 16, ClientConstants.PREV_PAGE_SPRITES, b -> {
                 if (index > 0 && this.minecraft != null)
                     this.minecraft.setScreen(new FieldGuideEntryScreen(parent, entries.get(index - 1)));
             });
-            PageTurnButton nextEntryButton = new PageTurnButton(this.bounds.right() - 30, this.rightPageBounds.bottom() - 15, 16, 16, NEXT_PAGE_SPRITES, b -> {
+            PageTurnButton nextEntryButton = new PageTurnButton(this.bounds.right() - 30, this.rightPageBounds.bottom() - 15, 16, 16, ClientConstants.NEXT_PAGE_SPRITES, b -> {
                 if (index >= 0 && index < entries.size() - 1 && this.minecraft != null)
                     this.minecraft.setScreen(new FieldGuideEntryScreen(parent, entries.get(index + 1)));
             });

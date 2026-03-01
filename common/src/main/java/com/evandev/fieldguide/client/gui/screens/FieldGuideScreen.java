@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.client.gui.screens;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.client.ClientConstants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.data.EntryVisual;
@@ -34,8 +35,6 @@ import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
-
-import static com.evandev.fieldguide.Constants.*;
 
 public class FieldGuideScreen extends BookScreen {
     private static final int ITEMS_PER_PAGE = 9;
@@ -158,14 +157,14 @@ public class FieldGuideScreen extends BookScreen {
         }
 
         // Pagination Buttons
-        this.prevPageButton = new PageTurnButton(this.bounds.left() + 15, this.leftPageBounds.bottom() - 15, 16, 16, PREV_PAGE_SPRITES, b -> prevPage());
-        this.nextPageButton = new PageTurnButton(this.bounds.right() - 14 - 16, this.rightPageBounds.bottom() - 15, 16, 16, NEXT_PAGE_SPRITES, b -> nextPage());
+        this.prevPageButton = new PageTurnButton(this.bounds.left() + 15, this.leftPageBounds.bottom() - 15, 16, 16, ClientConstants.PREV_PAGE_SPRITES, b -> prevPage());
+        this.nextPageButton = new PageTurnButton(this.bounds.right() - 14 - 16, this.rightPageBounds.bottom() - 15, 16, 16, ClientConstants.NEXT_PAGE_SPRITES, b -> nextPage());
 
         this.addRenderableWidget(prevPageButton);
         this.addRenderableWidget(nextPageButton);
 
         // Back Button
-        this.backButton = new PageTurnButton(this.bounds.right() - 13, this.bounds.top() + 26, 24, 24, BACK_SPRITES, b -> {
+        this.backButton = new PageTurnButton(this.bounds.right() - 13, this.bounds.top() + 26, 24, 24, ClientConstants.BACK_SPRITES, b -> {
             if (parent != null) Objects.requireNonNull(this.minecraft).setScreen(parent);
             else this.searchBox.setValue("");
         });
