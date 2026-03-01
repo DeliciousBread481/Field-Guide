@@ -158,7 +158,7 @@
       "structure_nbt": "fieldguide:chorus_plant",
       "components": [
         "minecraft:chorus_plant",
-        "minecraft:chorus_fruit"
+        "minecraft:chorus_flower"
       ]
     },
     {

@@ -7,8 +7,23 @@
     "#minecraft:corals",
     "#minecraft:tall_flowers",
     "#minecraft:leaves",
+    "minecraft:brown_mushroom",
+    "minecraft:red_mushroom",
+    "minecraft:crimson_fungus",
+    "minecraft:warped_fungus",
+    "minecraft:mushroom_stem",
+    "minecraft:brown_mushroom_block",
+    "minecraft:red_mushroom_block",
+    "minecraft:crimson_stem",
+    "minecraft:warped_stem",
+    "minecraft:nether_wart_block",
+    "minecraft:warped_wart_block",
+    "minecraft:shroomlight",
     "minecraft:weeping_vines",
     "minecraft:twisting_vines",
+    "minecraft:cave_vines",
+    "minecraft:chorus_plant",
+    "minecraft:chorus_flower",
     "minecraft:sugar_cane",
     "minecraft:kelp",
     "minecraft:bamboo",
@@ -22,20 +37,49 @@
     "minecraft:glow_lichen",
     "minecraft:melon",
     "minecraft:pumpkin",
-
-    { "id": "autumnity:large_pumpkin_slice", "required": false },
-
-    { "id": "farmersdelight:tomatoes", "required": false },
-    { "id": "farmersdelight:brown_mushroom_colony", "required": false },
-    { "id": "farmersdelight:red_mushroom_colony", "required": false },
-
-    { "id": "atmospheric:golden_growth", "required": false },
-    { "id": "atmospheric:agave", "required": false },
-    { "id": "atmospheric:passion_vine", "required": false },
-    { "id": "atmospheric:dragon_roots", "required": false },
-    { "id": "atmospheric:barrel_cactus", "required": false },
-    { "id": "atmospheric:aloe_vera", "required": false },
-
-    { "id": "windswept:yellow_petals", "required": false }
+    {
+      "id": "autumnity:large_pumpkin_slice",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:tomatoes",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:brown_mushroom_colony",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:red_mushroom_colony",
+      "required": false
+    },
+    {
+      "id": "atmospheric:golden_growth",
+      "required": false
+    },
+    {
+      "id": "atmospheric:agave",
+      "required": false
+    },
+    {
+      "id": "atmospheric:passion_vine",
+      "required": false
+    },
+    {
+      "id": "atmospheric:dragon_roots",
+      "required": false
+    },
+    {
+      "id": "atmospheric:barrel_cactus",
+      "required": false
+    },
+    {
+      "id": "atmospheric:aloe_vera",
+      "required": false
+    },
+    {
+      "id": "windswept:yellow_petals",
+      "required": false
+    }
   ]
 }

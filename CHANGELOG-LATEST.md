@@ -1,3 +1,3 @@
 ### Fixed
 
-- Fixed category syncing in heavily modded environments.
+- Fixed huge mushrooms not showing up in the Field Guide.
