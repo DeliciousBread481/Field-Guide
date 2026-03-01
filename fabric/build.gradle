@@ -32,6 +32,9 @@ dependencies {
     // ETF
     modCompileOnly "maven.modrinth:entitytexturefeatures:${etf_version}-fabric-1.20.1"
 
+    // Reliable Remover
+    modCompileOnly "maven.modrinth:reliable-remover:${reliable_remover_version}-fabric-1.20.1"
+
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
     implementation project(":common")
 }
