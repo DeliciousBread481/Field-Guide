@@ -22,7 +22,7 @@
             "com.evandev.fieldguide.compat.ModMenuIntegration"
         ],
         "client": [
-            "com.evandev.fieldguide.FieldGuideClient"
+            "com.evandev.fieldguide.FieldGuideFabricClient"
         ]
     },
     "mixins": [

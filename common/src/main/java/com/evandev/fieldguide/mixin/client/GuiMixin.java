@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class GuiMixin {
     @Inject(method = "render", at = @At("TAIL"))
     private void renderScanningIcon(GuiGraphics guiGraphics, DeltaTracker deltaTracker, CallbackInfo ci) {
-        if (!Services.PLATFORM.getPlatformName().equals("Forge")) {
+        if (!Services.PLATFORM.getPlatformName().equals("NeoForge")) {
             float partialTick = deltaTracker.getGameTimeDeltaPartialTick(true);
             FieldGuideClient.renderScanningIcon(guiGraphics, partialTick);
         }

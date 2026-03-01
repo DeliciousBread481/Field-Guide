@@ -24,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class FieldGuideClient implements ClientModInitializer {
+public class FieldGuideFabricClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         com.evandev.fieldguide.client.FieldGuideClient.init();

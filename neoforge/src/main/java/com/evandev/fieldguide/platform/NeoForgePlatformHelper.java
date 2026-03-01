@@ -1,17 +1,17 @@
 package com.evandev.fieldguide.platform;
 
 import com.evandev.fieldguide.platform.services.IPlatformHelper;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.loading.FMLLoader;
-import net.minecraftforge.fml.loading.FMLPaths;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.loading.FMLLoader;
+import net.neoforged.fml.loading.FMLPaths;
 
 import java.nio.file.Path;
 
-public class ForgePlatformHelper implements IPlatformHelper {
+public class NeoForgePlatformHelper implements IPlatformHelper {
 
     @Override
     public String getPlatformName() {
-        return "Forge";
+        return "NeoForge";
     }
 
     @Override

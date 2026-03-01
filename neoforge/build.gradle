@@ -39,27 +39,27 @@ sourceSets.main.resources.srcDir 'src/generated/resources'
 
 dependencies {
     // Item Descriptions
-    modRuntimeOnly "maven.modrinth:item-descriptions:${item_descriptions_version}-neoforge"
+    runtimeOnly "maven.modrinth:item-descriptions:${item_descriptions_version}-neoforge"
 
     // EMI
-    modImplementation "dev.emi:emi-neoforge:${emi_version}"
+    implementation "dev.emi:emi-neoforge:${emi_version}"
 
     // Cloth Config
-    modImplementation "me.shedaniel.cloth:cloth-config-neoforge:${cloth_config_version}"
+    implementation "me.shedaniel.cloth:cloth-config-neoforge:${cloth_config_version}"
 
     // Immersive Overlays
-    modRuntimeOnly "maven.modrinth:immersive-overlays:${immersive_overlays_version}-neoforge"
+    runtimeOnly "maven.modrinth:immersive-overlays:${immersive_overlays_version}-neoforge"
 
     // Spyglass Improvements
-    modRuntimeOnly "maven.modrinth:spyglass-improvements:${spyglass_improvements_version}+neoforge"
+    runtimeOnly "maven.modrinth:spyglass-improvements:${spyglass_improvements_version}+neoforge"
 
     // ETF
-    modCompileOnly "maven.modrinth:entitytexturefeatures:${etf_version}-neoforge-1.21"
+    compileOnly "maven.modrinth:entitytexturefeatures:${etf_version}-neoforge-1.21"
 
     // Reliable Remover
-    modCompileOnly "maven.modrinth:reliable-remover:${reliable_remover_version}-neoforge-1.21.1"
+    compileOnly "maven.modrinth:reliable-remover:${reliable_remover_version}-neoforge-1.21.1"
 }
 
 publishMods {
-    file = tasks.named("reobfJar").flatMap { it.archiveFile }
+    file = tasks.named("jar").flatMap { it.archiveFile }
 }

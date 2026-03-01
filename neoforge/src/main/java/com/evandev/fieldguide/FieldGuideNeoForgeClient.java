@@ -9,23 +9,23 @@ import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.storage.LevelResource;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.ConfigScreenHandler;
-import net.minecraftforge.client.event.*;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.ModLoadingContext;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.client.event.*;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class FieldGuideForgeClient {
+public class FieldGuideNeoForgeClient {
 
     public static void handleSyncLoot(SyncLootPacket packet) {
-        ClientFieldGuideManager.getInstance().updateLootCache(packet.getLootCache());
+        ClientFieldGuideManager.getInstance().updateLootCache(packet.lootCache());
     }
 
     public static void handleSyncCategories(SyncCategoriesPacket packet) {
@@ -43,7 +43,7 @@ public class FieldGuideForgeClient {
         packet.handleClient();
     }
 
-    @Mod.EventBusSubscriber(modid = Constants.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+    @EventBusSubscriber(modid = Constants.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents {
         @SubscribeEvent
         public static void registerShaders(RegisterShadersEvent event) {
@@ -75,33 +75,30 @@ public class FieldGuideForgeClient {
         }
 
         @SubscribeEvent
-        public static void onConstructMod(FMLConstructModEvent event) {
+        public static void onClientSetup(FMLClientSetupEvent event) {
             if (ModList.get().isLoaded("cloth_config")) {
                 ModLoadingContext.get().registerExtensionPoint(
-                        ConfigScreenHandler.ConfigScreenFactory.class,
-                        () -> new ConfigScreenHandler.ConfigScreenFactory(
-                                (client, parent) -> ClothConfigIntegration.createScreen(parent)
-                        )
+                        IConfigScreenFactory.class,
+                        () -> (client, parent) -> ClothConfigIntegration.createScreen(parent)
                 );
             }
         }
     }
 
-    @Mod.EventBusSubscriber(modid = Constants.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
-    public static class ClientForgeEvents {
+    @EventBusSubscriber(modid = Constants.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
+    public static class ClientNeoForgeEvents {
         @SubscribeEvent
-        public static void onClientTick(TickEvent.ClientTickEvent event) {
-            if (event.phase == TickEvent.Phase.END) {
-                Minecraft client = Minecraft.getInstance();
-                ClientFieldGuideManager.getInstance().onClientTick(client);
-                FieldGuideClient.onClientTick(client);
-            }
+        public static void onClientTick(ClientTickEvent.Post event) {
+            Minecraft client = Minecraft.getInstance();
+            ClientFieldGuideManager.getInstance().onClientTick(client);
+            FieldGuideClient.onClientTick(client);
         }
 
         @SubscribeEvent
-        public static void onRenderGuiOverlay(RenderGuiOverlayEvent.Post event) {
-            if (event.getOverlay().id().getPath().equals("crosshair")) {
-                FieldGuideClient.renderScanningIcon(event.getGuiGraphics(), event.getPartialTick());
+        public static void onRenderGuiOverlay(RenderGuiLayerEvent.Post event) {
+            if (event.getName().equals(VanillaGuiLayers.CROSSHAIR)) {
+                float partialTick = Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
+                FieldGuideClient.renderScanningIcon(event.getGuiGraphics(), partialTick);
             }
         }
 
