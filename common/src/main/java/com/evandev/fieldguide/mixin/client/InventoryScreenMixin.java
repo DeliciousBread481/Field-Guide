@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class InventoryScreenMixin extends EffectRenderingInventoryScreen<InventoryMenu> {
 
     @Unique
-    private static final WidgetSprites GUIDE_BUTTON_SPRITES = new WidgetSprites(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/inventory_button"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/inventory_button_highlighted"));
+    private static final WidgetSprites GUIDE_BUTTON_SPRITES = new WidgetSprites(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/fieldguide_inventory_button"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/fieldguide_inventory_button_highlighted"));
 
     @Unique
     private ImageButton fieldguide$guideButton;

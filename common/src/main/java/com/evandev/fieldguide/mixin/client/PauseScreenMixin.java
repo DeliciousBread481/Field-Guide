@@ -21,7 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class PauseScreenMixin extends Screen {
 
     @Unique
-    private static final WidgetSprites PAUSE_BUTTON_SPRITES = new WidgetSprites(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/pause_button"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/pause_button_highlighted"));
+    private static final WidgetSprites PAUSE_BUTTON_SPRITES = new WidgetSprites(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/fieldguide_button"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/fieldguide_button_highlighted"));
 
     protected PauseScreenMixin(Component title) {
         super(title);

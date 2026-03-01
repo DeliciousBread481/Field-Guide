@@ -28,8 +28,8 @@ public class Constants {
     public static final WidgetSprites NEXT_PAGE_SPRITES = new WidgetSprites(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/page_next"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/page_next_highlighted"));
     public static final WidgetSprites BACK_SPRITES = new WidgetSprites(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/back_button"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/back_button_highlighted"));
 
-    public static final WidgetSprites PREV_SPRITES = new WidgetSprites(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_prev"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_prev_highlighted"));
-    public static final WidgetSprites NEXT_SPRITES = new WidgetSprites(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_next"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_next_highlighted"));
+    public static final WidgetSprites PREV_SPRITES = new WidgetSprites(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_prev"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_prev_disabled"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_prev_highlighted"));
+    public static final WidgetSprites NEXT_SPRITES = new WidgetSprites(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_next"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_next_disabled"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_next_highlighted"));
 
     // Icons
     public static final ResourceLocation DEFAULT_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/book.png");

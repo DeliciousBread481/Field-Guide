@@ -588,7 +588,7 @@ public class FieldGuideScreen extends BookScreen {
 
                 int progressWidth = (int) ((float) unlocked / total * barWidth);
                 progressWidth = Math.max(progressWidth, 6);
-                guiGraphics.blitSprite(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/progress_bar"), barX, barY, progressWidth, barHeight);
+                guiGraphics.blitSprite(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/progress_bar_fill"), barX, barY, progressWidth, barHeight);
             }
         }
     }
