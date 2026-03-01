@@ -112,7 +112,24 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(flattenedCategories, biomeAdditions, biomeRemovals, lootAdditions, lootRemovals, redirects), player);
 
         if (!serverLootCache.isEmpty()) {
-            Services.NETWORK.sendToPlayer(new SyncLootPacket(serverLootCache), player);
+            Map<ResourceLocation, List<ItemStack>> chunk = new HashMap<>();
+            int count = 0;
+            int maxChunkSize = 50;
+
+            for (var entry : serverLootCache.entrySet()) {
+                chunk.put(entry.getKey(), entry.getValue());
+                count++;
+
+                if (count >= maxChunkSize) {
+                    Services.NETWORK.sendToPlayer(new SyncLootPacket(chunk), player);
+                    chunk = new HashMap<>();
+                    count = 0;
+                }
+            }
+
+            if (!chunk.isEmpty()) {
+                Services.NETWORK.sendToPlayer(new SyncLootPacket(chunk), player);
+            }
         }
     }
 

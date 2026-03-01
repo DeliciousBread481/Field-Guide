@@ -231,8 +231,6 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public void updateLootCache(Map<ResourceLocation, List<ItemStack>> lootCache) {
-        this.dropCache.clear();
-
         for (Map.Entry<ResourceLocation, List<ItemStack>> entry : lootCache.entrySet()) {
             ResourceLocation id = entry.getKey();
             List<ItemStack> drops = entry.getValue();
@@ -392,6 +390,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public void onWorldUnload() {
+        this.dropCache.clear();
         ProgressManager.getInstance().onWorldUnload();
     }
 
