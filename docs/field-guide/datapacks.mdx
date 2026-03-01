@@ -71,11 +71,42 @@ The Field Guide automatically hides empty categories.
 * `mod_trees:<mod_id>`: All dynamically generated tree structures from a specific mod.
 * `tag:<tag_id>`: All entities with a specific tag (e.g. tag:minecraft:raiders).
 
+#### Content grouping
+
+By default entries in the list appear in the order they were defined in `content: []`. However, if you want similar entries to be grouped together, a list of ['search queries'](/project/field-guide/docs/field-guide/searching) can be provided in `group_by`.
+
+Entries matched by the first query will show up first on the list, followed by entries matching the second, then third and so on. Entries that don't match any query will appear last on the list.
+
+```json
+{
+  "replace": false,
+  "group_by": [
+        "tree",
+        "#minecraft:flowers",
+        "!forest"
+        "!ocean"
+  ],
+  "contents": [...]
+}
+
+```
+
 ---
 
 ### For Mod Developers & Pack Makers
 
 If you are a mod developer, you can ensure your mod plays nicely with Field Guide by providing your own built-in datapack data. Here are some tips and advanced entry types to help you integrate seamlessly.
+
+#### Plant blocks
+
+The default "Plants" category includes everything with the tag `fieldguide:plants`. To make sure your modded plant blocks show up, either apply this tag or one of the following:
+
+* `minecraft:flowers`
+* `minecraft:saplings`
+* `minecraft:crops`
+* `minecraft:corals`
+* `minecraft:tall_flowers`
+* `minecraft:leaves`
 
 #### Special Entity Tags
 
