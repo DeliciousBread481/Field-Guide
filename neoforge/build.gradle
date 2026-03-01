@@ -48,7 +48,8 @@ dependencies {
     implementation "me.shedaniel.cloth:cloth-config-neoforge:${cloth_config_version}"
 
     // Immersive Overlays
-    runtimeOnly "maven.modrinth:immersive-overlays:${immersive_overlays_version}-neoforge"
+    // TODO: this crashes for some reason
+    // runtimeOnly "maven.modrinth:immersive-overlays:${immersive_overlays_version}-neoforge"
 
     // Spyglass Improvements
     runtimeOnly "maven.modrinth:spyglass-improvements:${spyglass_improvements_version}+neoforge"
