@@ -271,7 +271,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
+        this.renderFieldGuideBackground(guiGraphics, mouseX, mouseY, partialTick);
 
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0, 0, 50);

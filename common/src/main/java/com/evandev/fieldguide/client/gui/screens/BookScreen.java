@@ -7,12 +7,14 @@ import com.evandev.fieldguide.client.gui.widget.TabButton;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -147,6 +149,14 @@ public abstract class BookScreen extends Screen {
     }
 
     abstract public void onTabClick(Category category);
+
+    public void renderFieldGuideBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        super.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
+    }
+
+    @Override
+    public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    }
 
     @Override
     public void onClose() {

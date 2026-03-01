@@ -313,12 +313,12 @@ public class EntryRenderHelper {
             float g = rgb.getGreen() / 255F;
             float b = rgb.getBlue() / 255F;
 
+            guiGraphics.flush();
+
             RenderSystem.enableDepthTest();
             RenderSystem.setShaderFogColor(r, g, b);
             RenderSystem.setShaderFogStart(0.0F);
             RenderSystem.setShaderFogEnd(0.1F);
-
-            guiGraphics.flush();
 
             VertexConsumer consumer = guiGraphics.bufferSource().getBuffer(RenderType.entityCutout(texture));
             Matrix4f matrix = guiGraphics.pose().last().pose();
