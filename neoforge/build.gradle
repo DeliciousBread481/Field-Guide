@@ -1,0 +1,65 @@
+plugins {
+    id 'multiloader-loader'
+    id 'net.neoforged.moddev'
+}
+
+neoForge {
+    version = neoforge_version
+    def at = project(':common').file('src/main/resources/META-INF/accesstransformer.cfg')
+    if (at.exists()) {
+        accessTransformers.from(at.absolutePath)
+    }
+
+    parchment {
+        minecraftVersion = parchment_minecraft
+        mappingsVersion = parchment_version
+    }
+
+    runs {
+        configureEach {
+            systemProperty('neoforge.enabledGameTestNamespaces', mod_id)
+            ideName = "NeoForge ${it.name.capitalize()} (${project.path})"
+        }
+        client {
+            client()
+        }
+        server {
+            server()
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+sourceSets.main.resources.srcDir 'src/generated/resources'
+
+dependencies {
+    // Item Descriptions
+    modRuntimeOnly "maven.modrinth:item-descriptions:${item_descriptions_version}-neoforge"
+
+    // EMI
+    modImplementation "dev.emi:emi-neoforge:${emi_version}"
+
+    // Cloth Config
+    modImplementation "me.shedaniel.cloth:cloth-config-neoforge:${cloth_config_version}"
+
+    // Immersive Overlays
+    modRuntimeOnly "maven.modrinth:immersive-overlays:${immersive_overlays_version}-neoforge"
+
+    // Spyglass Improvements
+    modRuntimeOnly "maven.modrinth:spyglass-improvements:${spyglass_improvements_version}+neoforge"
+
+    // ETF
+    modCompileOnly "maven.modrinth:entitytexturefeatures:${etf_version}-neoforge-1.21"
+
+    // Reliable Remover
+    modImplementation "maven.modrinth:reliable-remover:${reliable_remover_version}-neoforge-1.21.1"
+}
+
+publishMods {
+    file = tasks.named("reobfJar").flatMap { it.archiveFile }
+}

@@ -4,10 +4,10 @@ plugins {
 }
 
 configurations {
-    commonJava{
+    commonJava {
         canBeResolved = true
     }
-    commonResources{
+    commonResources {
         canBeResolved = true
     }
 }
@@ -32,11 +32,10 @@ processResources {
     from(configurations.commonResources)
 }
 
-
 publishMods {
     changelog = rootProject.file("CHANGELOG-LATEST.md").text
     type = STABLE
-    version = "${project.version}-${project.name}-${minecraft_version}"
+    version = "${project.version}-${minecraft_version}-${project.name}"
     displayName = "${mod_name} ${project.name.capitalize()} ${minecraft_version} - ${project.version}"
     modLoaders.add(project.name)
 
