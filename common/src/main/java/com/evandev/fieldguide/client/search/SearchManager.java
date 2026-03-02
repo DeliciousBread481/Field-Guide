@@ -113,6 +113,31 @@ public class SearchManager {
         List<Object> results = new ArrayList<>();
         if (biomeQuery.isEmpty()) return results;
 
+        var connection = Minecraft.getInstance().getConnection();
+        if (connection != null) {
+            var biomeRegistry = connection.registryAccess().registryOrThrow(Registries.BIOME);
+
+            for (var biomeEntry : biomeRegistry.entrySet()) {
+                if (matchLocation(biomeEntry.getKey().location(), biomeQuery, exactMatch)) {
+                    Biome biome = biomeEntry.getValue();
+                    for (MobCategory cat : MobCategory.values()) {
+                        try {
+                            for (var spawn : biome.getMobSettings().getMobs(cat).unwrap()) {
+                                if (ClientFieldGuideManager.getInstance().isValidEntity(spawn.type, ModConfig.get())) {
+                                    if (!results.contains(spawn.type)) {
+                                        Object entry = ClientFieldGuideManager.getInstance().getEntryForTarget(spawn.type);
+                                        if (entry != null && !results.contains(entry) && entries.contains(entry))
+                                            results.add(entry);
+                                    }
+                                }
+                            }
+                        } catch (Exception ignored) {
+                        }
+                    }
+                }
+            }
+        }
+
         for (Object entry : entries) {
             ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
             if (entryId != null) {

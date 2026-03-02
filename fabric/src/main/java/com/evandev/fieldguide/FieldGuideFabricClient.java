@@ -54,10 +54,20 @@ public class FieldGuideFabricClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(SyncCategoriesPacket.TYPE, (SyncCategoriesPacket packet, ClientPlayNetworking.Context context) -> {
             context.client().execute(() -> {
                 ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
-                manager.updateCategoriesFromServer(packet.getCategories(), packet.getRedirects(), packet.isClearCache());
+
+                manager.updateCategoriesFromServer(
+                        packet.getCategories(),
+                        packet.getRedirects(),
+                        packet.isClearCache(),
+                        packet.isLast()
+                );
+
                 manager.updateModifiers(
-                        packet.getBiomeAdditions(), packet.getBiomeRemovals(),
-                        packet.getLootAdditions(), packet.getLootRemovals(), packet.isClearCache()
+                        packet.getBiomeAdditions(),
+                        packet.getBiomeRemovals(),
+                        packet.getLootAdditions(),
+                        packet.getLootRemovals(),
+                        packet.isClearCache()
                 );
             });
         });

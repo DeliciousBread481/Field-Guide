@@ -20,6 +20,7 @@ public class SyncCategoriesPacket implements CustomPacketPayload {
     public static final StreamCodec<RegistryFriendlyByteBuf, SyncCategoriesPacket> CODEC = StreamCodec.ofMember(SyncCategoriesPacket::encode, SyncCategoriesPacket::new);
 
     private final boolean clearCache;
+    private final boolean isLast;
     private final List<Category> categories;
     private final List<String> biomeAdditions;
     private final List<String> biomeRemovals;
@@ -27,7 +28,7 @@ public class SyncCategoriesPacket implements CustomPacketPayload {
     private final List<String> lootRemovals;
     private final Map<ResourceLocation, ResourceLocation> redirects;
 
-    public SyncCategoriesPacket(List<Category> categories, List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals, Map<ResourceLocation, ResourceLocation> redirects, boolean clearCache) {
+    public SyncCategoriesPacket(List<Category> categories, List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals, Map<ResourceLocation, ResourceLocation> redirects, boolean clearCache, boolean isLast) {
         this.categories = categories;
         this.biomeAdditions = biomeAdditions;
         this.biomeRemovals = biomeRemovals;
@@ -35,22 +36,29 @@ public class SyncCategoriesPacket implements CustomPacketPayload {
         this.lootRemovals = lootRemovals;
         this.redirects = redirects;
         this.clearCache = clearCache;
+        this.isLast = isLast;
     }
 
     public SyncCategoriesPacket(RegistryFriendlyByteBuf buf) {
         this.clearCache = buf.readBoolean();
+        this.isLast = buf.readBoolean();
 
         this.categories = buf.readCollection(ArrayList::new, b -> {
             ResourceLocation id = b.readResourceLocation();
             Category cat = new Category(id);
             cat.setSortIndex(b.readInt());
-            cat.setIcon(b.readResourceLocation());
+
+            if (b.readBoolean()) {
+                cat.setIcon(b.readResourceLocation());
+            }
+
             int queryCount = b.readInt();
             ArrayList<String> queries = new ArrayList<>();
             for (int i = 0; i < queryCount; i++) {
                 queries.add(b.readUtf());
             }
             cat.setGroupByQueries(queries);
+
             int entryCount = b.readInt();
             for (int i = 0; i < entryCount; i++) {
                 CategoryEntry.Type type = b.readEnum(CategoryEntry.Type.class);
@@ -93,42 +101,59 @@ public class SyncCategoriesPacket implements CustomPacketPayload {
 
     public void encode(RegistryFriendlyByteBuf buf) {
         buf.writeBoolean(clearCache);
+        buf.writeBoolean(isLast);
         buf.writeCollection(categories, (b, cat) -> {
             b.writeResourceLocation(cat.getId());
             b.writeInt(cat.getSortIndex());
-            b.writeResourceLocation(cat.getIcon());
-            b.writeInt(cat.getGroupByQueries().size());
-            for (String query : cat.getGroupByQueries()) {
-                b.writeUtf(query);
+
+            b.writeBoolean(cat.getIcon() != null);
+            if (cat.getIcon() != null) {
+                b.writeResourceLocation(cat.getIcon());
             }
-            b.writeInt(cat.getEntries().size());
-            for (CategoryEntry entry : cat.getEntries()) {
-                b.writeEnum(entry.type());
-                b.writeBoolean(entry.id() != null);
-                if (entry.id() != null) b.writeResourceLocation(entry.id());
 
-                b.writeBoolean(entry.displayId() != null);
-                if (entry.displayId() != null) b.writeResourceLocation(entry.displayId());
-
-                b.writeBoolean(entry.strategy() != null);
-                if (entry.strategy() != null) b.writeUtf(entry.strategy());
-
-                b.writeBoolean(entry.components() != null);
-                if (entry.components() != null) {
-                    b.writeInt(entry.components().size());
-                    for (ResourceLocation comp : entry.components()) {
-                        b.writeResourceLocation(comp);
-                    }
+            List<String> queries = cat.getGroupByQueries();
+            if (queries == null) {
+                b.writeInt(0);
+            } else {
+                b.writeInt(queries.size());
+                for (String query : queries) {
+                    b.writeUtf(query);
                 }
+            }
 
-                b.writeBoolean(entry.structureNbt() != null);
-                if (entry.structureNbt() != null) b.writeResourceLocation(entry.structureNbt());
+            List<CategoryEntry> entries = cat.getEntries();
+            if (entries == null) {
+                b.writeInt(0);
+            } else {
+                b.writeInt(entries.size());
+                for (CategoryEntry entry : entries) {
+                    b.writeEnum(entry.type());
+                    b.writeBoolean(entry.id() != null);
+                    if (entry.id() != null) b.writeResourceLocation(entry.id());
 
-                b.writeBoolean(entry.stackedBlocks() != null);
-                if (entry.stackedBlocks() != null) {
-                    b.writeInt(entry.stackedBlocks().size());
-                    for (String blockStr : entry.stackedBlocks()) {
-                        b.writeUtf(blockStr);
+                    b.writeBoolean(entry.displayId() != null);
+                    if (entry.displayId() != null) b.writeResourceLocation(entry.displayId());
+
+                    b.writeBoolean(entry.strategy() != null);
+                    if (entry.strategy() != null) b.writeUtf(entry.strategy());
+
+                    b.writeBoolean(entry.components() != null);
+                    if (entry.components() != null) {
+                        b.writeInt(entry.components().size());
+                        for (ResourceLocation comp : entry.components()) {
+                            b.writeResourceLocation(comp);
+                        }
+                    }
+
+                    b.writeBoolean(entry.structureNbt() != null);
+                    if (entry.structureNbt() != null) b.writeResourceLocation(entry.structureNbt());
+
+                    b.writeBoolean(entry.stackedBlocks() != null);
+                    if (entry.stackedBlocks() != null) {
+                        b.writeInt(entry.stackedBlocks().size());
+                        for (String blockStr : entry.stackedBlocks()) {
+                            b.writeUtf(blockStr);
+                        }
                     }
                 }
             }
@@ -148,6 +173,10 @@ public class SyncCategoriesPacket implements CustomPacketPayload {
 
     public boolean isClearCache() {
         return clearCache;
+    }
+
+    public boolean isLast() {
+        return isLast;
     }
 
     public List<Category> getCategories() {

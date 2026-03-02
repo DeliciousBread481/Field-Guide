@@ -9,6 +9,7 @@ import com.evandev.fieldguide.client.scanning.FieldGuideScanner;
 import com.evandev.fieldguide.client.search.SearchManager;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
+import com.evandev.fieldguide.data.CategoryEntry;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.util.EntryResolver;
 import com.google.gson.JsonObject;
@@ -46,6 +47,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     private final List<String> biomeRemovals = new ArrayList<>();
     private final List<String> lootAdditions = new ArrayList<>();
     private final List<String> lootRemovals = new ArrayList<>();
+    private boolean needsResolution = false;
 
     private ClientFieldGuideManager() {
     }
@@ -161,6 +163,17 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         return lootRemovals;
     }
 
+    public void updateModifiers(List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals) {
+        this.biomeAdditions.clear();
+        this.biomeAdditions.addAll(biomeAdditions);
+        this.biomeRemovals.clear();
+        this.biomeRemovals.addAll(biomeRemovals);
+        this.lootAdditions.clear();
+        this.lootAdditions.addAll(lootAdditions);
+        this.lootRemovals.clear();
+        this.lootRemovals.addAll(lootRemovals);
+    }
+
     public void updateModifiers(List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals, boolean clearCache) {
         if (clearCache) {
             this.biomeAdditions.clear();
@@ -168,23 +181,45 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             this.lootAdditions.clear();
             this.lootRemovals.clear();
         }
-        this.biomeAdditions.addAll(biomeAdditions);
-        this.biomeRemovals.addAll(biomeRemovals);
-        this.lootAdditions.addAll(lootAdditions);
-        this.lootRemovals.addAll(lootRemovals);
+
+        if (!biomeAdditions.isEmpty()) this.biomeAdditions.addAll(biomeAdditions);
+        if (!biomeRemovals.isEmpty()) this.biomeRemovals.addAll(biomeRemovals);
+        if (!lootAdditions.isEmpty()) this.lootAdditions.addAll(lootAdditions);
+        if (!lootRemovals.isEmpty()) this.lootRemovals.addAll(lootRemovals);
     }
 
-    public void updateCategoriesFromServer(List<Category> categories, Map<ResourceLocation, ResourceLocation> redirects, boolean clearCache) {
+    public void updateCategoriesFromServer(List<Category> categories, Map<ResourceLocation, ResourceLocation> redirects, boolean clearCache, boolean resolveEntries) {
         if (clearCache) {
             this.redirects.clear();
             this.syncedCategories.clear();
         }
 
         this.redirects.putAll(redirects);
+
         for (Category cat : categories) {
-            this.syncedCategories.put(cat.getId(), cat);
+            if (this.syncedCategories.containsKey(cat.getId())) {
+                Category existing = this.syncedCategories.get(cat.getId());
+                if (cat.getEntries() != null) {
+                    for (CategoryEntry entry : cat.getEntries()) {
+                        existing.addEntry(entry);
+                    }
+                }
+                if (cat.getGroupByQueries() != null && !cat.getGroupByQueries().isEmpty()) {
+                    existing.setGroupByQueries(cat.getGroupByQueries());
+                }
+            } else {
+                this.syncedCategories.put(cat.getId(), cat);
+            }
         }
-        resolveAllEntries();
+
+        if (resolveEntries) {
+            List<Category> sorted = new ArrayList<>(this.syncedCategories.values());
+            sorted.sort(Comparator.comparingInt(Category::getSortIndex).thenComparing(Category::getId));
+            this.syncedCategories.clear();
+            for (Category cat : sorted) this.syncedCategories.put(cat.getId(), cat);
+
+            this.needsResolution = true;
+        }
     }
 
     public Object getEntryForTarget(Object target) {
@@ -238,15 +273,6 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         ProgressManager.getInstance().exportToLang(type);
     }
 
-    public void updateCategoriesFromServer(List<Category> categories, Map<ResourceLocation, ResourceLocation> redirects) {
-        this.redirects.clear();
-        this.redirects.putAll(redirects);
-        this.syncedCategories.clear();
-        categories.sort(Comparator.comparingInt(Category::getSortIndex).thenComparing(Category::getId));
-        for (Category cat : categories) this.syncedCategories.put(cat.getId(), cat);
-        resolveAllEntries();
-    }
-
     public void updateLootCache(Map<ResourceLocation, List<ItemStack>> lootCache, boolean clearCache) {
         if (clearCache) {
             this.dropCache.clear();
@@ -297,7 +323,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             entryVisuals.put(targetId, visual);
         });
 
-        resolveAllEntries();
+        this.needsResolution = true;
     }
 
     private void loadVisuals(ResourceManager mgr, BiConsumer<ResourceLocation, JsonObject> processor) {
@@ -404,6 +430,11 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
     public void onClientTick(Minecraft minecraft) {
         FieldGuideScanner.getInstance().onClientTick(minecraft);
+
+        if (this.needsResolution && minecraft.level != null) {
+            resolveAllEntries();
+            this.needsResolution = false;
+        }
     }
 
     public long getLastUnlockTime() {

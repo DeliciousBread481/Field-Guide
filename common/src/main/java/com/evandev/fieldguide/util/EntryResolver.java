@@ -166,9 +166,15 @@ public class EntryResolver {
             results.addAll(getAutoTrees(id -> id.getNamespace().equals(modId), config));
         } else if (strategy.startsWith("tag:")) {
             try {
-                TagKey<EntityType<?>> tagKey = TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.parse(strategy.substring(4)));
-                BuiltInRegistries.ENTITY_TYPE.forEach(type -> BuiltInRegistries.ENTITY_TYPE.getResourceKey(type).flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder).filter(h -> h.is(tagKey) && isValidEntity(type, config)).ifPresent(h -> results.add(type)));
-                results.sort(Comparator.comparing(o -> BuiltInRegistries.ENTITY_TYPE.getKey((EntityType<?>) o).toString()));
+                ResourceLocation tagLocation = ResourceLocation.parse(strategy.substring(4));
+
+                TagKey<EntityType<?>> entityTagKey = TagKey.create(Registries.ENTITY_TYPE, tagLocation);
+                BuiltInRegistries.ENTITY_TYPE.forEach(type -> BuiltInRegistries.ENTITY_TYPE.getResourceKey(type).flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder).filter(h -> h.is(entityTagKey) && isValidEntity(type, config)).ifPresent(results::add));
+
+                TagKey<Block> blockTagKey = TagKey.create(Registries.BLOCK, tagLocation);
+                BuiltInRegistries.BLOCK.forEach(block -> BuiltInRegistries.BLOCK.getResourceKey(block).flatMap(BuiltInRegistries.BLOCK::getHolder).filter(h -> h.is(blockTagKey) && isValidBlock(block, config)).ifPresent(results::add));
+
+                results.sort(Comparator.comparing(o -> getEntryId(o).toString()));
             } catch (Exception e) {
                 Constants.LOG.error("Invalid tag strategy: {}", strategy, e);
             }

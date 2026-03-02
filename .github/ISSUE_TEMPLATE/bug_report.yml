@@ -42,6 +42,7 @@ body:
       label: Mod Version
       description: The version of the mod you were using
       options:
+        - "1.1.0"
         - "1.0.3"
         - "1.0.2"
         - "1.0.1"
@@ -62,9 +63,9 @@ body:
       label: Mod Loader
       description: Which mod loader were you using?
       options:
-        - "NeoForge"
         - "Forge"
         - "Fabric"
+        - "NeoForge"
     validations:
       required: true
   - type: textarea

@@ -32,7 +32,8 @@ public class FieldGuideNeoForgeClient {
         ClientFieldGuideManager.getInstance().updateCategoriesFromServer(
                 packet.getCategories(),
                 packet.getRedirects(),
-                packet.isClearCache()
+                packet.isClearCache(),
+                packet.isLast()
         );
 
         ClientFieldGuideManager.getInstance().updateModifiers(
