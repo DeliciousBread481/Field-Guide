@@ -34,18 +34,27 @@ public class FieldGuideMod {
 
     private void registerPayloads(final RegisterPayloadHandlersEvent event) {
         final PayloadRegistrar registrar = event.registrar(Constants.MOD_ID).versioned("1.0");
+        registrar.playToClient(
+                SyncLootPacket.TYPE,
+                SyncLootPacket.CODEC,
+                (packet, context) -> context.enqueueWork(() -> FieldGuideNeoForgeClient.handleSyncLoot(packet))
+        );
 
-        registrar.playToClient(SyncLootPacket.TYPE, SyncLootPacket.CODEC, (packet, context) ->
-                context.enqueueWork(() -> FieldGuideNeoForgeClient.handleSyncLoot(packet))
+        registrar.playToClient(
+                SyncCategoriesPacket.TYPE,
+                SyncCategoriesPacket.CODEC,
+                (packet, context) -> context.enqueueWork(() -> FieldGuideNeoForgeClient.handleSyncCategories(packet))
         );
-        registrar.playToClient(SyncCategoriesPacket.TYPE, SyncCategoriesPacket.CODEC, (packet, context) ->
-                context.enqueueWork(() -> FieldGuideNeoForgeClient.handleSyncCategories(packet))
+
+        registrar.playToClient(
+                GrantContentPacket.TYPE,
+                GrantContentPacket.CODEC,
+                (packet, context) -> context.enqueueWork(() -> FieldGuideNeoForgeClient.handleGrantContent(packet))
         );
-        registrar.playToClient(GrantContentPacket.TYPE, GrantContentPacket.CODEC, (packet, context) ->
-                context.enqueueWork(() -> FieldGuideNeoForgeClient.handleGrantContent(packet))
-        );
-        registrar.playToClient(ExportContentPacket.TYPE, ExportContentPacket.CODEC, (packet, context) ->
-                context.enqueueWork(packet::handleClient)
+        registrar.playToClient(
+                ExportContentPacket.TYPE,
+                ExportContentPacket.CODEC,
+                (packet, context) -> context.enqueueWork(packet::handleClient)
         );
 
         registrar.playToServer(ClaimXpPacket.TYPE, ClaimXpPacket.CODEC, (packet, context) ->

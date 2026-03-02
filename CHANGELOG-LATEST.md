@@ -1,4 +1,4 @@
 ### Fixed
 
-- Fixed bosses tag not populating properly.
-- Fixed possible networking-related NPE.
+- Improve networking performance for 1.21.1.
+- Fixed crashes with scanning multipart entities.

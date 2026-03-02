@@ -2,10 +2,7 @@ package com.evandev.fieldguide.server;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.data.Category;
-import com.evandev.fieldguide.data.CategoryEntry;
-import com.evandev.fieldguide.data.CompositeDefinition;
-import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.data.*;
 import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
@@ -107,11 +104,11 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                 for (int j = index; j < endIndex; j++) {
                     Object obj = resolved.get(j);
                     if (obj instanceof EntityType<?> type) {
-                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.ENTITY_TYPE.getKey(type), BuiltInRegistries.ENTITY_TYPE.getKey(type), null, null, null, null));
+                        chunkCat.addEntry(new CategoryEntry(CategoryType.Type.ENTRY, BuiltInRegistries.ENTITY_TYPE.getKey(type), BuiltInRegistries.ENTITY_TYPE.getKey(type), null, null, null, null));
                     } else if (obj instanceof Block block) {
-                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.BLOCK.getKey(block), BuiltInRegistries.BLOCK.getKey(block), null, null, null, null));
+                        chunkCat.addEntry(new CategoryEntry(CategoryType.Type.ENTRY, BuiltInRegistries.BLOCK.getKey(block), BuiltInRegistries.BLOCK.getKey(block), null, null, null, null));
                     } else if (obj instanceof Item item) {
-                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.ITEM.getKey(item), BuiltInRegistries.ITEM.getKey(item), null, null, null, null));
+                        chunkCat.addEntry(new CategoryEntry(CategoryType.Type.ENTRY, BuiltInRegistries.ITEM.getKey(item), BuiltInRegistries.ITEM.getKey(item), null, null, null, null));
                     } else if (obj instanceof CompositeFieldGuideEntry(
                             ResourceLocation id, Object displayEntry, List<Object> components,
                             ResourceLocation structureNbt, List<String> stackedBlocks
@@ -131,7 +128,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                         else if (displayEntry instanceof Block b) displayId = BuiltInRegistries.BLOCK.getKey(b);
                         else if (displayEntry instanceof Item i) displayId = BuiltInRegistries.ITEM.getKey(i);
 
-                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.Type.COMPOSITE, id, displayId, null, compIds, structureNbt, stackedBlocks));
+                        chunkCat.addEntry(new CategoryEntry(CategoryType.Type.COMPOSITE, id, displayId, null, compIds, structureNbt, stackedBlocks));
                     }
                 }
                 flattenedCategories.add(chunkCat);
@@ -193,7 +190,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         if (!serverLootCache.isEmpty()) {
             Map<ResourceLocation, List<ItemStack>> chunk = new HashMap<>();
             int count = 0;
-            int maxChunkSize = 50;
+            int maxChunkSize = 15;
             boolean isFirstLoot = true;
 
             for (var entry : serverLootCache.entrySet()) {
@@ -201,8 +198,8 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                 count++;
 
                 if (count >= maxChunkSize) {
-                    Services.NETWORK.sendToPlayer(new SyncLootPacket(chunk, isFirstLoot), player);
-                    chunk = new HashMap<>();
+                    Services.NETWORK.sendToPlayer(new SyncLootPacket(new HashMap<>(chunk), isFirstLoot), player);
+                    chunk.clear();
                     count = 0;
                     isFirstLoot = false;
                 }
@@ -309,11 +306,11 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                             switch (typeStr) {
                                 case "entry" -> {
                                     ResourceLocation id = ResourceLocation.parse(GsonHelper.getAsString(obj, "id"));
-                                    category.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, id, id, null, null, null, null));
+                                    category.addEntry(new CategoryEntry(CategoryType.Type.ENTRY, id, id, null, null, null, null));
                                 }
                                 case "auto_populate" -> {
                                     String strategy = GsonHelper.getAsString(obj, "strategy");
-                                    category.addEntry(new CategoryEntry(CategoryEntry.Type.AUTO_POPULATE, null, null, strategy, null, null, null));
+                                    category.addEntry(new CategoryEntry(CategoryType.Type.AUTO_POPULATE, null, null, strategy, null, null, null));
                                 }
                             }
                         }

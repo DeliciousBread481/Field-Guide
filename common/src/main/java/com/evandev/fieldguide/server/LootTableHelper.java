@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.server;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.network.SyncLootPacket;
 import com.evandev.fieldguide.server.loot.ParsedDrop;
 import com.evandev.fieldguide.server.loot.StaticLootParser;
 import net.minecraft.core.component.DataComponents;
@@ -152,5 +153,6 @@ public class LootTableHelper {
             }
         }
         if (added) distinctDrops.sort(Comparator.comparing(s -> s.getHoverName().getString()));
+        distinctDrops.removeIf(ItemStack::isEmpty);
     }
 }

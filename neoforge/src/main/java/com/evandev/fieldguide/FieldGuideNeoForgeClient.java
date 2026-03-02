@@ -30,18 +30,18 @@ public class FieldGuideNeoForgeClient {
 
     public static void handleSyncCategories(SyncCategoriesPacket packet) {
         ClientFieldGuideManager.getInstance().updateCategoriesFromServer(
-                packet.getCategories(),
-                packet.getRedirects(),
-                packet.isClearCache(),
+                packet.categories(),
+                packet.redirects(),
+                packet.clearCache(),
                 packet.isLast()
         );
 
         ClientFieldGuideManager.getInstance().updateModifiers(
-                packet.getBiomeAdditions(),
-                packet.getBiomeRemovals(),
-                packet.getLootAdditions(),
-                packet.getLootRemovals(),
-                packet.isClearCache()
+                packet.biomeAdditions(),
+                packet.biomeRemovals(),
+                packet.lootAdditions(),
+                packet.lootRemovals(),
+                packet.clearCache()
         );
     }
 
