@@ -45,8 +45,10 @@ public class ScanOverlayRenderer {
         FieldGuideScanner scanner = FieldGuideScanner.getInstance();
         Minecraft mc = Minecraft.getInstance();
 
-        Entity outOfRangeEntity = scanner.getOutOfRangeEntity();
-        Entity targetEntity = scanner.getScanningEntity() != null ? scanner.getScanningEntity() : (scanner.getFadingEntity() != null ? scanner.getFadingEntity() : outOfRangeEntity);
+        Entity outOfRangeEntity = resolveEntity(scanner.getOutOfRangeEntity());
+        Entity scanningRaw = scanner.getScanningEntity() != null ? scanner.getScanningEntity() : (scanner.getFadingEntity() != null ? scanner.getFadingEntity() : scanner.getOutOfRangeEntity());
+        Entity targetEntity = resolveEntity(scanningRaw);
+
         BlockPos outOfRangePos = scanner.getOutOfRangePos();
         BlockPos targetBlock = (scanner.getScanningTarget() instanceof Block && scanner.getScanningPos() != null) ? scanner.getScanningPos() : (scanner.getFadingPos() != null ? scanner.getFadingPos() : outOfRangePos);
 
@@ -80,6 +82,22 @@ public class ScanOverlayRenderer {
         if (targetEntity != null && alpha > 0.01f) {
             renderEntityOverlay(poseStack, partialTick, camPos, bufferSource, targetEntity, outOfRangeEntity, scanner, mc, red, green, blue, alpha);
         }
+    }
+
+    private static Entity resolveEntity(Entity entity) {
+        if (entity == null) return null;
+        if (entity instanceof net.minecraft.world.entity.boss.EnderDragonPart dragonPart) {
+            return dragonPart.parentMob;
+        }
+        try {
+            java.lang.reflect.Method getParent = entity.getClass().getMethod("getParent");
+            Object parent = getParent.invoke(entity);
+            if (parent instanceof Entity parentEntity) {
+                return parentEntity;
+            }
+        } catch (Exception ignored) {
+        }
+        return entity;
     }
 
     private static VertexConsumer createTintedConsumer(VertexConsumer delegate, MultiBufferSource provider, float r, float g, float b, float a) {
@@ -404,7 +422,11 @@ public class ScanOverlayRenderer {
         }
 
         MultiBufferSource depthSource = new ScanBufferSourceWrapper(bufferSource, 1, 1, 1, 1, true);
-        mc.getEntityRenderDispatcher().render(targetEntity, 0.0D, 0.0D, 0.0D, yaw, partialTick, poseStack, depthSource, 15728880);
+        try {
+            mc.getEntityRenderDispatcher().render(targetEntity, 0.0D, 0.0D, 0.0D, yaw, partialTick, poseStack, depthSource, 15728880);
+        } catch (Exception ignored) {
+            // Failsafe catch for entity parts trying to utilize incorrect render layers
+        }
         bufferSource.endBatch();
 
         if (ModRenderTypes.SCAN_ENTITY_SHADER != null && ModRenderTypes.SCAN_ENTITY_SHADER.getUniform("ColorModulator") != null) {
@@ -412,7 +434,10 @@ public class ScanOverlayRenderer {
         }
 
         MultiBufferSource forcedSource = new ScanBufferSourceWrapper(bufferSource, red, green, blue, alpha, false);
-        mc.getEntityRenderDispatcher().render(targetEntity, 0.0D, 0.0D, 0.0D, yaw, partialTick, poseStack, forcedSource, 15728880);
+        try {
+            mc.getEntityRenderDispatcher().render(targetEntity, 0.0D, 0.0D, 0.0D, yaw, partialTick, poseStack, forcedSource, 15728880);
+        } catch (Exception ignored) {
+        }
         bufferSource.endBatch();
 
         if (isEtfLoaded) {
