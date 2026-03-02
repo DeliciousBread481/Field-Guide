@@ -19,6 +19,7 @@ dependencies {
     compileOnly "dev.emi:emi-xplat-mojmap:${emi_version}"
     compileOnly "maven.modrinth:entitytexturefeatures:${etf_version}-forge-1.20.1"
     compileOnly "maven.modrinth:reliable-remover:${reliable_remover_version}-forge-1.20.1"
+    compileOnly "maven.modrinth:exposure:${exposure_forge_version}"
 
     compileOnly 'org.jetbrains:annotations:26.0.2-1'
     compileOnly group: 'org.spongepowered', name: 'mixin', version: '0.8.5'

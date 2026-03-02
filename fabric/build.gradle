@@ -35,6 +35,10 @@ dependencies {
     // Reliable Remover
     modCompileOnly "maven.modrinth:reliable-remover:${reliable_remover_version}-fabric-1.20.1"
 
+    // Exposure
+    modImplementation "maven.modrinth:exposure:${exposure_fabric_version}"
+    modImplementation "maven.modrinth:forge-config-api-port:${fcapi_version}-Fabric"
+
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
     implementation project(":common")
 }
@@ -42,9 +46,6 @@ dependencies {
 loom {
     if (project(":common").file("src/main/resources/${mod_id}.accesswidener").exists()) {
         accessWidenerPath.set(project(":common").file("src/main/resources/${mod_id}.accesswidener"))
-    }
-    mixin {
-        defaultRefmapName.set("${mod_id}.refmap.json")
     }
     runs {
         client {

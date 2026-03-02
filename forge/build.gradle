@@ -66,6 +66,9 @@ dependencies {
     // Reliable Remover
     modCompileOnly "maven.modrinth:reliable-remover:${reliable_remover_version}-forge-1.20.1"
 
+    // Exposure
+    modImplementation "maven.modrinth:exposure:${exposure_forge_version}"
+
     compileOnly project(":common")
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
 }
