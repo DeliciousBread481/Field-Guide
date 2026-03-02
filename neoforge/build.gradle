@@ -48,8 +48,7 @@ dependencies {
     implementation "me.shedaniel.cloth:cloth-config-neoforge:${cloth_config_version}"
 
     // Immersive Overlays
-    // TODO: this crashes for some reason
-    // runtimeOnly "maven.modrinth:immersive-overlays:${immersive_overlays_version}-neoforge"
+    runtimeOnly "maven.modrinth:immersive-overlays:${immersive_overlays_version}-neoforge"
 
     // Spyglass Improvements
     runtimeOnly "maven.modrinth:spyglass-improvements:${spyglass_improvements_version}+neoforge"
@@ -59,6 +58,9 @@ dependencies {
 
     // Reliable Remover
     compileOnly "maven.modrinth:reliable-remover:${reliable_remover_version}-neoforge-1.21.1"
+
+    // Exposure
+    implementation "maven.modrinth:exposure:${exposure_neoforge_version}"
 }
 
 publishMods {
