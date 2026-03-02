@@ -169,10 +169,16 @@ public class EntryResolver {
                 ResourceLocation tagLocation = ResourceLocation.parse(strategy.substring(4));
 
                 TagKey<EntityType<?>> entityTagKey = TagKey.create(Registries.ENTITY_TYPE, tagLocation);
-                BuiltInRegistries.ENTITY_TYPE.forEach(type -> BuiltInRegistries.ENTITY_TYPE.getResourceKey(type).flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder).filter(h -> h.is(entityTagKey) && isValidEntity(type, config)).ifPresent(results::add));
+                BuiltInRegistries.ENTITY_TYPE.forEach(type -> BuiltInRegistries.ENTITY_TYPE.getResourceKey(type)
+                        .flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder)
+                        .filter(h -> h.is(entityTagKey) && isValidEntity(type, config))
+                        .ifPresent(h -> results.add(type)));
 
                 TagKey<Block> blockTagKey = TagKey.create(Registries.BLOCK, tagLocation);
-                BuiltInRegistries.BLOCK.forEach(block -> BuiltInRegistries.BLOCK.getResourceKey(block).flatMap(BuiltInRegistries.BLOCK::getHolder).filter(h -> h.is(blockTagKey) && isValidBlock(block, config)).ifPresent(results::add));
+                BuiltInRegistries.BLOCK.forEach(block -> BuiltInRegistries.BLOCK.getResourceKey(block)
+                        .flatMap(BuiltInRegistries.BLOCK::getHolder)
+                        .filter(h -> h.is(blockTagKey) && isValidBlock(block, config))
+                        .ifPresent(h -> results.add(block)));
 
                 results.sort(Comparator.comparing(o -> getEntryId(o).toString()));
             } catch (Exception e) {

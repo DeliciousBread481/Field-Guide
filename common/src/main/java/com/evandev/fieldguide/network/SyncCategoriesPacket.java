@@ -29,12 +29,12 @@ public class SyncCategoriesPacket implements CustomPacketPayload {
     private final Map<ResourceLocation, ResourceLocation> redirects;
 
     public SyncCategoriesPacket(List<Category> categories, List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals, Map<ResourceLocation, ResourceLocation> redirects, boolean clearCache, boolean isLast) {
-        this.categories = categories;
-        this.biomeAdditions = biomeAdditions;
-        this.biomeRemovals = biomeRemovals;
-        this.lootAdditions = lootAdditions;
-        this.lootRemovals = lootRemovals;
-        this.redirects = redirects;
+        this.categories = categories != null ? categories : new ArrayList<>();
+        this.biomeAdditions = biomeAdditions != null ? biomeAdditions : new ArrayList<>();
+        this.biomeRemovals = biomeRemovals != null ? biomeRemovals : new ArrayList<>();
+        this.lootAdditions = lootAdditions != null ? lootAdditions : new ArrayList<>();
+        this.lootRemovals = lootRemovals != null ? lootRemovals : new ArrayList<>();
+        this.redirects = redirects != null ? redirects : new HashMap<>();
         this.clearCache = clearCache;
         this.isLast = isLast;
     }

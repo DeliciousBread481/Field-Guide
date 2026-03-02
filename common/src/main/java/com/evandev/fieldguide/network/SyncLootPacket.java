@@ -18,6 +18,10 @@ public record SyncLootPacket(Map<ResourceLocation, List<ItemStack>> lootCache,
     public static final Type<SyncLootPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "sync_loot"));
     public static final StreamCodec<RegistryFriendlyByteBuf, SyncLootPacket> CODEC = StreamCodec.ofMember(SyncLootPacket::encode, SyncLootPacket::new);
 
+    public SyncLootPacket {
+        lootCache = lootCache != null ? lootCache : new HashMap<>();
+    }
+
     public SyncLootPacket(RegistryFriendlyByteBuf buf) {
         this(decodeCache(buf), buf.readBoolean());
     }
