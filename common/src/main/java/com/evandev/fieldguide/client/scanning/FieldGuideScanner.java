@@ -7,6 +7,7 @@ import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.network.ClaimXpPacket;
 import com.evandev.fieldguide.platform.Services;
+import com.evandev.fieldguide.util.ModTags;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -55,7 +56,7 @@ public class FieldGuideScanner {
     public void onClientTick(Minecraft minecraft) {
         if (minecraft.player == null || minecraft.level == null) return;
 
-        boolean isScanningActive = (minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(Items.SPYGLASS))
+        boolean isScanningActive = (minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(ModTags.Items.SPYGLASSES))
                 || !ModConfig.get().requireSpyglass;
 
         if (isScanningActive) {

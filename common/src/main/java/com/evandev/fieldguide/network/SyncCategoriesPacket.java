@@ -35,13 +35,18 @@ public class SyncCategoriesPacket {
             ResourceLocation id = b.readResourceLocation();
             Category cat = new Category(id);
             cat.setSortIndex(b.readInt());
-            cat.setIcon(b.readResourceLocation());
+
+            if (b.readBoolean()) {
+                cat.setIcon(b.readResourceLocation());
+            }
+
             int queryCount = b.readInt();
             ArrayList<String> queries = new ArrayList<>();
             for (int i = 0; i < queryCount; i++) {
                 queries.add(b.readUtf());
             }
             cat.setGroupByQueries(queries);
+
             int entryCount = b.readInt();
             for (int i = 0; i < entryCount; i++) {
                 CategoryEntry.Type type = b.readEnum(CategoryEntry.Type.class);
@@ -87,39 +92,55 @@ public class SyncCategoriesPacket {
         buf.writeCollection(categories, (b, cat) -> {
             b.writeResourceLocation(cat.getId());
             b.writeInt(cat.getSortIndex());
-            b.writeResourceLocation(cat.getIcon());
-            b.writeInt(cat.getGroupByQueries().size());
-            for (String query : cat.getGroupByQueries()) {
-                b.writeUtf(query);
+
+            b.writeBoolean(cat.getIcon() != null);
+            if (cat.getIcon() != null) {
+                b.writeResourceLocation(cat.getIcon());
             }
-            b.writeInt(cat.getEntries().size());
-            for (CategoryEntry entry : cat.getEntries()) {
-                b.writeEnum(entry.type());
-                b.writeBoolean(entry.id() != null);
-                if (entry.id() != null) b.writeResourceLocation(entry.id());
 
-                b.writeBoolean(entry.displayId() != null);
-                if (entry.displayId() != null) b.writeResourceLocation(entry.displayId());
-
-                b.writeBoolean(entry.strategy() != null);
-                if (entry.strategy() != null) b.writeUtf(entry.strategy());
-
-                b.writeBoolean(entry.components() != null);
-                if (entry.components() != null) {
-                    b.writeInt(entry.components().size());
-                    for (ResourceLocation comp : entry.components()) {
-                        b.writeResourceLocation(comp);
-                    }
+            List<String> queries = cat.getGroupByQueries();
+            if (queries == null) {
+                b.writeInt(0);
+            } else {
+                b.writeInt(queries.size());
+                for (String query : queries) {
+                    b.writeUtf(query);
                 }
+            }
 
-                b.writeBoolean(entry.structureNbt() != null);
-                if (entry.structureNbt() != null) b.writeResourceLocation(entry.structureNbt());
+            List<CategoryEntry> entries = cat.getEntries();
+            if (entries == null) {
+                b.writeInt(0);
+            } else {
+                b.writeInt(entries.size());
+                for (CategoryEntry entry : entries) {
+                    b.writeEnum(entry.type());
+                    b.writeBoolean(entry.id() != null);
+                    if (entry.id() != null) b.writeResourceLocation(entry.id());
 
-                b.writeBoolean(entry.stackedBlocks() != null);
-                if (entry.stackedBlocks() != null) {
-                    b.writeInt(entry.stackedBlocks().size());
-                    for (String blockStr : entry.stackedBlocks()) {
-                        b.writeUtf(blockStr);
+                    b.writeBoolean(entry.displayId() != null);
+                    if (entry.displayId() != null) b.writeResourceLocation(entry.displayId());
+
+                    b.writeBoolean(entry.strategy() != null);
+                    if (entry.strategy() != null) b.writeUtf(entry.strategy());
+
+                    b.writeBoolean(entry.components() != null);
+                    if (entry.components() != null) {
+                        b.writeInt(entry.components().size());
+                        for (ResourceLocation comp : entry.components()) {
+                            b.writeResourceLocation(comp);
+                        }
+                    }
+
+                    b.writeBoolean(entry.structureNbt() != null);
+                    if (entry.structureNbt() != null) b.writeResourceLocation(entry.structureNbt());
+
+                    b.writeBoolean(entry.stackedBlocks() != null);
+                    if (entry.stackedBlocks() != null) {
+                        b.writeInt(entry.stackedBlocks().size());
+                        for (String blockStr : entry.stackedBlocks()) {
+                            b.writeUtf(blockStr);
+                        }
                     }
                 }
             }

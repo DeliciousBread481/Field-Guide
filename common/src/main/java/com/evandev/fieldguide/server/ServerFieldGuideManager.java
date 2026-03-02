@@ -75,22 +75,39 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
     public void syncToPlayer(ServerPlayer player) {
         List<Category> flattenedCategories = new ArrayList<>();
+        int maxEntriesPerChunk = 100;
 
         for (Category rawCat : categories.values()) {
-            Category flatCat = new Category(rawCat.getId());
-            flatCat.setSortIndex(rawCat.getSortIndex());
-            flatCat.setIcon(rawCat.getIcon());
-            flatCat.setGroupByQueries(rawCat.getGroupByQueries());
             List<Object> resolved = resolvedCategoryEntries.get(rawCat.getId());
 
-            if (resolved != null) {
-                for (Object obj : resolved) {
+            if (resolved == null || resolved.isEmpty()) {
+                Category flatCat = new Category(rawCat.getId());
+                flatCat.setSortIndex(rawCat.getSortIndex());
+                flatCat.setIcon(rawCat.getIcon());
+                flatCat.setGroupByQueries(rawCat.getGroupByQueries());
+                flattenedCategories.add(flatCat);
+                continue;
+            }
+
+            int index = 0;
+            while (index < resolved.size()) {
+                Category chunkCat = new Category(rawCat.getId());
+                chunkCat.setSortIndex(rawCat.getSortIndex());
+                chunkCat.setIcon(rawCat.getIcon());
+
+                if (index == 0) {
+                    chunkCat.setGroupByQueries(rawCat.getGroupByQueries());
+                }
+
+                int endIndex = Math.min(index + maxEntriesPerChunk, resolved.size());
+                for (int j = index; j < endIndex; j++) {
+                    Object obj = resolved.get(j);
                     if (obj instanceof EntityType<?> type) {
-                        flatCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.ENTITY_TYPE.getKey(type), BuiltInRegistries.ENTITY_TYPE.getKey(type), null, null, null, null));
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.ENTITY_TYPE.getKey(type), BuiltInRegistries.ENTITY_TYPE.getKey(type), null, null, null, null));
                     } else if (obj instanceof Block block) {
-                        flatCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.BLOCK.getKey(block), BuiltInRegistries.BLOCK.getKey(block), null, null, null, null));
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.BLOCK.getKey(block), BuiltInRegistries.BLOCK.getKey(block), null, null, null, null));
                     } else if (obj instanceof Item item) {
-                        flatCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.ITEM.getKey(item), BuiltInRegistries.ITEM.getKey(item), null, null, null, null));
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.ITEM.getKey(item), BuiltInRegistries.ITEM.getKey(item), null, null, null, null));
                     } else if (obj instanceof CompositeFieldGuideEntry comp) {
                         List<ResourceLocation> compIds = new ArrayList<>();
                         if (comp.components() != null) {
@@ -109,34 +126,62 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                         else if (comp.displayEntry() instanceof Item i)
                             displayId = BuiltInRegistries.ITEM.getKey(i);
 
-                        flatCat.addEntry(new CategoryEntry(CategoryEntry.Type.COMPOSITE, comp.id(), displayId, null, compIds, comp.structureNbt(), comp.stackedBlocks()));
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.Type.COMPOSITE, comp.id(), displayId, null, compIds, comp.structureNbt(), comp.stackedBlocks()));
                     }
                 }
+                flattenedCategories.add(chunkCat);
+                index += maxEntriesPerChunk;
             }
-            flattenedCategories.add(flatCat);
+        }
+
+        Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), true, false), player);
+
+        int maxModifiersChunkSize = 500;
+
+        for (int i = 0; i < biomeAdditions.size(); i += maxModifiersChunkSize) {
+            List<String> chunk = biomeAdditions.subList(i, Math.min(i + maxModifiersChunkSize, biomeAdditions.size()));
+            Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), chunk, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), false, false), player);
+        }
+
+        for (int i = 0; i < biomeRemovals.size(); i += maxModifiersChunkSize) {
+            List<String> chunk = biomeRemovals.subList(i, Math.min(i + maxModifiersChunkSize, biomeRemovals.size()));
+            Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), chunk, Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), false, false), player);
+        }
+
+        for (int i = 0; i < lootAdditions.size(); i += maxModifiersChunkSize) {
+            List<String> chunk = lootAdditions.subList(i, Math.min(i + maxModifiersChunkSize, lootAdditions.size()));
+            Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), chunk, Collections.emptyList(), Collections.emptyMap(), false, false), player);
+        }
+
+        for (int i = 0; i < lootRemovals.size(); i += maxModifiersChunkSize) {
+            List<String> chunk = lootRemovals.subList(i, Math.min(i + maxModifiersChunkSize, lootRemovals.size()));
+            Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), chunk, Collections.emptyMap(), false, false), player);
+        }
+
+        if (!redirects.isEmpty()) {
+            Map<ResourceLocation, ResourceLocation> redChunk = new HashMap<>();
+            int count = 0;
+            for (Map.Entry<ResourceLocation, ResourceLocation> entry : redirects.entrySet()) {
+                redChunk.put(entry.getKey(), entry.getValue());
+                count++;
+                if (count >= maxModifiersChunkSize) {
+                    Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), redChunk, false, false), player);
+                    redChunk = new HashMap<>();
+                    count = 0;
+                }
+            }
+            if (!redChunk.isEmpty()) {
+                Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), redChunk, false, false), player);
+            }
         }
 
         if (flattenedCategories.isEmpty()) {
-            Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), biomeAdditions, biomeRemovals, lootAdditions, lootRemovals, redirects, true, true), player);
+            Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), false, true), player);
         } else {
-            int chunkSize = 2;
-            List<Category> chunk = new ArrayList<>();
             for (int i = 0; i < flattenedCategories.size(); i++) {
-                chunk.add(flattenedCategories.get(i));
-
-                if (chunk.size() >= chunkSize || i == flattenedCategories.size() - 1) {
-                    boolean isFirst = (i < chunkSize);
-                    boolean isLast = (i == flattenedCategories.size() - 1);
-
-                    List<String> bAdd = isFirst ? biomeAdditions : new ArrayList<>();
-                    List<String> bRem = isFirst ? biomeRemovals : new ArrayList<>();
-                    List<String> lAdd = isFirst ? lootAdditions : new ArrayList<>();
-                    List<String> lRem = isFirst ? lootRemovals : new ArrayList<>();
-                    Map<ResourceLocation, ResourceLocation> red = isFirst ? redirects : new HashMap<>();
-
-                    Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(chunk, bAdd, bRem, lAdd, lRem, red, isFirst, isLast), player);
-                    chunk.clear();
-                }
+                List<Category> chunk = Collections.singletonList(flattenedCategories.get(i));
+                boolean isLast = (i == flattenedCategories.size() - 1);
+                Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(chunk, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), false, isLast), player);
             }
         }
 

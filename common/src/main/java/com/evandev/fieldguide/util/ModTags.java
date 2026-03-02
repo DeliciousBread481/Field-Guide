@@ -3,6 +3,7 @@ package com.evandev.fieldguide.util;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
 public class ModTags {
@@ -13,6 +14,14 @@ public class ModTags {
 
         private static TagKey<Block> tag(String name) {
             return TagKey.create(Registries.BLOCK, new ResourceLocation("fieldguide", name));
+        }
+    }
+
+    public static class Items {
+        public static final TagKey<Item> SPYGLASSES = tag("spyglasses");
+
+        private static TagKey<Item> tag(String name) {
+            return TagKey.create(Registries.ITEM, new ResourceLocation("fieldguide", name));
         }
     }
 }

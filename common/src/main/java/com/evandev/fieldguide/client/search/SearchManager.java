@@ -121,14 +121,17 @@ public class SearchManager {
                 if (matchLocation(biomeEntry.getKey().location(), biomeQuery, exactMatch)) {
                     Biome biome = biomeEntry.getValue();
                     for (MobCategory cat : MobCategory.values()) {
-                        for (var spawn : biome.getMobSettings().getMobs(cat).unwrap()) {
-                            if (ClientFieldGuideManager.getInstance().isValidEntity(spawn.type, ModConfig.get())) {
-                                if (!results.contains(spawn.type)) {
-                                    Object entry = ClientFieldGuideManager.getInstance().getEntryForTarget(spawn.type);
-                                    if (entry != null && !results.contains(entry) && entries.contains(entry))
-                                        results.add(entry);
+                        try {
+                            for (var spawn : biome.getMobSettings().getMobs(cat).unwrap()) {
+                                if (ClientFieldGuideManager.getInstance().isValidEntity(spawn.type, ModConfig.get())) {
+                                    if (!results.contains(spawn.type)) {
+                                        Object entry = ClientFieldGuideManager.getInstance().getEntryForTarget(spawn.type);
+                                        if (entry != null && !results.contains(entry) && entries.contains(entry))
+                                            results.add(entry);
+                                    }
                                 }
                             }
+                        } catch (Exception ignored) {
                         }
                     }
                 }

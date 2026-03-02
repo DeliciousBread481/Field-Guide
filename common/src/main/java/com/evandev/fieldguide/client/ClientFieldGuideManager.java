@@ -9,6 +9,7 @@ import com.evandev.fieldguide.client.scanning.FieldGuideScanner;
 import com.evandev.fieldguide.client.search.SearchManager;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
+import com.evandev.fieldguide.data.CategoryEntry;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.util.EntryResolver;
 import com.google.gson.JsonObject;
@@ -39,11 +40,11 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     private final Map<ResourceLocation, EntryVisual> entryVisuals = new HashMap<>();
     private final Map<Object, List<ItemStack>> dropCache = new HashMap<>();
     private final Map<ResourceLocation, ResourceLocation> redirects = new HashMap<>();
-
     private final List<String> biomeAdditions = new ArrayList<>();
     private final List<String> biomeRemovals = new ArrayList<>();
     private final List<String> lootAdditions = new ArrayList<>();
     private final List<String> lootRemovals = new ArrayList<>();
+    private boolean needsResolution = false;
 
     private ClientFieldGuideManager() {
     }
@@ -230,7 +231,19 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         this.redirects.putAll(redirects);
 
         for (Category cat : categories) {
-            this.syncedCategories.put(cat.getId(), cat);
+            if (this.syncedCategories.containsKey(cat.getId())) {
+                Category existing = this.syncedCategories.get(cat.getId());
+                if (cat.getEntries() != null) {
+                    for (CategoryEntry entry : cat.getEntries()) {
+                        existing.addEntry(entry);
+                    }
+                }
+                if (cat.getGroupByQueries() != null && !cat.getGroupByQueries().isEmpty()) {
+                    existing.setGroupByQueries(cat.getGroupByQueries());
+                }
+            } else {
+                this.syncedCategories.put(cat.getId(), cat);
+            }
         }
 
         if (resolveEntries) {
@@ -239,7 +252,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             this.syncedCategories.clear();
             for (Category cat : sorted) this.syncedCategories.put(cat.getId(), cat);
 
-            resolveAllEntries();
+            this.needsResolution = true;
         }
     }
 
@@ -303,7 +316,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             entryVisuals.put(targetId, visual);
         });
 
-        resolveAllEntries();
+        this.needsResolution = true;
     }
 
     private void loadVisuals(ResourceManager mgr, BiConsumer<ResourceLocation, JsonObject> processor) {
@@ -330,7 +343,6 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
             // Group entries
             List<Object> groupedEntries = SearchManager.groupByQueries(entries, category.getGroupByQueries());
-            Constants.LOG.info("queries: {}", category.getGroupByQueries());
 
             resolvedCategoryEntries.put(category.getId(), groupedEntries);
         });
@@ -402,6 +414,11 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
     public void onClientTick(Minecraft minecraft) {
         FieldGuideScanner.getInstance().onClientTick(minecraft);
+
+        if (this.needsResolution && minecraft.level != null) {
+            resolveAllEntries();
+            this.needsResolution = false;
+        }
     }
 
     public long getLastUnlockTime() {
