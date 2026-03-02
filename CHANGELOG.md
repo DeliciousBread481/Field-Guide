@@ -7,8 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.1.0] - 2026-03-01
 
-### Fixed
-
 ### Added
 
 - Added tag for Spyglass items.
