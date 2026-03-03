@@ -119,6 +119,8 @@ Field Guide uses specific entity tags to handle default scanning and categorizat
 
 Sometimes you may want scanning one entity to unlock the entry for a different one. This is useful for entities that have multiple variations or distinct parts (like multi-part bosses) where scanning any part should unlock the main entry.
 
+The redirected block/entity will automatically be removed from categories and will no longer appear as its own entry.
+
 You can define these redirects by creating a JSON file at:
 `data/<namespace>/fieldguide/redirects/<filename>.json`
 
@@ -126,8 +128,8 @@ You can define these redirects by creating a JSON file at:
 {
   "entries": [
     {
-      "source": "minecraft:bamboo_sapling",
-      "target": "minecraft:bamboo"
+      "source": "farmersdelight:budding_tomatoes",
+      "target": "farmersdelight:tomatoes"
     },
     {
       "source": "enemyexpansion:vampire_biter",
@@ -142,31 +144,46 @@ You can define these redirects by creating a JSON file at:
 
 A **Composite Entry** is a powerful feature that allows you to group multiple entities or blocks into a single book page, or render custom scenes using NBT structures.
 
+The composite will replace any of the component blocks if they are included in a category. The individual components will automatically be removed from all categories.
+
 This is highly recommended for multi-block entries, structures, or grouped concepts (like grouping all tree blocks for a specific tree).
+
+You can define composites by creating a JSON file at:
+`data/<namespace>/fieldguide/composites/<filename>.json`
 
 ```json
 {
-  "type": "composite",
-  "id": "mypack:custom_boss_encounter",
-  "display_id": "minecraft:zombie",
-  "components": [
-    "minecraft:zombie",
-    "minecraft:skeleton"
-  ],
-  "structure_nbt": "mypack:structures/spawner_room",
-  "stacked_blocks": [
-    "0,0,0|minecraft:cobblestone",
-    "0,1,0|minecraft:mossy_cobblestone"
-  ]
+    "values": [
+        {
+            "id": "farmersdelight:rice",
+            "render": [
+                "farmersdelight:rice|age=3,supporting=true",
+                "farmersdelight:rice_panicles|age=3"
+            ],
+            "components": [
+                "farmersdelight:rice",
+                "farmersdelight:rice_panicles"
+            ],
+        },
+        {
+            "id": "minecraft:mangrove_propagule",
+            "structure_nbt": "fieldguide:mangrove",
+            "components": [
+                "minecraft:mangrove_log",
+                "minecraft:mangrove_leaves",
+                "minecraft:mangrove_roots",
+                "minecraft:muddy_mangrove_roots"
+            ]
+        },
+    ]
 }
-
 ```
 
 * `id`: The unique identifier for this custom entry.
 * `display_id` *(Optional)*: The primary entity or block ID to represent this entry in the UI.
-* `components` *(Optional)*: An array of entity/block IDs that make up this composite entry.
-* `structure_nbt` *(Optional)*: The resource location of an NBT structure file to render in the book. *(Tip: You can use the `/fieldguide export feature <feature_id>` command in-game to easily generate an NBT file of a worldgen feature!)*
-* `stacked_blocks` *(Optional)*: An array of block IDs to render. By default, items will stack on top of each other vertically. You can also specify exact 3D coordinates using the format `"X,Y,Z|block_id"`.
+* `components` *(Optional)*: An array of entity/block IDs that make up this composite entry. These will no longer appear individually as entries.
+* `structure_nbt`: Provide the resource location of an NBT structure file to render. *(Tip: You can use the `/fieldguide export feature <feature_id>` command in-game to easily generate an NBT file of a worldgen feature!)*
+* `render`: An alternative to `structure_nbt` for simpler structures. Provide an array of block IDs to render. By default, blocks will stack on top of each other vertically. You can also specify exact 3D coordinates for each block using the format `"X,Y,Z|block_id"`.
 
 ---
 
