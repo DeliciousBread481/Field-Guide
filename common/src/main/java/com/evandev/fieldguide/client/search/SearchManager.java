@@ -119,9 +119,10 @@ public class SearchManager {
 
             for (var biomeEntry : biomeRegistry.entrySet()) {
                 if (matchLocation(biomeEntry.getKey().location(), biomeQuery, exactMatch)) {
-                    Biome biome = biomeEntry.getValue();
-                    for (MobCategory cat : MobCategory.values()) {
-                        try {
+                    try {
+                        Biome biome = biomeEntry.getValue();
+
+                        for (MobCategory cat : MobCategory.values()) {
                             for (var spawn : biome.getMobSettings().getMobs(cat).unwrap()) {
                                 if (ClientFieldGuideManager.getInstance().isValidEntity(spawn.type, ModConfig.get())) {
                                     if (!results.contains(spawn.type)) {
@@ -131,8 +132,8 @@ public class SearchManager {
                                     }
                                 }
                             }
-                        } catch (Exception ignored) {
                         }
+                    } catch (Exception ignored) {
                     }
                 }
             }
