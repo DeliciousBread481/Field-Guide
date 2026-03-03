@@ -1,0 +1,16 @@
+{
+  "entries": [
+    {
+      "source": "atmospheric:warm_wall_monkey_brush",
+      "target": "atmospheric:warm_monkey_brush"
+    },
+    {
+      "source": "atmospheric:hot_wall_monkey_brush",
+      "target": "atmospheric:hot_monkey_brush"
+    },
+    {
+      "source": "atmospheric:scalding_wall_monkey_brush",
+      "target": "atmospheric:scalding_monkey_brush"
+    }
+  ]
+}

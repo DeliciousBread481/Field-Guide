@@ -1,0 +1,15 @@
+{
+  "values": [
+    {
+      "id": "farmersdelight:rice",
+      "render": [
+        "farmersdelight:rice|age=3,supporting=true",
+        "farmersdelight:rice_panicles|age=3"
+      ],
+      "components": [
+        "farmersdelight:rice",
+        "farmersdelight:rice_panicles"
+      ]
+    }
+  ]
+}

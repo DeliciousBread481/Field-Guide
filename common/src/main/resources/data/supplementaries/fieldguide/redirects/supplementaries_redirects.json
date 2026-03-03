@@ -1,0 +1,12 @@
+{
+  "entries": [
+    {
+      "source": "supplementaries:stick_tomatoes",
+      "target": "farmersdelight:tomatoes"
+    },
+    {
+      "source": "supplementaries:rope_tomatoes",
+      "target": "farmersdelight:tomatoes"
+    }
+  ]
+}
