@@ -1,3 +1,3 @@
-### Fixed
+### Added
 
-- Fixed crash with Lithostitched.
+- Added Reliable Remover integration.

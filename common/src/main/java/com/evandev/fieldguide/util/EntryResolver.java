@@ -1,8 +1,10 @@
 package com.evandev.fieldguide.util;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.compat.reliableremover.ReliableRemoverCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.*;
+import com.evandev.fieldguide.platform.Services;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -24,7 +26,14 @@ public class EntryResolver {
     }
 
     public static boolean isValidBlock(Block block, ModConfig config) {
-        return !config.isEntityBlacklisted(BuiltInRegistries.BLOCK.getKey(block));
+        if (config.isEntityBlacklisted(BuiltInRegistries.BLOCK.getKey(block))) {
+            return false;
+        }
+
+        if (Services.PLATFORM.isModLoaded("reliable_remover") && ModConfig.get().enableReliableRemover && ReliableRemoverCompat.isHidden(block)) {
+            return false;
+        }
+        return true;
     }
 
     public static ResourceLocation getEntryId(Object obj) {

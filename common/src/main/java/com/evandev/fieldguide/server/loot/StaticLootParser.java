@@ -1,6 +1,9 @@
 package com.evandev.fieldguide.server.loot;
 
+import com.evandev.fieldguide.compat.reliableremover.ReliableRemoverCompat;
+import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.mixin.accessor.*;
+import com.evandev.fieldguide.platform.Services;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -110,7 +113,10 @@ public class StaticLootParser {
                 }
 
                 if (!stack.is(Items.AIR)) {
-                    drops.add(new ParsedDrop(stack, branchChance, min, max));
+                    boolean isHidden = Services.PLATFORM.isModLoaded("reliable_remover") && ModConfig.get().enableReliableRemover && ReliableRemoverCompat.isHidden(stack);
+                    if (!isHidden) {
+                        drops.add(new ParsedDrop(stack, branchChance, min, max));
+                    }
                 }
             }
             case NestedLootTable reference -> handleReference(reference, drops, branchChance, context);
