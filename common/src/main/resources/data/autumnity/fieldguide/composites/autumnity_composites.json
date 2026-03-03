@@ -37,6 +37,19 @@
       "components": [
         "autumnity:large_pumpkin_slice"
       ]
+    },
+    {
+      "id": "autumnity:large_pumpkin_slice",
+      "render": [
+        "0,0,0|autumnity:large_pumpkin_slice|facing=north,half=bottom",
+        "0,0,1|autumnity:large_pumpkin_slice|facing=west,half=bottom",
+        "1,0,1|autumnity:large_pumpkin_slice|facing=south,half=bottom",
+        "1,0,0|autumnity:large_pumpkin_slice|facing=east,half=bottom",
+        "0,1,0|autumnity:large_pumpkin_slice|facing=north,half=top",
+        "0,1,1|autumnity:large_pumpkin_slice|facing=west,half=top",
+        "1,1,1|autumnity:large_pumpkin_slice|facing=south,half=top",
+        "1,1,0|autumnity:large_pumpkin_slice|facing=east,half=top"
+      ]
     }
   ]
 }

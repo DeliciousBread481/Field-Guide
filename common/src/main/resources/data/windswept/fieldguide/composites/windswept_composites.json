@@ -21,6 +21,7 @@
       "structure_nbt": "windswept:pine",
       "components": [
         "windswept:pine_log",
+        "windswept:weathered_pine_log",
         "windswept:pine_leaves"
       ]
     },
