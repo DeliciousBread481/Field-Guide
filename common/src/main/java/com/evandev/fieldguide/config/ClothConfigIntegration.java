@@ -86,6 +86,12 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.grantXpOnScan = newValue)
                 .build());
 
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.enable_reliable_remover"), config.enableReliableRemover)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.fieldguide.enable_reliable_remover.tooltip"))
+                .setSaveConsumer(newValue -> config.enableReliableRemover = newValue)
+                .build());
+
         general.addEntry(entryBuilder.startIntField(Component.translatable("option.fieldguide.xp_amount_on_scan"), config.xpAmountOnScan)
                 .setDefaultValue(5)
                 .setMin(0)

@@ -1,6 +1,9 @@
 package com.evandev.fieldguide.server.loot;
 
+import com.evandev.fieldguide.compat.reliableremover.ReliableRemoverCompat;
+import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.mixin.accessor.*;
+import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.LootTableExpansion;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -82,7 +85,10 @@ public class StaticLootParser {
 
                 if (stack.isEmpty()) stack.setCount(1);
                 if (!stack.is(Items.AIR)) {
-                    drops.add(new ParsedDrop(stack, branchChance, min, max));
+                    boolean isHidden = Services.PLATFORM.isModLoaded("reliable_remover") && ModConfig.get().enableReliableRemover && ReliableRemoverCompat.isHidden(stack);
+                    if (!isHidden) {
+                        drops.add(new ParsedDrop(stack, branchChance, min, max));
+                    }
                 }
             } else if (entry instanceof LootTableReference reference) {
                 handleReference(reference, drops, branchChance, context);

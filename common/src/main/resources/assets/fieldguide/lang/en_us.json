@@ -71,8 +71,8 @@
   "option.fieldguide.xp_amount_on_scan": "XP Amount on Scan",
   "option.fieldguide.xp_amount_on_scan.tooltip": "The amount of experience points granted when an entry is successfully scanned for the first time.",
 
-  "option.fieldguide.discovery_redirects": "Discovery Redirects",
-  "option.fieldguide.discovery_redirects.tooltip": "Redirect scanning of one entry to another.\nFormat: 'modid:scanned_id|modid:target_id'",
+  "option.fieldguide.enable_reliable_remover": "Reliable Remover Integration",
+  "option.fieldguide.enable_reliable_remover.tooltip": "Whether or not blacklisted items should be removed from Field Guide entries and loot displays.",
 
   "option.fieldguide.text_color": "Text Color",
   "option.fieldguide.text_color.tooltip": "The hex color code used for standard text in the field guide.",

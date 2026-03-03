@@ -47,6 +47,7 @@ public class ModConfig {
     public boolean showScanIcon = true;
     public boolean playScanningSound = true;
     public boolean grantXpOnScan = true;
+    public boolean enableReliableRemover = true;
     public int xpAmountOnScan = 5;
 
     public String scanOverlayColor = "#F9EED0";
