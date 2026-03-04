@@ -57,7 +57,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         return Component.translatable("fieldguide.undiscovered");
     }
 
-    public FieldGuideScreen getParentScreen() {
+    public FieldGuideCategoryScreen getParentScreen() {
         return parent;
     }
 
@@ -365,7 +365,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (elapsed < 150) bounce = 1.0f - 0.05f * (float) Math.sin((elapsed / 150.0f) * Math.PI);
 
         int xPos = leftPageBounds.x_center();
-        int yPos = leftPageBounds.y_center() - 18;
+        int yPos = leftPageBounds.y_center() - 14;
 
         boolean hideEntity = Services.PLATFORM.isModLoaded("exposure") && ExposureCompat.hasPhotograph(entry);
         Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
@@ -373,14 +373,14 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() instanceof Block block) {
             if (!hideEntity) {
                 if (composite.structureNbt() != null || (composite.stackedBlocks() != null && !composite.stackedBlocks().isEmpty())) {
-                    EntryRenderHelper.renderStructure(guiGraphics, composite, xPos, yPos, 80, showSilhouette, true, bounce);
+                    EntryRenderHelper.renderStructure(guiGraphics, composite, xPos, yPos, 112, showSilhouette, true, bounce);
                 } else {
-                    EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 30.0F, showSilhouette, true, bounce);
+                    EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 40.0F, showSilhouette, true, bounce);
                 }
             }
         } else if (renderEntry instanceof EntityType && renderedEntity instanceof LivingEntity living) {
             if (!hideEntity) {
-                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, showSilhouette, ModConfig.get().getDetailsSilhouetteColorInt(), true, bounce);
+                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 112, 112, 100, showSilhouette, ModConfig.get().getDetailsSilhouetteColorInt(), true, bounce);
             }
             if (unlocked) {
                 renderAttributes(guiGraphics, living);
@@ -388,7 +388,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
         } else if (renderEntry instanceof Block block) {
             if (!hideEntity) {
-                EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 30.0F, showSilhouette, true, bounce);
+                EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 40.0F, showSilhouette, true, bounce);
             }
         }
 

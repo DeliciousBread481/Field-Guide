@@ -114,17 +114,19 @@ public class EntryRenderHelper {
                 float dynamicFactor = getScaleFactorForEntity(entity);
                 float clampedScale = 85.0F * dynamicFactor * visualScale;
                 float entityHeight = entity.getBbHeight();
+                float entityWidth = entity.getBbWidth();
+                float maxDimension = Math.max(entityHeight, entityWidth);
 
-                if (entityHeight * clampedScale > 230.0F) {
-                    clampedScale = 230.0F / entityHeight;
+                float safetyClamp = isPage ? 250.0F : 230.0F;
+
+                if (maxDimension * clampedScale > safetyClamp) {
+                    clampedScale = safetyClamp / maxDimension;
                 }
 
                 PoseStack pose = new PoseStack();
                 pose.scale(clampedScale, -clampedScale, -clampedScale);
-
                 pose.mulPose(Axis.XP.rotationDegrees(30.0F));
                 pose.mulPose(Axis.YP.rotationDegrees(-30.0F));
-
                 pose.translate(0, (entityHeight / -2.0F) + (yOff / clampedScale), 0);
 
                 entity.setYRot(0.0F);

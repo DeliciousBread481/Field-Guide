@@ -2,10 +2,10 @@ package com.evandev.fieldguide.compat.exposure;
 
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
+import com.evandev.fieldguide.client.gui.screens.FieldGuidePhotographScreen;
+import com.evandev.fieldguide.client.gui.widget.FieldGuidePhotographWidget;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import io.github.mortuusars.exposure.gui.screen.ItemListScreen;
-import io.github.mortuusars.exposure.gui.screen.PhotographScreen;
-import io.github.mortuusars.exposure.gui.screen.album.PhotographSlotButton;
 import io.github.mortuusars.exposure.item.PhotographItem;
 import io.github.mortuusars.exposure.util.ItemAndStack;
 import net.minecraft.ChatFormatting;
@@ -24,7 +24,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class ExposureCompat {
-    private static final ResourceLocation ADD_PHOTO_ICON = new ResourceLocation("fieldguide", "textures/gui/add_photo.png");
+    private static final ResourceLocation ADD_PHOTO_ICON = new ResourceLocation("fieldguide", "textures/gui/exposure/add_photo.png");
+    private static final ResourceLocation PHOTOGRAPH_BACKGROUND = new ResourceLocation("fieldguide", "textures/gui/exposure/photograph.png");
 
     public static void setupExposureWidgets(FieldGuideEntryScreen screen, Object entry) {
         if (!ClientFieldGuideManager.isUnlocked(entry)) return;
@@ -48,26 +49,12 @@ public class ExposureCompat {
             addPhotoButton.setTooltip(Tooltip.create(Component.translatable("gui.fieldguide.add_photograph")));
             screen.addWidgetPublic(addPhotoButton);
         } else {
-            int photoWidth = 84;
-            int photoHeight = 84;
+            int photoWidth = 112;
+            int photoHeight = 112;
             int photoX = leftX + (leftWidth / 2) - (photoWidth / 2);
-            int photoY = leftY + (leftHeight / 2) - (photoHeight / 2) - 18;
+            int photoY = leftY + (leftHeight / 2) - (photoHeight / 2) - 14;
 
             Rect2i exposureArea = new Rect2i(photoX + 8, photoY + 8, photoWidth - 16, photoHeight - 16);
-
-            PhotographSlotButton photoButton = new PhotographSlotButton(
-                    exposureArea, photoX, photoY, photoWidth, photoHeight,
-                    0, 0, 0, new ResourceLocation("exposure", "textures/gui/album.png"), 256, 256,
-                    btn -> {
-                        Minecraft.getInstance().setScreen(new PhotographScreen(List.of(new ItemAndStack<>(existingPhoto))));
-                    },
-                    btn -> {
-                        ProgressManager.getInstance().setPhotograph(entry, ItemStack.EMPTY);
-                        Minecraft.getInstance().setScreen(new FieldGuideEntryScreen(screen.getParentScreen(), entry));
-                    },
-                    () -> ProgressManager.getInstance().getPhotograph(entry),
-                    true
-            );
 
             Component tooltipText = Component.empty()
                     .append(Component.literal("[").withStyle(ChatFormatting.DARK_GRAY))
@@ -79,8 +66,22 @@ public class ExposureCompat {
                     .append(Component.literal("Right Click").withStyle(ChatFormatting.GRAY))
                     .append(Component.literal("] to Remove").withStyle(ChatFormatting.DARK_GRAY));
 
-            photoButton.setTooltip(Tooltip.create(tooltipText));
-            screen.addWidgetPublic(photoButton);
+            FieldGuidePhotographWidget photoWidget = new FieldGuidePhotographWidget(
+                    photoX, photoY, photoWidth, photoHeight,
+                    exposureArea,
+                    PHOTOGRAPH_BACKGROUND,
+                    () -> ProgressManager.getInstance().getPhotograph(entry),
+
+                    () -> Minecraft.getInstance().setScreen(new FieldGuidePhotographScreen(screen, List.of(new ItemAndStack<>(existingPhoto)))),
+
+                    () -> {
+                        ProgressManager.getInstance().setPhotograph(entry, ItemStack.EMPTY);
+                        Minecraft.getInstance().setScreen(new FieldGuideEntryScreen(screen.getParentScreen(), entry));
+                    },
+                    tooltipText
+            );
+
+            screen.addWidgetPublic(photoWidget);
         }
     }
 
