@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.Tesselator;
 import io.github.mortuusars.exposure.ExposureClient;
 import io.github.mortuusars.exposure.item.PhotographItem;
+import io.github.mortuusars.exposure.render.PhotographRenderProperties;
 import io.github.mortuusars.exposure.render.PhotographRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -15,7 +16,6 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector2i;
@@ -27,16 +27,13 @@ public class FieldGuidePhotographWidget extends AbstractButton {
     private final Supplier<ItemStack> photographGetter;
     private final Runnable onLeftClick;
     private final Runnable onRightClick;
-    private final ResourceLocation backgroundTexture;
 
     public FieldGuidePhotographWidget(int x, int y, int width, int height, Rect2i exposureArea,
-                                      ResourceLocation backgroundTexture,
                                       Supplier<ItemStack> photographGetter,
                                       Runnable onLeftClick, Runnable onRightClick,
                                       Component tooltipText) {
         super(x, y, width, height, Component.empty());
         this.exposureArea = exposureArea;
-        this.backgroundTexture = backgroundTexture;
         this.photographGetter = photographGetter;
         this.onLeftClick = onLeftClick;
         this.onRightClick = onRightClick;
@@ -46,10 +43,16 @@ public class FieldGuidePhotographWidget extends AbstractButton {
 
     @Override
     public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        guiGraphics.blit(backgroundTexture, this.getX(), this.getY(), 0, 0, this.width, this.height, this.width, this.height);
 
         ItemStack photograph = photographGetter.get();
         if (photograph.getItem() instanceof PhotographItem) {
+            PhotographRenderProperties renderProperties = PhotographRenderProperties.get(photograph);
+
+            // Paper
+            renderTexture(guiGraphics, renderProperties.getAlbumPaperTexture(),
+                    getX(), getY(), 0, 0, 0, width, height, width, height);
+
+            // Exposure
             guiGraphics.pose().pushPose();
             float scale = exposureArea.getWidth() / (float) ExposureClient.getExposureRenderer().getSize();
             guiGraphics.pose().translate(exposureArea.getX(), exposureArea.getY(), 1);
@@ -60,6 +63,15 @@ public class FieldGuidePhotographWidget extends AbstractButton {
                     bufferSource, LightTexture.FULL_BRIGHT, 255, 255, 255, 255);
             bufferSource.endBatch();
             guiGraphics.pose().popPose();
+
+            // Paper overlay
+            if (renderProperties.hasAlbumPaperOverlayTexture()) {
+                guiGraphics.pose().pushPose();
+                guiGraphics.pose().translate(0, 0, 2);
+                renderTexture(guiGraphics, renderProperties.getAlbumPaperOverlayTexture(),
+                        getX(), getY(), 0, 0, 0, width, height, width, height);
+                guiGraphics.pose().popPose();
+            }
         }
     }
 
