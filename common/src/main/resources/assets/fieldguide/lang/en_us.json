@@ -6,6 +6,8 @@
   "gui.fieldguide.search": "Search...",
   "gui.fieldguide.no_results": "No Results",
   "gui.fieldguide.drops": "Drops %s",
+  "gui.fieldguide.add_photograph": "Add Photograph",
+  "gui.fieldguide.select_photograph": "Select a Photograph",
 
   "gui.fieldguide.searching_name": "Searching Name",
   "gui.fieldguide.searching_drops": "Searching Drops",
@@ -118,6 +120,9 @@
 
   "option.fieldguide.global_scan_commands": "Global Scan Commands",
   "option.fieldguide.global_scan_commands.tooltip": "A list of commands to run whenever any entry is successfully scanned. Use @p for the player name.",
+
+  "option.fieldguide.keep_silhouette": "Keep Silhouette When Unlocked",
+  "option.fieldguide.keep_silhouette.tooltip": "If enabled, entities and blocks will still be displayed as silhouettes even after they've been discovered.",
 
   "fieldguide.alignment.passive": "Passive",
   "fieldguide.alignment.neutral": "Neutral",

@@ -9,6 +9,7 @@ import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.gui.widget.*;
 import com.evandev.fieldguide.client.progress.ProgressManager;
+import com.evandev.fieldguide.compat.exposure.ExposureCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
@@ -56,6 +57,18 @@ public class FieldGuideEntryScreen extends BookScreen {
         return Component.translatable("fieldguide.undiscovered");
     }
 
+    public FieldGuideScreen getParentScreen() {
+        return parent;
+    }
+
+    public Bounds getLeftPageBounds() {
+        return leftPageBounds;
+    }
+
+    public void addWidgetPublic(AbstractWidget widget) {
+        this.addRenderableWidget(widget);
+    }
+
     @Override
     protected void init() {
         Category category = ClientFieldGuideManager.getInstance().getCategoryForEntry(entry);
@@ -74,6 +87,10 @@ public class FieldGuideEntryScreen extends BookScreen {
         setupBiomeWidget(unlocked);
         setupDropWidget(unlocked);
         setupNavigationButtons();
+
+        if (Services.PLATFORM.isModLoaded("exposure")) {
+            com.evandev.fieldguide.compat.exposure.ExposureCompat.setupExposureWidgets(this, entry);
+        }
     }
 
     private void setupTextWidgets(boolean unlocked) {
@@ -294,6 +311,8 @@ public class FieldGuideEntryScreen extends BookScreen {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
 
         boolean unlocked = ClientFieldGuideManager.isUnlocked(entry);
+        boolean showSilhouette = !unlocked || ModConfig.get().keepSilhouetteWhenUnlocked;
+
         int titleY = this.leftPageBounds.top() + 8;
         int titleX = this.rightPageBounds.left() + 6;
         int textX = this.rightPageBounds.left() + 6;
@@ -348,22 +367,29 @@ public class FieldGuideEntryScreen extends BookScreen {
         int xPos = leftPageBounds.x_center();
         int yPos = leftPageBounds.y_center() - 18;
 
+        boolean hideEntity = Services.PLATFORM.isModLoaded("exposure") && ExposureCompat.hasPhotograph(entry);
         Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
 
         if (entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() instanceof Block block) {
-            if (composite.structureNbt() != null || (composite.stackedBlocks() != null && !composite.stackedBlocks().isEmpty())) {
-                EntryRenderHelper.renderStructure(guiGraphics, composite, xPos, yPos, 80, !unlocked, true, bounce);
-            } else {
-                EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 30.0F, !unlocked, true, bounce);
+            if (!hideEntity) {
+                if (composite.structureNbt() != null || (composite.stackedBlocks() != null && !composite.stackedBlocks().isEmpty())) {
+                    EntryRenderHelper.renderStructure(guiGraphics, composite, xPos, yPos, 80, showSilhouette, true, bounce);
+                } else {
+                    EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 30.0F, showSilhouette, true, bounce);
+                }
             }
         } else if (renderEntry instanceof EntityType && renderedEntity instanceof LivingEntity living) {
-            EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, !unlocked, ModConfig.get().getDetailsSilhouetteColorInt(), true, bounce);
+            if (!hideEntity) {
+                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 100, 100, 80, showSilhouette, ModConfig.get().getDetailsSilhouetteColorInt(), true, bounce);
+            }
             if (unlocked) {
                 renderAttributes(guiGraphics, living);
                 renderAlignment(guiGraphics, living, mouseX, mouseY);
             }
         } else if (renderEntry instanceof Block block) {
-            EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 30.0F, !unlocked, true, bounce);
+            if (!hideEntity) {
+                EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 30.0F, showSilhouette, true, bounce);
+            }
         }
 
         guiGraphics.pose().popPose();
