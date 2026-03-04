@@ -3,7 +3,7 @@ package com.evandev.fieldguide.client;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.gui.screens.BookScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
-import com.evandev.fieldguide.client.gui.screens.FieldGuideScreen;
+import com.evandev.fieldguide.client.gui.screens.FieldGuideCategoryScreen;
 import com.evandev.fieldguide.client.scanning.FieldGuideScanner;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
@@ -54,8 +54,8 @@ public class FieldGuideClient {
                 if (isRecent && lastEntry != null) {
                     Category targetCategory = manager.getCategoryForEntry(lastEntry);
                     if (targetCategory != null) {
-                        int page = FieldGuideScreen.getPageForEntry(targetCategory, lastEntry);
-                        FieldGuideScreen mainScreen = new FieldGuideScreen(targetCategory, page);
+                        int page = FieldGuideCategoryScreen.getPageForEntry(targetCategory, lastEntry);
+                        FieldGuideCategoryScreen mainScreen = new FieldGuideCategoryScreen(targetCategory, page);
                         minecraft.setScreen(new FieldGuideEntryScreen(mainScreen, lastEntry));
                         return;
                     }
@@ -65,7 +65,7 @@ public class FieldGuideClient {
                 if ("last_opened_screen".equals(defaultMode) && BookScreen.lastOpenedScreen != null) {
                     minecraft.setScreen(BookScreen.lastOpenedScreen);
                 } else {
-                    minecraft.setScreen(new FieldGuideScreen());
+                    minecraft.setScreen(new FieldGuideCategoryScreen());
                 }
             }
         }

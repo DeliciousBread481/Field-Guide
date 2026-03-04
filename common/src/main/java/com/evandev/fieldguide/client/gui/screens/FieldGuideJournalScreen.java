@@ -100,7 +100,7 @@ public class FieldGuideJournalScreen extends BookScreen {
 
         this.searchBox = new FieldGuideSearchBox(this.font, this.width / 2 - 70, this.bounds.bottom() + 5, 140, 20, "", q -> {
             if (!q.isEmpty() && this.minecraft != null) {
-                FieldGuideScreen searchScreen = new FieldGuideScreen(q, this);
+                FieldGuideCategoryScreen searchScreen = new FieldGuideCategoryScreen(q, this);
                 searchScreen.setInitialSearchFocus(true);
                 this.minecraft.setScreen(searchScreen);
             }
@@ -164,7 +164,7 @@ public class FieldGuideJournalScreen extends BookScreen {
     public void onTabClick(Category category) {
         if (category.getId().getPath().equals("intro")) return;
         cleanupEmptyPages();
-        Objects.requireNonNull(this.minecraft).setScreen(new FieldGuideScreen(category, 0));
+        Objects.requireNonNull(this.minecraft).setScreen(new FieldGuideCategoryScreen(category, 0));
     }
 
     @Override
