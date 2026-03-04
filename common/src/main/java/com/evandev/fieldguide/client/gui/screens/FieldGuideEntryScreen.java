@@ -443,6 +443,11 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         int xPos = this.leftPageBounds.x_center() - (totalWidth / 2);
 
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(0, 0, 2);
+
+        guiGraphics.blitNineSliced(Constants.WIDGETS_TEXTURE, xPos - 4, yPos - 3, totalWidth + 8, 16, 6, 16, 16, 48, 0);
+
         guiGraphics.blit(Constants.ATTRIBUTES_TEXTURE, xPos, yPos, 0, 0, iconSize, iconSize, 32, 32);
         guiGraphics.drawString(this.font, health, xPos + iconSize + iconSpacing, yPos + 1, ModConfig.get().getTextColorInt(), false);
 
@@ -451,5 +456,6 @@ public class FieldGuideEntryScreen extends BookScreen {
             guiGraphics.blit(Constants.ATTRIBUTES_TEXTURE, xPos, yPos, 0, iconSize, iconSize, iconSize, 32, 32);
             guiGraphics.drawString(this.font, armor, xPos + iconSize + iconSpacing, yPos + 1, ModConfig.get().getTextColorInt(), false);
         }
+        guiGraphics.pose().popPose();
     }
 }
