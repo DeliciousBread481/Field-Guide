@@ -29,6 +29,7 @@ public class ModConfig {
     public boolean disableBiomeDisplay = false;
     public boolean disableEditingDescriptions = false;
     public boolean disableEditingNames = false;
+    public boolean keepSilhouetteWhenUnlocked = false;
 
     public boolean showInventoryButton = true;
     public int inventoryButtonXOffset = 126;

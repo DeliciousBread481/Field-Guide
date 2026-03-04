@@ -8,8 +8,11 @@ import com.google.gson.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.LevelResource;
 
 import java.io.File;
@@ -29,6 +32,7 @@ public class ProgressManager {
     private final Map<String, Long> discoveryGameTimes = new HashMap<>();
     private final Map<String, String> customDescriptions = new HashMap<>();
     private final Map<String, String> customNames = new HashMap<>();
+    private final Map<String, String> entryPhotographs = new HashMap<>();
     private final List<JournalPage> journalPages = new ArrayList<>();
 
     private String journalTitle = "My Field Guide";
@@ -83,6 +87,7 @@ public class ProgressManager {
             seenEntries.remove(id.toString());
             discoveryTimes.remove(id.toString());
             discoveryGameTimes.remove(id.toString());
+            entryPhotographs.remove(id.toString());
             saveProgress();
         }
     }
@@ -92,6 +97,7 @@ public class ProgressManager {
         seenEntries.clear();
         discoveryTimes.clear();
         discoveryGameTimes.clear();
+        entryPhotographs.clear();
         saveProgress();
     }
 
@@ -143,6 +149,33 @@ public class ProgressManager {
         }
     }
 
+    public ItemStack getPhotograph(Object entry) {
+        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        if (id != null && entryPhotographs.containsKey(id.toString())) {
+            try {
+                CompoundTag tag = TagParser.parseTag(entryPhotographs.get(id.toString()));
+                return ItemStack.of(tag);
+            } catch (Exception e) {
+                return ItemStack.EMPTY;
+            }
+        }
+        return ItemStack.EMPTY;
+    }
+
+    public void setPhotograph(Object entry, ItemStack stack) {
+        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        if (id != null) {
+            if (stack == null || stack.isEmpty()) {
+                entryPhotographs.remove(id.toString());
+            } else {
+                CompoundTag tag = new CompoundTag();
+                stack.save(tag);
+                entryPhotographs.put(id.toString(), tag.toString());
+            }
+            saveProgress();
+        }
+    }
+
     public String getJournalTitle() {
         return journalTitle;
     }
@@ -168,6 +201,7 @@ public class ProgressManager {
         unlockedEntries.clear();
         seenEntries.clear();
         discoveryTimes.clear();
+        entryPhotographs.clear();
 
         Minecraft minecraft = Minecraft.getInstance();
         try {
@@ -198,6 +232,7 @@ public class ProgressManager {
         discoveryGameTimes.clear();
         customDescriptions.clear();
         customNames.clear();
+        entryPhotographs.clear();
         journalPages.clear();
         journalTitle = "My Field Guide";
     }
@@ -217,6 +252,8 @@ public class ProgressManager {
                 json.getAsJsonObject("customDescriptions").entrySet().forEach(e -> customDescriptions.put(e.getKey(), e.getValue().getAsString()));
             if (json.has("customNames"))
                 json.getAsJsonObject("customNames").entrySet().forEach(e -> customNames.put(e.getKey(), e.getValue().getAsString()));
+            if (json.has("entryPhotographs"))
+                json.getAsJsonObject("entryPhotographs").entrySet().forEach(e -> entryPhotographs.put(e.getKey(), e.getValue().getAsString()));
             if (json.has("journalTitle")) journalTitle = json.get("journalTitle").getAsString();
             if (json.has("journalPages")) {
                 journalPages.clear();
@@ -257,6 +294,10 @@ public class ProgressManager {
             JsonObject namesObj = new JsonObject();
             customNames.forEach(namesObj::addProperty);
             json.add("customNames", namesObj);
+
+            JsonObject photosObj = new JsonObject();
+            entryPhotographs.forEach(photosObj::addProperty);
+            json.add("entryPhotographs", photosObj);
 
             json.addProperty("journalTitle", journalTitle);
             JsonArray jpArr = new JsonArray();

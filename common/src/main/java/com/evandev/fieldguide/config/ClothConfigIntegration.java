@@ -124,6 +124,12 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.disableEditingNames = newValue)
                 .build());
 
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.keep_silhouette"), config.disableBiomeDisplay)
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("option.fieldguide.disable_biome_display.tooltip"))
+                .setSaveConsumer(newValue -> config.disableBiomeDisplay = newValue)
+                .build());
+
         // Interface
         ConfigCategory interfaceCat = builder.getOrCreateCategory(Component.translatable("category.fieldguide.interface"));
 
