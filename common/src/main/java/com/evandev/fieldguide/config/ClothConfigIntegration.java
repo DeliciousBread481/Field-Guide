@@ -35,7 +35,7 @@ public class ClothConfigIntegration {
         ConfigCategory general = builder.getOrCreateCategory(Component.translatable("category.fieldguide.general"));
 
         general.addEntry(entryBuilder.startStrField(Component.translatable("option.fieldguide.default_screen"), config.defaultScreen)
-                .setDefaultValue("last_opened")
+                .setDefaultValue("last_opened_screen")
                 .setTooltip(Component.translatable("option.fieldguide.default_screen.tooltip"))
                 .setSaveConsumer(newValue -> config.defaultScreen = newValue)
                 .build());
@@ -56,6 +56,12 @@ public class ClothConfigIntegration {
                 .setDefaultValue(false)
                 .setTooltip(Component.translatable("option.fieldguide.hide_undiscovered_from_search.tooltip"))
                 .setSaveConsumer(newValue -> config.hideUndiscoveredFromSearch = newValue)
+                .build());
+
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.disable_scanning"), config.disableScanning)
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("option.fieldguide.disable_scanning.tooltip"))
+                .setSaveConsumer(newValue -> config.disableScanning = newValue)
                 .build());
 
         general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.require_spyglass"), config.requireSpyglass)

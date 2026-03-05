@@ -43,6 +43,9 @@
   "option.fieldguide.hide_undiscovered_from_search": "Hide Undiscovered From Search",
   "option.fieldguide.hide_undiscovered_from_search.tooltip": "If enabled, undiscovered entries will be hidden from search results.",
 
+  "option.fieldguide.disable_scanning": "Disable Scanning",
+  "option.fieldguide.disable_scanning.tooltip": "If enabled, you will no longer be able to scan blocks or entities with spyglasses.",
+
   "option.fieldguide.require_spyglass": "Require Spyglass",
   "option.fieldguide.require_spyglass.tooltip": "If disabled, you can scan entities and blocks simply by looking at them without needing to use a Spyglass.",
 

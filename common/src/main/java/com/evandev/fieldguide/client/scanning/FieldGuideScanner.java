@@ -19,7 +19,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.boss.EnderDragonPart;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -56,8 +55,8 @@ public class FieldGuideScanner {
     public void onClientTick(Minecraft minecraft) {
         if (minecraft.player == null || minecraft.level == null) return;
 
-        boolean isScanningActive = (minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(ModTags.Items.SPYGLASSES))
-                || !ModConfig.get().requireSpyglass;
+        boolean isScanningActive = ((minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(ModTags.Items.SPYGLASSES))
+                || !ModConfig.get().requireSpyglass) && !ModConfig.get().disableScanning;
 
         if (isScanningActive) {
             processScanning(minecraft);
