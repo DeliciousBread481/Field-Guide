@@ -5,8 +5,12 @@ import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuidePhotographScreen;
 import com.evandev.fieldguide.client.gui.widget.FieldGuidePhotographWidget;
 import com.evandev.fieldguide.client.progress.ProgressManager;
+import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.network.GrantContentPacket;
+import com.evandev.fieldguide.platform.Services;
 import com.mojang.blaze3d.vertex.Tesselator;
 import io.github.mortuusars.exposure.ExposureClient;
+import io.github.mortuusars.exposure.camera.infrastructure.FrameData;
 import io.github.mortuusars.exposure.gui.screen.ItemListScreen;
 import io.github.mortuusars.exposure.item.PhotographItem;
 import io.github.mortuusars.exposure.render.PhotographRenderProperties;
@@ -21,8 +25,12 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.Rect2i;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
@@ -48,12 +56,14 @@ public class ExposureCompat {
         ItemStack existingPhoto = ProgressManager.getInstance().getPhotograph(entry);
 
         if (existingPhoto.isEmpty()) {
-            ImageButton addPhotoButton = new ImageButton(iconX, iconY, iconSize, iconSize, 0, 0, iconSize, ADD_PHOTO_ICON, 16, 32, btn -> {
-                openPhotographSelector(screen, entry);
-            }, Component.translatable("gui.fieldguide.add_photograph"));
+            if (ModConfig.get().exposureAddPhotographButton) {
+                ImageButton addPhotoButton = new ImageButton(iconX, iconY, iconSize, iconSize, 0, 0, iconSize, ADD_PHOTO_ICON, 16, 32, btn -> {
+                    openPhotographSelector(screen, entry);
+                }, Component.translatable("gui.fieldguide.add_photograph"));
 
-            addPhotoButton.setTooltip(Tooltip.create(Component.translatable("gui.fieldguide.add_photograph")));
-            screen.addWidgetPublic(addPhotoButton);
+                addPhotoButton.setTooltip(Tooltip.create(Component.translatable("gui.fieldguide.add_photograph")));
+                screen.addWidgetPublic(addPhotoButton);
+            }
         } else {
             int photoWidth = 108;
             int photoHeight = 108;
@@ -71,8 +81,6 @@ public class ExposureCompat {
                     .append(Component.literal("[").withStyle(ChatFormatting.DARK_GRAY))
                     .append(Component.literal("Right Click").withStyle(ChatFormatting.GRAY))
                     .append(Component.literal("] to Remove").withStyle(ChatFormatting.DARK_GRAY));
-
-
 
             FieldGuidePhotographWidget photoWidget = new FieldGuidePhotographWidget(
                     photoX, photoY, photoWidth, photoHeight,
@@ -150,6 +158,31 @@ public class ExposureCompat {
 
     public static boolean hasPhotograph(Object entry) {
         return !ProgressManager.getInstance().getPhotograph(entry).isEmpty();
+    }
+
+    public static void onPhotographTaken(Player player, CompoundTag frame) {
+        if (!ModConfig.get().exposureUnlockViaPhotograph || !ModConfig.get().exposureUnlockInstantly) return;
+        unlockEntitiesInFrame(player, frame);
+    }
+
+    public static void onPhotographPrinted(Player player, CompoundTag frame) {
+        if (!ModConfig.get().exposureUnlockViaPhotograph || ModConfig.get().exposureUnlockInstantly) return;
+        unlockEntitiesInFrame(player, frame);
+    }
+
+    private static void unlockEntitiesInFrame(Player player, CompoundTag frame) {
+        if (player instanceof ServerPlayer serverPlayer && frame.contains(FrameData.ENTITIES_IN_FRAME, Tag.TAG_LIST)) {
+            ListTag entities = frame.getList(FrameData.ENTITIES_IN_FRAME, Tag.TAG_COMPOUND);
+            for (int i = 0; i < entities.size(); i++) {
+                CompoundTag entityTag = entities.getCompound(i);
+                String entityIdStr = entityTag.getString(FrameData.ENTITY_ID);
+                ResourceLocation entityId = ResourceLocation.tryParse(entityIdStr);
+
+                if (entityId != null) {
+                    Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.Type.ENTRY, entityId), serverPlayer);
+                }
+            }
+        }
     }
 
     private static class PhotographSelectionScreen extends ItemListScreen {

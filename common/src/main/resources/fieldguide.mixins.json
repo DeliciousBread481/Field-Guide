@@ -3,6 +3,7 @@
   "minVersion": "0.8",
   "package": "com.evandev.fieldguide.mixin",
   "refmap": "${mod_id}.refmap.json",
+  "plugin": "com.evandev.fieldguide.mixin.FieldGuideMixinPlugin",
   "compatibilityLevel": "JAVA_18",
   "mixins": [
     "accessor.CompositeEntryBaseAccessor",

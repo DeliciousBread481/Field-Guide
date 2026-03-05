@@ -9,7 +9,9 @@
 ### Changed
 
 - Increased widget render size.
+- Removed default fish texture overrides.
 
 ### Fixed
 
 - Fixed issue where pressing B would sometimes erroneously open the guide.
+- Improved render scaling.
