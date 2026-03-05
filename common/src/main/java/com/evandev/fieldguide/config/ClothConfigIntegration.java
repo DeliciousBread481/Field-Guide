@@ -58,6 +58,12 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.hideUndiscoveredFromSearch = newValue)
                 .build());
 
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.disable_scanning"), config.disableScanning)
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("option.fieldguide.disable_scanning.tooltip"))
+                .setSaveConsumer(newValue -> config.disableScanning = newValue)
+                .build());
+
         general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.require_spyglass"), config.requireSpyglass)
                 .setDefaultValue(true)
                 .setTooltip(Component.translatable("option.fieldguide.require_spyglass.tooltip"))

@@ -25,6 +25,7 @@ public class ModConfig {
     public int pauseButtonXOffset = 0;
     public int pauseButtonYOffset = 0;
 
+    public boolean disableScanning = false;
     public boolean disableLootDisplay = false;
     public boolean disableBiomeDisplay = false;
     public boolean disableEditingDescriptions = false;
