@@ -1,5 +1,6 @@
 package com.evandev.fieldguide;
 
+import com.evandev.fieldguide.compat.exposure.ExposureForgeEventHandler;
 import com.evandev.fieldguide.network.*;
 import com.evandev.fieldguide.platform.ForgeNetworkHelper;
 import com.evandev.fieldguide.platform.Services;
@@ -34,6 +35,10 @@ public class FieldGuideMod {
     public FieldGuideMod() {
         CommonClass.init();
         MinecraftForge.EVENT_BUS.register(this);
+
+        if (Services.PLATFORM.isModLoaded("exposure")) {
+            MinecraftForge.EVENT_BUS.register(ExposureForgeEventHandler.class);
+        }
 
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(this::commonSetup);

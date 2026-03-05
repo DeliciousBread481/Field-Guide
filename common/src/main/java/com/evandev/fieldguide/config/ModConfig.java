@@ -64,6 +64,11 @@ public class ModConfig {
     public String detailsSilhouetteColor = "#DDC69B";
     public boolean useRealWorldDate = false;
 
+    public boolean exposureAddPhotographButton = true;
+    public boolean exposureUnlockViaPhotograph = true;
+    public boolean exposureUnlockInstantly = true;
+    public boolean exposureShowPhotographsInGrid = true;
+
     public List<String> entityBlacklist = getDefaultBlacklist();
 
     public List<String> globalScanCommands = new ArrayList<>();

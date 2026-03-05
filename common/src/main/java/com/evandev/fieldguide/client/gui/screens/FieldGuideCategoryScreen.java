@@ -9,6 +9,7 @@ import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.gui.widget.FieldGuideSearchBox;
 import com.evandev.fieldguide.client.gui.widget.PageTurnButton;
 import com.evandev.fieldguide.client.progress.ProgressManager;
+import com.evandev.fieldguide.compat.exposure.ExposureCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
@@ -750,11 +751,11 @@ public class FieldGuideCategoryScreen extends BookScreen {
     private void renderEntryInGrid(GuiGraphics guiGraphics, Object entry, int x, int y, int scale, boolean unlocked) {
         Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
 
-        if (unlocked && Services.PLATFORM.isModLoaded("exposure")) {
+        if (unlocked && Services.PLATFORM.isModLoaded("exposure") && ModConfig.get().exposureShowPhotographsInGrid) {
             ItemStack existingPhoto = ProgressManager.getInstance().getPhotograph(entry);
 
             if (!existingPhoto.isEmpty()) {
-                com.evandev.fieldguide.compat.exposure.ExposureCompat.renderPhotographInGrid(guiGraphics, x - (CELL_SIZE/2), y - (CELL_SIZE/2), CELL_SIZE, CELL_SIZE, existingPhoto);
+                ExposureCompat.renderPhotographInGrid(guiGraphics, x - (CELL_SIZE / 2), y - (CELL_SIZE / 2), CELL_SIZE, CELL_SIZE, existingPhoto);
                 return;
             }
         }

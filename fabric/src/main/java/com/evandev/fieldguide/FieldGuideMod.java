@@ -1,5 +1,6 @@
 package com.evandev.fieldguide;
 
+import com.evandev.fieldguide.compat.exposure.ExposureFabricEventHandler;
 import com.evandev.fieldguide.network.ClaimXpPacket;
 import com.evandev.fieldguide.network.GrantContentPacket;
 import com.evandev.fieldguide.platform.FabricNetworkHelper;
@@ -35,6 +36,10 @@ public class FieldGuideMod implements ModInitializer {
         CommonClass.init();
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> FieldGuideCommand.register(dispatcher));
+
+        if (Services.PLATFORM.isModLoaded("exposure")) {
+            ExposureFabricEventHandler.register();
+        }
 
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new IdentifiableResourceReloadListener() {
             @Override

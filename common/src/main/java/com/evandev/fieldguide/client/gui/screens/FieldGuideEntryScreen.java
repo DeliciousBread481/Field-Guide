@@ -90,7 +90,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         setupNavigationButtons();
 
         if (Services.PLATFORM.isModLoaded("exposure")) {
-            com.evandev.fieldguide.compat.exposure.ExposureCompat.setupExposureWidgets(this, entry);
+            ExposureCompat.setupExposureWidgets(this, entry);
         }
     }
 

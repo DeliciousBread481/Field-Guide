@@ -3,6 +3,7 @@
   "minVersion": "0.8",
   "package": "com.evandev.fieldguide.mixin",
   "refmap": "${mod_id}.refmap.json",
+  "plugin": "com.evandev.fieldguide.mixin.FieldGuideMixinPlugin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
     "accessor.BonusLevelTableConditionAccessor",
@@ -19,7 +20,8 @@
     "accessor.SetItemCountFunctionAccessor",
     "accessor.StructureTemplateAccessor",
     "accessor.TagEntryAccessor",
-    "accessor.UniformGeneratorAccessor"
+    "accessor.UniformGeneratorAccessor",
+    "compat.exposure.LightroomBlockEntityMixin"
   ],
   "client": [
     "client.GuiMixin",

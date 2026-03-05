@@ -124,6 +124,20 @@
   "option.fieldguide.keep_silhouette": "Keep Silhouette When Unlocked",
   "option.fieldguide.keep_silhouette.tooltip": "If enabled, entities and blocks will still be displayed as silhouettes even after they've been discovered.",
 
+  "category.fieldguide.exposure": "Exposure Integration",
+
+  "option.fieldguide.exposure.add_photograph_button": "Enable 'Add Photograph' Button",
+  "option.fieldguide.exposure.add_photograph_button.tooltip": "If enabled, a button will appear in the entry screen allowing you to attach an existing photograph from your inventory.",
+
+  "option.fieldguide.exposure.unlock_via_photograph": "Unlock Entries via Photos",
+  "option.fieldguide.exposure.unlock_via_photograph.tooltip": "If enabled, taking or developing a photo of entities or blocks will automatically unlock its entry in the Field Guide.",
+
+  "option.fieldguide.exposure.unlock_instantly": "Unlock Instantly",
+  "option.fieldguide.exposure.unlock_instantly.tooltip": "If enabled, entries unlock immediately after taking a photo. If disabled, they only unlock after the film is developed in a Lightroom.",
+
+  "option.fieldguide.exposure.show_photographs_in_grid": "Show Photos in Category Grid",
+  "option.fieldguide.exposure.show_photographs_in_grid.tooltip": "If enabled, the category grid will display a photograph instead of the standard model.",
+
   "fieldguide.alignment.passive": "Passive",
   "fieldguide.alignment.neutral": "Neutral",
   "fieldguide.alignment.hostile": "Hostile",

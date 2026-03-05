@@ -265,6 +265,33 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.globalScanCommands = newValue)
                 .build());
 
+        // Exposure
+        ConfigCategory exposureCat = builder.getOrCreateCategory(Component.translatable("category.fieldguide.exposure"));
+
+        exposureCat.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.exposure.add_photograph_button"), config.exposureAddPhotographButton)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.fieldguide.exposure.add_photograph_button.tooltip"))
+                .setSaveConsumer(newValue -> config.exposureAddPhotographButton = newValue)
+                .build());
+
+        exposureCat.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.exposure.unlock_via_photograph"), config.exposureUnlockViaPhotograph)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.fieldguide.exposure.unlock_via_photograph.tooltip"))
+                .setSaveConsumer(newValue -> config.exposureUnlockViaPhotograph = newValue)
+                .build());
+
+        exposureCat.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.exposure.unlock_instantly"), config.exposureUnlockInstantly)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.fieldguide.exposure.unlock_instantly.tooltip"))
+                .setSaveConsumer(newValue -> config.exposureUnlockInstantly = newValue)
+                .build());
+
+        exposureCat.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.exposure.show_photographs_in_grid"), config.exposureShowPhotographsInGrid)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.fieldguide.exposure.show_photographs_in_grid.tooltip"))
+                .setSaveConsumer(newValue -> config.exposureShowPhotographsInGrid = newValue)
+                .build());
+
         return builder.build();
     }
 }
