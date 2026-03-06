@@ -50,6 +50,7 @@ import java.util.function.Consumer;
 
 public class ExposureCompat {
     private static final ResourceLocation ADD_PHOTO_ICON = new ResourceLocation("fieldguide", "textures/gui/exposure/add_photo.png");
+    private static final ResourceLocation MISSING_PHOTOGRAPH_BACKGROUND = new ResourceLocation("fieldguide", "textures/gui/exposure/missing_photograph.png");
 
     public static void setupExposureWidgets(FieldGuideEntryScreen screen, Object entry) {
         if (!ClientFieldGuideManager.isUnlocked(entry)) return;
@@ -108,6 +109,10 @@ public class ExposureCompat {
 
             screen.addWidgetPublic(photoWidget);
         }
+    }
+
+    public static void renderMissingPhotoBackground(GuiGraphics guiGraphics, int x, int y, int width, int height) {
+        guiGraphics.blit(MISSING_PHOTOGRAPH_BACKGROUND, x, y, 0, 0,width, height, width, height);
     }
 
     public static void renderPhotographInGrid(GuiGraphics guiGraphics, int x, int y, int width, int height, ItemStack photograph) {
