@@ -135,9 +135,6 @@
   "option.fieldguide.exposure.unlock_via_photograph": "Unlock Entries via Photos",
   "option.fieldguide.exposure.unlock_via_photograph.tooltip": "If enabled, taking or developing a photo of entities or blocks will automatically unlock its entry in the Field Guide.",
 
-  "option.fieldguide.exposure.unlock_instantly": "Unlock Instantly",
-  "option.fieldguide.exposure.unlock_instantly.tooltip": "If enabled, entries unlock immediately after taking a photo. If disabled, they only unlock after the film is developed in a Lightroom.",
-
   "option.fieldguide.exposure.show_photographs_in_grid": "Show Photos in Category Grid",
   "option.fieldguide.exposure.show_photographs_in_grid.tooltip": "If enabled, the category grid will display a photograph instead of the standard model.",
 

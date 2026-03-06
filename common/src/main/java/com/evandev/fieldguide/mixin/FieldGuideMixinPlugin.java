@@ -9,16 +9,8 @@ import java.util.Set;
 
 public class FieldGuideMixinPlugin implements IMixinConfigPlugin {
 
-    private boolean isExposureLoaded = false;
-
     @Override
     public void onLoad(String mixinPackage) {
-        try {
-            Class.forName("io.github.mortuusars.exposure.Exposure", false, this.getClass().getClassLoader());
-            isExposureLoaded = true;
-        } catch (ClassNotFoundException e) {
-            isExposureLoaded = false;
-        }
     }
 
     @Override
@@ -28,9 +20,6 @@ public class FieldGuideMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (mixinClassName.contains(".compat.exposure.")) {
-            return isExposureLoaded;
-        }
         return true;
     }
 

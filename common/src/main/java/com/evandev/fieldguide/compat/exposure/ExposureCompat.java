@@ -39,6 +39,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.*;
 
 import java.util.ArrayList;
@@ -175,12 +176,7 @@ public class ExposureCompat {
     }
 
     public static void onPhotographTaken(Player player, CompoundTag frame) {
-        if (!ModConfig.get().exposureUnlockViaPhotograph || !ModConfig.get().exposureUnlockInstantly) return;
-        unlockContentInFrame(player, frame);
-    }
-
-    public static void onPhotographPrinted(Player player, CompoundTag frame) {
-        if (!ModConfig.get().exposureUnlockViaPhotograph || ModConfig.get().exposureUnlockInstantly) return;
+        if (!ModConfig.get().exposureUnlockViaPhotograph) return;
         unlockContentInFrame(player, frame);
     }
 
@@ -239,7 +235,7 @@ public class ExposureCompat {
                     BlockHitResult blockHit = player.level().clip(new ClipContext(currentStart, endPos, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player));
 
                     if (blockHit.getType() == HitResult.Type.BLOCK) {
-                        net.minecraft.world.level.block.state.BlockState state = player.level().getBlockState(blockHit.getBlockPos());
+                        BlockState state = player.level().getBlockState(blockHit.getBlockPos());
 
                         hitTargets.add(state.getBlock());
 
