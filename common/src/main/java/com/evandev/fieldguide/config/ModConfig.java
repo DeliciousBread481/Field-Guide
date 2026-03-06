@@ -67,7 +67,6 @@ public class ModConfig {
 
     public boolean exposureAddPhotographButton = true;
     public boolean exposureUnlockViaPhotograph = true;
-    public boolean exposureUnlockInstantly = true;
     public boolean exposureShowPhotographsInGrid = true;
 
     public List<String> entityBlacklist = getDefaultBlacklist();
