@@ -14,7 +14,9 @@ import com.evandev.fieldguide.util.EntryResolver;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -24,8 +26,10 @@ import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 
@@ -235,6 +239,19 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     public void onServerStarted(MinecraftServer server) {
         resolveAllCategories();
         this.serverLootCache = LootTableHelper.generateLootMap(server.overworld());
+        populateServerBiomes(server);
+    }
+
+    public void reload(MinecraftServer server) {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            Services.NETWORK.sendToPlayer(new ExportContentPacket("reload_cache"), player);
+        }
+
+        resolveAllCategories();
+        this.serverLootCache = LootTableHelper.generateLootMap(server.overworld());
+        populateServerBiomes(server);
+
+        syncToAll(server);
     }
 
     public Category getCategoryForEntry(Object entry) {
@@ -451,21 +468,26 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         return list;
     }
 
+    private void populateServerBiomes(MinecraftServer server) {
+        Registry<Biome> biomeRegistry = server.registryAccess().registryOrThrow(Registries.BIOME);
+        for (var biomeEntry : biomeRegistry.entrySet()) {
+            ResourceLocation biomeId = biomeEntry.getKey().location();
+            for (MobCategory category : MobCategory.values()) {
+                for (var spawnData : biomeEntry.getValue().getMobSettings().getMobs(category).unwrap()) {
+                    ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(spawnData.type);
+                    String addition = entityId + "|" + biomeId;
+                    if (!this.biomeAdditions.contains(addition)) {
+                        this.biomeAdditions.add(addition);
+                    }
+                }
+            }
+        }
+    }
+
     public void syncToAll(MinecraftServer server) {
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             syncToPlayer(player);
         }
-    }
-
-    public void reload(MinecraftServer server) {
-        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            Services.NETWORK.sendToPlayer(new ExportContentPacket("reload_cache"), player);
-        }
-
-        resolveAllCategories();
-        this.serverLootCache = LootTableHelper.generateLootMap(server.overworld());
-
-        syncToAll(server);
     }
 
     @Override

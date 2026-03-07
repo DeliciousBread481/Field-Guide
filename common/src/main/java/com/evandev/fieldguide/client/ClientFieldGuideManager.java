@@ -160,17 +160,6 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         return lootRemovals;
     }
 
-    public void updateModifiers(List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals) {
-        this.biomeAdditions.clear();
-        this.biomeAdditions.addAll(biomeAdditions);
-        this.biomeRemovals.clear();
-        this.biomeRemovals.addAll(biomeRemovals);
-        this.lootAdditions.clear();
-        this.lootAdditions.addAll(lootAdditions);
-        this.lootRemovals.clear();
-        this.lootRemovals.addAll(lootRemovals);
-    }
-
     public Object getEntryForTarget(Object target) {
         List<Object> entries = getEntriesForTarget(target);
         if (entries.isEmpty()) return null;

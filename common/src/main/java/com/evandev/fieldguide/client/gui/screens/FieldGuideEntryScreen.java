@@ -20,15 +20,12 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 
@@ -130,20 +127,8 @@ public class FieldGuideEntryScreen extends BookScreen {
         ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
         EntryVisual visual = entryId != null ? ClientFieldGuideManager.getInstance().getEntryVisual(entryId) : null;
 
-        Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
-
         if (visual != null && visual.spawnBiomes != null) {
             spawnBiomes.addAll(visual.spawnBiomes);
-        } else if (renderEntry instanceof EntityType<?> entityType && Services.PLATFORM.isModLoaded("immersiveoverlays") && this.minecraft != null && this.minecraft.level != null) {
-            Registry<Biome> biomeRegistry = this.minecraft.level.registryAccess().registryOrThrow(Registries.BIOME);
-            for (var biomeEntry : biomeRegistry.entrySet()) {
-                var spawns = biomeEntry.getValue().getMobSettings().getMobs(entityType.getCategory());
-                if (spawns.unwrap().stream().anyMatch(s -> s.type == entityType)) {
-                    ResourceLocation id = biomeEntry.getKey().location();
-                    ResourceLocation texture = new ResourceLocation(id.getNamespace(), "textures/immersiveoverlays/" + id.getPath() + ".png");
-                    if (this.minecraft.getResourceManager().getResource(texture).isPresent()) spawnBiomes.add(id);
-                }
-            }
         }
 
         if (entryId != null) {
@@ -153,10 +138,19 @@ public class FieldGuideEntryScreen extends BookScreen {
                     spawnBiomes.remove(new ResourceLocation(parts[1]));
                 }
             }
+
             for (String addition : ClientFieldGuideManager.getInstance().getBiomeAdditions()) {
                 String[] parts = addition.split("\\|");
                 if (parts.length == 2 && parts[0].equals(entryId.toString())) {
                     ResourceLocation biomeId = new ResourceLocation(parts[1]);
+
+                    if (Services.PLATFORM.isModLoaded("immersiveoverlays")) {
+                        ResourceLocation texture = new ResourceLocation(biomeId.getNamespace(), "textures/immersiveoverlays/" + biomeId.getPath() + ".png");
+                        if (this.minecraft != null && this.minecraft.getResourceManager().getResource(texture).isEmpty()) {
+                            continue;
+                        }
+                    }
+
                     if (!spawnBiomes.contains(biomeId)) {
                         spawnBiomes.add(biomeId);
                     }
