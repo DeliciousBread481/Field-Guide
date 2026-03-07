@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.platform;
 
 import com.evandev.fieldguide.platform.services.IPlatformHelper;
+import net.minecraft.world.entity.Entity;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.fml.loading.FMLPaths;
@@ -27,5 +28,10 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
     @Override
     public Path getConfigDirectory() {
         return FMLPaths.CONFIGDIR.get();
+    }
+
+    @Override
+    public void applyMixedLitterCompat(Entity entity) {
+        com.evandev.fieldguide.compat.mixedlitter.MixedLitterCompat.applyDummyVariant(entity);
     }
 }

@@ -1,5 +1,7 @@
 package com.evandev.fieldguide.platform.services;
 
+import net.minecraft.world.entity.Entity;
+
 import java.nio.file.Path;
 
 public interface IPlatformHelper {
@@ -41,5 +43,11 @@ public interface IPlatformHelper {
      * @return The path to the config directory.
      */
     Path getConfigDirectory();
+
+    /**
+     * Applies platform-specific dummy entity configurations.
+     */
+    default void applyMixedLitterCompat(Entity entity) {
+    }
 
 }

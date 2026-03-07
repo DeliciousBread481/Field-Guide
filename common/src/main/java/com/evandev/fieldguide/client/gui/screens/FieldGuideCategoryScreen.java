@@ -36,7 +36,7 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
 
-public class FieldGuideScreen extends BookScreen {
+public class FieldGuideCategoryScreen extends BookScreen {
     private static final int ITEMS_PER_PAGE = 9;
     private static final int ITEMS_PER_VIEW = ITEMS_PER_PAGE * 2;
 
@@ -63,21 +63,21 @@ public class FieldGuideScreen extends BookScreen {
     private PageTurnButton backButton;
     private FieldGuideSearchBox searchBox;
 
-    public FieldGuideScreen() {
+    public FieldGuideCategoryScreen() {
         super(Component.translatable("title.fieldguide.field_guide"));
     }
 
-    public FieldGuideScreen(Category initialCategory) {
+    public FieldGuideCategoryScreen(Category initialCategory) {
         this();
         this.setSelectedCategory(initialCategory);
     }
 
-    public FieldGuideScreen(Category initialCategory, int initialPage) {
+    public FieldGuideCategoryScreen(Category initialCategory, int initialPage) {
         this(initialCategory);
         this.currentPage = initialPage;
     }
 
-    public FieldGuideScreen(String searchQuery, Screen parent) {
+    public FieldGuideCategoryScreen(String searchQuery, Screen parent) {
         this();
         this.searchQuery = searchQuery;
         this.parent = parent;
@@ -743,6 +743,10 @@ public class FieldGuideScreen extends BookScreen {
                         try {
                             entity = type.create(this.minecraft.level);
                             if (entity != null) {
+                                if (Services.PLATFORM.isModLoaded("mixed_litter")) {
+                                    Services.PLATFORM.applyMixedLitterCompat(entity);
+                                }
+
                                 entryCache.put(type, entity);
                             }
                         } catch (Exception e) {

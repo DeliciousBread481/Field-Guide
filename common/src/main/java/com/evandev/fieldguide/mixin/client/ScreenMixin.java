@@ -1,7 +1,7 @@
 package com.evandev.fieldguide.mixin.client;
 
 import com.evandev.fieldguide.client.FieldGuideClient;
-import com.evandev.fieldguide.client.gui.screens.FieldGuideScreen;
+import com.evandev.fieldguide.client.gui.screens.FieldGuideCategoryScreen;
 import com.evandev.fieldguide.compat.emi.EmiCompat;
 import com.evandev.fieldguide.platform.Services;
 import net.minecraft.client.Minecraft;
@@ -26,7 +26,7 @@ public class ScreenMixin {
 
                 if (hoveredStack != null && !hoveredStack.isEmpty()) {
                     String query = "=^" + hoveredStack.getHoverName().getString().toLowerCase(Locale.ROOT);
-                    FieldGuideScreen screen = new FieldGuideScreen(query, (Screen) (Object) this);
+                    FieldGuideCategoryScreen screen = new FieldGuideCategoryScreen(query, (Screen) (Object) this);
                     screen.setSearchItemStack(hoveredStack);
                     Minecraft.getInstance().setScreen(screen);
                     cir.setReturnValue(true);

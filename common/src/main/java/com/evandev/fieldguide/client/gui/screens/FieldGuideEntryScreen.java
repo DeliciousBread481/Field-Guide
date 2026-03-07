@@ -37,13 +37,13 @@ import java.util.List;
 import java.util.Locale;
 
 public class FieldGuideEntryScreen extends BookScreen {
-    private final FieldGuideScreen parent;
+    private final FieldGuideCategoryScreen parent;
     private final Object entry;
     private final List<ResourceLocation> spawnBiomes = new ArrayList<>();
     private Entity renderedEntity;
     private long lastClickTime = 0;
 
-    public FieldGuideEntryScreen(FieldGuideScreen parent, Object entry) {
+    public FieldGuideEntryScreen(FieldGuideCategoryScreen parent, Object entry) {
         super(getTitleForEntry(entry));
         this.parent = parent;
         this.entry = entry;
@@ -103,6 +103,9 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (renderEntry instanceof EntityType<?> type && this.minecraft != null && this.minecraft.level != null) {
             try {
                 this.renderedEntity = type.create(this.minecraft.level);
+                if (Services.PLATFORM.isModLoaded("mixed_litter")) {
+                    Services.PLATFORM.applyMixedLitterCompat(this.renderedEntity);
+                }
             } catch (Exception ignored) {
             }
         }
@@ -164,7 +167,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                     graphics.renderTooltip(this.font, Component.translatable("biome." + item.getNamespace() + "." + item.getPath()), mouseX, mouseY);
                 }
             }, item -> {
-                if (this.minecraft != null) this.minecraft.setScreen(new FieldGuideScreen("=!" + item, this));
+                if (this.minecraft != null) this.minecraft.setScreen(new FieldGuideCategoryScreen("=!" + item, this));
             }));
         }
     }
@@ -193,7 +196,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                 }
             }, stack -> {
                 if (this.minecraft != null)
-                    this.minecraft.setScreen(new FieldGuideScreen("=^" + stack.getHoverName().getString().toLowerCase(Locale.ROOT), this));
+                    this.minecraft.setScreen(new FieldGuideCategoryScreen("=^" + stack.getHoverName().getString().toLowerCase(Locale.ROOT), this));
             }));
         }
     }
@@ -225,7 +228,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         this.addRenderableWidget(new FieldGuideSearchBox(this.font, this.width / 2 - 70, this.bounds.bottom() + 5, 140, 20, "", q -> {
             if (!q.isEmpty() && this.minecraft != null) {
-                FieldGuideScreen searchScreen = new FieldGuideScreen(q, this);
+                FieldGuideCategoryScreen searchScreen = new FieldGuideCategoryScreen(q, this);
                 searchScreen.setInitialSearchFocus(true);
                 this.minecraft.setScreen(searchScreen);
             }

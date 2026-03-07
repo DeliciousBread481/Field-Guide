@@ -61,6 +61,9 @@ dependencies {
 
     // Exposure
     implementation "maven.modrinth:exposure:${exposure_neoforge_version}"
+
+    // Mixed Litter
+    compileOnly "maven.modrinth:mixed-litter:${mixed_litter_version}"
 }
 
 publishMods {
