@@ -2,7 +2,10 @@ package com.evandev.fieldguide.server;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.data.*;
+import com.evandev.fieldguide.data.Category;
+import com.evandev.fieldguide.data.CategoryEntry;
+import com.evandev.fieldguide.data.CompositeDefinition;
+import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
@@ -11,9 +14,7 @@ import com.evandev.fieldguide.util.EntryResolver;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -23,10 +24,8 @@ import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 
@@ -104,31 +103,30 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                 for (int j = index; j < endIndex; j++) {
                     Object obj = resolved.get(j);
                     if (obj instanceof EntityType<?> type) {
-                        chunkCat.addEntry(new CategoryEntry(CategoryType.Type.ENTRY, BuiltInRegistries.ENTITY_TYPE.getKey(type), BuiltInRegistries.ENTITY_TYPE.getKey(type), null, null, null, null));
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.ENTITY_TYPE.getKey(type), BuiltInRegistries.ENTITY_TYPE.getKey(type), null, null, null, null));
                     } else if (obj instanceof Block block) {
-                        chunkCat.addEntry(new CategoryEntry(CategoryType.Type.ENTRY, BuiltInRegistries.BLOCK.getKey(block), BuiltInRegistries.BLOCK.getKey(block), null, null, null, null));
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.BLOCK.getKey(block), BuiltInRegistries.BLOCK.getKey(block), null, null, null, null));
                     } else if (obj instanceof Item item) {
-                        chunkCat.addEntry(new CategoryEntry(CategoryType.Type.ENTRY, BuiltInRegistries.ITEM.getKey(item), BuiltInRegistries.ITEM.getKey(item), null, null, null, null));
-                    } else if (obj instanceof CompositeFieldGuideEntry(
-                            ResourceLocation id, Object displayEntry, List<Object> components,
-                            ResourceLocation structureNbt, List<String> stackedBlocks
-                    )) {
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, BuiltInRegistries.ITEM.getKey(item), BuiltInRegistries.ITEM.getKey(item), null, null, null, null));
+                    } else if (obj instanceof CompositeFieldGuideEntry comp) {
                         List<ResourceLocation> compIds = new ArrayList<>();
-                        if (components != null) {
-                            for (Object c : components) {
+                        if (comp.components() != null) {
+                            for (Object c : comp.components()) {
                                 if (c instanceof EntityType<?> t) compIds.add(BuiltInRegistries.ENTITY_TYPE.getKey(t));
                                 else if (c instanceof Block b) compIds.add(BuiltInRegistries.BLOCK.getKey(b));
-                                else if (c instanceof Item i) compIds.add(BuiltInRegistries.ITEM.getKey(i));
+                                else if (c instanceof Item i)
+                                    compIds.add(BuiltInRegistries.ITEM.getKey(i));
                             }
                         }
 
                         ResourceLocation displayId = null;
-                        if (displayEntry instanceof EntityType<?> t)
+                        if (comp.displayEntry() instanceof EntityType<?> t)
                             displayId = BuiltInRegistries.ENTITY_TYPE.getKey(t);
-                        else if (displayEntry instanceof Block b) displayId = BuiltInRegistries.BLOCK.getKey(b);
-                        else if (displayEntry instanceof Item i) displayId = BuiltInRegistries.ITEM.getKey(i);
+                        else if (comp.displayEntry() instanceof Block b) displayId = BuiltInRegistries.BLOCK.getKey(b);
+                        else if (comp.displayEntry() instanceof Item i)
+                            displayId = BuiltInRegistries.ITEM.getKey(i);
 
-                        chunkCat.addEntry(new CategoryEntry(CategoryType.Type.COMPOSITE, id, displayId, null, compIds, structureNbt, stackedBlocks));
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.Type.COMPOSITE, comp.id(), displayId, null, compIds, comp.structureNbt(), comp.stackedBlocks()));
                     }
                 }
                 flattenedCategories.add(chunkCat);
@@ -190,23 +188,21 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         if (!serverLootCache.isEmpty()) {
             Map<ResourceLocation, List<ItemStack>> chunk = new HashMap<>();
             int count = 0;
-            int maxChunkSize = 15;
-            boolean isFirstLoot = true;
+            int maxChunkSize = 50;
 
             for (var entry : serverLootCache.entrySet()) {
                 chunk.put(entry.getKey(), entry.getValue());
                 count++;
 
                 if (count >= maxChunkSize) {
-                    Services.NETWORK.sendToPlayer(new SyncLootPacket(new HashMap<>(chunk), isFirstLoot), player);
-                    chunk.clear();
+                    Services.NETWORK.sendToPlayer(new SyncLootPacket(chunk), player);
+                    chunk = new HashMap<>();
                     count = 0;
-                    isFirstLoot = false;
                 }
             }
 
             if (!chunk.isEmpty()) {
-                Services.NETWORK.sendToPlayer(new SyncLootPacket(chunk, isFirstLoot), player);
+                Services.NETWORK.sendToPlayer(new SyncLootPacket(chunk), player);
             }
         }
     }
@@ -240,6 +236,19 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         resolveAllCategories();
         this.serverLootCache = LootTableHelper.generateLootMap(server.overworld());
         generateAutoBiomeAdditions(server);
+        populateServerBiomes(server);
+    }
+
+    public void reload(MinecraftServer server) {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            Services.NETWORK.sendToPlayer(new ExportContentPacket("reload_cache"), player);
+        }
+
+        resolveAllCategories();
+        this.serverLootCache = LootTableHelper.generateLootMap(server.overworld());
+        populateServerBiomes(server);
+
+        syncToAll(server);
     }
 
     public Category getCategoryForEntry(Object entry) {
@@ -262,7 +271,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             ResourceLocation fileId = entry.getKey();
             String path = fileId.getPath();
             String idPath = path.substring("fieldguide/categories/".length(), path.length() - ".json".length());
-            ResourceLocation defaultCategoryId = ResourceLocation.fromNamespaceAndPath(fileId.getNamespace(), idPath);
+            ResourceLocation defaultCategoryId = new ResourceLocation(fileId.getNamespace(), idPath);
 
             for (Resource resource : entry.getValue()) {
                 try (Reader reader = resource.openAsReader()) {
@@ -270,7 +279,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
                     ResourceLocation categoryId = defaultCategoryId;
                     if (json.has("target_category")) {
-                        categoryId = ResourceLocation.parse(GsonHelper.getAsString(json, "target_category"));
+                        categoryId = new ResourceLocation(GsonHelper.getAsString(json, "target_category"));
                     }
 
                     Category category = data.categories.computeIfAbsent(categoryId, Category::new);
@@ -284,7 +293,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                     }
 
                     if (json.has("icon")) {
-                        category.setIcon(ResourceLocation.parse(GsonHelper.getAsString(json, "icon")));
+                        category.setIcon(new ResourceLocation(GsonHelper.getAsString(json, "icon")));
                     }
 
                     if (json.has("group_by")) {
@@ -305,12 +314,12 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
                             switch (typeStr) {
                                 case "entry" -> {
-                                    ResourceLocation id = ResourceLocation.parse(GsonHelper.getAsString(obj, "id"));
-                                    category.addEntry(new CategoryEntry(CategoryType.Type.ENTRY, id, id, null, null, null, null));
+                                    ResourceLocation id = new ResourceLocation(GsonHelper.getAsString(obj, "id"));
+                                    category.addEntry(new CategoryEntry(CategoryEntry.Type.ENTRY, id, id, null, null, null, null));
                                 }
                                 case "auto_populate" -> {
                                     String strategy = GsonHelper.getAsString(obj, "strategy");
-                                    category.addEntry(new CategoryEntry(CategoryType.Type.AUTO_POPULATE, null, null, strategy, null, null, null));
+                                    category.addEntry(new CategoryEntry(CategoryEntry.Type.AUTO_POPULATE, null, null, strategy, null, null, null));
                                 }
                             }
                         }
@@ -333,17 +342,17 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                     if (json.has("values")) {
                         for (JsonElement el : GsonHelper.getAsJsonArray(json, "values")) {
                             JsonObject obj = el.getAsJsonObject();
-                            ResourceLocation id = ResourceLocation.parse(GsonHelper.getAsString(obj, "id"));
-                            ResourceLocation displayId = obj.has("display") ? ResourceLocation.parse(GsonHelper.getAsString(obj, "display")) : id;
+                            ResourceLocation id = new ResourceLocation(GsonHelper.getAsString(obj, "id"));
+                            ResourceLocation displayId = obj.has("display") ? new ResourceLocation(GsonHelper.getAsString(obj, "display")) : id;
 
                             List<ResourceLocation> components = new ArrayList<>();
                             if (obj.has("components")) {
                                 for (JsonElement comp : GsonHelper.getAsJsonArray(obj, "components")) {
-                                    components.add(ResourceLocation.parse(comp.getAsString()));
+                                    components.add(new ResourceLocation(comp.getAsString()));
                                 }
                             }
 
-                            ResourceLocation structureNbt = obj.has("structure_nbt") ? ResourceLocation.parse(GsonHelper.getAsString(obj, "structure_nbt")) : null;
+                            ResourceLocation structureNbt = obj.has("structure_nbt") ? new ResourceLocation(GsonHelper.getAsString(obj, "structure_nbt")) : null;
 
                             List<String> stackedBlocks = null;
                             if (obj.has("render")) {
@@ -376,8 +385,8 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                     if (json.has("entries")) {
                         for (JsonElement el : GsonHelper.getAsJsonArray(json, "entries")) {
                             JsonObject obj = el.getAsJsonObject();
-                            ResourceLocation source = ResourceLocation.parse(GsonHelper.getAsString(obj, "source"));
-                            ResourceLocation target = ResourceLocation.parse(GsonHelper.getAsString(obj, "target"));
+                            ResourceLocation source = new ResourceLocation(GsonHelper.getAsString(obj, "source"));
+                            ResourceLocation target = new ResourceLocation(GsonHelper.getAsString(obj, "target"));
                             data.redirects.put(source, target);
                         }
                     }
@@ -388,24 +397,6 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         }
 
         return data;
-    }
-
-    private void generateAutoBiomeAdditions(MinecraftServer server) {
-        Registry<Biome> biomeRegistry = server.registryAccess().registryOrThrow(Registries.BIOME);
-        for (var biomeEntry : biomeRegistry.entrySet()) {
-            ResourceLocation biomeId = biomeEntry.getKey().location();
-            Biome biome = biomeEntry.getValue();
-
-            for (MobCategory cat : MobCategory.values()) {
-                for (var spawn : biome.getMobSettings().getMobs(cat).unwrap()) {
-                    ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(spawn.type);
-                    String addition = entityId + "|" + biomeId;
-                    if (!this.biomeAdditions.contains(addition)) {
-                        this.biomeAdditions.add(addition);
-                    }
-                }
-            }
-        }
     }
 
     private void loadModifiers(ResourceManager resourceManager, String path, List<String> additions, List<String> removals) {
