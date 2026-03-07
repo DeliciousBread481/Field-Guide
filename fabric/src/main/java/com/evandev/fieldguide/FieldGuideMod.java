@@ -13,6 +13,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -56,6 +57,10 @@ public class FieldGuideMod implements ModInitializer {
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> ServerFieldGuideManager.getInstance().syncToPlayer(handler.player));
 
         ServerLifecycleEvents.SERVER_STARTED.register(server -> ServerFieldGuideManager.getInstance().onServerStarted(server));
+
+        if (FabricLoader.getInstance().isModLoaded("exposure")) {
+            com.evandev.fieldguide.compat.exposure.ExposureFabricEventHandler.register();
+        }
 
         ServerPlayNetworking.registerGlobalReceiver(ClaimXpPacket.TYPE, (packet, context) -> {
             context.server().execute(() -> packet.handleServer(context.player()));

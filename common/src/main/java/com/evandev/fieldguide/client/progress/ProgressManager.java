@@ -7,8 +7,10 @@ import com.evandev.fieldguide.client.gui.toasts.FieldGuideToast;
 import com.google.gson.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -154,7 +156,10 @@ public class ProgressManager {
         if (id != null && entryPhotographs.containsKey(id.toString())) {
             try {
                 CompoundTag tag = TagParser.parseTag(entryPhotographs.get(id.toString()));
-                return ItemStack.of(tag);
+                if (Minecraft.getInstance().level != null) {
+                    HolderLookup.Provider registries = Minecraft.getInstance().level.registryAccess();
+                    return ItemStack.parseOptional(registries, tag);
+                }
             } catch (Exception e) {
                 return ItemStack.EMPTY;
             }
@@ -167,9 +172,9 @@ public class ProgressManager {
         if (id != null) {
             if (stack == null || stack.isEmpty()) {
                 entryPhotographs.remove(id.toString());
-            } else {
-                CompoundTag tag = new CompoundTag();
-                stack.save(tag);
+            } else if (Minecraft.getInstance().level != null) {
+                HolderLookup.Provider registries = Minecraft.getInstance().level.registryAccess();
+                Tag tag = stack.saveOptional(registries);
                 entryPhotographs.put(id.toString(), tag.toString());
             }
             saveProgress();

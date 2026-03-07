@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.client.gui.screens;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.client.ClientConstants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.data.EntryVisual;
@@ -20,12 +21,13 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 
@@ -118,6 +120,9 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (renderEntry instanceof EntityType<?> type && this.minecraft != null && this.minecraft.level != null) {
             try {
                 this.renderedEntity = type.create(this.minecraft.level);
+                if (Services.PLATFORM.isModLoaded("mixed_litter")) {
+                    Services.PLATFORM.applyMixedLitterCompat(this.renderedEntity);
+                }
             } catch (Exception ignored) {
             }
         }
@@ -135,17 +140,17 @@ public class FieldGuideEntryScreen extends BookScreen {
             for (String removal : ClientFieldGuideManager.getInstance().getBiomeRemovals()) {
                 String[] parts = removal.split("\\|");
                 if (parts.length == 2 && parts[0].equals(entryId.toString())) {
-                    spawnBiomes.remove(new ResourceLocation(parts[1]));
+                    spawnBiomes.remove(ResourceLocation.parse(parts[1]));
                 }
             }
 
             for (String addition : ClientFieldGuideManager.getInstance().getBiomeAdditions()) {
                 String[] parts = addition.split("\\|");
                 if (parts.length == 2 && parts[0].equals(entryId.toString())) {
-                    ResourceLocation biomeId = new ResourceLocation(parts[1]);
+                    ResourceLocation biomeId = ResourceLocation.parse(parts[1]);
 
                     if (Services.PLATFORM.isModLoaded("immersiveoverlays")) {
-                        ResourceLocation texture = new ResourceLocation(biomeId.getNamespace(), "textures/immersiveoverlays/" + biomeId.getPath() + ".png");
+                        ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(biomeId.getNamespace(), "textures/immersiveoverlays/" + biomeId.getPath() + ".png");
                         if (this.minecraft != null && this.minecraft.getResourceManager().getResource(texture).isEmpty()) {
                             continue;
                         }
@@ -164,18 +169,28 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         if (unlocked && !spawnBiomes.isEmpty()) {
             int itemSize = 20;
-            this.addRenderableWidget(new PaginatedGridWidget<>(this.rightPageBounds.left() + 2, this.rightPageBounds.bottom() - 33, this.rightPageBounds.width() - 4, itemSize, 5, itemSize, 0, spawnBiomes, (graphics, item, x, y, mouseX, mouseY) -> {
-                ResourceLocation texture = new ResourceLocation(item.getNamespace(), "textures/immersiveoverlays/" + item.getPath() + ".png");
 
+            List<ResourceLocation> validBiomes = new ArrayList<>();
+            for (ResourceLocation biome : spawnBiomes) {
+                ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(biome.getNamespace(), "textures/immersiveoverlays/" + biome.getPath() + ".png");
                 if (Minecraft.getInstance().getResourceManager().getResource(texture).isPresent()) {
-                    boolean mouseOver = Bounds.isMouseOver(mouseX, mouseY, x, y, itemSize, itemSize);
-                    int backgroundOffset = mouseOver ? itemSize : 0;
-                    graphics.blit(Constants.WIDGETS_TEXTURE, x, y, 20, 64 + backgroundOffset, itemSize, itemSize);
-                    int offset = (itemSize - 16) / 2;
-                    graphics.blit(texture, x + offset, y + offset, 0, 0, 16, 16, 16, 16);
-                    if (Bounds.isMouseOver(mouseX, mouseY, x + offset, y + offset, 16, 16)) {
-                        graphics.renderTooltip(this.font, Component.translatable("biome." + item.getNamespace() + "." + item.getPath()), mouseX, mouseY);
-                    }
+                    validBiomes.add(biome);
+                }
+            }
+
+            if (validBiomes.isEmpty()) return;
+
+            this.addRenderableWidget(new PaginatedGridWidget<>(this.rightPageBounds.left() + 2, this.rightPageBounds.bottom() - 33, this.rightPageBounds.width() - 4, itemSize, 5, itemSize, 0, validBiomes, (graphics, item, x, y, mouseX, mouseY) -> {
+                ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(item.getNamespace(), "textures/immersiveoverlays/" + item.getPath() + ".png");
+
+                boolean mouseOver = Bounds.isMouseOver(mouseX, mouseY, x, y, itemSize, itemSize);
+                int backgroundOffset = mouseOver ? itemSize : 0;
+                graphics.blit(Constants.WIDGETS_TEXTURE, x, y, 20, 64 + backgroundOffset, itemSize, itemSize);
+                int offset = (itemSize - 16) / 2;
+                graphics.blit(texture, x + offset, y + offset, 0, 0, 16, 16, 16, 16);
+
+                if (Bounds.isMouseOver(mouseX, mouseY, x + offset, y + offset, 16, 16)) {
+                    graphics.renderTooltip(this.font, Component.translatable("biome." + item.getNamespace() + "." + item.getPath()), mouseX, mouseY);
                 }
             }, item -> {
                 if (this.minecraft != null) this.minecraft.setScreen(new FieldGuideCategoryScreen("=!" + item, this));
@@ -199,9 +214,9 @@ public class FieldGuideEntryScreen extends BookScreen {
                 if (mouseOver) {
                     Minecraft mc = Minecraft.getInstance();
                     List<Component> tooltip = new ArrayList<>(Screen.getTooltipFromItem(mc, stack));
-                    CompoundTag tag = stack.getTag();
-                    if (tag != null && tag.contains("FieldGuideDropChance")) {
-                        tooltip.add(Component.literal(String.format(Locale.ROOT, "%.2f%%", tag.getFloat("FieldGuideDropChance"))).withStyle(ChatFormatting.GRAY));
+                    CustomData customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+                    if (customData.contains("FieldGuideDropChance")) {
+                        tooltip.add(Component.literal(String.format(Locale.ROOT, "%.2f%%", customData.copyTag().getFloat("FieldGuideDropChance"))).withStyle(ChatFormatting.GRAY));
                     }
                     graphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
                 }
@@ -213,7 +228,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private void setupNavigationButtons() {
-        this.addRenderableWidget(new PageTurnButton(this.bounds.right() - 13, this.bounds.top() + 26, 24, 24, 24, 144, 24, Constants.WIDGETS_TEXTURE, b -> {
+        this.addRenderableWidget(new PageTurnButton(this.bounds.right() - 13, this.bounds.top() + 26, 24, 24, ClientConstants.BACK_SPRITES, b -> {
             if (this.minecraft != null) this.minecraft.setScreen(parent);
         }));
 
@@ -222,11 +237,11 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (!entries.isEmpty()) {
             int index = entries.indexOf(this.entry);
 
-            PageTurnButton prevEntryButton = new PageTurnButton(this.bounds.left() + 15, this.leftPageBounds.bottom() - 15, 16, 16, 32, 16, 16, Constants.WIDGETS_TEXTURE, b -> {
+            PageTurnButton prevEntryButton = new PageTurnButton(this.bounds.left() + 15, this.leftPageBounds.bottom() - 15, 16, 16, ClientConstants.PREV_PAGE_SPRITES, b -> {
                 if (index > 0 && this.minecraft != null)
                     this.minecraft.setScreen(new FieldGuideEntryScreen(parent, entries.get(index - 1)));
             });
-            PageTurnButton nextEntryButton = new PageTurnButton(this.bounds.right() - 30, this.rightPageBounds.bottom() - 15, 16, 16, 48, 16, 16, Constants.WIDGETS_TEXTURE, b -> {
+            PageTurnButton nextEntryButton = new PageTurnButton(this.bounds.right() - 30, this.rightPageBounds.bottom() - 15, 16, 16, ClientConstants.NEXT_PAGE_SPRITES, b -> {
                 if (index >= 0 && index < entries.size() - 1 && this.minecraft != null)
                     this.minecraft.setScreen(new FieldGuideEntryScreen(parent, entries.get(index + 1)));
             });
@@ -294,8 +309,11 @@ public class FieldGuideEntryScreen extends BookScreen {
 
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics);
-        RenderSystem.setShaderTexture(0, Constants.BOOK_TEXTURE);
+        this.renderFieldGuideBackground(guiGraphics, mouseX, mouseY, partialTick);
+
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(0, 0, 50);
+
         guiGraphics.blit(Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
         guiGraphics.blit(Constants.DETAILS_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
 
@@ -436,8 +454,6 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0, 0, 2);
-
-        guiGraphics.blitNineSliced(Constants.WIDGETS_TEXTURE, xPos - 4, yPos - 3, totalWidth + 8, 16, 6, 16, 16, 48, 0);
 
         guiGraphics.blit(Constants.ATTRIBUTES_TEXTURE, xPos, yPos, 0, 0, iconSize, iconSize, 32, 32);
         guiGraphics.drawString(this.font, health, xPos + iconSize + iconSpacing, yPos + 1, ModConfig.get().getTextColorInt(), false);

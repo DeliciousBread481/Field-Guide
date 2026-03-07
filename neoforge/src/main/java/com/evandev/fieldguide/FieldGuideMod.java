@@ -12,6 +12,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
@@ -30,6 +31,14 @@ public class FieldGuideMod {
 
         NeoForge.EVENT_BUS.register(this);
         modEventBus.addListener(this::registerPayloads);
+
+        if (ModList.get().isLoaded("exposure")) {
+            registerExposureCompat();
+        }
+    }
+
+    private void registerExposureCompat() {
+        NeoForge.EVENT_BUS.register(com.evandev.fieldguide.compat.exposure.ExposureNeoForgeEventHandler.class);
     }
 
     private void registerPayloads(final RegisterPayloadHandlersEvent event) {

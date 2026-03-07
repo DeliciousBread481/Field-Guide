@@ -15,6 +15,7 @@ import com.evandev.fieldguide.util.EntryResolver;
 import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -24,6 +25,7 @@ import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 
@@ -160,17 +162,6 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         return lootRemovals;
     }
 
-    public void updateModifiers(List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals) {
-        this.biomeAdditions.clear();
-        this.biomeAdditions.addAll(biomeAdditions);
-        this.biomeRemovals.clear();
-        this.biomeRemovals.addAll(biomeRemovals);
-        this.lootAdditions.clear();
-        this.lootAdditions.addAll(lootAdditions);
-        this.lootRemovals.clear();
-        this.lootRemovals.addAll(lootRemovals);
-    }
-
     public void updateModifiers(List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals, boolean clearCache) {
         if (clearCache) {
             this.biomeAdditions.clear();
@@ -232,7 +223,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             }
         }
 
-        return entries.get(0);
+        return entries.getFirst();
     }
 
     public List<Object> getEntriesForTarget(Object target) {
@@ -270,55 +261,11 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         ProgressManager.getInstance().exportToLang(type);
     }
 
-    public void updateCategoriesFromServer(List<Category> categories, Map<ResourceLocation, ResourceLocation> redirects, boolean clearCache, boolean resolveEntries) {
+    public void updateLootCache(Map<ResourceLocation, List<ItemStack>> lootCache, boolean clearCache) {
         if (clearCache) {
-            this.redirects.clear();
-            this.syncedCategories.clear();
+            this.dropCache.clear();
         }
 
-        this.redirects.putAll(redirects);
-
-        for (Category cat : categories) {
-            if (this.syncedCategories.containsKey(cat.getId())) {
-                Category existing = this.syncedCategories.get(cat.getId());
-                if (cat.getEntries() != null) {
-                    for (CategoryEntry entry : cat.getEntries()) {
-                        existing.addEntry(entry);
-                    }
-                }
-                if (cat.getGroupByQueries() != null && !cat.getGroupByQueries().isEmpty()) {
-                    existing.setGroupByQueries(cat.getGroupByQueries());
-                }
-            } else {
-                this.syncedCategories.put(cat.getId(), cat);
-            }
-        }
-
-        if (resolveEntries) {
-            List<Category> sorted = new ArrayList<>(this.syncedCategories.values());
-            sorted.sort(Comparator.comparingInt(Category::getSortIndex).thenComparing(Category::getId));
-            this.syncedCategories.clear();
-            for (Category cat : sorted) this.syncedCategories.put(cat.getId(), cat);
-
-            this.needsResolution = true;
-        }
-    }
-
-    public void updateModifiers(List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals, boolean clearCache) {
-        if (clearCache) {
-            this.biomeAdditions.clear();
-            this.biomeRemovals.clear();
-            this.lootAdditions.clear();
-            this.lootRemovals.clear();
-        }
-
-        if (!biomeAdditions.isEmpty()) this.biomeAdditions.addAll(biomeAdditions);
-        if (!biomeRemovals.isEmpty()) this.biomeRemovals.addAll(biomeRemovals);
-        if (!lootAdditions.isEmpty()) this.lootAdditions.addAll(lootAdditions);
-        if (!lootRemovals.isEmpty()) this.lootRemovals.addAll(lootRemovals);
-    }
-
-    public void updateLootCache(Map<ResourceLocation, List<ItemStack>> lootCache) {
         for (Map.Entry<ResourceLocation, List<ItemStack>> entry : lootCache.entrySet()) {
             ResourceLocation id = entry.getKey();
             List<ItemStack> drops = entry.getValue();
@@ -342,12 +289,12 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         EntryRenderHelper.clearCache();
 
         loadVisuals(resourceManager, (derivedId, json) -> {
-            ResourceLocation targetId = json.has("id") ? new ResourceLocation(GsonHelper.getAsString(json, "id")) : derivedId;
+            ResourceLocation targetId = json.has("id") ? ResourceLocation.parse(GsonHelper.getAsString(json, "id")) : derivedId;
             EntryVisual visual = new EntryVisual();
             if (json.has("custom_sound"))
-                visual.customSound = new ResourceLocation(GsonHelper.getAsString(json, "custom_sound"));
+                visual.customSound = ResourceLocation.parse(GsonHelper.getAsString(json, "custom_sound"));
             if (json.has("alignment_icon"))
-                visual.alignmentIcon = new ResourceLocation(GsonHelper.getAsString(json, "alignment_icon"));
+                visual.alignmentIcon = ResourceLocation.parse(GsonHelper.getAsString(json, "alignment_icon"));
             if (json.has("scale")) visual.scale = GsonHelper.getAsFloat(json, "scale");
             if (json.has("y_offset")) visual.yOffset = GsonHelper.getAsFloat(json, "y_offset");
             if (json.has("x_offset")) visual.xOffset = GsonHelper.getAsFloat(json, "x_offset");
@@ -359,7 +306,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             if (json.has("page_x_offset")) visual.pageXOffset = GsonHelper.getAsFloat(json, "page_x_offset");
             if (json.has("spawn_biomes")) {
                 visual.spawnBiomes = new ArrayList<>();
-                GsonHelper.getAsJsonArray(json, "spawn_biomes").forEach(el -> visual.spawnBiomes.add(new ResourceLocation(el.getAsString())));
+                GsonHelper.getAsJsonArray(json, "spawn_biomes").forEach(el -> visual.spawnBiomes.add(ResourceLocation.parse(el.getAsString())));
             }
             entryVisuals.put(targetId, visual);
         });
@@ -371,7 +318,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         mgr.listResourceStacks("fieldguide/entries", id -> id.getPath().endsWith(".json")).forEach((fileId, resources) -> {
             String path = fileId.getPath();
             String idPath = path.substring(("fieldguide/entries" + "/").length(), path.length() - ".json".length());
-            ResourceLocation targetId = new ResourceLocation(fileId.getNamespace(), idPath);
+            ResourceLocation targetId = ResourceLocation.fromNamespaceAndPath(fileId.getNamespace(), idPath);
             resources.forEach(resource -> {
                 try (Reader reader = resource.openAsReader()) {
                     processor.accept(targetId, GsonHelper.parse(reader));
@@ -444,20 +391,29 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
     private boolean isSameLootItem(ItemStack a, ItemStack b) {
         if (!ItemStack.isSameItem(a, b)) return false;
-        if (a.getTag() == b.getTag()) return true;
-        if (a.getTag() == null || b.getTag() == null) return false;
 
-        CompoundTag tagA = a.getTag().copy();
-        tagA.remove("FieldGuideDropChance");
-        tagA.remove("FieldGuideMin");
-        tagA.remove("FieldGuideMax");
+        ItemStack aCopy = a.copy();
+        ItemStack bCopy = b.copy();
 
-        CompoundTag tagB = b.getTag().copy();
-        tagB.remove("FieldGuideDropChance");
-        tagB.remove("FieldGuideMin");
-        tagB.remove("FieldGuideMax");
+        removeFieldGuideTags(aCopy);
+        removeFieldGuideTags(bCopy);
 
-        return tagA.equals(tagB);
+        return ItemStack.isSameItemSameComponents(aCopy, bCopy);
+    }
+
+    private void removeFieldGuideTags(ItemStack stack) {
+        CustomData customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+        if (!customData.isEmpty()) {
+            CompoundTag tag = customData.copyTag();
+            tag.remove("FieldGuideDropChance");
+            tag.remove("FieldGuideMin");
+            tag.remove("FieldGuideMax");
+            if (tag.isEmpty()) {
+                stack.remove(DataComponents.CUSTOM_DATA);
+            } else {
+                stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+            }
+        }
     }
 
     public void onClientTick(Minecraft minecraft) {

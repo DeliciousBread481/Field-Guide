@@ -1,8 +1,8 @@
 package com.evandev.fieldguide.client.gui.screens;
 
-import io.github.mortuusars.exposure.gui.screen.PhotographScreen;
-import io.github.mortuusars.exposure.item.PhotographItem;
-import io.github.mortuusars.exposure.util.ItemAndStack;
+import io.github.mortuusars.exposure.client.gui.screen.PhotographScreen;
+import io.github.mortuusars.exposure.world.item.PhotographItem;
+import io.github.mortuusars.exposure.world.item.util.ItemAndStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 
