@@ -130,10 +130,10 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.disableEditingNames = newValue)
                 .build());
 
-        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.keep_silhouette"), config.disableBiomeDisplay)
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.keep_silhouette"), config.keepSilhouetteWhenUnlocked)
                 .setDefaultValue(false)
-                .setTooltip(Component.translatable("option.fieldguide.disable_biome_display.tooltip"))
-                .setSaveConsumer(newValue -> config.disableBiomeDisplay = newValue)
+                .setTooltip(Component.translatable("option.fieldguide.keep_silhouette.tooltip"))
+                .setSaveConsumer(newValue -> config.keepSilhouetteWhenUnlocked = newValue)
                 .build());
 
         // Interface
