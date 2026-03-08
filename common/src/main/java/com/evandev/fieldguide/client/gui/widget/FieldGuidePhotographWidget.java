@@ -48,7 +48,7 @@ public class FieldGuidePhotographWidget extends AbstractButton {
 
             // Exposure
             guiGraphics.pose().pushPose();
-            float scale = exposureArea.getWidth() / 256.0f;
+            float scale = exposureArea.getWidth();
             guiGraphics.pose().translate(exposureArea.getX(), exposureArea.getY(), 1);
             guiGraphics.pose().scale(scale, scale, scale);
 

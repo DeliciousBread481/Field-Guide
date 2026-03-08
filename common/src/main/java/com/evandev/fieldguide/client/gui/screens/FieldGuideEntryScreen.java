@@ -455,6 +455,8 @@ public class FieldGuideEntryScreen extends BookScreen {
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0, 0, 2);
 
+        guiGraphics.blitSprite(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/attributes_background"), xPos - 4, yPos - 3, totalWidth + 8, 16);
+
         guiGraphics.blit(Constants.ATTRIBUTES_TEXTURE, xPos, yPos, 0, 0, iconSize, iconSize, 32, 32);
         guiGraphics.drawString(this.font, health, xPos + iconSize + iconSpacing, yPos + 1, ModConfig.get().getTextColorInt(), false);
 

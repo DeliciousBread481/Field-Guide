@@ -47,7 +47,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 public class ExposureCompat {
-    private static final ResourceLocation ADD_PHOTO_ICON = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/exposure/add_photo.png");
+    private static final WidgetSprites ADD_PHOTO_SPRITES = new WidgetSprites(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/exposure/add_photo"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/exposure/add_photo_highlighted"));
     private static final ResourceLocation MISSING_PHOTOGRAPH_BACKGROUND = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/exposure/missing_photograph.png");
 
     public static void setupExposureWidgets(FieldGuideEntryScreen screen, Object entry) {
@@ -66,8 +66,7 @@ public class ExposureCompat {
 
         if (existingPhoto.isEmpty()) {
             if (ModConfig.get().exposureAddPhotographButton) {
-                WidgetSprites sprites = new WidgetSprites(ADD_PHOTO_ICON, ADD_PHOTO_ICON);
-                ImageButton addPhotoButton = new ImageButton(iconX, iconY, iconSize, iconSize, sprites, btn -> {
+                ImageButton addPhotoButton = new ImageButton(iconX, iconY, iconSize, iconSize, ExposureCompat.ADD_PHOTO_SPRITES, btn -> {
                     openPhotographSelector(screen, entry);
                 }, Component.translatable("gui.fieldguide.add_photograph"));
 
@@ -129,7 +128,7 @@ public class ExposureCompat {
 
             // Exposure
             guiGraphics.pose().pushPose();
-            float scale = exposureArea.getWidth() / 256.0f;
+            float scale = exposureArea.getWidth();
             guiGraphics.pose().translate(exposureArea.getX(), exposureArea.getY(), 1);
             guiGraphics.pose().scale(scale, scale, scale);
 
