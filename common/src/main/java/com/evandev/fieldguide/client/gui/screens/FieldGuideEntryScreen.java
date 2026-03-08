@@ -317,8 +317,6 @@ public class FieldGuideEntryScreen extends BookScreen {
         guiGraphics.blit(Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
         guiGraphics.blit(Constants.DETAILS_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
 
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-
         boolean unlocked = ClientFieldGuideManager.isUnlocked(entry);
         boolean showSilhouette = !unlocked || ModConfig.get().keepSilhouetteWhenUnlocked;
 
@@ -374,7 +372,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (elapsed < 150) bounce = 1.0f - 0.05f * (float) Math.sin((elapsed / 150.0f) * Math.PI);
 
         int xPos = leftPageBounds.x_center();
-        int yPos = leftPageBounds.y_center() - 14;
+        int yPos = leftPageBounds.y_center() - 15;
 
         boolean hideEntity = Services.PLATFORM.isModLoaded("exposure") && ExposureCompat.hasPhotograph(entry);
         Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
@@ -400,7 +398,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                 EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 40.0F, showSilhouette, true, bounce);
             }
         }
-
+        super.render(guiGraphics, mouseX, mouseY, partialTick);
         guiGraphics.pose().popPose();
     }
 
