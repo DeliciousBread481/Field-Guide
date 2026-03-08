@@ -250,10 +250,56 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.listSilhouetteColor = newValue)
                 .build());
 
+        interfaceCat.addEntry(entryBuilder.startDoubleField(Component.translatable("option.fieldguide.list_silhouette_alpha"), config.listSilhouetteAlpha)
+                .setDefaultValue(1.0D)
+                .setMin(0.0D)
+                .setMax(1.0D)
+                .setTooltip(Component.translatable("option.fieldguide.list_silhouette_alpha.tooltip"))
+                .setSaveConsumer(newValue -> config.listSilhouetteAlpha = newValue)
+                .build());
+
+        interfaceCat.addEntry(entryBuilder.startStrField(Component.translatable("option.fieldguide.list_unlocked_silhouette_color"), config.listUnlockedSilhouetteColor)
+                .setDefaultValue("#DDC69B")
+                .setTooltip(Component.translatable("option.fieldguide.list_unlocked_silhouette_color.tooltip"))
+                .setSaveConsumer(newValue -> config.listUnlockedSilhouetteColor = newValue)
+                .build());
+
+        interfaceCat.addEntry(entryBuilder.startDoubleField(Component.translatable("option.fieldguide.list_unlocked_silhouette_alpha"), config.listUnlockedSilhouetteAlpha)
+                .setDefaultValue(1.0D)
+                .setMin(0.0D)
+                .setMax(1.0D)
+                .setTooltip(Component.translatable("option.fieldguide.list_unlocked_silhouette_alpha.tooltip"))
+                .setSaveConsumer(newValue -> config.listUnlockedSilhouetteAlpha = newValue)
+                .build());
+
+
         interfaceCat.addEntry(entryBuilder.startStrField(Component.translatable("option.fieldguide.details_silhouette_color"), config.detailsSilhouetteColor)
                 .setDefaultValue("#DDC69B")
                 .setTooltip(Component.translatable("option.fieldguide.details_silhouette_color.tooltip"))
                 .setSaveConsumer(newValue -> config.detailsSilhouetteColor = newValue)
+                .build());
+
+
+        interfaceCat.addEntry(entryBuilder.startDoubleField(Component.translatable("option.fieldguide.details_silhouette_alpha"), config.detailsSilhouetteAlpha)
+                .setDefaultValue(1.0D)
+                .setMin(0.0D)
+                .setMax(1.0D)
+                .setTooltip(Component.translatable("option.fieldguide.details_silhouette_alpha.tooltip"))
+                .setSaveConsumer(newValue -> config.detailsSilhouetteAlpha = newValue)
+                .build());
+
+        interfaceCat.addEntry(entryBuilder.startStrField(Component.translatable("option.fieldguide.details_unlocked_silhouette_color"), config.detailsUnlockedSilhouetteColor)
+                .setDefaultValue("#DDC69B")
+                .setTooltip(Component.translatable("option.fieldguide.details_unlocked_silhouette_color.tooltip"))
+                .setSaveConsumer(newValue -> config.detailsUnlockedSilhouetteColor = newValue)
+                .build());
+
+        interfaceCat.addEntry(entryBuilder.startDoubleField(Component.translatable("option.fieldguide.details_unlocked_silhouette_alpha"), config.detailsUnlockedSilhouetteAlpha)
+                .setDefaultValue(1.0D)
+                .setMin(0.0D)
+                .setMax(1.0D)
+                .setTooltip(Component.translatable("option.fieldguide.details_unlocked_silhouette_alpha.tooltip"))
+                .setSaveConsumer(newValue -> config.detailsUnlockedSilhouetteAlpha = newValue)
                 .build());
 
         // Content

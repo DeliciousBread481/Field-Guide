@@ -318,7 +318,6 @@ public class FieldGuideEntryScreen extends BookScreen {
         guiGraphics.blit(Constants.DETAILS_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
 
         boolean unlocked = ClientFieldGuideManager.isUnlocked(entry);
-        boolean showSilhouette = !unlocked || ModConfig.get().keepSilhouetteWhenUnlocked;
 
         int titleY = this.leftPageBounds.top() + 8;
         int titleX = this.rightPageBounds.left() + 6;
@@ -380,14 +379,14 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() instanceof Block block) {
             if (!hideEntity) {
                 if (composite.structureNbt() != null || (composite.stackedBlocks() != null && !composite.stackedBlocks().isEmpty())) {
-                    EntryRenderHelper.renderStructure(guiGraphics, composite, xPos, yPos, 112, showSilhouette, true, bounce);
+                    EntryRenderHelper.renderStructure(guiGraphics, composite, xPos, yPos, 112, unlocked, true, bounce);
                 } else {
-                    EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 40.0F, showSilhouette, true, bounce);
+                    EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 40.0F, unlocked, true, bounce);
                 }
             }
         } else if (renderEntry instanceof EntityType && renderedEntity instanceof LivingEntity living) {
             if (!hideEntity) {
-                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 112, 112, 100, showSilhouette, ModConfig.get().getDetailsSilhouetteColorInt(), true, bounce);
+                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 112, 112, 100, unlocked, true, bounce);
             }
             if (unlocked) {
                 renderAttributes(guiGraphics, living);
@@ -395,7 +394,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
         } else if (renderEntry instanceof Block block) {
             if (!hideEntity) {
-                EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 40.0F, showSilhouette, true, bounce);
+                EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 40.0F, unlocked, true, bounce);
             }
         }
         super.render(guiGraphics, mouseX, mouseY, partialTick);

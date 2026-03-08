@@ -730,7 +730,6 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
     private void renderEntryInGrid(GuiGraphics guiGraphics, Object entry, int x, int y, int scale, boolean unlocked) {
         Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
-        boolean showSilhouette = !unlocked || ModConfig.get().keepSilhouetteWhenUnlocked;
 
         if (unlocked && Services.PLATFORM.isModLoaded("exposure") && ModConfig.get().exposureShowPhotographsInGrid) {
             ItemStack existingPhoto = ProgressManager.getInstance().getPhotograph(entry);
@@ -744,9 +743,9 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
         if (entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() instanceof Block block) {
             if (composite.structureNbt() != null || (composite.stackedBlocks() != null && !composite.stackedBlocks().isEmpty())) {
-                EntryRenderHelper.renderStructure(guiGraphics, composite, x, y, CELL_SIZE - 4, showSilhouette, false, 1.0F);
+                EntryRenderHelper.renderStructure(guiGraphics, composite, x, y, CELL_SIZE - 4, unlocked, false, 1.0F);
             } else {
-                EntryRenderHelper.renderBlock(guiGraphics, block, x, y, 15.0F, showSilhouette, false, 1.0F);
+                EntryRenderHelper.renderBlock(guiGraphics, block, x, y, 15.0F, unlocked, false, 1.0F);
             }
         } else if (coreEntry instanceof EntityType<?> type) {
             if (this.minecraft != null && this.minecraft.level != null) {
@@ -770,11 +769,11 @@ public class FieldGuideCategoryScreen extends BookScreen {
                 }
 
                 if (entity instanceof LivingEntity living) {
-                    EntryRenderHelper.renderEntityNormalized(guiGraphics, living, x, y, CELL_SIZE - 8, CELL_SIZE - 8, scale, showSilhouette, ModConfig.get().getListSilhouetteColorInt(), false, 1.0F);
+                    EntryRenderHelper.renderEntityNormalized(guiGraphics, living, x, y, CELL_SIZE - 8, CELL_SIZE - 8, scale, unlocked, false, 1.0F);
                 }
             }
         } else if (coreEntry instanceof Block block) {
-            EntryRenderHelper.renderBlock(guiGraphics, block, x, y, 15.0F, showSilhouette, false, 1.0F);
+            EntryRenderHelper.renderBlock(guiGraphics, block, x, y, 15.0F, unlocked, false, 1.0F);
         }
     }
 }

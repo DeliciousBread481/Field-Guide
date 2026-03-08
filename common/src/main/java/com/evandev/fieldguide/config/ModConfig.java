@@ -61,8 +61,16 @@ public class ModConfig {
     public String textNewColor = "#63B40C";
     public String textCursorColor = "#0xFF704623";
     public String pageNumberColor = "#C7A875";
+
     public String listSilhouetteColor = "#DDC69B";
+    public double listSilhouetteAlpha = 1.0D;
+    public String listUnlockedSilhouetteColor = "#DDC69B";
+    public double listUnlockedSilhouetteAlpha = 1.0D;
+
     public String detailsSilhouetteColor = "#DDC69B";
+    public double detailsSilhouetteAlpha = 1.0D;
+    public String detailsUnlockedSilhouetteColor = "#DDC69B";
+    public double detailsUnlockedSilhouetteAlpha = 1.0D;
     public boolean useRealWorldDate = false;
 
     public boolean exposureAddPhotographButton = true;
@@ -156,9 +164,15 @@ public class ModConfig {
     public int getListSilhouetteColorInt() {
         return parseColor(listSilhouetteColor, 0xDDC69B);
     }
+    public int getListUnlockedSilhouetteColorInt() {
+        return parseColor(listUnlockedSilhouetteColor, 0xDDC69B);
+    }
 
     public int getDetailsSilhouetteColorInt() {
         return parseColor(detailsSilhouetteColor, 0xDDC69B);
+    }
+    public int getDetailsUnlockedSilhouetteColorInt() {
+        return parseColor(detailsUnlockedSilhouetteColor, 0xDDC69B);
     }
 
     private int parseColor(String colorStr, int fallback) {

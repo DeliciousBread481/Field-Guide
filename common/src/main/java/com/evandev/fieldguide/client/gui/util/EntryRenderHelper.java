@@ -91,7 +91,7 @@ public class EntryRenderHelper {
         }
     }
 
-    public static void renderEntityNormalized(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, int maxWidth, int maxHeight, float baseScale, boolean silhouette, int color, boolean isPage, float bounceScale) {
+    public static void renderEntityNormalized(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, int maxWidth, int maxHeight, float baseScale, boolean unlocked, boolean isPage, float bounceScale) {
         Optional<ResourceLocation> textureOpt = getResourcePackOverride(entity.getType(), isPage);
 
         if (textureOpt.isEmpty()) {
@@ -148,10 +148,10 @@ public class EntryRenderHelper {
             });
         }
 
-        textureOpt.ifPresent(texture -> drawCachedTexture(guiGraphics, texture, x, y, maxWidth, maxHeight, silhouette, color, bounceScale));
+        textureOpt.ifPresent(texture -> drawCachedTexture(guiGraphics, texture, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale));
     }
 
-    public static void renderBlock(GuiGraphics guiGraphics, Block block, int x, int y, float baseScale, boolean silhouette, boolean isPage, float bounceScale) {
+    public static void renderBlock(GuiGraphics guiGraphics, Block block, int x, int y, float baseScale, boolean unlocked, boolean isPage, float bounceScale) {
         Optional<ResourceLocation> textureOpt = getResourcePackOverride(block, isPage);
 
         if (textureOpt.isEmpty()) {
@@ -221,11 +221,10 @@ public class EntryRenderHelper {
             });
         }
 
-        int color = ModConfig.get().getListSilhouetteColorInt();
-        textureOpt.ifPresent(texture -> drawCachedTexture(guiGraphics, texture, x, y, (int) (baseScale * 2), (int) (baseScale * 2), silhouette, color, bounceScale));
+        textureOpt.ifPresent(texture -> drawCachedTexture(guiGraphics, texture, x, y, (int) (baseScale * 2), (int) (baseScale * 2), unlocked, isPage, bounceScale));
     }
 
-    public static void renderStructure(GuiGraphics guiGraphics, CompositeFieldGuideEntry composite, int x, int y, int size, boolean silhouette, boolean isPage, float bounceScale) {
+    public static void renderStructure(GuiGraphics guiGraphics, CompositeFieldGuideEntry composite, int x, int y, int size, boolean unlocked, boolean isPage, float bounceScale) {
         Optional<ResourceLocation> textureOpt = getResourcePackOverride(composite, isPage);
 
         if (textureOpt.isEmpty()) {
@@ -287,8 +286,7 @@ public class EntryRenderHelper {
             });
         }
 
-        int color = ModConfig.get().getListSilhouetteColorInt();
-        textureOpt.ifPresent(texture -> drawCachedTexture(guiGraphics, texture, x, y, size, size, silhouette, color, bounceScale));
+        textureOpt.ifPresent(texture -> drawCachedTexture(guiGraphics, texture, x, y, size, size, unlocked, isPage, bounceScale));
     }
 
     private static void setupFieldGuideEntityLighting() {
@@ -303,13 +301,25 @@ public class EntryRenderHelper {
         RenderSystem.setShaderLights(light0, light1);
     }
 
-    private static void drawCachedTexture(GuiGraphics guiGraphics, ResourceLocation texture, int x, int y, int width, int height, boolean silhouette, int color, float bounceScale) {
+    private static void drawCachedTexture(GuiGraphics guiGraphics, ResourceLocation texture, int x, int y, int width, int height, boolean unlocked, boolean isPage, float bounceScale) {
         int scaledWidth = (int) (width * bounceScale);
         int scaledHeight = (int) (height * bounceScale);
         int drawX = x - scaledWidth / 2;
         int drawY = y - scaledHeight / 2;
 
+        boolean silhouette = !unlocked || ModConfig.get().keepSilhouetteWhenUnlocked;
+
         if (silhouette) {
+            int color;
+            double alpha;
+            if (isPage) {
+                color = unlocked ? ModConfig.get().getDetailsSilhouetteColorInt() : ModConfig.get().getDetailsUnlockedSilhouetteColorInt();
+                alpha = unlocked ? ModConfig.get().detailsUnlockedSilhouetteAlpha : ModConfig.get().detailsSilhouetteAlpha;
+            } else {
+                color = unlocked ? ModConfig.get().getListSilhouetteColorInt() : ModConfig.get().getListUnlockedSilhouetteColorInt();
+                alpha = unlocked ? ModConfig.get().listUnlockedSilhouetteAlpha : ModConfig.get().listSilhouetteAlpha;
+            }
+
             Color rgb = new Color(color);
             float r = rgb.getRed() / 255F;
             float g = rgb.getGreen() / 255F;
@@ -318,7 +328,7 @@ public class EntryRenderHelper {
             guiGraphics.flush();
 
             RenderSystem.enableDepthTest();
-            RenderSystem.setShaderFogColor(r, g, b);
+            RenderSystem.setShaderFogColor(r, g, b, (float) alpha);
             RenderSystem.setShaderFogStart(0.0F);
             RenderSystem.setShaderFogEnd(0.1F);
 

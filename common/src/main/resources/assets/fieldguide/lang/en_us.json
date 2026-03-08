@@ -92,10 +92,28 @@
   "option.fieldguide.page_number_color.tooltip": "The hex color code used for the page numbers.",
 
   "option.fieldguide.list_silhouette_color": "List Silhouette Color",
-  "option.fieldguide.list_silhouette_color.tooltip": "The hex color code for undiscovered entity silhouettes within the list pages.",
+  "option.fieldguide.list_silhouette_color.tooltip": "The hex color code for undiscovered entry silhouettes within the list pages.",
+
+  "option.fieldguide.list_silhouette_alpha": "List Silhouette Opacity",
+  "option.fieldguide.list_silhouette_alpha.tooltip": "The opacity of the undiscovered entry silhouettes within the list pages (0.0 - 1.0).",
+
+  "option.fieldguide.list_unlocked_silhouette_color": "List Discovered Silhouette Color",
+  "option.fieldguide.list_unlocked_silhouette_color.tooltip": "The hex color code for discovered entry silhouettes within the list pages.",
+
+  "option.fieldguide.list_unlocked_silhouette_alpha": "List Discovered Silhouette Opacity",
+  "option.fieldguide.list_unlocked_silhouette_alpha.tooltip": "The opacity of the discovered entry silhouettes within the list pages (0.0 - 1.0).",
 
   "option.fieldguide.details_silhouette_color": "Details Silhouette Color",
-  "option.fieldguide.details_silhouette_color.tooltip": "The hex color code for undiscovered entity silhouettes on details pages.",
+  "option.fieldguide.details_silhouette_color.tooltip": "The hex color code for undiscovered entry silhouettes on details pages.",
+
+  "option.fieldguide.details_silhouette_alpha": "Details Silhouette Opacity",
+  "option.fieldguide.details_silhouette_alpha.tooltip": "The opacity of the undiscovered entry silhouettes within the details pages (0.0 - 1.0).",
+
+  "option.fieldguide.details_unlocked_silhouette_color": "Details Discovered Silhouette Color",
+  "option.fieldguide.details_unlocked_silhouette_color.tooltip": "The hex color code for discovered entry silhouettes within the details pages.",
+
+  "option.fieldguide.details_unlocked_silhouette_alpha": "Details Discovered Silhouette Opacity",
+  "option.fieldguide.details_unlocked_silhouette_alpha.tooltip": "The opacity of the discovered entry silhouettes within the details pages (0.0 - 1.0).",
 
   "option.fieldguide.use_real_world_date": "Use Real-World Date",
   "option.fieldguide.use_real_world_date.tooltip": "If true, discovery dates are shown using the real-world date instead of the in-game day.",
