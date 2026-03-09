@@ -121,6 +121,7 @@ public class ModConfig {
         defaults.add("minecraft:armor_stand");
         defaults.add("minecraft:giant");
         defaults.add("minecraft:illusioner");
+        defaults.add("shades:shade");
         return defaults;
     }
 

@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.client.gui.util;
 
+import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.config.ModConfig;
@@ -16,6 +17,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.Block;
@@ -143,8 +145,13 @@ public class EntryRenderHelper {
                 entity.oAttackAnim = 0.0F;
 
                 MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
-                Minecraft.getInstance().getEntityRenderDispatcher().render(entity, 0, 0, 0, 0.0F, 1.0F, pose, buffers, LightTexture.FULL_BRIGHT);
-                buffers.endBatch();
+                try {
+                    Minecraft.getInstance().getEntityRenderDispatcher().render(entity, 0, 0, 0, 0.0F, 1.0F, pose, buffers, LightTexture.FULL_BRIGHT);
+                } catch (Exception e) {
+                    Constants.LOG.error("Failed to render entity in Field Guide: {}", BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()), e);
+                } finally {
+                    buffers.endBatch();
+                }
             });
         }
 

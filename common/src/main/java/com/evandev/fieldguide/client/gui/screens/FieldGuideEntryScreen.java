@@ -339,7 +339,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                     dateComponent = Component.literal(realDate);
                 } else {
                     long gameTime = ProgressManager.getInstance().getDiscoveryGameTime(entry);
-                    long days = gameTime / 24000L;
+                    long days = gameTime / 24000L + 1;
                     long timeOfDay = gameTime % 24000L;
 
                     String timeKey = "fieldguide.time.day";

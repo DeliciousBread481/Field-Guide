@@ -3,6 +3,7 @@
   "title.fieldguide.field_guide": "Field Guide",
 
   "gui.fieldguide.open": "Open Field Guide",
+  "gui.fieldguide.main.default": "Recent Discoveries",
   "gui.fieldguide.search": "Search...",
   "gui.fieldguide.no_results": "No Results",
   "gui.fieldguide.drops": "Drops %s",
@@ -167,6 +168,8 @@
   "fieldguide.time.midnight": "Night",
 
   "fieldguide.tooltip.common_spawn": "Common Spawn",
+
+  "tag.item.fieldguide.spyglasses": "Spyglasses",
 
   "key.fieldguide.open": "Open Field Guide",
 

@@ -20,6 +20,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.EntityType;
@@ -239,6 +240,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     public void onServerStarted(MinecraftServer server) {
         resolveAllCategories();
         this.serverLootCache = LootTableHelper.generateLootMap(server.overworld());
+        expandBiomeTags(server);
         generateAutoBiomeAdditions(server);
     }
 
@@ -249,6 +251,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
         resolveAllCategories();
         this.serverLootCache = LootTableHelper.generateLootMap(server.overworld());
+        expandBiomeTags(server);
         generateAutoBiomeAdditions(server);
 
         syncToAll(server);
@@ -484,6 +487,39 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             }
         }
         return list;
+    }
+
+    private void expandBiomeTags(MinecraftServer server) {
+        Registry<Biome> biomeRegistry = server.registryAccess().registryOrThrow(Registries.BIOME);
+
+        this.biomeAdditions = expandTagsForList(this.biomeAdditions, biomeRegistry);
+        this.biomeRemovals = expandTagsForList(this.biomeRemovals, biomeRegistry);
+    }
+
+    private List<String> expandTagsForList(List<String> list, Registry<Biome> biomeRegistry) {
+        Set<String> expanded = new LinkedHashSet<>();
+
+        for (String item : list) {
+            String[] parts = item.split("\\|", 2);
+            if (parts.length == 2 && parts[1].startsWith("#")) {
+                String tagPath = parts[1].substring(1);
+                try {
+                    TagKey<Biome> tagKey = TagKey.create(Registries.BIOME, ResourceLocation.parse(tagPath));
+                    biomeRegistry.getTagOrEmpty(tagKey).forEach(holder -> {
+                        holder.unwrapKey().ifPresent(key -> {
+                            expanded.add(parts[0] + "|" + key.location());
+                        });
+                    });
+                } catch (Exception e) {
+                    Constants.LOG.error("Failed to expand biome tag: {}", parts[1], e);
+                    expanded.add(item);
+                }
+            } else {
+                expanded.add(item);
+            }
+        }
+
+        return new ArrayList<>(expanded);
     }
 
     public void syncToAll(MinecraftServer server) {

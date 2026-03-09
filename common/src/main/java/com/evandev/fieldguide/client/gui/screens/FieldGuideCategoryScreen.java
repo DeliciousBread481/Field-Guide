@@ -596,7 +596,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
     private void renderRecentDiscoveries(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         // Title
-        Component title = Component.literal("Recent Discoveries"); // Fallback
+        Component title = Component.translatable("gui.fieldguide.main.default");
         int titleY = this.rightPageBounds.top() + 8;
         guiGraphics.drawString(this.font, title, this.rightPageBounds.x_center() - font.width(title) / 2, titleY, ModConfig.get().getTextMutedColorInt(), false);
 
@@ -733,12 +733,12 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
         if (unlocked && Services.PLATFORM.isModLoaded("exposure") && ModConfig.get().exposureShowPhotographsInGrid) {
             ItemStack existingPhoto = ProgressManager.getInstance().getPhotograph(entry);
-                if (!existingPhoto.isEmpty()) {
-                    ExposureCompat.renderPhotographInGrid(guiGraphics, x - (CELL_SIZE / 2), y - (CELL_SIZE / 2), CELL_SIZE, CELL_SIZE, existingPhoto);
-                    return;
-                } else if (ModConfig.get().keepSilhouetteWhenUnlocked) {
-                    ExposureCompat.renderMissingPhotoBackground(guiGraphics, x - (CELL_SIZE / 2), y - (CELL_SIZE / 2), CELL_SIZE, CELL_SIZE);
-                }
+            if (!existingPhoto.isEmpty()) {
+                ExposureCompat.renderPhotographInGrid(guiGraphics, x - (CELL_SIZE / 2), y - (CELL_SIZE / 2), CELL_SIZE, CELL_SIZE, existingPhoto);
+                return;
+            } else if (ModConfig.get().keepSilhouetteWhenUnlocked) {
+                ExposureCompat.renderMissingPhotoBackground(guiGraphics, x - (CELL_SIZE / 2), y - (CELL_SIZE / 2), CELL_SIZE, CELL_SIZE);
+            }
         }
 
         if (entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() instanceof Block block) {
