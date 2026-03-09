@@ -1,11 +1,15 @@
 package com.evandev.fieldguide.server.progress;
 
+import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
+import com.mojang.authlib.GameProfile;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.storage.LevelResource;
 
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,6 +33,7 @@ public class FieldGuideProgressManager {
 
     public static void init(MinecraftServer server) {
         INSTANCE = new FieldGuideProgressManager(server);
+        INSTANCE.migrateLegacyProgress();
     }
 
     public static void shutdown() {
@@ -50,6 +55,23 @@ public class FieldGuideProgressManager {
         progress.load();
         progress.markForFullSync();
         playerProgress.put(uuid, progress);
+    }
+
+    private void migrateLegacyProgress() {
+        GameProfile profile = server.getSingleplayerProfile();
+        if (profile == null) return;
+
+        Path legacyFile = server.getWorldPath(LevelResource.ROOT).resolve("fieldguide_data").resolve("progress.dat");
+        if (!Files.exists(legacyFile)) return;
+
+        try {
+            Files.createDirectories(progressDir);
+            Files.move(legacyFile, progressDir.resolve(profile.getId() + ".json"));
+            Constants.LOG.info("Migrated legacy field guide progress for {}", profile.getName());
+        } catch (FileAlreadyExistsException ignored) {
+        } catch (Exception e) {
+            Constants.LOG.error("Failed to migrate legacy field guide progress for {}", profile.getName(), e);
+        }
     }
 
     public void onPlayerDisconnect(ServerPlayer player) {
