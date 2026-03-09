@@ -1,24 +1,20 @@
 package com.evandev.fieldguide.client.gui.widget;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.vertex.Tesselator;
 import io.github.mortuusars.exposure.ExposureClient;
-import io.github.mortuusars.exposure.item.PhotographItem;
-import io.github.mortuusars.exposure.render.PhotographRenderProperties;
-import io.github.mortuusars.exposure.render.PhotographRenderer;
+import io.github.mortuusars.exposure.client.render.photograph.PhotographStyle;
+import io.github.mortuusars.exposure.world.item.PhotographItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Vector2i;
 
 import java.util.function.Supplier;
 
@@ -42,53 +38,34 @@ public class FieldGuidePhotographWidget extends AbstractButton {
     }
 
     @Override
-    public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-
+    public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         ItemStack photograph = photographGetter.get();
         if (photograph.getItem() instanceof PhotographItem) {
-            PhotographRenderProperties renderProperties = PhotographRenderProperties.get(photograph);
+            PhotographStyle style = PhotographStyle.of(photograph);
 
             // Paper
-            renderTexture(guiGraphics, renderProperties.getAlbumPaperTexture(),
-                    getX(), getY(), 0, 0, 0, width, height, width, height);
+            guiGraphics.blit(style.albumPaperTexture(), getX(), getY(), 0, 0, width, height, width, height);
 
             // Exposure
             guiGraphics.pose().pushPose();
-            float scale = exposureArea.getWidth() / (float) ExposureClient.getExposureRenderer().getSize();
+            float scale = exposureArea.getWidth();
             guiGraphics.pose().translate(exposureArea.getX(), exposureArea.getY(), 1);
             guiGraphics.pose().scale(scale, scale, scale);
 
-            MultiBufferSource.BufferSource bufferSource = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
-            PhotographRenderer.render(photograph, false, false, guiGraphics.pose(),
+            MultiBufferSource.BufferSource bufferSource = Minecraft.getInstance().renderBuffers().bufferSource();
+            ExposureClient.photographRenderer().render(photograph, false, false, guiGraphics.pose(),
                     bufferSource, LightTexture.FULL_BRIGHT, 255, 255, 255, 255);
             bufferSource.endBatch();
             guiGraphics.pose().popPose();
 
             // Paper overlay
-            if (renderProperties.hasAlbumPaperOverlayTexture()) {
+            if (style.hasAlbumOverlayTexture()) {
                 guiGraphics.pose().pushPose();
                 guiGraphics.pose().translate(0, 0, 2);
-                renderTexture(guiGraphics, renderProperties.getAlbumPaperOverlayTexture(),
-                        getX(), getY(), 0, 0, 0, width, height, width, height);
+                guiGraphics.blit(style.albumOverlayTexture(), getX(), getY(), 0, 0, width, height, width, height);
                 guiGraphics.pose().popPose();
             }
         }
-    }
-
-    @Override
-    protected @NotNull ClientTooltipPositioner createTooltipPositioner() {
-        return (screenWidth, screenHeight, mouseX, mouseY, tooltipWidth, tooltipHeight) -> {
-            int x = mouseX + 12;
-            int y = mouseY - 12;
-
-            if (x + tooltipWidth > screenWidth) {
-                x -= 28 + tooltipWidth;
-            }
-            if (y + tooltipHeight + 6 > screenHeight) {
-                y = screenHeight - tooltipHeight - 6;
-            }
-            return new Vector2i(x, y);
-        };
     }
 
     @Override

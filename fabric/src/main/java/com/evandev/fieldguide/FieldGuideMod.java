@@ -71,7 +71,7 @@ public class FieldGuideMod implements ModInitializer {
                     var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
                     if (holder.isPresent() && holder.get().is(killToUnlockTag)) {
                         ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(killedEntity.getType());
-                        Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.Type.ENTRY, entityId), player);
+                        Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.TypeEnum.ENTRY, entityId), player);
                     }
                 }
             }

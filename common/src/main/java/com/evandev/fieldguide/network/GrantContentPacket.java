@@ -7,24 +7,24 @@ import net.minecraft.resources.ResourceLocation;
 
 public class GrantContentPacket {
     private final Action action;
-    private final Type type;
+    private final TypeEnum typeEnum;
     private final ResourceLocation id;
 
-    public GrantContentPacket(Action action, Type type, ResourceLocation id) {
+    public GrantContentPacket(Action action, TypeEnum typeEnum, ResourceLocation id) {
         this.action = action;
-        this.type = type;
+        this.typeEnum = typeEnum;
         this.id = id;
     }
 
     public GrantContentPacket(FriendlyByteBuf buf) {
         this.action = buf.readEnum(Action.class);
-        this.type = buf.readEnum(Type.class);
+        this.typeEnum = buf.readEnum(TypeEnum.class);
         this.id = buf.readBoolean() ? buf.readResourceLocation() : null;
     }
 
     public void encode(FriendlyByteBuf buf) {
         buf.writeEnum(action);
-        buf.writeEnum(type);
+        buf.writeEnum(typeEnum);
         buf.writeBoolean(id != null);
         if (id != null) buf.writeResourceLocation(id);
     }
@@ -33,8 +33,8 @@ public class GrantContentPacket {
         return action;
     }
 
-    public Type getType() {
-        return type;
+    public TypeEnum getType() {
+        return typeEnum;
     }
 
     public ResourceLocation getId() {
@@ -51,7 +51,7 @@ public class GrantContentPacket {
     }
 
     private void handleGrant(ClientFieldGuideManager manager) {
-        switch (type) {
+        switch (typeEnum) {
             case EVERYTHING -> {
                 for (Object entry : ClientFieldGuideManager.getValidEntries()) {
                     manager.unlock(entry, false);
@@ -76,7 +76,7 @@ public class GrantContentPacket {
     }
 
     private void handleRevoke(ClientFieldGuideManager manager) {
-        switch (type) {
+        switch (typeEnum) {
             case EVERYTHING -> manager.revokeAll();
             case CATEGORY -> {
                 Category cat = ClientFieldGuideManager.getCategories().get(id);
@@ -98,5 +98,5 @@ public class GrantContentPacket {
 
     public enum Action {GRANT, REVOKE}
 
-    public enum Type {EVERYTHING, CATEGORY, ENTRY}
+    public enum TypeEnum {EVERYTHING, CATEGORY, ENTRY}
 }
