@@ -25,7 +25,7 @@ public class StructureUtils {
 
         if (entry.structureNbt() != null) {
             ResourceLocation nbtLocation = entry.structureNbt();
-            ResourceLocation path = ResourceLocation.fromNamespaceAndPath(nbtLocation.getNamespace(), "structures/" + nbtLocation.getPath() + ".nbt");
+            ResourceLocation path = ResourceLocation.fromNamespaceAndPath(nbtLocation.getNamespace(), "structure/" + nbtLocation.getPath() + ".nbt");
 
             try {
                 var res = Minecraft.getInstance().getResourceManager().getResource(path);
