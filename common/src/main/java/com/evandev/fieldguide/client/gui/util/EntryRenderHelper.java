@@ -204,25 +204,31 @@ public class EntryRenderHelper {
                         .findFirst()
                         .orElse(null);
 
-                if (verticalProp == null) {
-                    Minecraft.getInstance().getBlockRenderer().renderSingleBlock(state, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-                } else {
-                    Collection<?> values = verticalProp.getPossibleValues();
-                    pose.translate(0.0F, -0.5F * (values.size() - 1), 0.0F);
+                try {
+                    if (verticalProp == null) {
+                        Minecraft.getInstance().getBlockRenderer().renderSingleBlock(state, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
+                    } else {
+                        Collection<?> values = verticalProp.getPossibleValues();
+                        pose.translate(0.0F, -0.5F * (values.size() - 1), 0.0F);
 
-                    if (!values.isEmpty() && values.iterator().next() instanceof Comparable) {
-                        @SuppressWarnings("unchecked")
-                        Collection<Comparable<?>> sorted = (Collection<Comparable<?>>) values;
-                        values = sorted.stream()
-                                .sorted((a, b) -> Integer.compare(((Enum<?>) b).ordinal(), ((Enum<?>) a).ordinal()))
-                                .toList();
+                        if (!values.isEmpty() && values.iterator().next() instanceof Comparable) {
+                            @SuppressWarnings("unchecked")
+                            Collection<Comparable<?>> sorted = (Collection<Comparable<?>>) values;
+                            values = sorted.stream()
+                                    .sorted((a, b) -> Integer.compare(((Enum<?>) b).ordinal(), ((Enum<?>) a).ordinal()))
+                                    .toList();
+                        }
+                        for (Object value : values) {
+                            @SuppressWarnings({"unchecked", "rawtypes"})
+                            BlockState variant = state.setValue((Property) verticalProp, (Comparable) value);
+                            Minecraft.getInstance().getBlockRenderer().renderSingleBlock(variant, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
+                            pose.translate(0.0F, 1.0F, 0.0F);
+                        }
                     }
-                    for (Object value : values) {
-                        @SuppressWarnings({"unchecked", "rawtypes"})
-                        BlockState variant = state.setValue((Property) verticalProp, (Comparable) value);
-                        Minecraft.getInstance().getBlockRenderer().renderSingleBlock(variant, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-                        pose.translate(0.0F, 1.0F, 0.0F);
-                    }
+                } catch (Exception e) {
+                    Constants.LOG.error("Failed to render block in Field Guide: {}", BuiltInRegistries.BLOCK.getKey(block), e);
+                } finally {
+                    buffers.endBatch();
                 }
                 buffers.endBatch();
             });
@@ -278,15 +284,21 @@ public class EntryRenderHelper {
                 MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
                 var blockRenderer = Minecraft.getInstance().getBlockRenderer();
 
-                for (Map.Entry<BlockPos, BlockState> b : blocks.entrySet()) {
-                    BlockPos pos = b.getKey();
-                    BlockState state = b.getValue();
-                    if (state.isAir()) continue;
+                try {
+                    for (Map.Entry<BlockPos, BlockState> b : blocks.entrySet()) {
+                        BlockPos pos = b.getKey();
+                        BlockState state = b.getValue();
+                        if (state.isAir()) continue;
 
-                    pose.pushPose();
-                    pose.translate(pos.getX(), pos.getY(), pos.getZ());
-                    blockRenderer.renderSingleBlock(state, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-                    pose.popPose();
+                        pose.pushPose();
+                        pose.translate(pos.getX(), pos.getY(), pos.getZ());
+                        blockRenderer.renderSingleBlock(state, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
+                        pose.popPose();
+                    }
+                } catch (Exception e) {
+                    Constants.LOG.error("Failed to render structure in Field Guide", e);
+                } finally {
+                    buffers.endBatch();
                 }
 
                 buffers.endBatch();
