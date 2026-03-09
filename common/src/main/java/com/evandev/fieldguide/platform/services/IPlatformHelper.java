@@ -27,9 +27,9 @@ public interface IPlatformHelper {
     boolean isDevelopmentEnvironment();
 
     /**
-     * Gets the name of the environment type as a string.
+     * Gets the name of the environment categoryType as a string.
      *
-     * @return The name of the environment type.
+     * @return The name of the environment categoryType.
      */
     default String getEnvironmentName() {
         return isDevelopmentEnvironment() ? "development" : "production";

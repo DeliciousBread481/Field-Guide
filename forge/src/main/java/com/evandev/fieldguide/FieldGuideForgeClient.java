@@ -25,7 +25,7 @@ import java.nio.file.Path;
 public class FieldGuideForgeClient {
 
     public static void handleSyncLoot(SyncLootPacket packet) {
-        ClientFieldGuideManager.getInstance().updateLootCache(packet.getLootCache());
+        ClientFieldGuideManager.getInstance().updateLootCache(packet.getLootCache(), packet.isClearCache());
     }
 
     public static void handleSyncCategories(SyncCategoriesPacket packet) {

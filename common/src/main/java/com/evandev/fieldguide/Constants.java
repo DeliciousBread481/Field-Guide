@@ -33,7 +33,7 @@ public class Constants {
     public static final ResourceLocation ATTRIBUTES_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/attributes.png");
     public static final ResourceLocation SCANNING_ICON_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/scanning.png");
 
-    // Mob Type Icons
+    // Mob CategoryType Icons
     public static final ResourceLocation HOSTILE_ICON = new ResourceLocation(MOD_ID, "textures/gui/icons/hostile.png");
     public static final ResourceLocation PASSIVE_ICON = new ResourceLocation(MOD_ID, "textures/gui/icons/passive.png");
     public static final ResourceLocation NEUTRAL_ICON = new ResourceLocation(MOD_ID, "textures/gui/icons/neutral.png");

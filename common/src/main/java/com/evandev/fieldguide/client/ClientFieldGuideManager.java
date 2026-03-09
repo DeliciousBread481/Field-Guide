@@ -259,7 +259,11 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         if (!lootRemovals.isEmpty()) this.lootRemovals.addAll(lootRemovals);
     }
 
-    public void updateLootCache(Map<ResourceLocation, List<ItemStack>> lootCache) {
+    public void updateLootCache(Map<ResourceLocation, List<ItemStack>> lootCache, boolean clearCache) {
+        if (clearCache) {
+            this.dropCache.clear();
+        }
+
         for (Map.Entry<ResourceLocation, List<ItemStack>> entry : lootCache.entrySet()) {
             ResourceLocation id = entry.getKey();
             List<ItemStack> drops = entry.getValue();

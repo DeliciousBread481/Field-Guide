@@ -51,7 +51,7 @@ public class EntryResolver {
         Set<ResourceLocation> addedIds = new HashSet<>();
 
         for (CategoryEntry entry : category.getEntries()) {
-            if (entry.type() == CategoryEntry.Type.ENTRY && entry.id() != null) {
+            if (entry.categoryType() == CategoryEntry.CategoryType.ENTRY && entry.id() != null) {
                 resolveSingleEntry(entry.id(), config).ifPresent(e -> {
                     if (entry.stackedBlocks() != null && !entry.stackedBlocks().isEmpty()) {
                         foundEntries.add(new CompositeFieldGuideEntry(entry.id(), e, new ArrayList<>(), null, entry.stackedBlocks()));
@@ -60,7 +60,7 @@ public class EntryResolver {
                     }
                     addedIds.add(entry.id());
                 });
-            } else if (entry.type() == CategoryEntry.Type.COMPOSITE && entry.id() != null) {
+            } else if (entry.categoryType() == CategoryEntry.CategoryType.COMPOSITE && entry.id() != null) {
                 ResourceLocation displayLoc = entry.displayId() != null ? entry.displayId() : entry.id();
                 resolveSingleEntry(displayLoc, config).ifPresent(displayEntry -> {
                     List<Object> components = new ArrayList<>();
@@ -72,7 +72,7 @@ public class EntryResolver {
                     foundEntries.add(new CompositeFieldGuideEntry(entry.id(), displayEntry, components, entry.structureNbt(), entry.stackedBlocks()));
                     addedIds.add(entry.id());
                 });
-            } else if (entry.type() == CategoryEntry.Type.AUTO_POPULATE) {
+            } else if (entry.categoryType() == CategoryEntry.CategoryType.AUTO_POPULATE) {
                 for (Object obj : getEntriesForStrategy(entry.strategy(), config)) {
                     ResourceLocation id = getEntryId(obj);
                     if (id != null && !addedIds.contains(id)) {

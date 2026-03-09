@@ -51,7 +51,7 @@ public class FieldGuideFabricClient implements ClientModInitializer {
 
         ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.SYNC_LOOT_CHANNEL, (client, handler, buf, responseSender) -> {
             SyncLootPacket packet = new SyncLootPacket(buf);
-            client.execute(() -> ClientFieldGuideManager.getInstance().updateLootCache(packet.getLootCache()));
+            client.execute(() -> ClientFieldGuideManager.getInstance().updateLootCache(packet.getLootCache(), packet.isClearCache()));
         });
 
         ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.SYNC_CATEGORIES_CHANNEL, (client, handler, buf, responseSender) -> {

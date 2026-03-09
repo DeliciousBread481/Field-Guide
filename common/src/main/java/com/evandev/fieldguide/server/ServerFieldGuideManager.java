@@ -2,7 +2,10 @@ package com.evandev.fieldguide.server;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.data.*;
+import com.evandev.fieldguide.data.Category;
+import com.evandev.fieldguide.data.CategoryEntry;
+import com.evandev.fieldguide.data.CompositeDefinition;
+import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
@@ -105,15 +108,18 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                 for (int j = index; j < endIndex; j++) {
                     Object obj = resolved.get(j);
                     if (obj instanceof EntityType<?> type) {
-                        chunkCat.addEntry(new CategoryEntry(CategoryType.Type.ENTRY, BuiltInRegistries.ENTITY_TYPE.getKey(type), BuiltInRegistries.ENTITY_TYPE.getKey(type), null, null, null, null));
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, BuiltInRegistries.ENTITY_TYPE.getKey(type), BuiltInRegistries.ENTITY_TYPE.getKey(type), null, null, null, null));
                     } else if (obj instanceof Block block) {
-                        chunkCat.addEntry(new CategoryEntry(CategoryType.Type.ENTRY, BuiltInRegistries.BLOCK.getKey(block), BuiltInRegistries.BLOCK.getKey(block), null, null, null, null));
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, BuiltInRegistries.BLOCK.getKey(block), BuiltInRegistries.BLOCK.getKey(block), null, null, null, null));
                     } else if (obj instanceof Item item) {
-                        chunkCat.addEntry(new CategoryEntry(CategoryType.Type.ENTRY, BuiltInRegistries.ITEM.getKey(item), BuiltInRegistries.ITEM.getKey(item), null, null, null, null));
-                    } else if (obj instanceof CompositeFieldGuideEntry(
-                            ResourceLocation id, Object displayEntry, List<Object> components,
-                            ResourceLocation structureNbt, List<String> stackedBlocks
-                    )) {
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, BuiltInRegistries.ITEM.getKey(item), BuiltInRegistries.ITEM.getKey(item), null, null, null, null));
+                    } else if (obj instanceof CompositeFieldGuideEntry composite) {
+                        ResourceLocation id = composite.id();
+                        Object displayEntry = composite.displayEntry();
+                        List<Object> components = composite.components();
+                        ResourceLocation structureNbt = composite.structureNbt();
+                        List<String> stackedBlocks = composite.stackedBlocks();
+
                         List<ResourceLocation> compIds = new ArrayList<>();
                         if (components != null) {
                             for (Object c : components) {
@@ -129,7 +135,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                         else if (displayEntry instanceof Block b) displayId = BuiltInRegistries.BLOCK.getKey(b);
                         else if (displayEntry instanceof Item i) displayId = BuiltInRegistries.ITEM.getKey(i);
 
-                        chunkCat.addEntry(new CategoryEntry(CategoryType.Type.COMPOSITE, id, displayId, null, compIds, structureNbt, stackedBlocks));
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.COMPOSITE, id, displayId, null, compIds, structureNbt, stackedBlocks));
                     }
                 }
                 flattenedCategories.add(chunkCat);
@@ -277,7 +283,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             ResourceLocation fileId = entry.getKey();
             String path = fileId.getPath();
             String idPath = path.substring("fieldguide/categories/".length(), path.length() - ".json".length());
-            ResourceLocation defaultCategoryId = ResourceLocation.fromNamespaceAndPath(fileId.getNamespace(), idPath);
+            ResourceLocation defaultCategoryId = new ResourceLocation(fileId.getNamespace(), idPath);
 
             for (Resource resource : entry.getValue()) {
                 try (Reader reader = resource.openAsReader()) {
@@ -285,7 +291,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
                     ResourceLocation categoryId = defaultCategoryId;
                     if (json.has("target_category")) {
-                        categoryId = ResourceLocation.parse(GsonHelper.getAsString(json, "target_category"));
+                        categoryId = new ResourceLocation(GsonHelper.getAsString(json, "target_category"));
                     }
 
                     Category category = data.categories.computeIfAbsent(categoryId, Category::new);
@@ -299,7 +305,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                     }
 
                     if (json.has("icon")) {
-                        category.setIcon(ResourceLocation.parse(GsonHelper.getAsString(json, "icon")));
+                        category.setIcon(new ResourceLocation(GsonHelper.getAsString(json, "icon")));
                     }
 
                     if (json.has("group_by")) {
@@ -320,12 +326,12 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
                             switch (typeStr) {
                                 case "entry" -> {
-                                    ResourceLocation id = ResourceLocation.parse(GsonHelper.getAsString(obj, "id"));
-                                    category.addEntry(new CategoryEntry(CategoryType.Type.ENTRY, id, id, null, null, null, null));
+                                    ResourceLocation id = new ResourceLocation(GsonHelper.getAsString(obj, "id"));
+                                    category.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, null, null, null, null));
                                 }
                                 case "auto_populate" -> {
                                     String strategy = GsonHelper.getAsString(obj, "strategy");
-                                    category.addEntry(new CategoryEntry(CategoryType.Type.AUTO_POPULATE, null, null, strategy, null, null, null));
+                                    category.addEntry(new CategoryEntry(CategoryEntry.CategoryType.AUTO_POPULATE, null, null, strategy, null, null, null));
                                 }
                             }
                         }
@@ -348,17 +354,17 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                     if (json.has("values")) {
                         for (JsonElement el : GsonHelper.getAsJsonArray(json, "values")) {
                             JsonObject obj = el.getAsJsonObject();
-                            ResourceLocation id = ResourceLocation.parse(GsonHelper.getAsString(obj, "id"));
-                            ResourceLocation displayId = obj.has("display") ? ResourceLocation.parse(GsonHelper.getAsString(obj, "display")) : id;
+                            ResourceLocation id = new ResourceLocation(GsonHelper.getAsString(obj, "id"));
+                            ResourceLocation displayId = obj.has("display") ? new ResourceLocation(GsonHelper.getAsString(obj, "display")) : id;
 
                             List<ResourceLocation> components = new ArrayList<>();
                             if (obj.has("components")) {
                                 for (JsonElement comp : GsonHelper.getAsJsonArray(obj, "components")) {
-                                    components.add(ResourceLocation.parse(comp.getAsString()));
+                                    components.add(new ResourceLocation(comp.getAsString()));
                                 }
                             }
 
-                            ResourceLocation structureNbt = obj.has("structure_nbt") ? ResourceLocation.parse(GsonHelper.getAsString(obj, "structure_nbt")) : null;
+                            ResourceLocation structureNbt = obj.has("structure_nbt") ? new ResourceLocation(GsonHelper.getAsString(obj, "structure_nbt")) : null;
 
                             List<String> stackedBlocks = null;
                             if (obj.has("render")) {
@@ -391,8 +397,8 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                     if (json.has("entries")) {
                         for (JsonElement el : GsonHelper.getAsJsonArray(json, "entries")) {
                             JsonObject obj = el.getAsJsonObject();
-                            ResourceLocation source = ResourceLocation.parse(GsonHelper.getAsString(obj, "source"));
-                            ResourceLocation target = ResourceLocation.parse(GsonHelper.getAsString(obj, "target"));
+                            ResourceLocation source = new ResourceLocation(GsonHelper.getAsString(obj, "source"));
+                            ResourceLocation target = new ResourceLocation(GsonHelper.getAsString(obj, "target"));
                             data.redirects.put(source, target);
                         }
                     }
@@ -504,7 +510,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             if (parts.length == 2 && parts[1].startsWith("#")) {
                 String tagPath = parts[1].substring(1);
                 try {
-                    TagKey<Biome> tagKey = TagKey.create(Registries.BIOME, ResourceLocation.parse(tagPath));
+                    TagKey<Biome> tagKey = TagKey.create(Registries.BIOME, new ResourceLocation(tagPath));
                     biomeRegistry.getTagOrEmpty(tagKey).forEach(holder -> {
                         holder.unwrapKey().ifPresent(key -> {
                             expanded.add(parts[0] + "|" + key.location());
