@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.network;
 
+import com.evandev.fieldguide.FieldGuideLimits;
 import com.evandev.fieldguide.compat.exposure.ExposureCompat;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
@@ -12,8 +13,8 @@ import net.minecraft.world.item.ItemStack;
 
 public class UpdateEntryDataPacket {
 
-    private static final int MAX_NAME_LENGTH = 64;
-    private static final int MAX_DESCRIPTION_LENGTH = 1024;
+    private static final int MAX_NAME_LENGTH = FieldGuideLimits.MAX_ENTRY_NAME_LENGTH;
+    private static final int MAX_DESCRIPTION_LENGTH = FieldGuideLimits.MAX_ENTRY_DESCRIPTION_LENGTH;
 
     private interface Data {
         void encode(FriendlyByteBuf buf);

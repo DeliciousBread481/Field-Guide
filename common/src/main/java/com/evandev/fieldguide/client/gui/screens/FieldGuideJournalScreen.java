@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.client.gui.screens;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.FieldGuideLimits;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.data.JournalPage;
@@ -42,7 +43,9 @@ public class FieldGuideJournalScreen extends BookScreen {
     protected void init() {
         super.init();
         ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
-        ensurePagesExist(manager);
+        List<JournalPage> pages = manager.getJournalPages();
+        ensurePagesExist(pages);
+        clampCurrentSpread(pages);
 
         int textXLeft = this.leftPageBounds.left() + 6;
         int textXRight = this.rightPageBounds.left() + 6;
@@ -55,17 +58,17 @@ public class FieldGuideJournalScreen extends BookScreen {
         if (currentSpread == 0) {
             String jTitle = manager.getJournalTitle();
             int jtWidth = Math.max(100, this.font.width(jTitle.isEmpty() ? "Journal" : jTitle));
-            BookTextFieldWidget journalTitleWidget = new BookTextFieldWidget(this.font, this.leftPageBounds.x_center() - jtWidth / 2, this.leftPageBounds.top() + 36, jtWidth, font.lineHeight, jTitle, ModConfig.get().getTextTitleColorInt(), 100, manager::setJournalTitle).setCentered(true);
+            BookTextFieldWidget journalTitleWidget = new BookTextFieldWidget(this.font, this.leftPageBounds.x_center() - jtWidth / 2, this.leftPageBounds.top() + 36, jtWidth, font.lineHeight, jTitle, ModConfig.get().getTextTitleColorInt(), 100, FieldGuideLimits.MAX_JOURNAL_TITLE_LENGTH, manager::setJournalTitle).setCentered(true);
             this.addRenderableWidget(journalTitleWidget);
         } else {
-            JournalPage lPage = manager.getJournalPages().get(currentSpread * 2 - 1);
+            JournalPage lPage = pages.get(currentSpread * 2 - 1);
 
-            BookTextFieldWidget leftTitleWidget = new BookTextFieldWidget(this.font, textXLeft, titleY, textAreaWidth, font.lineHeight, lPage.title, ModConfig.get().getTextTitleColorInt(), textAreaWidth, text -> {
+            BookTextFieldWidget leftTitleWidget = new BookTextFieldWidget(this.font, textXLeft, titleY, textAreaWidth, font.lineHeight, lPage.title, ModConfig.get().getTextTitleColorInt(), textAreaWidth, FieldGuideLimits.MAX_JOURNAL_PAGE_TITLE_LENGTH, text -> {
                 lPage.title = text;
                 manager.saveJournal();
             });
 
-            BookTextAreaWidget leftContentWidget = new BookTextAreaWidget(this.font, textXLeft, textY, textAreaWidth, textAreaHeight, 12, ModConfig.get().getTextColorInt(), false, lPage.content, text -> {
+            BookTextAreaWidget leftContentWidget = new BookTextAreaWidget(this.font, textXLeft, textY, textAreaWidth, textAreaHeight, 12, ModConfig.get().getTextColorInt(), false, FieldGuideLimits.MAX_JOURNAL_PAGE_CONTENT_LENGTH, lPage.content, text -> {
                 lPage.content = text;
                 manager.saveJournal();
             });
@@ -75,14 +78,14 @@ public class FieldGuideJournalScreen extends BookScreen {
         }
 
         // Right Page
-        JournalPage rPage = manager.getJournalPages().get(currentSpread == 0 ? 0 : currentSpread * 2);
+        JournalPage rPage = pages.get(currentSpread == 0 ? 0 : currentSpread * 2);
 
-        BookTextFieldWidget rightTitleWidget = new BookTextFieldWidget(this.font, textXRight, titleY, textAreaWidth, font.lineHeight, rPage.title, ModConfig.get().getTextTitleColorInt(), textAreaWidth, text -> {
+        BookTextFieldWidget rightTitleWidget = new BookTextFieldWidget(this.font, textXRight, titleY, textAreaWidth, font.lineHeight, rPage.title, ModConfig.get().getTextTitleColorInt(), textAreaWidth, FieldGuideLimits.MAX_JOURNAL_PAGE_TITLE_LENGTH, text -> {
             rPage.title = text;
             manager.saveJournal();
         });
 
-        BookTextAreaWidget rightContentWidget = new BookTextAreaWidget(this.font, textXRight, textY, textAreaWidth, textAreaHeight, 12, ModConfig.get().getTextColorInt(), false, rPage.content, text -> {
+        BookTextAreaWidget rightContentWidget = new BookTextAreaWidget(this.font, textXRight, textY, textAreaWidth, textAreaHeight, 12, ModConfig.get().getTextColorInt(), false, FieldGuideLimits.MAX_JOURNAL_PAGE_CONTENT_LENGTH, rPage.content, text -> {
             rPage.content = text;
             manager.saveJournal();
         });
@@ -95,6 +98,8 @@ public class FieldGuideJournalScreen extends BookScreen {
         PageTurnButton prevButton = new PageTurnButton(this.bounds.left() + 15, this.leftPageBounds.bottom() - 15, 16, 16, 32, 16, 16, Constants.WIDGETS_TEXTURE, b -> changeSpread(-1));
         PageTurnButton nextButton = new PageTurnButton(this.bounds.right() - 30, this.rightPageBounds.bottom() - 15, 16, 16, 48, 16, 16, Constants.WIDGETS_TEXTURE, b -> changeSpread(1));
         prevButton.visible = currentSpread > 0;
+        int nextSpreadPageCount = (currentSpread + 1) * 2 + 1;
+        nextButton.visible = nextSpreadPageCount <= FieldGuideLimits.MAX_JOURNAL_PAGES;
         this.addRenderableWidget(prevButton);
         this.addRenderableWidget(nextButton);
 
@@ -108,10 +113,17 @@ public class FieldGuideJournalScreen extends BookScreen {
         this.addRenderableWidget(this.searchBox);
     }
 
-    private void ensurePagesExist(ClientFieldGuideManager manager) {
-        int targetSize = currentSpread == 0 ? 1 : currentSpread * 2 + 1;
-        while (manager.getJournalPages().size() < targetSize) {
-            manager.getJournalPages().add(new JournalPage("", getDefaultJournalText(), System.currentTimeMillis()));
+    private void clampCurrentSpread(List<JournalPage> pages) {
+        int maxSpread = Math.max(0, (pages.size() - 1) / 2);
+        if (currentSpread > maxSpread) {
+            currentSpread = maxSpread;
+        }
+    }
+
+    private void ensurePagesExist(List<JournalPage> pages) {
+        int targetSize = Math.min(currentSpread == 0 ? 1 : currentSpread * 2 + 1, FieldGuideLimits.MAX_JOURNAL_PAGES);
+        while (pages.size() < targetSize) {
+            pages.add(new JournalPage("", getDefaultJournalText(), System.currentTimeMillis()));
         }
     }
 
@@ -122,11 +134,13 @@ public class FieldGuideJournalScreen extends BookScreen {
     }
 
     private void handleSpillover(String spill, int targetPageIndex) {
+        if (targetPageIndex >= FieldGuideLimits.MAX_JOURNAL_PAGES) return;
         ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
-        while (manager.getJournalPages().size() <= targetPageIndex) {
-            manager.getJournalPages().add(new JournalPage("", getDefaultJournalText(), System.currentTimeMillis()));
+        List<JournalPage> pages = manager.getJournalPages();
+        while (pages.size() <= targetPageIndex) {
+            pages.add(new JournalPage("", getDefaultJournalText(), System.currentTimeMillis()));
         }
-        JournalPage targetPage = manager.getJournalPages().get(targetPageIndex);
+        JournalPage targetPage = pages.get(targetPageIndex);
         targetPage.content = spill + targetPage.content;
         manager.saveJournal();
 
@@ -169,6 +183,8 @@ public class FieldGuideJournalScreen extends BookScreen {
 
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        List<JournalPage> pages = ClientFieldGuideManager.getInstance().getJournalPages();
+        clampCurrentSpread(pages);
         this.renderBackground(guiGraphics);
         guiGraphics.blit(Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
 
@@ -189,14 +205,14 @@ public class FieldGuideJournalScreen extends BookScreen {
             String leftPageStr = (currentSpread * 2) + "";
             guiGraphics.drawString(this.font, leftPageStr, this.leftPageBounds.x_center() - this.font.width(leftPageStr) / 2, this.leftPageBounds.bottom() - 11, ModConfig.get().getPageNumberColorInt(), false);
 
-            JournalPage lPage = ClientFieldGuideManager.getInstance().getJournalPages().get(currentSpread * 2 - 1);
+            JournalPage lPage = pages.get(currentSpread * 2 - 1);
             guiGraphics.drawString(this.font, dateFormat.format(new Date(lPage.timestamp)), this.leftPageBounds.left() + 6, dateY, ModConfig.get().getTextMutedColorInt(), false);
         }
 
         String rightPageStr = (currentSpread * 2 + 1) + "";
         guiGraphics.drawString(this.font, rightPageStr, this.rightPageBounds.x_center() - this.font.width(rightPageStr) / 2, this.rightPageBounds.bottom() - 11, ModConfig.get().getPageNumberColorInt(), false);
 
-        JournalPage rPage = ClientFieldGuideManager.getInstance().getJournalPages().get(currentSpread == 0 ? 0 : currentSpread * 2);
+        JournalPage rPage = pages.get(currentSpread == 0 ? 0 : currentSpread * 2);
         guiGraphics.drawString(this.font, dateFormat.format(new Date(rPage.timestamp)), this.rightPageBounds.left() + 6, dateY, ModConfig.get().getTextMutedColorInt(), false);
     }
 }

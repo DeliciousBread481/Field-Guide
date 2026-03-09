@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.client.progress;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.FieldGuideLimits;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.data.JournalPage;
 import com.evandev.fieldguide.client.gui.toasts.FieldGuideToast;
@@ -235,7 +236,9 @@ public class ProgressManager {
 
     private void sendJournalUpdate() {
         List<PlayerFieldGuideProgress.JournalPageData> pageData = new ArrayList<>();
-        for (JournalPage page : journalPages) {
+        int limit = Math.min(journalPages.size(), FieldGuideLimits.MAX_JOURNAL_PAGES);
+        for (int i = 0; i < limit; i++) {
+            JournalPage page = journalPages.get(i);
             pageData.add(new PlayerFieldGuideProgress.JournalPageData(page.title, page.content, page.timestamp));
         }
         Services.NETWORK.sendToServer(new UpdateJournalPacket(journalTitle, pageData));

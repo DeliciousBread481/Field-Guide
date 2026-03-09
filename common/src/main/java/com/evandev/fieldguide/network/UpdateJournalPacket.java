@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.network;
 
+import com.evandev.fieldguide.FieldGuideLimits;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
 import net.minecraft.network.FriendlyByteBuf;
@@ -10,9 +11,9 @@ import java.util.List;
 
 public class UpdateJournalPacket {
 
-    private static final int MAX_TITLE_LENGTH = 64;
-    private static final int MAX_PAGE_CONTENT_LENGTH = 1024;
-    private static final int MAX_JOURNAL_PAGES = 128;
+    private static final int MAX_TITLE_LENGTH = FieldGuideLimits.MAX_JOURNAL_TITLE_LENGTH;
+    private static final int MAX_PAGE_CONTENT_LENGTH = FieldGuideLimits.MAX_JOURNAL_PAGE_CONTENT_LENGTH;
+    private static final int MAX_JOURNAL_PAGES = FieldGuideLimits.MAX_JOURNAL_PAGES;
 
     private final String title;
     private final List<PlayerFieldGuideProgress.JournalPageData> pages;

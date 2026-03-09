@@ -22,6 +22,7 @@ public class BookTextAreaWidget extends AbstractWidget {
     private final int maxVisibleLines;
     private final int textColor;
     private final boolean scrollable;
+    private final int maxCharacters;
     private final Consumer<String> onChanged;
     private final List<Integer> lineStarts = new ArrayList<>();
     private String text;
@@ -31,13 +32,14 @@ public class BookTextAreaWidget extends AbstractWidget {
     private boolean isDraggingScrollbar = false;
     private Consumer<String> onSpillover;
 
-    public BookTextAreaWidget(Font font, int x, int y, int width, int height, int maxVisibleLines, int textColor, boolean scrollable, String initialText, Consumer<String> onChanged) {
+    public BookTextAreaWidget(Font font, int x, int y, int width, int height, int maxVisibleLines, int textColor, boolean scrollable, int maxCharacters, String initialText, Consumer<String> onChanged) {
         super(x, y, width, height, Component.empty());
         this.font = font;
         this.maxVisibleLines = maxVisibleLines;
         this.textColor = textColor;
         this.scrollable = scrollable;
-        this.text = initialText == null ? "" : initialText;
+        this.maxCharacters = maxCharacters;
+        this.text = initialText == null ? "" : initialText.substring(0, Math.min(initialText.length(), maxCharacters));
         this.computeLineStarts();
         this.onChanged = onChanged;
         this.cursorPos = this.text.length();
@@ -53,9 +55,9 @@ public class BookTextAreaWidget extends AbstractWidget {
     }
 
     public void setText(String text) {
-        this.text = text;
+        this.text = text.substring(0, Math.min(text.length(), maxCharacters));
         this.computeLineStarts();
-        this.cursorPos = Math.min(this.cursorPos, text.length());
+        this.cursorPos = Math.min(this.cursorPos, this.text.length());
         this.selectionPos = this.cursorPos;
     }
 
@@ -90,6 +92,11 @@ public class BookTextAreaWidget extends AbstractWidget {
     }
 
     private void updateText(String proposedText, int newCursorPos) {
+        if (proposedText.length() > maxCharacters) {
+            proposedText = proposedText.substring(0, maxCharacters);
+            newCursorPos = Math.min(newCursorPos, maxCharacters);
+        }
+
         if (scrollable) {
             this.text = proposedText;
             this.computeLineStarts();
