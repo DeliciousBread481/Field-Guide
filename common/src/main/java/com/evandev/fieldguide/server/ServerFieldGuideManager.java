@@ -37,7 +37,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.Reader;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ServerFieldGuideManager extends SimplePreparableReloadListener<ServerFieldGuideManager.ReloadData> {
     private static final ServerFieldGuideManager INSTANCE = new ServerFieldGuideManager();
@@ -81,13 +80,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     }
 
     public boolean hasEntry(ResourceLocation entryId) {
-        for (List<Object> entries : resolvedCategoryEntries.values()) {
-            for (Object entry : entries) {
-                ResourceLocation id = EntryResolver.getEntryId(entry);
-                if (entryId.equals(id)) return true;
-            }
-        }
-        return false;
+        return EntryResolver.hasEntry(resolvedCategoryEntries, entryId);
     }
 
     public boolean isKillToUnlock(ResourceLocation entryId) {
@@ -100,30 +93,15 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     }
 
     public ResourceLocation getCategoryForEntryId(ResourceLocation entryId) {
-        for (Map.Entry<ResourceLocation, List<Object>> cat : resolvedCategoryEntries.entrySet()) {
-            for (Object entry : cat.getValue()) {
-                ResourceLocation id = EntryResolver.getEntryId(entry);
-                if (entryId.equals(id)) return cat.getKey();
-            }
-        }
-        return null;
+        return EntryResolver.getCategoryForEntryId(resolvedCategoryEntries, entryId);
     }
 
     public Set<ResourceLocation> getAllEntryIds() {
-        return resolvedCategoryEntries.values().stream()
-                .flatMap(List::stream)
-                .map(EntryResolver::getEntryId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
+        return EntryResolver.getAllEntryIds(resolvedCategoryEntries);
     }
 
     public Set<ResourceLocation> getEntryIdsForCategory(ResourceLocation categoryId) {
-        List<Object> entries = resolvedCategoryEntries.get(categoryId);
-        if (entries == null) return Collections.emptySet();
-        return entries.stream()
-                .map(EntryResolver::getEntryId)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
+        return EntryResolver.getEntryIdsForCategory(resolvedCategoryEntries, categoryId);
     }
 
     public List<CompositeDefinition> getComposites() {
@@ -131,42 +109,11 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     }
 
     public List<Object> getEntriesForTarget(Object target) {
-        List<Object> matches = new ArrayList<>();
-        for (List<Object> entries : resolvedCategoryEntries.values()) {
-            for (Object entry : entries) {
-                if (entry.equals(target)) {
-                    matches.add(entry);
-                } else if (entry instanceof CompositeFieldGuideEntry composite) {
-                    if ((composite.displayEntry() != null && composite.displayEntry().equals(target)) ||
-                            (composite.components() != null && composite.components().contains(target))) {
-                        matches.add(entry);
-                    }
-                }
-            }
-        }
-        return matches;
+        return EntryResolver.getEntriesForTarget(resolvedCategoryEntries, target);
     }
 
     public boolean isTargetInEntry(ResourceLocation targetId, ResourceLocation entryId) {
-        for (List<Object> entries : resolvedCategoryEntries.values()) {
-            for (Object entry : entries) {
-                ResourceLocation id = EntryResolver.getEntryId(entry);
-                if (!entryId.equals(id)) continue;
-
-                if (targetId.equals(id)) return true;
-
-                if (entry instanceof CompositeFieldGuideEntry composite) {
-                    ResourceLocation displayId = composite.displayEntry() != null ? EntryResolver.getEntryId(composite.displayEntry()) : null;
-                    if (targetId.equals(displayId)) return true;
-                    if (composite.components() != null) {
-                        for (Object comp : composite.components()) {
-                            if (targetId.equals(EntryResolver.getEntryId(comp))) return true;
-                        }
-                    }
-                }
-            }
-        }
-        return false;
+        return EntryResolver.isTargetInEntry(resolvedCategoryEntries, targetId, entryId);
     }
 
     public void syncToPlayer(ServerPlayer player) {

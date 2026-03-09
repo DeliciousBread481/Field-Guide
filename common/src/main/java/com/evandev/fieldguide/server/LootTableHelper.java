@@ -3,6 +3,7 @@ package com.evandev.fieldguide.server;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.server.loot.ParsedDrop;
 import com.evandev.fieldguide.server.loot.StaticLootParser;
+import com.evandev.fieldguide.util.EntryResolver;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
@@ -54,21 +55,15 @@ public class LootTableHelper {
         }
         applyConfigModifications(entry, formattedDrops);
         if (!formattedDrops.isEmpty()) {
-            ResourceLocation id = getEntryId(entry);
+            ResourceLocation id = EntryResolver.getEntryId(entry);
             if (id != null) {
                 lootMap.computeIfAbsent(id, k -> new ArrayList<>()).addAll(formattedDrops);
             }
         }
     }
 
-    private static ResourceLocation getEntryId(Object entry) {
-        if (entry instanceof EntityType<?> type) return BuiltInRegistries.ENTITY_TYPE.getKey(type);
-        if (entry instanceof Block block) return BuiltInRegistries.BLOCK.getKey(block);
-        return null;
-    }
-
     private static boolean matchesTarget(Object entry, String targetStr) {
-        ResourceLocation entryId = getEntryId(entry);
+        ResourceLocation entryId = EntryResolver.getEntryId(entry);
         if (entryId == null) return false;
         if (targetStr.startsWith("#")) {
             try {
@@ -86,7 +81,7 @@ public class LootTableHelper {
     }
 
     public static void applyConfigModifications(Object entry, List<ItemStack> distinctDrops) {
-        ResourceLocation entryId = getEntryId(entry);
+        ResourceLocation entryId = EntryResolver.getEntryId(entry);
         if (entryId == null) return;
 
         ServerFieldGuideManager manager = ServerFieldGuideManager.getInstance();
