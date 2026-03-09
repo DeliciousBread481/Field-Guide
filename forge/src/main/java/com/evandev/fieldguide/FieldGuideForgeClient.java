@@ -4,11 +4,10 @@ import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.ModRenderTypes;
 import com.evandev.fieldguide.config.ClothConfigIntegration;
-import com.evandev.fieldguide.network.GrantContentPacket;
+import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.client.event.*;
@@ -20,7 +19,6 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLConstructModEvent;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 public class FieldGuideForgeClient {
 
@@ -45,8 +43,8 @@ public class FieldGuideForgeClient {
         );
     }
 
-    public static void handleGrantContent(GrantContentPacket packet) {
-        packet.handleClient();
+    public static void handleProgressUpdate(ProgressUpdatePacket packet) {
+        ClientFieldGuideManager.getInstance().applyServerUpdate(packet);
     }
 
     @Mod.EventBusSubscriber(modid = Constants.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
@@ -113,17 +111,7 @@ public class FieldGuideForgeClient {
 
         @SubscribeEvent
         public static void onClientPlayerLogin(ClientPlayerNetworkEvent.LoggingIn event) {
-            Minecraft client = Minecraft.getInstance();
-            String serverId = "unknown_server";
-
-            if (client.hasSingleplayerServer() && client.getSingleplayerServer() != null) {
-                Path levelDatPath = client.getSingleplayerServer().getWorldPath(LevelResource.LEVEL_DATA_FILE);
-                serverId = levelDatPath.getParent().getFileName().toString();
-            } else if (client.getCurrentServer() != null) {
-                serverId = client.getCurrentServer().ip;
-            }
-
-            ClientFieldGuideManager.getInstance().onWorldLoad(serverId);
+            ClientFieldGuideManager.getInstance().onWorldLoad();
         }
 
         @SubscribeEvent

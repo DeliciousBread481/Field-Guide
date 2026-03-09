@@ -6,6 +6,8 @@ import com.evandev.fieldguide.platform.ForgeNetworkHelper;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.command.FieldGuideCommand;
+import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
+import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -16,9 +18,11 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
+import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
@@ -44,9 +48,9 @@ public class FieldGuideMod {
         modEventBus.addListener(this::commonSetup);
     }
 
-    public static void handleGrantContent(GrantContentPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
+    public static void handleProgressUpdate(ProgressUpdatePacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
         NetworkEvent.Context context = contextSupplier.get();
-        context.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> FieldGuideForgeClient.handleGrantContent(packet)));
+        context.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> FieldGuideForgeClient.handleProgressUpdate(packet)));
         context.setPacketHandled(true);
     }
 
@@ -68,7 +72,40 @@ public class FieldGuideMod {
         context.setPacketHandled(true);
     }
 
-    public static void handleClaimXp(ClaimXpPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
+    public static void handleScanUnlock(ScanUnlockPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
+        NetworkEvent.Context context = contextSupplier.get();
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player != null) {
+                packet.handleServer(player);
+            }
+        });
+        context.setPacketHandled(true);
+    }
+
+    public static void handleMarkSeen(MarkSeenPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
+        NetworkEvent.Context context = contextSupplier.get();
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player != null) {
+                packet.handleServer(player);
+            }
+        });
+        context.setPacketHandled(true);
+    }
+
+    public static void handleUpdateEntryData(UpdateEntryDataPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
+        NetworkEvent.Context context = contextSupplier.get();
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player != null) {
+                packet.handleServer(player);
+            }
+        });
+        context.setPacketHandled(true);
+    }
+
+    public static void handleUpdateJournal(UpdateJournalPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
         NetworkEvent.Context context = contextSupplier.get();
         context.enqueueWork(() -> {
             ServerPlayer player = context.getSender();
@@ -96,12 +133,33 @@ public class FieldGuideMod {
     @SubscribeEvent
     public void onServerStarted(ServerStartedEvent event) {
         ServerFieldGuideManager.getInstance().onServerStarted(event.getServer());
+        FieldGuideProgressManager.init(event.getServer());
+    }
+
+    @SubscribeEvent
+    public void onServerStopping(ServerStoppingEvent event) {
+        FieldGuideProgressManager.shutdown();
+    }
+
+    @SubscribeEvent
+    public void onServerTick(TickEvent.ServerTickEvent event) {
+        if (event.phase == TickEvent.Phase.END) {
+            FieldGuideProgressManager.getInstance().tick();
+        }
     }
 
     @SubscribeEvent
     public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             ServerFieldGuideManager.getInstance().syncToPlayer(player);
+            FieldGuideProgressManager.getInstance().onPlayerJoin(player);
+        }
+    }
+
+    @SubscribeEvent
+    public void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            FieldGuideProgressManager.getInstance().onPlayerDisconnect(player);
         }
     }
 
@@ -115,7 +173,10 @@ public class FieldGuideMod {
                 var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
                 if (holder.isPresent() && holder.get().is(killToUnlockTag)) {
                     ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType());
-                    Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.TypeEnum.ENTRY, entityId), player);
+                    PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
+                    if (progress != null) {
+                        progress.unlock(entityId.toString(), player.serverLevel().dayTime());
+                    }
                 }
             }
         }

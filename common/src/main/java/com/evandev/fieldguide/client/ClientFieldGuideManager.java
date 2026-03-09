@@ -11,6 +11,7 @@ import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CategoryEntry;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.util.EntryResolver;
 import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
@@ -422,8 +423,8 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         return ProgressManager.getInstance().getLastUnlockedEntry();
     }
 
-    public void onWorldLoad(String serverIdentifier) {
-        ProgressManager.getInstance().onWorldLoad(serverIdentifier);
+    public void onWorldLoad() {
+        ProgressManager.getInstance().onWorldLoad();
     }
 
     public void onWorldUnload() {
@@ -431,15 +432,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         ProgressManager.getInstance().onWorldUnload();
     }
 
-    public void unlock(Object entry, boolean showToast) {
-        ProgressManager.getInstance().unlock(entry, showToast);
-    }
-
-    public void revoke(Object entry) {
-        ProgressManager.getInstance().revoke(entry);
-    }
-
-    public void revokeAll() {
-        ProgressManager.getInstance().revokeAll();
+    public void applyServerUpdate(ProgressUpdatePacket packet) {
+        ProgressManager.getInstance().applyServerUpdate(packet);
     }
 }

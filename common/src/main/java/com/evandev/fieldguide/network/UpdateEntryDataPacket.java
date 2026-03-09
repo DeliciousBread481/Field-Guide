@@ -1,0 +1,136 @@
+package com.evandev.fieldguide.network;
+
+import com.evandev.fieldguide.compat.exposure.ExposureCompat;
+import com.evandev.fieldguide.platform.Services;
+import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
+import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+
+public class UpdateEntryDataPacket {
+
+    private static final int MAX_NAME_LENGTH = 64;
+    private static final int MAX_DESCRIPTION_LENGTH = 1024;
+
+    private interface Data {
+        void encode(FriendlyByteBuf buf);
+        void apply(String entryId, PlayerFieldGuideProgress progress, ServerPlayer player);
+    }
+
+    private record NameData(String name) implements Data {
+        @Override
+        public void encode(FriendlyByteBuf buf) {
+            buf.writeUtf(name != null ? name : "", MAX_NAME_LENGTH);
+        }
+
+        @Override
+        public void apply(String entryId, PlayerFieldGuideProgress progress, ServerPlayer player) {
+            progress.setCustomName(entryId, name);
+        }
+    }
+
+    private record DescriptionData(String description) implements Data {
+        @Override
+        public void encode(FriendlyByteBuf buf) {
+            buf.writeUtf(description != null ? description : "", MAX_DESCRIPTION_LENGTH);
+        }
+
+        @Override
+        public void apply(String entryId, PlayerFieldGuideProgress progress, ServerPlayer player) {
+            progress.setCustomDescription(entryId, description);
+        }
+    }
+
+    private record PhotographData(int slot) implements Data {
+        @Override
+        public void encode(FriendlyByteBuf buf) {
+            buf.writeVarInt(slot);
+        }
+
+        @Override
+        public void apply(String entryId, PlayerFieldGuideProgress progress, ServerPlayer player) {
+            if (!Services.PLATFORM.isModLoaded("exposure")) return;
+            if (slot < 0 || slot >= player.getInventory().getContainerSize()) return;
+            ItemStack stack = player.getInventory().getItem(slot);
+            if (stack.isEmpty() || !ExposureCompat.isPhotographItem(stack)) {
+                progress.markEntryForResync(entryId);
+                return;
+            }
+            CompoundTag tag = new CompoundTag();
+            stack.save(tag);
+            progress.setPhotograph(entryId, tag.toString());
+        }
+    }
+
+    private record RemovePhotographData() implements Data {
+        @Override
+        public void encode(FriendlyByteBuf buf) {
+        }
+
+        @Override
+        public void apply(String entryId, PlayerFieldGuideProgress progress, ServerPlayer player) {
+            progress.setPhotograph(entryId, null);
+        }
+    }
+
+    private enum Action {
+        SET_NAME,
+        SET_DESCRIPTION,
+        SET_PHOTOGRAPH,
+        REMOVE_PHOTOGRAPH
+    }
+
+    private final Action action;
+    private final ResourceLocation entryId;
+    private final Data data;
+
+    private UpdateEntryDataPacket(Action action, ResourceLocation entryId, Data data) {
+        this.action = action;
+        this.entryId = entryId;
+        this.data = data;
+    }
+
+    public static UpdateEntryDataPacket setName(ResourceLocation entryId, String name) {
+        return new UpdateEntryDataPacket(Action.SET_NAME, entryId, new NameData(name));
+    }
+
+    public static UpdateEntryDataPacket setDescription(ResourceLocation entryId, String description) {
+        return new UpdateEntryDataPacket(Action.SET_DESCRIPTION, entryId, new DescriptionData(description));
+    }
+
+    public static UpdateEntryDataPacket setPhotograph(ResourceLocation entryId, int slot) {
+        return new UpdateEntryDataPacket(Action.SET_PHOTOGRAPH, entryId, new PhotographData(slot));
+    }
+
+    public static UpdateEntryDataPacket removePhotograph(ResourceLocation entryId) {
+        return new UpdateEntryDataPacket(Action.REMOVE_PHOTOGRAPH, entryId, new RemovePhotographData());
+    }
+
+    public UpdateEntryDataPacket(FriendlyByteBuf buf) {
+        this.action = buf.readEnum(Action.class);
+        this.entryId = buf.readResourceLocation();
+        this.data = switch (action) {
+            case SET_NAME -> new NameData(buf.readUtf(MAX_NAME_LENGTH));
+            case SET_DESCRIPTION -> new DescriptionData(buf.readUtf(MAX_DESCRIPTION_LENGTH));
+            case SET_PHOTOGRAPH -> new PhotographData(buf.readVarInt());
+            case REMOVE_PHOTOGRAPH -> new RemovePhotographData();
+        };
+    }
+
+    public void encode(FriendlyByteBuf buf) {
+        buf.writeEnum(action);
+        buf.writeResourceLocation(entryId);
+        data.encode(buf);
+    }
+
+    public void handleServer(ServerPlayer player) {
+        if (player == null) return;
+        PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
+        if (progress == null || !progress.isUnlocked(entryId)) return;
+
+        data.apply(entryId.toString(), progress, player);
+    }
+}

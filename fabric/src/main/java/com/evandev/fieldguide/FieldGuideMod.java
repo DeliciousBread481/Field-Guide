@@ -1,16 +1,21 @@
 package com.evandev.fieldguide;
 
 import com.evandev.fieldguide.compat.exposure.ExposureFabricEventHandler;
-import com.evandev.fieldguide.network.ClaimXpPacket;
-import com.evandev.fieldguide.network.GrantContentPacket;
+import com.evandev.fieldguide.network.MarkSeenPacket;
+import com.evandev.fieldguide.network.ScanUnlockPacket;
+import com.evandev.fieldguide.network.UpdateEntryDataPacket;
+import com.evandev.fieldguide.network.UpdateJournalPacket;
 import com.evandev.fieldguide.platform.FabricNetworkHelper;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.command.FieldGuideCommand;
+import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
+import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityCombatEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
@@ -53,12 +58,45 @@ public class FieldGuideMod implements ModInitializer {
             }
         });
 
-        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> ServerFieldGuideManager.getInstance().syncToPlayer(handler.player));
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            ServerFieldGuideManager.getInstance().syncToPlayer(handler.player);
+            FieldGuideProgressManager.getInstance().onPlayerJoin(handler.player);
+        });
 
-        ServerLifecycleEvents.SERVER_STARTED.register(server -> ServerFieldGuideManager.getInstance().onServerStarted(server));
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            FieldGuideProgressManager.getInstance().onPlayerDisconnect(handler.player);
+        });
 
-        ServerPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.CLAIM_XP_CHANNEL, (server, player, handler, buf, responseSender) -> {
-            ClaimXpPacket packet = new ClaimXpPacket(buf);
+        ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+            ServerFieldGuideManager.getInstance().onServerStarted(server);
+            FieldGuideProgressManager.init(server);
+        });
+
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            FieldGuideProgressManager.shutdown();
+        });
+
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            FieldGuideProgressManager.getInstance().tick();
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.SCAN_UNLOCK_CHANNEL, (server, player, handler, buf, responseSender) -> {
+            ScanUnlockPacket packet = new ScanUnlockPacket(buf);
+            server.execute(() -> packet.handleServer(player));
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.MARK_SEEN_CHANNEL, (server, player, handler, buf, responseSender) -> {
+            MarkSeenPacket packet = new MarkSeenPacket(buf);
+            server.execute(() -> packet.handleServer(player));
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.UPDATE_ENTRY_DATA_CHANNEL, (server, player, handler, buf, responseSender) -> {
+            UpdateEntryDataPacket packet = new UpdateEntryDataPacket(buf);
+            server.execute(() -> packet.handleServer(player));
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.UPDATE_JOURNAL_CHANNEL, (server, player, handler, buf, responseSender) -> {
+            UpdateJournalPacket packet = new UpdateJournalPacket(buf);
             server.execute(() -> packet.handleServer(player));
         });
 
@@ -71,7 +109,10 @@ public class FieldGuideMod implements ModInitializer {
                     var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
                     if (holder.isPresent() && holder.get().is(killToUnlockTag)) {
                         ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(killedEntity.getType());
-                        Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.TypeEnum.ENTRY, entityId), player);
+                        PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
+                        if (progress != null) {
+                            progress.unlock(entityId.toString(), player.serverLevel().dayTime());
+                        }
                     }
                 }
             }
