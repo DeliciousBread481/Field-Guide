@@ -7,9 +7,11 @@ import com.google.gson.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.BufferedReader;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -231,10 +233,7 @@ public class PlayerFieldGuideProgress {
     }
 
     public void load() {
-        File file = savePath.toFile();
-        if (!file.exists()) return;
-
-        try (FileReader reader = new FileReader(file)) {
+        try (BufferedReader reader = Files.newBufferedReader(savePath, StandardCharsets.UTF_8)) {
             JsonObject json = GSON.fromJson(reader, JsonObject.class);
             if (json == null) return;
 
@@ -287,6 +286,7 @@ public class PlayerFieldGuideProgress {
                     ));
                 }
             }
+        } catch (NoSuchFileException ignored) {
         } catch (Exception e) {
             Constants.LOG.error("Failed to load field guide progress for {}", playerUUID, e);
         }
@@ -296,8 +296,7 @@ public class PlayerFieldGuideProgress {
         if (!dirty) return;
 
         try {
-            File file = savePath.toFile();
-            if (file.getParentFile() != null) file.getParentFile().mkdirs();
+            Files.createDirectories(savePath.getParent());
 
             JsonObject json = new JsonObject();
 
@@ -341,7 +340,7 @@ public class PlayerFieldGuideProgress {
             }
             json.add("journalPages", jpArr);
 
-            try (FileWriter w = new FileWriter(file)) {
+            try (Writer w = Files.newBufferedWriter(savePath, StandardCharsets.UTF_8)) {
                 GSON.toJson(json, w);
             }
 
