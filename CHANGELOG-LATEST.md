@@ -12,6 +12,7 @@
     - Supplementaries
     - Windswept
 - Added config options for changing silhouette colors.
+- Added support for biome tags in biome modifiers.
 - Added Simplified and Traditional Chinese localizations (@balitube).
 
 ### Changed
@@ -25,6 +26,6 @@
 
 - Fixed mob rendering with Mixed Litter (No Man's Land).
 - Fixed spawn biomes not showing on dedicated servers.
-- Fixed crash with Shades, and possibly other mods.
+- Fixed crash with Shades, Monster Booklet, and possibly other mods.
 - Fixed issue where pressing B would sometimes erroneously open the guide.
 - Improved render scaling.
