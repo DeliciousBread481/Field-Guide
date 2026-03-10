@@ -46,6 +46,12 @@ public class FieldGuideMod implements ModInitializer {
             ExposureFabricEventHandler.register();
         }
 
+        ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
+            if (success) {
+                ServerFieldGuideManager.getInstance().reload(server);
+            }
+        });
+
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new IdentifiableResourceReloadListener() {
             @Override
             public ResourceLocation getFabricId() {

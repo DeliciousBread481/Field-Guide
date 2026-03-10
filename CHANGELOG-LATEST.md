@@ -1,3 +1,7 @@
+### Changed
+
+- Servers now enforce progress and validate discoveries for improved security (@pau101).
+
 ### Fixed
 
-- Fixed 1.20.1 version being slightly out of date.
+- Fixed datapack loot modifications not being reflected in the Field Guide.
