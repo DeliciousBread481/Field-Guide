@@ -11,6 +11,7 @@ import java.util.Optional;
 public class ProgressUpdatePacket {
 
     private final boolean reset;
+    private final boolean silent;
 
     private final List<String> unlocked;
     private final List<String> seen;
@@ -25,6 +26,7 @@ public class ProgressUpdatePacket {
 
     private ProgressUpdatePacket(
             boolean reset,
+            boolean silent,
             List<String> unlocked,
             List<String> seen,
             Map<String, Long> discoveryTimes,
@@ -37,6 +39,7 @@ public class ProgressUpdatePacket {
             Optional<List<PlayerFieldGuideProgress.JournalPageData>> journalPages
     ) {
         this.reset = reset;
+        this.silent = silent;
         this.unlocked = unlocked;
         this.seen = seen;
         this.discoveryTimes = discoveryTimes;
@@ -56,11 +59,10 @@ public class ProgressUpdatePacket {
             Map<String, Long> discoveryGameTimes,
             Map<String, String> customNames,
             Map<String, String> customDescriptions,
-            Map<String, String> entryPhotographs,
-            String journalTitle,
-            List<PlayerFieldGuideProgress.JournalPageData> journalPages
+            Map<String, String> entryPhotographs
     ) {
         return new ProgressUpdatePacket(true,
+                true,
                 unlocked,
                 seen,
                 discoveryTimes,
@@ -69,6 +71,49 @@ public class ProgressUpdatePacket {
                 customNames,
                 customDescriptions,
                 entryPhotographs,
+                Optional.empty(),
+                Optional.empty()
+        );
+    }
+
+    public static ProgressUpdatePacket syncChunk(
+            List<String> unlocked,
+            List<String> seen,
+            Map<String, Long> discoveryTimes,
+            Map<String, Long> discoveryGameTimes,
+            Map<String, String> customNames,
+            Map<String, String> customDescriptions,
+            Map<String, String> entryPhotographs
+    ) {
+        return new ProgressUpdatePacket(false,
+                true,
+                unlocked,
+                seen,
+                discoveryTimes,
+                discoveryGameTimes,
+                Collections.emptyList(),
+                customNames,
+                customDescriptions,
+                entryPhotographs,
+                Optional.empty(),
+                Optional.empty()
+        );
+    }
+
+    public static ProgressUpdatePacket journalSync(
+            String journalTitle,
+            List<PlayerFieldGuideProgress.JournalPageData> journalPages
+    ) {
+        return new ProgressUpdatePacket(false,
+                true,
+                Collections.emptyList(),
+                Collections.emptyList(),
+                Collections.emptyMap(),
+                Collections.emptyMap(),
+                Collections.emptyList(),
+                Collections.emptyMap(),
+                Collections.emptyMap(),
+                Collections.emptyMap(),
                 Optional.of(journalTitle),
                 Optional.of(journalPages)
         );
@@ -85,6 +130,7 @@ public class ProgressUpdatePacket {
             Map<String, String> entryPhotographs
     ) {
         return new ProgressUpdatePacket(false,
+                false,
                 unlocked,
                 seen,
                 discoveryTimes,
@@ -100,6 +146,7 @@ public class ProgressUpdatePacket {
 
     public ProgressUpdatePacket(FriendlyByteBuf buf) {
         this.reset = buf.readBoolean();
+        this.silent = buf.readBoolean();
         this.unlocked = buf.readList(FriendlyByteBuf::readUtf);
         this.seen = buf.readList(FriendlyByteBuf::readUtf);
         this.discoveryTimes = buf.readMap(FriendlyByteBuf::readUtf, FriendlyByteBuf::readLong);
@@ -115,6 +162,7 @@ public class ProgressUpdatePacket {
 
     public void encode(FriendlyByteBuf buf) {
         buf.writeBoolean(reset);
+        buf.writeBoolean(silent);
         buf.writeCollection(unlocked, FriendlyByteBuf::writeUtf);
         buf.writeCollection(seen, FriendlyByteBuf::writeUtf);
         buf.writeMap(discoveryTimes, FriendlyByteBuf::writeUtf, FriendlyByteBuf::writeLong);
@@ -134,6 +182,10 @@ public class ProgressUpdatePacket {
 
     public boolean isReset() {
         return reset;
+    }
+
+    public boolean isSilent() {
+        return silent;
     }
 
     public List<String> getUnlocked() {

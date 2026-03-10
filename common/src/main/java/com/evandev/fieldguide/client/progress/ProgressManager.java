@@ -72,7 +72,7 @@ public class ProgressManager {
         }
 
         for (String id : packet.getUnlocked()) {
-            if (unlockedEntries.add(id) && !packet.isReset()) {
+            if (unlockedEntries.add(id) && !packet.isSilent()) {
                 Object entry = resolveEntryFromId(id);
                 if (entry != null) {
                     this.lastUnlockTime = System.currentTimeMillis();

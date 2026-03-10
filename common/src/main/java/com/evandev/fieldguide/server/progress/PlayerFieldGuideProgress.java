@@ -178,17 +178,7 @@ public class PlayerFieldGuideProgress {
 
     public void flushDirty(ServerPlayer player) {
         if (pendingFullSync) {
-            Services.NETWORK.sendToPlayer(ProgressUpdatePacket.fullSync(
-                    new ArrayList<>(unlockedEntries),
-                    new ArrayList<>(seenEntries),
-                    new HashMap<>(discoveryTimes),
-                    new HashMap<>(discoveryGameTimes),
-                    new HashMap<>(customNames),
-                    new HashMap<>(customDescriptions),
-                    new HashMap<>(entryPhotographs),
-                    journalTitle,
-                    new ArrayList<>(journalPages)
-            ), player);
+            sendFullSync(player);
             pendingFullSync = false;
             pendingUnlocks.clear();
             pendingRevokes.clear();
@@ -198,38 +188,108 @@ public class PlayerFieldGuideProgress {
         }
 
         if (!pendingUnlocks.isEmpty() || !pendingRevokes.isEmpty() || !pendingSeen.isEmpty() || !pendingEntryResync.isEmpty()) {
-            Map<String, Long> unlockTimes = new HashMap<>();
-            Map<String, Long> unlockGameTimes = new HashMap<>();
-            for (String id : pendingUnlocks) {
-                if (discoveryTimes.containsKey(id)) unlockTimes.put(id, discoveryTimes.get(id));
-                if (discoveryGameTimes.containsKey(id)) unlockGameTimes.put(id, discoveryGameTimes.get(id));
-            }
-
-            Map<String, String> entryNames = new HashMap<>();
-            Map<String, String> entryDescs = new HashMap<>();
-            Map<String, String> entryPhotos = new HashMap<>();
-            for (String id : pendingEntryResync) {
-                entryNames.put(id, customNames.getOrDefault(id, ""));
-                entryDescs.put(id, customDescriptions.getOrDefault(id, ""));
-                entryPhotos.put(id, entryPhotographs.getOrDefault(id, ""));
-            }
-
-            Services.NETWORK.sendToPlayer(ProgressUpdatePacket.delta(
-                    new ArrayList<>(pendingUnlocks),
-                    new ArrayList<>(pendingRevokes),
-                    new ArrayList<>(pendingSeen),
-                    unlockTimes,
-                    unlockGameTimes,
-                    entryNames,
-                    entryDescs,
-                    entryPhotos
-            ), player);
-
+            sendDelta(player);
             pendingUnlocks.clear();
             pendingRevokes.clear();
             pendingSeen.clear();
             pendingEntryResync.clear();
         }
+    }
+
+    private void sendFullSync(ServerPlayer player) {
+        int chunkSize = 256;
+        List<String> allUnlocked = new ArrayList<>(unlockedEntries);
+        int iterations = Math.max(1, allUnlocked.size());
+
+        boolean first = true;
+        for (int i = 0; i < iterations; i += chunkSize) {
+            List<String> unlockedChunk = chunkAt(allUnlocked, i, chunkSize);
+
+            List<String> seenChunk = new ArrayList<>();
+            Map<String, Long> times = new HashMap<>();
+            Map<String, Long> gameTimes = new HashMap<>();
+            Map<String, String> names = new HashMap<>();
+            Map<String, String> descs = new HashMap<>();
+            Map<String, String> photos = new HashMap<>();
+            for (String id : unlockedChunk) {
+                if (seenEntries.contains(id)) seenChunk.add(id);
+                if (discoveryTimes.containsKey(id)) times.put(id, discoveryTimes.get(id));
+                if (discoveryGameTimes.containsKey(id)) gameTimes.put(id, discoveryGameTimes.get(id));
+                if (customNames.containsKey(id)) names.put(id, customNames.get(id));
+                if (customDescriptions.containsKey(id)) descs.put(id, customDescriptions.get(id));
+                if (entryPhotographs.containsKey(id)) photos.put(id, entryPhotographs.get(id));
+            }
+
+            if (first) {
+                Services.NETWORK.sendToPlayer(ProgressUpdatePacket.fullSync(
+                        unlockedChunk, seenChunk, times, gameTimes, names, descs, Collections.emptyMap()
+                ), player);
+                first = false;
+            } else {
+                Services.NETWORK.sendToPlayer(ProgressUpdatePacket.syncChunk(
+                        unlockedChunk, seenChunk, times, gameTimes, names, descs, Collections.emptyMap()
+                ), player);
+            }
+
+            if (!photos.isEmpty()) {
+                Services.NETWORK.sendToPlayer(ProgressUpdatePacket.syncChunk(
+                        Collections.emptyList(), Collections.emptyList(),
+                        Collections.emptyMap(), Collections.emptyMap(),
+                        Collections.emptyMap(), Collections.emptyMap(), photos
+                ), player);
+            }
+        }
+
+        Services.NETWORK.sendToPlayer(ProgressUpdatePacket.journalSync(
+                journalTitle, new ArrayList<>(journalPages)
+        ), player);
+    }
+
+    private void sendDelta(ServerPlayer player) {
+        int chunkSize = 1024;
+        List<String> allUnlocks = new ArrayList<>(pendingUnlocks);
+        List<String> revoked = new ArrayList<>(pendingRevokes);
+        List<String> seen = new ArrayList<>(pendingSeen);
+        int iterations = Math.max(1, Math.max(allUnlocks.size(), Math.max(revoked.size(), seen.size())));
+
+        Map<String, String> entryNames = new HashMap<>();
+        Map<String, String> entryDescs = new HashMap<>();
+        Map<String, String> entryPhotos = new HashMap<>();
+        for (String id : pendingEntryResync) {
+            entryNames.put(id, customNames.getOrDefault(id, ""));
+            entryDescs.put(id, customDescriptions.getOrDefault(id, ""));
+            entryPhotos.put(id, entryPhotographs.getOrDefault(id, ""));
+        }
+
+        boolean first = true;
+        for (int i = 0; i < iterations; i += chunkSize) {
+            List<String> unlockChunk = chunkAt(allUnlocks, i, chunkSize);
+            List<String> revokedChunk = chunkAt(revoked, i, chunkSize);
+            List<String> seenChunk = chunkAt(seen, i, chunkSize);
+
+            Map<String, Long> unlockTimes = new HashMap<>();
+            Map<String, Long> unlockGameTimes = new HashMap<>();
+            for (String id : unlockChunk) {
+                if (discoveryTimes.containsKey(id)) unlockTimes.put(id, discoveryTimes.get(id));
+                if (discoveryGameTimes.containsKey(id)) unlockGameTimes.put(id, discoveryGameTimes.get(id));
+            }
+
+            Services.NETWORK.sendToPlayer(ProgressUpdatePacket.delta(
+                    unlockChunk,
+                    revokedChunk,
+                    seenChunk,
+                    unlockTimes,
+                    unlockGameTimes,
+                    first ? entryNames : Collections.emptyMap(),
+                    first ? entryDescs : Collections.emptyMap(),
+                    first ? entryPhotos : Collections.emptyMap()
+            ), player);
+            first = false;
+        }
+    }
+
+    private static <T> List<T> chunkAt(List<T> list, int index, int length) {
+        return list.subList(Math.min(index, list.size()), Math.min(index + length, list.size()));
     }
 
     public void load() {
