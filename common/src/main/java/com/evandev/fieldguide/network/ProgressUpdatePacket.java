@@ -24,124 +24,19 @@ public class ProgressUpdatePacket {
     private final Optional<String> journalTitle;
     private final Optional<List<PlayerFieldGuideProgress.JournalPageData>> journalPages;
 
-    private ProgressUpdatePacket(
-            boolean reset,
-            boolean silent,
-            List<String> unlocked,
-            List<String> seen,
-            Map<String, Long> discoveryTimes,
-            Map<String, Long> discoveryGameTimes,
-            List<String> revoked,
-            Map<String, String> customNames,
-            Map<String, String> customDescriptions,
-            Map<String, String> entryPhotographs,
-            Optional<String> journalTitle,
-            Optional<List<PlayerFieldGuideProgress.JournalPageData>> journalPages
-    ) {
-        this.reset = reset;
-        this.silent = silent;
-        this.unlocked = unlocked;
-        this.seen = seen;
-        this.discoveryTimes = discoveryTimes;
-        this.discoveryGameTimes = discoveryGameTimes;
-        this.revoked = revoked;
-        this.customNames = customNames;
-        this.customDescriptions = customDescriptions;
-        this.entryPhotographs = entryPhotographs;
-        this.journalTitle = journalTitle;
-        this.journalPages = journalPages;
-    }
-
-    public static ProgressUpdatePacket fullSync(
-            List<String> unlocked,
-            List<String> seen,
-            Map<String, Long> discoveryTimes,
-            Map<String, Long> discoveryGameTimes,
-            Map<String, String> customNames,
-            Map<String, String> customDescriptions,
-            Map<String, String> entryPhotographs
-    ) {
-        return new ProgressUpdatePacket(true,
-                true,
-                unlocked,
-                seen,
-                discoveryTimes,
-                discoveryGameTimes,
-                Collections.emptyList(),
-                customNames,
-                customDescriptions,
-                entryPhotographs,
-                Optional.empty(),
-                Optional.empty()
-        );
-    }
-
-    public static ProgressUpdatePacket syncChunk(
-            List<String> unlocked,
-            List<String> seen,
-            Map<String, Long> discoveryTimes,
-            Map<String, Long> discoveryGameTimes,
-            Map<String, String> customNames,
-            Map<String, String> customDescriptions,
-            Map<String, String> entryPhotographs
-    ) {
-        return new ProgressUpdatePacket(false,
-                true,
-                unlocked,
-                seen,
-                discoveryTimes,
-                discoveryGameTimes,
-                Collections.emptyList(),
-                customNames,
-                customDescriptions,
-                entryPhotographs,
-                Optional.empty(),
-                Optional.empty()
-        );
-    }
-
-    public static ProgressUpdatePacket journalSync(
-            String journalTitle,
-            List<PlayerFieldGuideProgress.JournalPageData> journalPages
-    ) {
-        return new ProgressUpdatePacket(false,
-                true,
-                Collections.emptyList(),
-                Collections.emptyList(),
-                Collections.emptyMap(),
-                Collections.emptyMap(),
-                Collections.emptyList(),
-                Collections.emptyMap(),
-                Collections.emptyMap(),
-                Collections.emptyMap(),
-                Optional.of(journalTitle),
-                Optional.of(journalPages)
-        );
-    }
-
-    public static ProgressUpdatePacket delta(
-            List<String> unlocked,
-            List<String> revoked,
-            List<String> seen,
-            Map<String, Long> discoveryTimes,
-            Map<String, Long> discoveryGameTimes,
-            Map<String, String> customNames,
-            Map<String, String> customDescriptions,
-            Map<String, String> entryPhotographs
-    ) {
-        return new ProgressUpdatePacket(false,
-                false,
-                unlocked,
-                seen,
-                discoveryTimes,
-                discoveryGameTimes,
-                revoked,
-                customNames,
-                customDescriptions,
-                entryPhotographs,
-                Optional.empty(),
-                Optional.empty()
-        );
+    private ProgressUpdatePacket(Builder builder) {
+        this.reset = builder.reset;
+        this.silent = builder.silent;
+        this.unlocked = builder.unlocked;
+        this.seen = builder.seen;
+        this.discoveryTimes = builder.discoveryTimes;
+        this.discoveryGameTimes = builder.discoveryGameTimes;
+        this.revoked = builder.revoked;
+        this.customNames = builder.customNames;
+        this.customDescriptions = builder.customDescriptions;
+        this.entryPhotographs = builder.entryPhotographs;
+        this.journalTitle = builder.journalTitle;
+        this.journalPages = builder.journalPages;
     }
 
     public ProgressUpdatePacket(FriendlyByteBuf buf) {
@@ -226,5 +121,84 @@ public class ProgressUpdatePacket {
 
     public Optional<List<PlayerFieldGuideProgress.JournalPageData>> getJournalPages() {
         return journalPages;
+    }
+
+    public static class Builder {
+        private boolean reset = false;
+        private boolean silent = false;
+        private List<String> unlocked = Collections.emptyList();
+        private List<String> seen = Collections.emptyList();
+        private Map<String, Long> discoveryTimes = Collections.emptyMap();
+        private Map<String, Long> discoveryGameTimes = Collections.emptyMap();
+        private List<String> revoked = Collections.emptyList();
+        private Map<String, String> customNames = Collections.emptyMap();
+        private Map<String, String> customDescriptions = Collections.emptyMap();
+        private Map<String, String> entryPhotographs = Collections.emptyMap();
+        private Optional<String> journalTitle = Optional.empty();
+        private Optional<List<PlayerFieldGuideProgress.JournalPageData>> journalPages = Optional.empty();
+
+        public Builder reset(boolean reset) {
+            this.reset = reset;
+            return this;
+        }
+
+        public Builder silent(boolean silent) {
+            this.silent = silent;
+            return this;
+        }
+
+        public Builder unlocked(List<String> unlocked) {
+            this.unlocked = unlocked;
+            return this;
+        }
+
+        public Builder seen(List<String> seen) {
+            this.seen = seen;
+            return this;
+        }
+
+        public Builder discoveryTimes(Map<String, Long> times) {
+            this.discoveryTimes = times;
+            return this;
+        }
+
+        public Builder discoveryGameTimes(Map<String, Long> gameTimes) {
+            this.discoveryGameTimes = gameTimes;
+            return this;
+        }
+
+        public Builder revoked(List<String> revoked) {
+            this.revoked = revoked;
+            return this;
+        }
+
+        public Builder customNames(Map<String, String> names) {
+            this.customNames = names;
+            return this;
+        }
+
+        public Builder customDescriptions(Map<String, String> desc) {
+            this.customDescriptions = desc;
+            return this;
+        }
+
+        public Builder entryPhotographs(Map<String, String> photos) {
+            this.entryPhotographs = photos;
+            return this;
+        }
+
+        public Builder journalTitle(String title) {
+            this.journalTitle = Optional.ofNullable(title);
+            return this;
+        }
+
+        public Builder journalPages(List<PlayerFieldGuideProgress.JournalPageData> pages) {
+            this.journalPages = Optional.ofNullable(pages);
+            return this;
+        }
+
+        public ProgressUpdatePacket build() {
+            return new ProgressUpdatePacket(this);
+        }
     }
 }

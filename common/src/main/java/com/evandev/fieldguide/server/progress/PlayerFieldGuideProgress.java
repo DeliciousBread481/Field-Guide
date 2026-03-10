@@ -30,19 +30,23 @@ public class PlayerFieldGuideProgress {
     private final Map<String, String> customDescriptions = new HashMap<>();
     private final Map<String, String> entryPhotographs = new HashMap<>();
     private final List<JournalPageData> journalPages = new ArrayList<>();
-    private String journalTitle = "My Field Guide";
-
-    private boolean dirty = false;
 
     private final Set<String> pendingUnlocks = new LinkedHashSet<>();
     private final Set<String> pendingRevokes = new LinkedHashSet<>();
     private final Set<String> pendingSeen = new LinkedHashSet<>();
-    private boolean pendingFullSync = false;
     private final Set<String> pendingEntryResync = new LinkedHashSet<>();
+    private boolean pendingFullSync = false;
+
+    private String journalTitle = "My Field Guide";
+    private boolean dirty = false;
 
     public PlayerFieldGuideProgress(UUID playerUUID, Path progressDir) {
         this.playerUUID = playerUUID;
         this.savePath = progressDir.resolve(playerUUID.toString() + ".json");
+    }
+
+    private static <T> List<T> chunkAt(List<T> list, int index, int length) {
+        return list.subList(Math.min(index, list.size()), Math.min(index + length, list.size()));
     }
 
     public boolean unlock(String entryId) {
@@ -220,29 +224,40 @@ public class PlayerFieldGuideProgress {
                 if (entryPhotographs.containsKey(id)) photos.put(id, entryPhotographs.get(id));
             }
 
-            if (first) {
-                Services.NETWORK.sendToPlayer(ProgressUpdatePacket.fullSync(
-                        unlockedChunk, seenChunk, times, gameTimes, names, descs, Collections.emptyMap()
-                ), player);
-                first = false;
-            } else {
-                Services.NETWORK.sendToPlayer(ProgressUpdatePacket.syncChunk(
-                        unlockedChunk, seenChunk, times, gameTimes, names, descs, Collections.emptyMap()
-                ), player);
-            }
+            Services.NETWORK.sendToPlayer(
+                    new ProgressUpdatePacket.Builder()
+                            .reset(first)
+                            .silent(true)
+                            .unlocked(unlockedChunk)
+                            .seen(seenChunk)
+                            .discoveryTimes(times)
+                            .discoveryGameTimes(gameTimes)
+                            .customNames(names)
+                            .customDescriptions(descs)
+                            .build(),
+                    player
+            );
+            first = false;
 
             if (!photos.isEmpty()) {
-                Services.NETWORK.sendToPlayer(ProgressUpdatePacket.syncChunk(
-                        Collections.emptyList(), Collections.emptyList(),
-                        Collections.emptyMap(), Collections.emptyMap(),
-                        Collections.emptyMap(), Collections.emptyMap(), photos
-                ), player);
+                Services.NETWORK.sendToPlayer(
+                        new ProgressUpdatePacket.Builder()
+                                .silent(true)
+                                .entryPhotographs(photos)
+                                .build(),
+                        player
+                );
             }
         }
 
-        Services.NETWORK.sendToPlayer(ProgressUpdatePacket.journalSync(
-                journalTitle, new ArrayList<>(journalPages)
-        ), player);
+        Services.NETWORK.sendToPlayer(
+                new ProgressUpdatePacket.Builder()
+                        .silent(true)
+                        .journalTitle(journalTitle)
+                        .journalPages(new ArrayList<>(journalPages))
+                        .build(),
+                player
+        );
     }
 
     private void sendDelta(ServerPlayer player) {
@@ -274,22 +289,21 @@ public class PlayerFieldGuideProgress {
                 if (discoveryGameTimes.containsKey(id)) unlockGameTimes.put(id, discoveryGameTimes.get(id));
             }
 
-            Services.NETWORK.sendToPlayer(ProgressUpdatePacket.delta(
-                    unlockChunk,
-                    revokedChunk,
-                    seenChunk,
-                    unlockTimes,
-                    unlockGameTimes,
-                    first ? entryNames : Collections.emptyMap(),
-                    first ? entryDescs : Collections.emptyMap(),
-                    first ? entryPhotos : Collections.emptyMap()
-            ), player);
+            Services.NETWORK.sendToPlayer(
+                    new ProgressUpdatePacket.Builder()
+                            .unlocked(unlockChunk)
+                            .revoked(revokedChunk)
+                            .seen(seenChunk)
+                            .discoveryTimes(unlockTimes)
+                            .discoveryGameTimes(unlockGameTimes)
+                            .customNames(first ? entryNames : Collections.emptyMap())
+                            .customDescriptions(first ? entryDescs : Collections.emptyMap())
+                            .entryPhotographs(first ? entryPhotos : Collections.emptyMap())
+                            .build(),
+                    player
+            );
             first = false;
         }
-    }
-
-    private static <T> List<T> chunkAt(List<T> list, int index, int length) {
-        return list.subList(Math.min(index, list.size()), Math.min(index + length, list.size()));
     }
 
     public void load() {
