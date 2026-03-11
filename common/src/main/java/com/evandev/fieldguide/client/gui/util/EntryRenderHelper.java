@@ -104,12 +104,16 @@ public class EntryRenderHelper {
 
                 float visualScale = visual.scale;
                 float yOff = visual.yOffset;
+                float xOff = visual.xOffset;
+
                 if (isPage) {
                     if (visual.pageScale != null) visualScale = visual.pageScale;
                     if (visual.pageYOffset != null) yOff = visual.pageYOffset;
+                    if (visual.pageXOffset != null) xOff = visual.pageXOffset;
                 } else {
                     if (visual.gridScale != null) visualScale = visual.gridScale;
                     if (visual.gridYOffset != null) yOff = visual.gridYOffset;
+                    if (visual.gridXOffset != null) xOff = visual.gridXOffset;
                 }
 
                 float dynamicFactor = getScaleFactorForEntity(entity);
@@ -128,7 +132,7 @@ public class EntryRenderHelper {
                 pose.scale(clampedScale, -clampedScale, -clampedScale);
                 pose.mulPose(Axis.XP.rotationDegrees(30.0F));
                 pose.mulPose(Axis.YP.rotationDegrees(-30.0F));
-                pose.translate(0, (entityHeight / -2.0F) + (yOff / clampedScale), 0);
+                pose.translate((xOff / clampedScale), (entityHeight / -2.0F) + (yOff / clampedScale), 0);
 
                 entity.setYRot(0.0F);
                 entity.setXRot(0.0F);
