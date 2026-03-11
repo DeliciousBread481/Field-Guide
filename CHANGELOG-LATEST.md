@@ -1,3 +1,3 @@
 ### Fixed
 
-- Fixed 1.20.1 version being slightly out of date.
+- Fixed `x_offset` not doing anything in resource packs.
