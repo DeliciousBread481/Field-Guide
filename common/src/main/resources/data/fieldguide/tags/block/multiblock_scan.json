@@ -36,6 +36,7 @@
     "minecraft:melon_stem",
     "minecraft:attached_melon_stem",
     "minecraft:big_dripleaf_stem",
+    "minecraft:tall_seagrass",
     {
       "id": "farmersdelight:tomatoes",
       "required": false
