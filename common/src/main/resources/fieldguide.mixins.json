@@ -9,6 +9,7 @@
     "accessor.BonusLevelTableConditionAccessor",
     "accessor.CompositeEntryBaseAccessor",
     "accessor.ConstantValueAccessor",
+    "accessor.EntityAccessor",
     "accessor.LootItemAccessor",
     "accessor.LootPoolAccessor",
     "accessor.LootPoolEntryContainerAccessor",

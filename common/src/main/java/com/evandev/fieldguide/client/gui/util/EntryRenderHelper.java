@@ -5,6 +5,7 @@ import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.mixin.accessor.EntityAccessor;
 import com.evandev.fieldguide.util.StructureUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -20,6 +21,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.WaterAnimal;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
@@ -104,12 +106,16 @@ public class EntryRenderHelper {
 
                 float visualScale = visual.scale;
                 float yOff = visual.yOffset;
+                float xOff = visual.xOffset;
+
                 if (isPage) {
                     if (visual.pageScale != null) visualScale = visual.pageScale;
                     if (visual.pageYOffset != null) yOff = visual.pageYOffset;
+                    if (visual.pageXOffset != null) xOff = visual.pageXOffset;
                 } else {
                     if (visual.gridScale != null) visualScale = visual.gridScale;
                     if (visual.gridYOffset != null) yOff = visual.gridYOffset;
+                    if (visual.gridXOffset != null) xOff = visual.gridXOffset;
                 }
 
                 float dynamicFactor = getScaleFactorForEntity(entity);
@@ -128,7 +134,7 @@ public class EntryRenderHelper {
                 pose.scale(clampedScale, -clampedScale, -clampedScale);
                 pose.mulPose(Axis.XP.rotationDegrees(30.0F));
                 pose.mulPose(Axis.YP.rotationDegrees(-30.0F));
-                pose.translate(0, (entityHeight / -2.0F) + (yOff / clampedScale), 0);
+                pose.translate((xOff / clampedScale), (entityHeight / -2.0F) + (yOff / clampedScale), 0);
 
                 entity.setYRot(0.0F);
                 entity.setXRot(0.0F);
@@ -143,8 +149,13 @@ public class EntryRenderHelper {
                 entity.attackAnim = 0.0F;
                 entity.oAttackAnim = 0.0F;
 
+                if (entity instanceof WaterAnimal) {
+                    ((EntityAccessor) entity).fieldguide$setWasTouchingWater(true);
+                }
+
                 MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
                 try {
+                    Minecraft.getInstance().getEntityRenderDispatcher().render(entity, 0, 0, 0, 0.0F, 1.0F, pose, buffers, LightTexture.FULL_BRIGHT);
                     Minecraft.getInstance().getEntityRenderDispatcher().render(entity, 0, 0, 0, 0.0F, 1.0F, pose, buffers, LightTexture.FULL_BRIGHT);
                 } catch (Exception e) {
                     Constants.LOG.error("Failed to render entity in Field Guide: {}", BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()), e);
