@@ -1,9 +1,10 @@
 package com.evandev.fieldguide;
 
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.ModRenderTypes;
 import com.evandev.fieldguide.network.ExportContentPacket;
-import com.evandev.fieldguide.network.GrantContentPacket;
+import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -18,17 +19,15 @@ import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.world.level.storage.LevelResource;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 public class FieldGuideFabricClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
-        com.evandev.fieldguide.client.FieldGuideClient.init();
-        KeyBindingHelper.registerKeyBinding(com.evandev.fieldguide.client.FieldGuideClient.OPEN_GUIDE_KEY);
+        FieldGuideClient.init();
+        KeyBindingHelper.registerKeyBinding(FieldGuideClient.OPEN_GUIDE_KEY);
 
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
             @Override
@@ -44,10 +43,10 @@ public class FieldGuideFabricClient implements ClientModInitializer {
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             ClientFieldGuideManager.getInstance().onClientTick(client);
-            com.evandev.fieldguide.client.FieldGuideClient.onClientTick(client);
+            FieldGuideClient.onClientTick(client);
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(SyncLootPacket.TYPE, (SyncLootPacket packet, ClientPlayNetworking.Context context) -> {
+        ClientPlayNetworking.registerGlobalReceiver(SyncLootPacket.TYPE, (packet, context) -> {
             context.client().execute(() -> ClientFieldGuideManager.getInstance().updateLootCache(packet.lootCache(), packet.clearCache()));
         });
 
@@ -56,27 +55,27 @@ public class FieldGuideFabricClient implements ClientModInitializer {
                 ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
 
                 manager.updateCategoriesFromServer(
-                        packet.categories(),
-                        packet.redirects(),
-                        packet.clearCache(),
-                        packet.isLast()
+                        packet.getCategories(),
+                        packet.getRedirects(),
+                        packet.shouldClearCache(),
+                        packet.shouldResolveEntries()
                 );
 
                 manager.updateModifiers(
-                        packet.biomeAdditions(),
-                        packet.biomeRemovals(),
-                        packet.lootAdditions(),
-                        packet.lootRemovals(),
-                        packet.clearCache()
+                        packet.getBiomeAdditions(),
+                        packet.getBiomeRemovals(),
+                        packet.getLootAdditions(),
+                        packet.getLootRemovals(),
+                        packet.shouldClearCache()
                 );
             });
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(GrantContentPacket.TYPE, (GrantContentPacket packet, ClientPlayNetworking.Context context) -> {
-            context.client().execute(packet::handleClient);
+        ClientPlayNetworking.registerGlobalReceiver(ProgressUpdatePacket.TYPE, (packet, context) -> {
+            context.client().execute(() -> ClientFieldGuideManager.getInstance().applyServerUpdate(packet));
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(ExportContentPacket.TYPE, (ExportContentPacket packet, ClientPlayNetworking.Context context) -> {
+        ClientPlayNetworking.registerGlobalReceiver(ExportContentPacket.TYPE, (packet, context) -> {
             context.client().execute(packet::handleClient);
         });
 
@@ -100,16 +99,7 @@ public class FieldGuideFabricClient implements ClientModInitializer {
         });
 
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
-            String serverId = "unknown_server";
-
-            if (client.hasSingleplayerServer() && client.getSingleplayerServer() != null) {
-                Path levelDatPath = client.getSingleplayerServer().getWorldPath(LevelResource.LEVEL_DATA_FILE);
-                serverId = levelDatPath.getParent().getFileName().toString();
-            } else if (client.getCurrentServer() != null) {
-                serverId = client.getCurrentServer().ip;
-            }
-
-            ClientFieldGuideManager.getInstance().onWorldLoad(serverId);
+            ClientFieldGuideManager.getInstance().onWorldLoad();
         });
 
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) ->

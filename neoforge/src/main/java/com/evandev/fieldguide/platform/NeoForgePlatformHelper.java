@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.platform;
 
+import com.evandev.fieldguide.compat.mixedlitter.MixedLitterCompat;
 import com.evandev.fieldguide.platform.services.IPlatformHelper;
 import net.minecraft.world.entity.Entity;
 import net.neoforged.fml.ModList;
@@ -32,6 +33,6 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
 
     @Override
     public void applyMixedLitterCompat(Entity entity) {
-        com.evandev.fieldguide.compat.mixedlitter.MixedLitterCompat.applyDummyVariant(entity);
+       MixedLitterCompat.applyDummyVariant(entity);
     }
 }

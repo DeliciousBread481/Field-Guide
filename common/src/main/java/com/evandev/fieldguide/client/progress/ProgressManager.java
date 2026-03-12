@@ -1,10 +1,19 @@
 package com.evandev.fieldguide.client.progress;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.FieldGuideLimits;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.data.JournalPage;
 import com.evandev.fieldguide.client.gui.toasts.FieldGuideToast;
-import com.google.gson.*;
+import com.evandev.fieldguide.network.MarkSeenPacket;
+import com.evandev.fieldguide.network.ProgressUpdatePacket;
+import com.evandev.fieldguide.network.UpdateEntryDataPacket;
+import com.evandev.fieldguide.network.UpdateJournalPacket;
+import com.evandev.fieldguide.platform.Services;
+import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.HolderLookup;
@@ -15,10 +24,8 @@ import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.storage.LevelResource;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,7 +45,6 @@ public class ProgressManager {
     private final List<JournalPage> journalPages = new ArrayList<>();
 
     private String journalTitle = "My Field Guide";
-    private Path currentSavePath = null;
 
     private long lastUnlockTime = 0;
     private Object lastUnlockedEntry = null;
@@ -50,6 +56,73 @@ public class ProgressManager {
         return INSTANCE;
     }
 
+    private static void applyEntryMap(Map<String, String> source, Map<String, String> target) {
+        source.forEach((key, value) -> {
+            if (value.isEmpty()) {
+                target.remove(key);
+            } else {
+                target.put(key, value);
+            }
+        });
+    }
+
+    public void applyServerUpdate(ProgressUpdatePacket packet) {
+        if (packet.isReset()) {
+            unlockedEntries.clear();
+            seenEntries.clear();
+            discoveryTimes.clear();
+            discoveryGameTimes.clear();
+            customNames.clear();
+            customDescriptions.clear();
+            entryPhotographs.clear();
+        }
+
+        for (String id : packet.getRevoked()) {
+            unlockedEntries.remove(id);
+            seenEntries.remove(id);
+            discoveryTimes.remove(id);
+            discoveryGameTimes.remove(id);
+            entryPhotographs.remove(id);
+        }
+
+        for (String id : packet.getUnlocked()) {
+            if (unlockedEntries.add(id) && !packet.isSilent()) {
+                Object entry = resolveEntryFromId(id);
+                if (entry != null) {
+                    this.lastUnlockTime = System.currentTimeMillis();
+                    this.lastUnlockedEntry = entry;
+                    Minecraft.getInstance().getToasts().addToast(new FieldGuideToast(entry));
+                }
+            }
+        }
+
+        seenEntries.addAll(packet.getSeen());
+        discoveryTimes.putAll(packet.getDiscoveryTimes());
+        discoveryGameTimes.putAll(packet.getDiscoveryGameTimes());
+        applyEntryMap(packet.getCustomNames(), customNames);
+        applyEntryMap(packet.getCustomDescriptions(), customDescriptions);
+        applyEntryMap(packet.getEntryPhotographs(), entryPhotographs);
+
+        packet.getJournalTitle().ifPresent(title -> journalTitle = title);
+        packet.getJournalPages().ifPresent(pages -> {
+            journalPages.clear();
+            for (PlayerFieldGuideProgress.JournalPageData page : pages) {
+                journalPages.add(new JournalPage(page.title(), page.content(), page.timestamp()));
+            }
+        });
+    }
+
+    private Object resolveEntryFromId(String idStr) {
+        ResourceLocation id = ResourceLocation.tryParse(idStr);
+        if (id == null) return null;
+
+        for (Object entry : ClientFieldGuideManager.getValidEntries()) {
+            ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
+            if (id.equals(entryId)) return entry;
+        }
+        return null;
+    }
+
     public boolean isUnlocked(Object entry) {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
         return id != null && unlockedEntries.contains(id.toString());
@@ -58,49 +131,6 @@ public class ProgressManager {
     public boolean isNew(Object entry) {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
         return id != null && unlockedEntries.contains(id.toString()) && !seenEntries.contains(id.toString());
-    }
-
-    public void markAsSeen(Object entry) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-        if (id != null && seenEntries.add(id.toString())) saveProgress();
-    }
-
-    public void unlock(Object entry) {
-        unlock(entry, true);
-    }
-
-    public void unlock(Object entry, boolean showToast) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-        if (id != null && unlockedEntries.add(id.toString())) {
-            this.lastUnlockedEntry = entry;
-            this.lastUnlockTime = System.currentTimeMillis();
-            this.discoveryTimes.put(id.toString(), this.lastUnlockTime);
-            if (Minecraft.getInstance().level != null) {
-                this.discoveryGameTimes.put(id.toString(), Minecraft.getInstance().level.dayTime());
-            }
-            if (showToast) Minecraft.getInstance().getToasts().addToast(new FieldGuideToast(entry));
-            saveProgress();
-        }
-    }
-
-    public void revoke(Object entry) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-        if (id != null && unlockedEntries.remove(id.toString())) {
-            seenEntries.remove(id.toString());
-            discoveryTimes.remove(id.toString());
-            discoveryGameTimes.remove(id.toString());
-            entryPhotographs.remove(id.toString());
-            saveProgress();
-        }
-    }
-
-    public void revokeAll() {
-        unlockedEntries.clear();
-        seenEntries.clear();
-        discoveryTimes.clear();
-        discoveryGameTimes.clear();
-        entryPhotographs.clear();
-        saveProgress();
     }
 
     public long getLastUnlockTime() {
@@ -121,6 +151,13 @@ public class ProgressManager {
         return id != null ? discoveryGameTimes.getOrDefault(id.toString(), 0L) : 0L;
     }
 
+    public void markAsSeen(Object entry) {
+        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        if (id != null && seenEntries.add(id.toString())) {
+            Services.NETWORK.sendToServer(new MarkSeenPacket(id));
+        }
+    }
+
     public String getCustomName(Object entry) {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
         return id != null ? customNames.get(id.toString()) : null;
@@ -129,12 +166,13 @@ public class ProgressManager {
     public void setCustomName(Object entry, String name) {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
         if (id != null) {
-            if (name == null || name.isEmpty() || name.equals(ClientFieldGuideManager.getDefaultName(entry))) {
+            boolean clear = name == null || name.isEmpty() || name.equals(ClientFieldGuideManager.getDefaultName(entry));
+            if (clear) {
                 customNames.remove(id.toString());
             } else {
                 customNames.put(id.toString(), name);
             }
-            saveProgress();
+            Services.NETWORK.sendToServer(UpdateEntryDataPacket.setName(id, clear ? null : name));
         }
     }
 
@@ -147,7 +185,7 @@ public class ProgressManager {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
         if (id != null) {
             customDescriptions.put(id.toString(), desc);
-            saveProgress();
+            Services.NETWORK.sendToServer(UpdateEntryDataPacket.setDescription(id, desc));
         }
     }
 
@@ -167,17 +205,18 @@ public class ProgressManager {
         return ItemStack.EMPTY;
     }
 
-    public void setPhotograph(Object entry, ItemStack stack) {
+    public void setPhotograph(Object entry, int slot, ItemStack stack) {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
         if (id != null) {
-            if (stack == null || stack.isEmpty()) {
+            if (slot < 0 || stack == null || stack.isEmpty()) {
                 entryPhotographs.remove(id.toString());
+                Services.NETWORK.sendToServer(UpdateEntryDataPacket.removePhotograph(id));
             } else if (Minecraft.getInstance().level != null) {
                 HolderLookup.Provider registries = Minecraft.getInstance().level.registryAccess();
                 Tag tag = stack.saveOptional(registries);
                 entryPhotographs.put(id.toString(), tag.toString());
+                Services.NETWORK.sendToServer(UpdateEntryDataPacket.setPhotograph(id, slot));
             }
-            saveProgress();
         }
     }
 
@@ -187,11 +226,11 @@ public class ProgressManager {
 
     public void setJournalTitle(String title) {
         this.journalTitle = title;
-        saveProgress();
+        sendJournalUpdate();
     }
 
     public void saveJournal() {
-        saveProgress();
+        sendJournalUpdate();
     }
 
     public List<JournalPage> getJournalPages() {
@@ -202,35 +241,17 @@ public class ProgressManager {
         return journalPages;
     }
 
-    public void onWorldLoad(String serverIdentifier) {
-        unlockedEntries.clear();
-        seenEntries.clear();
-        discoveryTimes.clear();
-        entryPhotographs.clear();
-
-        Minecraft minecraft = Minecraft.getInstance();
-        try {
-            if (minecraft.hasSingleplayerServer() && minecraft.getSingleplayerServer() != null) {
-                Path worldDir = minecraft.getSingleplayerServer().getWorldPath(LevelResource.ROOT);
-                Path dataDir = worldDir.resolve("fieldguide_data");
-                Files.createDirectories(dataDir);
-                this.currentSavePath = dataDir.resolve("progress.dat");
-            } else {
-                Path gameDir = minecraft.gameDirectory.toPath();
-                Path dataDir = gameDir.resolve("config").resolve("fieldguide_data");
-                Files.createDirectories(dataDir);
-                String safeName = serverIdentifier.replaceAll("[^a-zA-Z0-9.-]", "_");
-                this.currentSavePath = dataDir.resolve(safeName + ".dat");
-            }
-        } catch (Exception e) {
-            Constants.LOG.error("Failed to setup save directory for Field Guide", e);
+    private void sendJournalUpdate() {
+        List<PlayerFieldGuideProgress.JournalPageData> pageData = new ArrayList<>();
+        int limit = Math.min(journalPages.size(), FieldGuideLimits.MAX_JOURNAL_PAGES);
+        for (int i = 0; i < limit; i++) {
+            JournalPage page = journalPages.get(i);
+            pageData.add(new PlayerFieldGuideProgress.JournalPageData(page.title, page.content, page.timestamp));
         }
-        loadProgress();
+        Services.NETWORK.sendToServer(new UpdateJournalPacket(journalTitle, pageData));
     }
 
-    public void onWorldUnload() {
-        if (this.currentSavePath != null) saveProgress();
-        this.currentSavePath = null;
+    public void onWorldLoad() {
         unlockedEntries.clear();
         seenEntries.clear();
         discoveryTimes.clear();
@@ -242,87 +263,16 @@ public class ProgressManager {
         journalTitle = "My Field Guide";
     }
 
-    private void loadProgress() {
-        if (currentSavePath == null || !currentSavePath.toFile().exists()) return;
-        try (FileReader reader = new FileReader(currentSavePath.toFile())) {
-            JsonObject json = GSON.fromJson(reader, JsonObject.class);
-            if (json.has("unlocked"))
-                for (JsonElement e : json.getAsJsonArray("unlocked")) unlockedEntries.add(e.getAsString());
-            if (json.has("seen")) for (JsonElement e : json.getAsJsonArray("seen")) seenEntries.add(e.getAsString());
-            if (json.has("times"))
-                json.getAsJsonObject("times").entrySet().forEach(e -> discoveryTimes.put(e.getKey(), e.getValue().getAsLong()));
-            if (json.has("gameTimes"))
-                json.getAsJsonObject("gameTimes").entrySet().forEach(e -> discoveryGameTimes.put(e.getKey(), e.getValue().getAsLong()));
-            if (json.has("customDescriptions"))
-                json.getAsJsonObject("customDescriptions").entrySet().forEach(e -> customDescriptions.put(e.getKey(), e.getValue().getAsString()));
-            if (json.has("customNames"))
-                json.getAsJsonObject("customNames").entrySet().forEach(e -> customNames.put(e.getKey(), e.getValue().getAsString()));
-            if (json.has("entryPhotographs"))
-                json.getAsJsonObject("entryPhotographs").entrySet().forEach(e -> entryPhotographs.put(e.getKey(), e.getValue().getAsString()));
-            if (json.has("journalTitle")) journalTitle = json.get("journalTitle").getAsString();
-            if (json.has("journalPages")) {
-                journalPages.clear();
-                for (JsonElement e : json.getAsJsonArray("journalPages")) {
-                    JsonObject obj = e.getAsJsonObject();
-                    journalPages.add(new JournalPage(
-                            obj.has("title") ? obj.get("title").getAsString() : "",
-                            obj.has("content") ? obj.get("content").getAsString() : "",
-                            obj.has("timestamp") ? obj.get("timestamp").getAsLong() : System.currentTimeMillis()
-                    ));
-                }
-            }
-        } catch (Exception e) {
-            Constants.LOG.error("Failed to load progress", e);
-        }
-    }
-
-    private void saveProgress() {
-        if (currentSavePath == null) return;
-        try {
-            JsonObject json = new JsonObject();
-            JsonArray uArr = new JsonArray();
-            unlockedEntries.forEach(uArr::add);
-            json.add("unlocked", uArr);
-            JsonArray sArr = new JsonArray();
-            seenEntries.forEach(sArr::add);
-            json.add("seen", sArr);
-
-            JsonObject timesObj = new JsonObject();
-            discoveryTimes.forEach(timesObj::addProperty);
-            json.add("times", timesObj);
-            JsonObject gameTimesObj = new JsonObject();
-            discoveryGameTimes.forEach(gameTimesObj::addProperty);
-            json.add("gameTimes", gameTimesObj);
-            JsonObject descsObj = new JsonObject();
-            customDescriptions.forEach(descsObj::addProperty);
-            json.add("customDescriptions", descsObj);
-            JsonObject namesObj = new JsonObject();
-            customNames.forEach(namesObj::addProperty);
-            json.add("customNames", namesObj);
-
-            JsonObject photosObj = new JsonObject();
-            entryPhotographs.forEach(photosObj::addProperty);
-            json.add("entryPhotographs", photosObj);
-
-            json.addProperty("journalTitle", journalTitle);
-            JsonArray jpArr = new JsonArray();
-            for (JournalPage jp : getJournalPages()) {
-                JsonObject obj = new JsonObject();
-                obj.addProperty("title", jp.title);
-                obj.addProperty("content", jp.content);
-                obj.addProperty("timestamp", jp.timestamp);
-                jpArr.add(obj);
-            }
-            json.add("journalPages", jpArr);
-
-            File file = currentSavePath.toFile();
-            if (file.getParentFile() != null) file.getParentFile().mkdirs();
-            try (FileWriter w = new FileWriter(file)) {
-                GSON.toJson(json, w);
-            }
-        } catch (Exception e) {
-            Constants.LOG.error("Failed to save progress", e);
-        }
+    public void onWorldUnload() {
+        unlockedEntries.clear();
+        seenEntries.clear();
+        discoveryTimes.clear();
+        discoveryGameTimes.clear();
+        customDescriptions.clear();
+        customNames.clear();
+        entryPhotographs.clear();
+        journalPages.clear();
+        journalTitle = "My Field Guide";
     }
 
     public void exportToLang(String type) {

@@ -4,11 +4,10 @@ import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.ModRenderTypes;
 import com.evandev.fieldguide.config.ClothConfigIntegration;
-import com.evandev.fieldguide.network.GrantContentPacket;
+import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.level.storage.LevelResource;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
@@ -20,7 +19,6 @@ import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 public class FieldGuideNeoForgeClient {
 
@@ -30,23 +28,23 @@ public class FieldGuideNeoForgeClient {
 
     public static void handleSyncCategories(SyncCategoriesPacket packet) {
         ClientFieldGuideManager.getInstance().updateCategoriesFromServer(
-                packet.categories(),
-                packet.redirects(),
-                packet.clearCache(),
-                packet.isLast()
+                packet.getCategories(),
+                packet.getRedirects(),
+                packet.shouldClearCache(),
+                packet.shouldResolveEntries()
         );
 
         ClientFieldGuideManager.getInstance().updateModifiers(
-                packet.biomeAdditions(),
-                packet.biomeRemovals(),
-                packet.lootAdditions(),
-                packet.lootRemovals(),
-                packet.clearCache()
+                packet.getBiomeAdditions(),
+                packet.getBiomeRemovals(),
+                packet.getLootAdditions(),
+                packet.getLootRemovals(),
+                packet.shouldClearCache()
         );
     }
 
-    public static void handleGrantContent(GrantContentPacket packet) {
-        packet.handleClient();
+    public static void handleProgressUpdate(ProgressUpdatePacket packet) {
+        ClientFieldGuideManager.getInstance().applyServerUpdate(packet);
     }
 
     @EventBusSubscriber(modid = Constants.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
@@ -110,17 +108,7 @@ public class FieldGuideNeoForgeClient {
 
         @SubscribeEvent
         public static void onClientPlayerLogin(ClientPlayerNetworkEvent.LoggingIn event) {
-            Minecraft client = Minecraft.getInstance();
-            String serverId = "unknown_server";
-
-            if (client.hasSingleplayerServer() && client.getSingleplayerServer() != null) {
-                Path levelDatPath = client.getSingleplayerServer().getWorldPath(LevelResource.LEVEL_DATA_FILE);
-                serverId = levelDatPath.getParent().getFileName().toString();
-            } else if (client.getCurrentServer() != null) {
-                serverId = client.getCurrentServer().ip;
-            }
-
-            ClientFieldGuideManager.getInstance().onWorldLoad(serverId);
+            ClientFieldGuideManager.getInstance().onWorldLoad();
         }
 
         @SubscribeEvent

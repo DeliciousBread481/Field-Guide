@@ -18,8 +18,99 @@ import net.minecraft.world.level.block.BushBlock;
 
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class EntryResolver {
+
+    public static boolean hasEntry(Map<ResourceLocation, List<Object>> resolvedEntries, ResourceLocation entryId) {
+        for (List<Object> entries : resolvedEntries.values()) {
+            for (Object entry : entries) {
+                if (entryId.equals(getEntryId(entry))) return true;
+            }
+        }
+        return false;
+    }
+
+    public static ResourceLocation getCategoryForEntryId(Map<ResourceLocation, List<Object>> resolvedEntries, ResourceLocation entryId) {
+        for (Map.Entry<ResourceLocation, List<Object>> cat : resolvedEntries.entrySet()) {
+            for (Object entry : cat.getValue()) {
+                if (entryId.equals(getEntryId(entry))) return cat.getKey();
+            }
+        }
+        return null;
+    }
+
+    public static Set<ResourceLocation> getAllEntryIds(Map<ResourceLocation, List<Object>> resolvedEntries) {
+        return resolvedEntries.values().stream()
+                .flatMap(List::stream)
+                .map(EntryResolver::getEntryId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+    }
+
+    public static Set<ResourceLocation> getEntryIdsForCategory(Map<ResourceLocation, List<Object>> resolvedEntries, ResourceLocation categoryId) {
+        List<Object> entries = resolvedEntries.get(categoryId);
+        if (entries == null) return Collections.emptySet();
+        return entries.stream()
+                .map(EntryResolver::getEntryId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+    }
+
+    public static Object getEntryForTarget(Map<ResourceLocation, List<Object>> resolvedEntries, Object target) {
+        List<Object> entries = getEntriesForTarget(resolvedEntries, target);
+        if (entries.isEmpty()) return null;
+
+        for (Object entry : entries) {
+            if (entry.equals(target)) return entry;
+            if (entry instanceof CompositeFieldGuideEntry composite) {
+                if (composite.displayEntry() != null && composite.displayEntry().equals(target)) {
+                    return entry;
+                }
+            }
+        }
+
+        return entries.get(0);
+    }
+
+    public static List<Object> getEntriesForTarget(Map<ResourceLocation, List<Object>> resolvedEntries, Object target) {
+        List<Object> matches = new ArrayList<>();
+        for (List<Object> entries : resolvedEntries.values()) {
+            for (Object entry : entries) {
+                if (entry.equals(target)) {
+                    matches.add(entry);
+                } else if (entry instanceof CompositeFieldGuideEntry composite) {
+                    if ((composite.displayEntry() != null && composite.displayEntry().equals(target)) ||
+                            (composite.components() != null && composite.components().contains(target))) {
+                        matches.add(entry);
+                    }
+                }
+            }
+        }
+        return matches;
+    }
+
+    public static boolean isTargetInEntry(Map<ResourceLocation, List<Object>> resolvedEntries, ResourceLocation targetId, ResourceLocation entryId) {
+        for (List<Object> entries : resolvedEntries.values()) {
+            for (Object entry : entries) {
+                ResourceLocation id = getEntryId(entry);
+                if (!entryId.equals(id)) continue;
+
+                if (targetId.equals(id)) return true;
+
+                if (entry instanceof CompositeFieldGuideEntry composite) {
+                    ResourceLocation displayId = composite.displayEntry() != null ? getEntryId(composite.displayEntry()) : null;
+                    if (targetId.equals(displayId)) return true;
+                    if (composite.components() != null) {
+                        for (Object comp : composite.components()) {
+                            if (targetId.equals(getEntryId(comp))) return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
 
     public static boolean isValidEntity(EntityType<?> type, ModConfig config) {
         return type.canSummon() && !config.isEntityBlacklisted(BuiltInRegistries.ENTITY_TYPE.getKey(type));

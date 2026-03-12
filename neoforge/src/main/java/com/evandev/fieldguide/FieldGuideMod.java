@@ -1,9 +1,10 @@
 package com.evandev.fieldguide;
 
 import com.evandev.fieldguide.network.*;
-import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.command.FieldGuideCommand;
+import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
+import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -16,10 +17,13 @@ import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import net.neoforged.neoforge.event.OnDatapackSyncEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
@@ -43,36 +47,33 @@ public class FieldGuideMod {
 
     private void registerPayloads(final RegisterPayloadHandlersEvent event) {
         final PayloadRegistrar registrar = event.registrar(Constants.MOD_ID).versioned("1.0");
-        registrar.playToClient(
-                SyncLootPacket.TYPE,
-                SyncLootPacket.CODEC,
-                (packet, context) -> context.enqueueWork(() -> FieldGuideNeoForgeClient.handleSyncLoot(packet))
-        );
 
-        registrar.playToClient(
-                SyncCategoriesPacket.TYPE,
-                SyncCategoriesPacket.CODEC,
-                (packet, context) -> context.enqueueWork(() -> FieldGuideNeoForgeClient.handleSyncCategories(packet))
-        );
+        // S2C
+        registrar.playToClient(SyncLootPacket.TYPE, SyncLootPacket.CODEC, (packet, context) -> context.enqueueWork(() -> FieldGuideNeoForgeClient.handleSyncLoot(packet)));
+        registrar.playToClient(SyncCategoriesPacket.TYPE, SyncCategoriesPacket.CODEC, (packet, context) -> context.enqueueWork(() -> FieldGuideNeoForgeClient.handleSyncCategories(packet)));
+        registrar.playToClient(ProgressUpdatePacket.TYPE, ProgressUpdatePacket.CODEC, (packet, context) -> context.enqueueWork(() -> FieldGuideNeoForgeClient.handleProgressUpdate(packet)));
+        registrar.playToClient(ExportContentPacket.TYPE, ExportContentPacket.CODEC, (packet, context) -> context.enqueueWork(packet::handleClient));
 
-        registrar.playToClient(
-                GrantContentPacket.TYPE,
-                GrantContentPacket.CODEC,
-                (packet, context) -> context.enqueueWork(() -> FieldGuideNeoForgeClient.handleGrantContent(packet))
-        );
-        registrar.playToClient(
-                ExportContentPacket.TYPE,
-                ExportContentPacket.CODEC,
-                (packet, context) -> context.enqueueWork(packet::handleClient)
-        );
+        // C2S
+        registrar.playToServer(ScanUnlockPacket.TYPE, ScanUnlockPacket.CODEC, (packet, context) -> context.enqueueWork(() -> {
+            if (context.player() instanceof ServerPlayer sp) packet.handleServer(sp);
+        }));
+        registrar.playToServer(MarkSeenPacket.TYPE, MarkSeenPacket.CODEC, (packet, context) -> context.enqueueWork(() -> {
+            if (context.player() instanceof ServerPlayer sp) packet.handleServer(sp);
+        }));
+        registrar.playToServer(UpdateEntryDataPacket.TYPE, UpdateEntryDataPacket.CODEC, (packet, context) -> context.enqueueWork(() -> {
+            if (context.player() instanceof ServerPlayer sp) packet.handleServer(sp);
+        }));
+        registrar.playToServer(UpdateJournalPacket.TYPE, UpdateJournalPacket.CODEC, (packet, context) -> context.enqueueWork(() -> {
+            if (context.player() instanceof ServerPlayer sp) packet.handleServer(sp);
+        }));
+    }
 
-        registrar.playToServer(ClaimXpPacket.TYPE, ClaimXpPacket.CODEC, (packet, context) ->
-                context.enqueueWork(() -> {
-                    if (context.player() instanceof ServerPlayer sp) {
-                        packet.handleServer(sp);
-                    }
-                })
-        );
+    @SubscribeEvent
+    public void onDatapackSync(OnDatapackSyncEvent event) {
+        if (event.getPlayer() == null) {
+            ServerFieldGuideManager.getInstance().reload(event.getPlayerList().getServer());
+        }
     }
 
     @SubscribeEvent
@@ -88,12 +89,31 @@ public class FieldGuideMod {
     @SubscribeEvent
     public void onServerStarted(ServerStartedEvent event) {
         ServerFieldGuideManager.getInstance().onServerStarted(event.getServer());
+        FieldGuideProgressManager.init(event.getServer());
+    }
+
+    @SubscribeEvent
+    public void onServerStopping(ServerStoppingEvent event) {
+        FieldGuideProgressManager.shutdown();
+    }
+
+    @SubscribeEvent
+    public void onServerTick(ServerTickEvent.Post event) {
+        FieldGuideProgressManager.getInstance().tick();
     }
 
     @SubscribeEvent
     public void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             ServerFieldGuideManager.getInstance().syncToPlayer(player);
+            FieldGuideProgressManager.getInstance().onPlayerJoin(player);
+        }
+    }
+
+    @SubscribeEvent
+    public void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            FieldGuideProgressManager.getInstance().onPlayerDisconnect(player);
         }
     }
 
@@ -107,7 +127,10 @@ public class FieldGuideMod {
                 var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
                 if (holder.isPresent() && holder.get().is(killToUnlockTag)) {
                     ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType());
-                    Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.TypeEnum.ENTRY, entityId), player);
+                    PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
+                    if (progress != null) {
+                        progress.unlock(player, entityId);
+                    }
                 }
             }
         }

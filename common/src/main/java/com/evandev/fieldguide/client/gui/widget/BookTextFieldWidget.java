@@ -18,18 +18,19 @@ public class BookTextFieldWidget extends AbstractWidget {
     private final int textColor;
     private final int highlightColor = 0x550000FF;
     private final Consumer<String> onChanged;
-    private final int maxLength;
+    private final int maxTextWidth;
+    private final int maxCharacters;
     private String text;
     private int cursorPos;
     private int selectionPos;
     private boolean centered = false;
 
-    public BookTextFieldWidget(Font font, int x, int y, int width, int height, String text, int textColor, int maxLength, Consumer<String> onChanged) {
-        super(x, y, width, height, Component.empty());
+    public BookTextFieldWidget(Font font, int x, int y, int width, int height, String text, int textColor, int maxTextWidth, int maxCharacters, Consumer<String> onChanged) {        super(x, y, width, height, Component.empty());
         this.font = font;
         this.textColor = textColor;
-        this.text = text == null ? "" : text;
-        this.maxLength = maxLength;
+        this.text = text == null ? "" : text.substring(0, Math.min(text.length(), maxCharacters));
+        this.maxTextWidth = maxTextWidth;
+        this.maxCharacters = maxCharacters;
         this.onChanged = onChanged;
         this.cursorPos = this.text.length();
         this.selectionPos = this.cursorPos;
@@ -45,13 +46,13 @@ public class BookTextFieldWidget extends AbstractWidget {
     }
 
     public void setText(String text) {
-        this.text = text;
+        this.text = text.substring(0, Math.min(text.length(), maxCharacters));
         this.cursorPos = Math.min(this.text.length(), this.cursorPos);
         this.selectionPos = Math.min(this.text.length(), this.selectionPos);
     }
 
     private void tryUpdateText(String newText, int newCursorPos, int newSelectionPos) {
-        if (font.width(newText) <= maxLength) {
+        if (newText.length() <= maxCharacters && font.width(newText) <= maxTextWidth) {
             this.text = newText;
             this.cursorPos = newCursorPos;
             this.selectionPos = newSelectionPos;

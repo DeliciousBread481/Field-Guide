@@ -17,7 +17,8 @@
     "accessor.NestedLootTableAccessor",
     "accessor.SetItemCountFunctionAccessor",
     "accessor.StructureTemplateAccessor",
-    "accessor.TagEntryAccessor"
+    "accessor.TagEntryAccessor",
+    "server.PlayerListMixin"
   ],
   "client": [
     "client.GuiMixin",

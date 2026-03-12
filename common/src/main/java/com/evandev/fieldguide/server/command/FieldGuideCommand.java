@@ -3,9 +3,10 @@ package com.evandev.fieldguide.server.command;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.network.ExportContentPacket;
-import com.evandev.fieldguide.network.GrantContentPacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
+import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
+import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
 import com.google.common.collect.Iterables;
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;
@@ -31,6 +32,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Set;
 
 public class FieldGuideCommand {
 
@@ -107,8 +109,15 @@ public class FieldGuideCommand {
     }
 
     private static int grantEverything(CommandSourceStack source, Collection<ServerPlayer> targets) {
+        FieldGuideProgressManager manager = FieldGuideProgressManager.getInstance();
+        Set<ResourceLocation> allEntries = ServerFieldGuideManager.getInstance().getAllEntryIds();
         for (ServerPlayer player : targets) {
-            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.TypeEnum.EVERYTHING, null), player);
+            PlayerFieldGuideProgress progress = manager.getProgress(player);
+            if (progress != null) {
+                for (ResourceLocation entryId : allEntries) {
+                    progress.unlock(player, entryId);
+                }
+            }
         }
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.everything.success", targets.size()), true);
         return targets.size();
@@ -120,8 +129,15 @@ public class FieldGuideCommand {
             source.sendFailure(Component.translatable("commands.fieldguide.category.not_found", categoryId));
             return 0;
         }
+        FieldGuideProgressManager manager = FieldGuideProgressManager.getInstance();
+        Set<ResourceLocation> entryIds = ServerFieldGuideManager.getInstance().getEntryIdsForCategory(categoryId);
         for (ServerPlayer player : targets) {
-            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.TypeEnum.CATEGORY, categoryId), player);
+            PlayerFieldGuideProgress progress = manager.getProgress(player);
+            if (progress != null) {
+                for (ResourceLocation entryId : entryIds) {
+                    progress.unlock(player, entryId);
+                }
+            }
         }
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.category.success", categoryId, targets.size()), true);
         return targets.size();
@@ -235,32 +251,51 @@ public class FieldGuideCommand {
     }
 
     private static int grantEntry(CommandSourceStack source, Collection<ServerPlayer> targets, ResourceLocation entryId) {
+        FieldGuideProgressManager manager = FieldGuideProgressManager.getInstance();
         for (ServerPlayer player : targets) {
-            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.TypeEnum.ENTRY, entryId), player);
+            PlayerFieldGuideProgress progress = manager.getProgress(player);
+            if (progress != null) {
+                progress.unlock(player, entryId);
+            }
         }
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.entry.success", entryId), true);
         return targets.size();
     }
 
     private static int revokeEverything(CommandSourceStack source, Collection<ServerPlayer> targets) {
+        FieldGuideProgressManager manager = FieldGuideProgressManager.getInstance();
         for (ServerPlayer player : targets) {
-            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.REVOKE, GrantContentPacket.TypeEnum.EVERYTHING, null), player);
+            PlayerFieldGuideProgress progress = manager.getProgress(player);
+            if (progress != null) {
+                progress.revokeAll();
+            }
         }
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.revoke.everything.success"), true);
         return targets.size();
     }
 
     private static int revokeCategory(CommandSourceStack source, Collection<ServerPlayer> targets, ResourceLocation categoryId) {
+        FieldGuideProgressManager manager = FieldGuideProgressManager.getInstance();
+        Set<ResourceLocation> entryIds = ServerFieldGuideManager.getInstance().getEntryIdsForCategory(categoryId);
         for (ServerPlayer player : targets) {
-            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.REVOKE, GrantContentPacket.TypeEnum.CATEGORY, categoryId), player);
+            PlayerFieldGuideProgress progress = manager.getProgress(player);
+            if (progress != null) {
+                for (ResourceLocation entryId : entryIds) {
+                    progress.revoke(entryId.toString());
+                }
+            }
         }
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.revoke.category.success", categoryId, targets.size()), true);
         return targets.size();
     }
 
     private static int revokeEntry(CommandSourceStack source, Collection<ServerPlayer> targets, ResourceLocation entryId) {
+        FieldGuideProgressManager manager = FieldGuideProgressManager.getInstance();
         for (ServerPlayer player : targets) {
-            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.REVOKE, GrantContentPacket.TypeEnum.ENTRY, entryId), player);
+            PlayerFieldGuideProgress progress = manager.getProgress(player);
+            if (progress != null) {
+                progress.revoke(entryId.toString());
+            }
         }
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.revoke.entry.success", entryId), true);
         return targets.size();

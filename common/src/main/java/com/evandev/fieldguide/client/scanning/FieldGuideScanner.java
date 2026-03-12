@@ -6,7 +6,7 @@ import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
-import com.evandev.fieldguide.network.ClaimXpPacket;
+import com.evandev.fieldguide.network.ScanUnlockPacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.ModTags;
 import net.minecraft.client.Minecraft;
@@ -338,34 +338,19 @@ public class FieldGuideScanner {
             }
         }
 
-        ProgressManager.getInstance().unlock(targetKey);
         Objects.requireNonNull(minecraft.player).playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
 
-        if (ModConfig.get().grantXpOnScan && ModConfig.get().xpAmountOnScan > 0) {
-            Services.NETWORK.sendToServer(new ClaimXpPacket(ModConfig.get().xpAmountOnScan));
-        }
-
-        // Run commands when unlocked
-        List<String> commandsToRun = new ArrayList<>(ModConfig.get().globalScanCommands);
-        if (targetId != null) {
-            String idStr = targetId.toString();
-            if (ModConfig.get().entryScanCommands.containsKey(idStr)) {
-                commandsToRun.addAll(ModConfig.get().entryScanCommands.get(idStr));
+        ResourceLocation entryId = ClientFieldGuideManager.getEntryId(targetKey);
+        if (entryId != null) {
+            ResourceLocation scannedTargetId;
+            if (foundTarget instanceof Entity entity) {
+                scannedTargetId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+            } else {
+                scannedTargetId = BuiltInRegistries.BLOCK.getKey((Block) foundTarget);
             }
-            Category cat = ClientFieldGuideManager.getInstance().getCategoryForEntry(targetKey);
-            if (cat != null && ModConfig.get().categoryScanCommands.containsKey(cat.getId().toString())) {
-                commandsToRun.addAll(ModConfig.get().categoryScanCommands.get(cat.getId().toString()));
-            }
-        }
-
-        for (String cmd : commandsToRun) {
-            String formattedCmd = cmd.replace("@p", minecraft.player.getGameProfile().getName());
-            if (formattedCmd.startsWith("/")) {
-                formattedCmd = formattedCmd.substring(1);
-            }
-            if (minecraft.getConnection() != null) {
-                minecraft.getConnection().sendCommand(formattedCmd);
-            }
+            BlockPos targetBlockPos = (foundTarget instanceof Block) ? scanningPos : null;
+            int targetEntityId = (foundTarget instanceof Entity) ? ((Entity) foundTarget).getId() : 0;
+            Services.NETWORK.sendToServer(new ScanUnlockPacket(entryId, scannedTargetId, targetBlockPos, targetEntityId));
         }
 
         fadingTarget = foundTarget;

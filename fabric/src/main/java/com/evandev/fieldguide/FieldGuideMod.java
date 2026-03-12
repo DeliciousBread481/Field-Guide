@@ -1,19 +1,22 @@
 package com.evandev.fieldguide;
 
+import com.evandev.fieldguide.compat.exposure.ExposureFabricEventHandler;
 import com.evandev.fieldguide.network.*;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.command.FieldGuideCommand;
+import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
+import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityCombatEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -34,14 +37,30 @@ public class FieldGuideMod implements ModInitializer {
     public void onInitialize() {
         CommonClass.init();
 
+        // Register Client-bound payloads
         PayloadTypeRegistry.playS2C().register(SyncCategoriesPacket.TYPE, SyncCategoriesPacket.CODEC);
-        PayloadTypeRegistry.playS2C().register(GrantContentPacket.TYPE, GrantContentPacket.CODEC);
         PayloadTypeRegistry.playS2C().register(SyncLootPacket.TYPE, SyncLootPacket.CODEC);
         PayloadTypeRegistry.playS2C().register(ExportContentPacket.TYPE, ExportContentPacket.CODEC);
+        PayloadTypeRegistry.playS2C().register(ProgressUpdatePacket.TYPE, ProgressUpdatePacket.CODEC);
 
-        PayloadTypeRegistry.playC2S().register(ClaimXpPacket.TYPE, ClaimXpPacket.CODEC);
+        // Register Server-bound payloads
+        PayloadTypeRegistry.playC2S().register(ScanUnlockPacket.TYPE, ScanUnlockPacket.CODEC);
+        PayloadTypeRegistry.playC2S().register(MarkSeenPacket.TYPE, MarkSeenPacket.CODEC);
+        PayloadTypeRegistry.playC2S().register(UpdateEntryDataPacket.TYPE, UpdateEntryDataPacket.CODEC);
+        PayloadTypeRegistry.playC2S().register(UpdateJournalPacket.TYPE, UpdateJournalPacket.CODEC);
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> FieldGuideCommand.register(dispatcher));
+
+        if (Services.PLATFORM.isModLoaded("exposure")) {
+            ExposureFabricEventHandler.register();
+        }
+
+        ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, resourceManager, success) -> {
+            if (success) {
+                ServerFieldGuideManager.getInstance().reload(server);
+            }
+        });
+
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new IdentifiableResourceReloadListener() {
             @Override
             public ResourceLocation getFabricId() {
@@ -54,15 +73,42 @@ public class FieldGuideMod implements ModInitializer {
             }
         });
 
-        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> ServerFieldGuideManager.getInstance().syncToPlayer(handler.player));
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            ServerFieldGuideManager.getInstance().syncToPlayer(handler.player);
+            FieldGuideProgressManager.getInstance().onPlayerJoin(handler.player);
+        });
 
-        ServerLifecycleEvents.SERVER_STARTED.register(server -> ServerFieldGuideManager.getInstance().onServerStarted(server));
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            FieldGuideProgressManager.getInstance().onPlayerDisconnect(handler.player);
+        });
 
-        if (FabricLoader.getInstance().isModLoaded("exposure")) {
-            com.evandev.fieldguide.compat.exposure.ExposureFabricEventHandler.register();
-        }
+        ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+            ServerFieldGuideManager.getInstance().onServerStarted(server);
+            FieldGuideProgressManager.init(server);
+        });
 
-        ServerPlayNetworking.registerGlobalReceiver(ClaimXpPacket.TYPE, (packet, context) -> {
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            FieldGuideProgressManager.shutdown();
+        });
+
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            FieldGuideProgressManager.getInstance().tick();
+        });
+
+        // Server-side receivers
+        ServerPlayNetworking.registerGlobalReceiver(ScanUnlockPacket.TYPE, (packet, context) -> {
+            context.server().execute(() -> packet.handleServer(context.player()));
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(MarkSeenPacket.TYPE, (packet, context) -> {
+            context.server().execute(() -> packet.handleServer(context.player()));
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(UpdateEntryDataPacket.TYPE, (packet, context) -> {
+            context.server().execute(() -> packet.handleServer(context.player()));
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(UpdateJournalPacket.TYPE, (packet, context) -> {
             context.server().execute(() -> packet.handleServer(context.player()));
         });
 
@@ -75,7 +121,10 @@ public class FieldGuideMod implements ModInitializer {
                     var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
                     if (holder.isPresent() && holder.get().is(killToUnlockTag)) {
                         ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(killedEntity.getType());
-                        Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.TypeEnum.ENTRY, entityId), player);
+                        PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
+                        if (progress != null) {
+                            progress.unlock(player, entityId);
+                        }
                     }
                 }
             }
