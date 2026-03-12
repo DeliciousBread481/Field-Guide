@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.client.gui.screens;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.FieldGuideLimits;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.data.EntryVisual;
@@ -101,13 +102,13 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (unlocked) {
             String initialName = ClientFieldGuideManager.getEntryName(entry).getString();
             if (!ModConfig.get().disableEditingNames) {
-                this.addRenderableWidget(new BookTextFieldWidget(this.font, textX, titleY, textAreaWidth, font.lineHeight, initialName, ModConfig.get().getTextTitleColorInt(), textAreaWidth,
+                this.addRenderableWidget(new BookTextFieldWidget(this.font, textX, titleY, textAreaWidth, font.lineHeight, initialName, ModConfig.get().getTextTitleColorInt(), textAreaWidth, FieldGuideLimits.MAX_ENTRY_NAME_LENGTH,
                         newName -> ClientFieldGuideManager.setCustomName(entry, newName)));
             }
 
             String initialDesc = ClientFieldGuideManager.getEntryDescription(entry);
             if (!ModConfig.get().disableEditingDescriptions) {
-                this.addRenderableWidget(new BookTextAreaWidget(this.font, textX, textY, textAreaWidth, textAreaHeight, 10, ModConfig.get().getTextColorInt(), true, initialDesc,
+                this.addRenderableWidget(new BookTextAreaWidget(this.font, textX, textY, textAreaWidth, textAreaHeight, 10, ModConfig.get().getTextColorInt(), true, FieldGuideLimits.MAX_ENTRY_DESCRIPTION_LENGTH, initialDesc,
                         newDesc -> ClientFieldGuideManager.setCustomDescription(entry, newDesc)));
             }
         }

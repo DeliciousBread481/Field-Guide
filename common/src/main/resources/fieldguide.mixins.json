@@ -21,7 +21,8 @@
     "accessor.SetItemCountFunctionAccessor",
     "accessor.StructureTemplateAccessor",
     "accessor.TagEntryAccessor",
-    "accessor.UniformGeneratorAccessor"
+    "accessor.UniformGeneratorAccessor",
+    "server.PlayerListMixin"
   ],
   "client": [
     "client.GuiMixin",

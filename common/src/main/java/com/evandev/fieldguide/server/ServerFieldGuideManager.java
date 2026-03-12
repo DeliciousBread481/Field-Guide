@@ -26,6 +26,7 @@ import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.Item;
@@ -76,6 +77,43 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
     public List<String> getLootRemovals() {
         return lootRemovals;
+    }
+
+    public boolean hasEntry(ResourceLocation entryId) {
+        return EntryResolver.hasEntry(resolvedCategoryEntries, entryId);
+    }
+
+    public boolean isKillToUnlock(ResourceLocation entryId) {
+        TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(Constants.MOD_ID, "kill_to_unlock"));
+        return BuiltInRegistries.ENTITY_TYPE.getOptional(entryId)
+                .flatMap(BuiltInRegistries.ENTITY_TYPE::getResourceKey)
+                .flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder)
+                .map(h -> h.is(killToUnlockTag))
+                .orElse(false);
+    }
+
+    public ResourceLocation getCategoryForEntryId(ResourceLocation entryId) {
+        return EntryResolver.getCategoryForEntryId(resolvedCategoryEntries, entryId);
+    }
+
+    public Set<ResourceLocation> getAllEntryIds() {
+        return EntryResolver.getAllEntryIds(resolvedCategoryEntries);
+    }
+
+    public Set<ResourceLocation> getEntryIdsForCategory(ResourceLocation categoryId) {
+        return EntryResolver.getEntryIdsForCategory(resolvedCategoryEntries, categoryId);
+    }
+
+    public List<CompositeDefinition> getComposites() {
+        return composites;
+    }
+
+    public List<Object> getEntriesForTarget(Object target) {
+        return EntryResolver.getEntriesForTarget(resolvedCategoryEntries, target);
+    }
+
+    public boolean isTargetInEntry(ResourceLocation targetId, ResourceLocation entryId) {
+        return EntryResolver.isTargetInEntry(resolvedCategoryEntries, targetId, entryId);
     }
 
     public void syncToPlayer(ServerPlayer player) {

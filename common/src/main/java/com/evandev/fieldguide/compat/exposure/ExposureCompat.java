@@ -8,8 +8,11 @@ import com.evandev.fieldguide.client.gui.widget.FieldGuidePhotographWidget;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
-import com.evandev.fieldguide.network.GrantContentPacket;
-import com.evandev.fieldguide.platform.Services;
+import com.evandev.fieldguide.server.ServerFieldGuideManager;
+import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
+import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
+import com.evandev.fieldguide.util.EntryResolver;
+import com.mojang.blaze3d.vertex.Tesselator;
 import io.github.mortuusars.exposure.ExposureClient;
 import io.github.mortuusars.exposure.client.gui.screen.ItemListScreen;
 import io.github.mortuusars.exposure.client.render.photograph.PhotographStyle;
@@ -41,7 +44,9 @@ import net.minecraft.world.phys.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -98,7 +103,7 @@ public class ExposureCompat {
                     () -> Minecraft.getInstance().setScreen(new FieldGuidePhotographScreen(screen, List.of(new ItemAndStack<>(existingPhoto)))),
 
                     () -> {
-                        ProgressManager.getInstance().setPhotograph(entry, ItemStack.EMPTY);
+                        ProgressManager.getInstance().setPhotograph(entry, -1, ItemStack.EMPTY);
                         Minecraft.getInstance().setScreen(new FieldGuideEntryScreen(screen.getParentScreen(), entry));
                     },
                     tooltipText
@@ -156,15 +161,20 @@ public class ExposureCompat {
         if (player == null) return;
 
         List<ItemStack> photographs = new ArrayList<>();
+        Map<ItemStack, Integer> slotMap = new IdentityHashMap<>();
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             ItemStack stack = player.getInventory().getItem(i);
             if (stack.getItem() instanceof PhotographItem) {
                 photographs.add(stack);
+                slotMap.put(stack, i);
             }
         }
 
         Minecraft.getInstance().setScreen(new PhotographSelectionScreen(parent, photographs, stack -> {
-            ProgressManager.getInstance().setPhotograph(entry, stack.copy());
+            Integer slot = slotMap.get(stack);
+            if (slot != null) {
+                ProgressManager.getInstance().setPhotograph(entry, slot, stack);
+            }
             Minecraft.getInstance().setScreen(new FieldGuideEntryScreen(parent.getParentScreen(), entry));
         }));
     }
@@ -247,10 +257,11 @@ public class ExposureCompat {
             }
         }
 
-        Set<ResourceLocation> unlockedIds = new HashSet<>();
+        PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(serverPlayer);
+        if (progress == null) return;
 
         for (Object target : hitTargets) {
-            List<Object> possibleEntries = ClientFieldGuideManager.getInstance().getEntriesForTarget(target);
+            List<Object> possibleEntries = ServerFieldGuideManager.getInstance().getEntriesForTarget(target);
             if (possibleEntries.isEmpty()) continue;
 
             Object bestMatch;
@@ -290,15 +301,15 @@ public class ExposureCompat {
                 }
             }
 
-            ResourceLocation id = ClientFieldGuideManager.getEntryId(bestMatch);
-            if (id != null && !ClientFieldGuideManager.isUnlocked(bestMatch)) {
-                unlockedIds.add(id);
+            ResourceLocation id = EntryResolver.getEntryId(bestMatch);
+            if (id != null) {
+                progress.unlock(serverPlayer, id);
             }
         }
+    }
 
-        for (ResourceLocation id : unlockedIds) {
-            Services.NETWORK.sendToPlayer(new GrantContentPacket(GrantContentPacket.Action.GRANT, GrantContentPacket.TypeEnum.ENTRY, id), serverPlayer);
-        }
+    public static boolean isPhotographItem(ItemStack stack) {
+        return stack.getItem() instanceof PhotographItem;
     }
 
     private static Vec3 calculateViewVector(float pitch, float yaw) {

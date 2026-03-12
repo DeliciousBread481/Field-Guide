@@ -4,7 +4,7 @@ import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.ModRenderTypes;
 import com.evandev.fieldguide.network.ExportContentPacket;
-import com.evandev.fieldguide.network.GrantContentPacket;
+import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
 import com.evandev.fieldguide.platform.FabricNetworkHelper;
@@ -20,11 +20,9 @@ import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.world.level.storage.LevelResource;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 public class FieldGuideFabricClient implements ClientModInitializer {
     @Override
@@ -77,9 +75,9 @@ public class FieldGuideFabricClient implements ClientModInitializer {
             });
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.GRANT_CONTENT_CHANNEL, (client, handler, buf, responseSender) -> {
-            GrantContentPacket packet = new GrantContentPacket(buf);
-            client.execute(packet::handleClient);
+        ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.PROGRESS_UPDATE_CHANNEL, (client, handler, buf, responseSender) -> {
+            ProgressUpdatePacket packet = new ProgressUpdatePacket(buf);
+            client.execute(() -> ClientFieldGuideManager.getInstance().applyServerUpdate(packet));
         });
 
         CoreShaderRegistrationCallback.EVENT.register(context -> {
@@ -107,16 +105,7 @@ public class FieldGuideFabricClient implements ClientModInitializer {
         });
 
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
-            String serverId = "unknown_server";
-
-            if (client.hasSingleplayerServer() && client.getSingleplayerServer() != null) {
-                Path levelDatPath = client.getSingleplayerServer().getWorldPath(LevelResource.LEVEL_DATA_FILE);
-                serverId = levelDatPath.getParent().getFileName().toString();
-            } else if (client.getCurrentServer() != null) {
-                serverId = client.getCurrentServer().ip;
-            }
-
-            ClientFieldGuideManager.getInstance().onWorldLoad(serverId);
+            ClientFieldGuideManager.getInstance().onWorldLoad();
         });
 
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) ->
