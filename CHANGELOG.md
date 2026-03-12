@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-03-12
+
+### Changed
+
+- Servers now enforce progress and validate discoveries for improved security (@pau101).
+
+### Fixed
+
+- Fixed Exposure discoveries not giving rewards (@pau101).
+- Fixed crash on dedicated servers when taking photos with Exposure.
+- Fixed LootJS changes not being reflected in the Field Guide.
+- Fixed datapack loot modifications not being reflected in the Field Guide.
+- Fixed `x_offset` not doing anything in resource packs.
+- Fixed Autumnity red and yellow maple trees having swapped names.
+- Fixed fish rendering sideways in the Field Guide (Thanks, Ninni!)
+
 ## [1.2.1] - 2026-03-08
 
 ### Fixed
@@ -16,16 +32,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added Exposure integration.
-  - Entities/blocks in photos will automatically be unlocked in the Field Guide (configurable).
-  - Photographs can be added to any entry displays in place of their regular renders.
+    - Entities/blocks in photos will automatically be unlocked in the Field Guide (configurable).
+    - Photographs can be added to any entry displays in place of their regular renders.
 - Added Reliable Remover integration.
-  - Blacklisted items will now be removed from entries and loot displays.
+    - Blacklisted items will now be removed from entries and loot displays.
 - Added default configurations for the following mods' plants:
-  - Farmer's Delight
-  - Atmospheric
-  - Autumnity
-  - Supplementaries
-  - Windswept
+    - Farmer's Delight
+    - Atmospheric
+    - Autumnity
+    - Supplementaries
+    - Windswept
 - Added config options for changing silhouette colors.
 - Added support for biome tags in biome modifiers.
 - Added Simplified and Traditional Chinese localizations (@balitube).

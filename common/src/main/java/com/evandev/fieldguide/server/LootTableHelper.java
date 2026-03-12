@@ -2,6 +2,7 @@ package com.evandev.fieldguide.server;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.server.loot.ParsedDrop;
+import com.evandev.fieldguide.server.loot.SimulatedLootParser;
 import com.evandev.fieldguide.server.loot.StaticLootParser;
 import com.evandev.fieldguide.util.EntryResolver;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -25,7 +26,6 @@ public class LootTableHelper {
         Map<ResourceLocation, List<ItemStack>> lootMap = new HashMap<>();
         for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
             ResourceLocation tableId = type.getDefaultLootTable();
-
             processEntry(level, type, tableId, lootMap);
         }
         for (Block block : BuiltInRegistries.BLOCK) {
@@ -39,10 +39,26 @@ public class LootTableHelper {
         if (tableId != null && !tableId.toString().equals("minecraft:empty")) {
             try {
                 LootTable table = level.getServer().getLootData().getLootTable(tableId);
-                List<ParsedDrop> parsedDrops = StaticLootParser.parseTable(table, level);
-                for (ParsedDrop drop : parsedDrops) {
-                    ItemStack stack = drop.stack.copy();
+                List<ParsedDrop> finalDrops = StaticLootParser.parseTable(table, level);
 
+                List<ParsedDrop> simulatedDrops = new ArrayList<>();
+                if (entry instanceof EntityType<?> entityType) {
+                    simulatedDrops = SimulatedLootParser.simulateEntityDrop(level, entityType, table);
+                } else if (entry instanceof Block block) {
+                    simulatedDrops = SimulatedLootParser.simulateBlockDrop(level, block, table);
+                }
+
+                for (ParsedDrop simDrop : simulatedDrops) {
+                    boolean alreadyExists = finalDrops.stream()
+                            .anyMatch(staticDrop -> ItemStack.isSameItemSameTags(staticDrop.stack, simDrop.stack));
+
+                    if (!alreadyExists) {
+                        finalDrops.add(simDrop);
+                    }
+                }
+
+                for (ParsedDrop drop : finalDrops) {
+                    ItemStack stack = drop.stack.copy();
                     CompoundTag tag = stack.getOrCreateTag();
                     tag.putFloat("FieldGuideDropChance", drop.chance * 100.0f);
                     tag.putInt("FieldGuideMin", drop.minCount);
@@ -53,6 +69,7 @@ public class LootTableHelper {
                 Constants.LOG.error("FieldGuide: Failed to parse loot table {}", tableId, e);
             }
         }
+
         applyConfigModifications(entry, formattedDrops);
         if (!formattedDrops.isEmpty()) {
             ResourceLocation id = EntryResolver.getEntryId(entry);
