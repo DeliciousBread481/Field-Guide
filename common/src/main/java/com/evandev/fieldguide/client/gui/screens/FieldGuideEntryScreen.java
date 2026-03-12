@@ -10,7 +10,7 @@ import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.gui.widget.*;
 import com.evandev.fieldguide.client.progress.ProgressManager;
-import com.evandev.fieldguide.compat.exposure.ExposureCompat;
+import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
@@ -90,7 +90,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         setupNavigationButtons();
 
         if (Services.PLATFORM.isModLoaded("exposure")) {
-            ExposureCompat.setupExposureWidgets(this, entry);
+            ClientExposureCompat.setupExposureWidgets(this, entry);
         }
     }
 
@@ -374,7 +374,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         int xPos = leftPageBounds.x_center();
         int yPos = leftPageBounds.y_center() - 15;
 
-        boolean hideEntity = Services.PLATFORM.isModLoaded("exposure") && ExposureCompat.hasPhotograph(entry);
+        boolean hideEntity = Services.PLATFORM.isModLoaded("exposure") && ClientExposureCompat.hasPhotograph(entry);
         Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
 
         if (entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() instanceof Block block) {

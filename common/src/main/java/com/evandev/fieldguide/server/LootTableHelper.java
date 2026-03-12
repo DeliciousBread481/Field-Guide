@@ -1,8 +1,8 @@
 package com.evandev.fieldguide.server;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.network.SyncLootPacket;
 import com.evandev.fieldguide.server.loot.ParsedDrop;
+import com.evandev.fieldguide.server.loot.SimulatedLootParser;
 import com.evandev.fieldguide.server.loot.StaticLootParser;
 import com.evandev.fieldguide.util.EntryResolver;
 import net.minecraft.core.component.DataComponents;
@@ -43,8 +43,25 @@ public class LootTableHelper {
         if (tableId != null && !tableId.toString().equals("minecraft:empty")) {
             try {
                 LootTable table = level.getServer().reloadableRegistries().getLootTable(tableId);
-                List<ParsedDrop> parsedDrops = StaticLootParser.parseTable(table, level);
-                for (ParsedDrop drop : parsedDrops) {
+                List<ParsedDrop> finalDrops = StaticLootParser.parseTable(table, level);
+
+                List<ParsedDrop> simulatedDrops = new ArrayList<>();
+                if (entry instanceof EntityType<?> entityType) {
+                    simulatedDrops = SimulatedLootParser.simulateEntityDrop(level, entityType, table);
+                } else if (entry instanceof Block block) {
+                    simulatedDrops = SimulatedLootParser.simulateBlockDrop(level, block, table);
+                }
+
+                for (ParsedDrop simDrop : simulatedDrops) {
+                    boolean alreadyExists = finalDrops.stream()
+                            .anyMatch(staticDrop -> ItemStack.isSameItemSameComponents(staticDrop.stack, simDrop.stack));
+
+                    if (!alreadyExists) {
+                        finalDrops.add(simDrop);
+                    }
+                }
+
+                for (ParsedDrop drop : finalDrops) {
                     ItemStack stack = drop.stack.copy();
 
                     CustomData customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);

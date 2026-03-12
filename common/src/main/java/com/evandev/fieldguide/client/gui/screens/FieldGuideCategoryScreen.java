@@ -10,7 +10,7 @@ import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.gui.widget.FieldGuideSearchBox;
 import com.evandev.fieldguide.client.gui.widget.PageTurnButton;
 import com.evandev.fieldguide.client.progress.ProgressManager;
-import com.evandev.fieldguide.compat.exposure.ExposureCompat;
+import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
@@ -734,10 +734,10 @@ public class FieldGuideCategoryScreen extends BookScreen {
         if (unlocked && Services.PLATFORM.isModLoaded("exposure") && ModConfig.get().exposureShowPhotographsInGrid) {
             ItemStack existingPhoto = ProgressManager.getInstance().getPhotograph(entry);
             if (!existingPhoto.isEmpty()) {
-                ExposureCompat.renderPhotographInGrid(guiGraphics, x - (CELL_SIZE / 2), y - (CELL_SIZE / 2), CELL_SIZE, CELL_SIZE, existingPhoto);
+                ClientExposureCompat.renderPhotographInGrid(guiGraphics, x - (CELL_SIZE / 2), y - (CELL_SIZE / 2), CELL_SIZE, CELL_SIZE, existingPhoto);
                 return;
             } else if (ModConfig.get().keepSilhouetteWhenUnlocked) {
-                ExposureCompat.renderMissingPhotoBackground(guiGraphics, x - (CELL_SIZE / 2), y - (CELL_SIZE / 2), CELL_SIZE, CELL_SIZE);
+                ClientExposureCompat.renderMissingPhotoBackground(guiGraphics, x - (CELL_SIZE / 2), y - (CELL_SIZE / 2), CELL_SIZE, CELL_SIZE);
             }
         }
 
