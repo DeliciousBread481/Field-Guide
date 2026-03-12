@@ -117,7 +117,7 @@ public class FieldGuideMod implements ModInitializer {
                         ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(killedEntity.getType());
                         PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
                         if (progress != null) {
-                            progress.unlock(entityId.toString(), player.serverLevel().dayTime());
+                            progress.unlock(player, entityId);
                         }
                     }
                 }

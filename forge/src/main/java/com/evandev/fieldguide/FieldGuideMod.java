@@ -183,7 +183,7 @@ public class FieldGuideMod {
                     ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType());
                     PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
                     if (progress != null) {
-                        progress.unlock(entityId.toString(), player.serverLevel().dayTime());
+                        progress.unlock(player, entityId);
                     }
                 }
             }

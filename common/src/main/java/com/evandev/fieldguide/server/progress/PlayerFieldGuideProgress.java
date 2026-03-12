@@ -49,28 +49,15 @@ public class PlayerFieldGuideProgress {
         return list.subList(Math.min(index, list.size()), Math.min(index + length, list.size()));
     }
 
-    public boolean unlock(String entryId) {
-        if (unlockedEntries.add(entryId)) {
-            discoveryTimes.put(entryId, System.currentTimeMillis());
-            pendingUnlocks.add(entryId);
-            pendingRevokes.remove(entryId);
+    public boolean unlock(ServerPlayer player, ResourceLocation entryId) {
+        String id = entryId.toString();
+        if (unlockedEntries.add(id)) {
+            discoveryTimes.put(id, System.currentTimeMillis());
+            discoveryGameTimes.put(id, player.serverLevel().dayTime());
+            pendingUnlocks.add(id);
+            pendingRevokes.remove(id);
             dirty = true;
-            return true;
-        }
-        return false;
-    }
-
-    public boolean unlock(ResourceLocation entryId) {
-        return unlock(entryId.toString());
-    }
-
-    public boolean unlock(String entryId, long gameTime) {
-        if (unlockedEntries.add(entryId)) {
-            discoveryTimes.put(entryId, System.currentTimeMillis());
-            discoveryGameTimes.put(entryId, gameTime);
-            pendingUnlocks.add(entryId);
-            pendingRevokes.remove(entryId);
-            dirty = true;
+            UnlockRewards.grant(player, entryId);
             return true;
         }
         return false;

@@ -302,8 +302,8 @@ public class ExposureCompat {
             }
 
             ResourceLocation id = EntryResolver.getEntryId(bestMatch);
-            if (id != null && !progress.isUnlocked(id)) {
-                progress.unlock(id.toString(), serverPlayer.serverLevel().dayTime());
+            if (id != null) {
+                progress.unlock(serverPlayer, id);
             }
         }
     }
