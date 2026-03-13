@@ -256,14 +256,14 @@ public class FieldGuideCategoryScreen extends BookScreen {
             this.currentEntries = ClientFieldGuideManager.getInstance().getEntriesForCategory(category);
             this.recentEntries = ClientFieldGuideManager.getInstance().getRecentEntries(category, 9);
         } else {
-            this.currentEntries = null;
-            this.recentEntries = null;
+            this.currentEntries = new ArrayList<>();
+            this.recentEntries = new ArrayList<>();
         }
     }
 
     private void getEntriesForSearchQuery() {
         this.currentEntries = ClientFieldGuideManager.getInstance().searchEntries(this.searchQuery);
-        this.recentEntries = null;
+        this.recentEntries = new ArrayList<>();
     }
 
     @Override
