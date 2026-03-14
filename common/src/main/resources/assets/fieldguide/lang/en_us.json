@@ -44,9 +44,6 @@
   "option.fieldguide.disable_scanning": "Disable Scanning",
   "option.fieldguide.disable_scanning.tooltip": "If enabled, you will no longer be able to scan blocks or entities with spyglasses.",
 
-  "option.fieldguide.require_spyglass": "Require Spyglass",
-  "option.fieldguide.require_spyglass.tooltip": "If disabled, you can scan entities and blocks simply by looking at them without needing to use a Spyglass.",
-
   "option.fieldguide.scan_speed": "Scanning Speed",
   "option.fieldguide.scan_speed.tooltip": "The time in seconds it takes to scan an entry.",
 
@@ -65,8 +62,17 @@
   "option.fieldguide.show_scan_icon": "Show Scanning Icon",
   "option.fieldguide.show_scan_icon.tooltip": "Toggles the visibility of the scanning icon near the crosshair.",
 
-  "option.fieldguide.scan_distance": "Scanning Distance",
-  "option.fieldguide.scan_distance.tooltip": "The maximum distance from which you can scan an entry with a Spyglass, in blocks.",
+  "option.fieldguide.spyglass_scan_distance": "Spyglass Scan Distance",
+  "option.fieldguide.spyglass_scan_distance.tooltip": "The maximum distance from which you can scan an entry while using a Spyglass.",
+
+  "option.fieldguide.naked_eye_scan_distance": "Naked Eye Scan Distance",
+  "option.fieldguide.naked_eye_scan_distance.tooltip": "The maximum distance from which you can scan an entry with your naked eye (without a Spyglass).",
+
+  "option.fieldguide.enable_spyglass_scanning": "Enable Spyglass Scanning",
+  "option.fieldguide.enable_spyglass_scanning.tooltip": "Allows players to scan entries from afar using a Spyglass.",
+
+  "option.fieldguide.enable_naked_eye_scanning": "Enable Naked Eye Scanning",
+  "option.fieldguide.enable_naked_eye_scanning.tooltip": "Allows players to scan entries just by looking at them without a Spyglass.",
 
   "option.fieldguide.grant_xp_on_scan": "Grant XP on Scan",
   "option.fieldguide.grant_xp_on_scan.tooltip": "If enabled, discovering a new entry via scanning will grant the player experience points.",

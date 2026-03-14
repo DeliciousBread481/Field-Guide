@@ -39,18 +39,24 @@ public class ModConfig {
     public String defaultScreen = "last_opened_screen";
     public boolean hideTabsUntilUnlocked = false;
 
-    public boolean requireSpyglass = true;
+    public boolean enableSpyglassScanning = true;
+    public double spyglassScanDistance = 64.0D;
+
+    public boolean enableNakedEyeScanning = true;
+    public double nakedEyeScanDistance = 10.0D;
+
     public boolean showUndiscoveredNames = false;
     public boolean hideUndiscoveredFromSearch = false;
+
     public double scanSpeed = 1.0D;
-    public double scanDistance = 64.0D;
     public int scanIconYOffset = 2;
     public int scanIconXOffset = 30;
     public boolean showScanIcon = true;
     public boolean playScanningSound = true;
     public boolean grantXpOnScan = true;
-    public boolean enableReliableRemover = true;
     public int xpAmountOnScan = 5;
+
+    public boolean enableReliableRemover = true;
 
     public String scanOverlayColor = "#F9EED0";
     public double scanOverlayAlpha = 0.5D;
