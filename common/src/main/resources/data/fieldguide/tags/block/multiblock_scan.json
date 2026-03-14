@@ -48,6 +48,10 @@
     {
       "id": "supplementaries:rope_tomatoes",
       "required": false
+    },
+    {
+      "id": "autumnity:tall_foul_berry_bush",
+      "required": false
     }
   ]
 }

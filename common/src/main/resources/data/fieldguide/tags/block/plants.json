@@ -37,6 +37,7 @@
     "minecraft:glow_lichen",
     "minecraft:melon",
     "minecraft:pumpkin",
+    "minecraft:cocoa",
     {
       "id": "autumnity:large_pumpkin_slice",
       "required": false
