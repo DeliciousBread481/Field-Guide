@@ -76,6 +76,7 @@ public class FieldGuideForgeClient {
         public static void registerKeyMappings(RegisterKeyMappingsEvent event) {
             FieldGuideClient.init();
             event.register(FieldGuideClient.OPEN_GUIDE_KEY);
+            event.register(FieldGuideClient.SCAN_KEY);
         }
 
         @SubscribeEvent

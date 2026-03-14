@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.client.scanning;
 
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
@@ -59,6 +60,10 @@ public class FieldGuideScanner {
         boolean hasSpyglass = minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(ModTags.Items.SPYGLASSES);
         boolean canScan = (hasSpyglass && ModConfig.get().enableSpyglassScanning) || ModConfig.get().enableNakedEyeScanning;
         boolean isScanningActive = canScan && !ModConfig.get().disableScanning;
+
+        if (FieldGuideClient.SCAN_KEY != null && !FieldGuideClient.SCAN_KEY.isUnbound()) {
+            isScanningActive = isScanningActive && FieldGuideClient.SCAN_KEY.isDown();
+        }
 
         if (isScanningActive) {
             processScanning(minecraft);

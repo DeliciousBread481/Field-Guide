@@ -2,8 +2,8 @@ package com.evandev.fieldguide.client;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.gui.screens.BookScreen;
-import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideCategoryScreen;
+import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.client.scanning.FieldGuideScanner;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
@@ -23,12 +23,20 @@ import org.lwjgl.glfw.GLFW;
 public class FieldGuideClient {
     private static final long AUTO_OPEN_THRESHOLD_MS = 5000;
     public static KeyMapping OPEN_GUIDE_KEY;
+    public static KeyMapping SCAN_KEY;
 
     public static void init() {
         OPEN_GUIDE_KEY = new KeyMapping(
                 "key.fieldguide.open",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_B,
+                "category.fieldguide.main"
+        );
+
+        SCAN_KEY = new KeyMapping(
+                "key.fieldguide.scan",
+                InputConstants.Type.KEYSYM,
+                InputConstants.UNKNOWN.getValue(),
                 "category.fieldguide.main"
         );
     }

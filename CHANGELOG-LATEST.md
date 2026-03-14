@@ -3,6 +3,8 @@
 - Added many more modded bosses to the default bosses category.
 - Added French localization (@TheCreateMaster).
 - Added many more default blacklist entries.
+- Added new config options for naked eye scanning and scan distance.
+- Added optional keybind to initiate scanning when bound.
 
 ### Changed
 

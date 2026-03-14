@@ -29,6 +29,7 @@ public class FieldGuideFabricClient implements ClientModInitializer {
     public void onInitializeClient() {
         FieldGuideClient.init();
         KeyBindingHelper.registerKeyBinding(FieldGuideClient.OPEN_GUIDE_KEY);
+        KeyBindingHelper.registerKeyBinding(FieldGuideClient.SCAN_KEY);
 
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
             @Override
