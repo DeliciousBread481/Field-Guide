@@ -57,7 +57,10 @@ public class FieldGuideScanner {
     public void onClientTick(Minecraft minecraft) {
         if (minecraft.player == null || minecraft.level == null) return;
 
-        boolean hasSpyglass = minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(ModTags.Items.SPYGLASSES);
+        boolean hasSpyglass = minecraft.player.isScoping() ||
+                (minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(ModTags.Items.SPYGLASSES)) ||
+                Services.PLATFORM.hasSpyglass(minecraft.player);
+
         boolean canScan = (hasSpyglass && ModConfig.get().enableSpyglassScanning) || ModConfig.get().enableNakedEyeScanning;
         boolean isScanningActive = canScan && !ModConfig.get().disableScanning;
 
@@ -206,7 +209,9 @@ public class FieldGuideScanner {
 
     private void handleTargetAcquisition(Minecraft minecraft, Object foundTarget, double hitDistSq, BlockHitResult blockHit) {
         if (foundTarget != null) {
-            boolean usingSpyglass = minecraft.player != null && minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(ModTags.Items.SPYGLASSES);
+            boolean usingSpyglass = minecraft.player != null && (minecraft.player.isScoping() ||
+                    (minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(ModTags.Items.SPYGLASSES)) ||
+                    Services.PLATFORM.hasSpyglass(minecraft.player));
 
             double activeScanDist = 0;
             if (usingSpyglass && ModConfig.get().enableSpyglassScanning) {
