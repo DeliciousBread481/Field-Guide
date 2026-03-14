@@ -36,10 +36,7 @@
       "id": "autumnity:large_pumpkin_slice",
       "components": [
         "autumnity:large_pumpkin_slice"
-      ]
-    },
-    {
-      "id": "autumnity:large_pumpkin_slice",
+      ],
       "render": [
         "0,0,0|autumnity:large_pumpkin_slice|facing=north,half=bottom",
         "0,0,1|autumnity:large_pumpkin_slice|facing=west,half=bottom",
