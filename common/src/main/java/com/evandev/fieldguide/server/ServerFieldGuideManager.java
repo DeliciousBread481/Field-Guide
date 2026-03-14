@@ -452,17 +452,21 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     private void generateAutoBiomeAdditions(MinecraftServer server) {
         Registry<Biome> biomeRegistry = server.registryAccess().registryOrThrow(Registries.BIOME);
         for (var biomeEntry : biomeRegistry.entrySet()) {
-            ResourceLocation biomeId = biomeEntry.getKey().location();
-            Biome biome = biomeEntry.getValue();
+            try {
+                ResourceLocation biomeId = biomeEntry.getKey().location();
+                Biome biome = biomeEntry.getValue();
 
-            for (MobCategory cat : MobCategory.values()) {
-                for (var spawn : biome.getMobSettings().getMobs(cat).unwrap()) {
-                    ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(spawn.type);
-                    String addition = entityId + "|" + biomeId;
-                    if (!this.biomeAdditions.contains(addition)) {
-                        this.biomeAdditions.add(addition);
+                for (MobCategory cat : MobCategory.values()) {
+                    for (var spawn : biome.getMobSettings().getMobs(cat).unwrap()) {
+                        ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(spawn.type);
+                        String addition = entityId + "|" + biomeId;
+                        if (!this.biomeAdditions.contains(addition)) {
+                            this.biomeAdditions.add(addition);
+                        }
                     }
                 }
+            } catch (IllegalStateException e) {
+                Constants.LOG.warn("Skipping unbound biome in registry: {}", biomeEntry.getKey().location());
             }
         }
     }
