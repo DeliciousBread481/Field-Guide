@@ -7,6 +7,650 @@
     {
       "id": "shades:shade",
       "required": false
+    },
+    {
+      "id": "starcatcher:fish",
+      "required": false
+    },
+    {
+      "id": "aether_redux:blightbunny_spawner",
+      "required": false
+    },
+    {
+      "id": "aether_redux:cockatrice_spawner",
+      "required": false
+    },
+    {
+      "id": "alexsmobs:sea_bear",
+      "required": false
+    },
+    {
+      "id": "alshanex_familiars:blue_bird",
+      "required": false
+    },
+    {
+      "id": "alshanex_familiars:frozen_entity",
+      "required": false
+    },
+    {
+      "id": "alshanex_familiars:summoned_shadow",
+      "required": false
+    },
+    {
+      "id": "aquamirae:luminous_jelly",
+      "required": false
+    },
+    {
+      "id": "bagus_lib:mini_bagu",
+      "required": false
+    },
+    {
+      "id": "benssharks:shoal",
+      "required": false
+    },
+    {
+      "id": "buzzier_bees:grizzly_bear",
+      "required": false
+    },
+    {
+      "id": "deep_aether:eots_controller",
+      "required": false
+    },
+    {
+      "id": "deep_aether:gentle_wind",
+      "required": false
+    },
+    {
+      "id": "endermanoverhaul:axolotl_pet_enderman",
+      "required": false
+    },
+    {
+      "id": "endermanoverhaul:hammerhead_pet_enderman",
+      "required": false
+    },
+    {
+      "id": "endermanoverhaul:pet_enderman",
+      "required": false
+    },
+    {
+      "id": "iceandfire:stone_statue",
+      "required": false
+    },
+    {
+      "id": "irons_spellbooks:summoned_vex",
+      "required": false
+    },
+    {
+      "id": "irons_spellbooks:summoned_polar_bear",
+      "required": false
+    },
+    {
+      "id": "legendary_spellbooks:summoned_flameborn_guard",
+      "required": false
+    },
+    {
+      "id": "legendary_spellbooks:summoned_flameborn_warrior",
+      "required": false
+    },
+    {
+      "id": "legendary_spellbooks:summoned_haunted_guard",
+      "required": false
+    },
+    {
+      "id": "legendary_spellbooks:summoned_haunted_knight",
+      "required": false
+    },
+    {
+      "id": "prehistoricfauna:arganodus_cocoon",
+      "required": false
+    },
+    {
+      "id": "prehistoricfauna:ceratodus_cocoon",
+      "required": false
+    },
+    {
+      "id": "prehistoricfauna:potamoceratodus_cocoon",
+      "required": false
+    },
+    {
+      "id": "productivebees:configurable_bee",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_atlatitan",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_forsaken",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_gum_worm",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_hullbreaker",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_tremorsaurus",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_vallumraptor",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_vesper",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_void_tome",
+      "required": false
+    },
+    {
+      "id": "aquamirae:pillagers_patrol",
+      "required": false
+    },
+    {
+      "id": "armageddon_mod:abyssal_ball_ballball",
+      "required": false
+    },
+    {
+      "id": "armageddon_mod:blood_orb",
+      "required": false
+    },
+    {
+      "id": "armageddon_mod:ancient_allay",
+      "required": false
+    },
+    {
+      "id": "armageddon_mod:bloody_slash_entity",
+      "required": false
+    },
+    {
+      "id": "armageddon_mod:chaos_sigil_circle",
+      "required": false
+    },
+    {
+      "id": "armageddon_mod:fire_ball",
+      "required": false
+    },
+    {
+      "id": "armageddon_mod:passive_blood_slash",
+      "required": false
+    },
+    {
+      "id": "armageddon_mod:passive_sunbeam",
+      "required": false
+    },
+    {
+      "id": "armageddon_mod:prismatic_ball_ball_ball",
+      "required": false
+    },
+    {
+      "id": "armageddon_mod:rift",
+      "required": false
+    },
+    {
+      "id": "armageddon_mod:shadowed_spear",
+      "required": false
+    },
+    {
+      "id": "armageddon_mod:star_bullet",
+      "required": false
+    },
+    {
+      "id": "armageddon_mod:sunbeam",
+      "required": false
+    },
+    {
+      "id": "armageddon_mod:sunbeam_1",
+      "required": false
+    },
+    {
+      "id": "armageddon_mod:testing_entity",
+      "required": false
+    },
+    {
+      "id": "armageddon_mod:the_discord_illusion",
+      "required": false
+    },
+    {
+      "id": "armageddon_mod:witheredarrow",
+      "required": false
+    },
+    {
+      "id": "block_factorys_bosses:big_cage",
+      "required": false
+    },
+    {
+      "id": "block_factorys_bosses:big_cage_skelly",
+      "required": false
+    },
+    {
+      "id": "block_factorys_bosses:cage",
+      "required": false
+    },
+    {
+      "id": "block_factorys_bosses:cage_skelly",
+      "required": false
+    },
+    {
+      "id": "block_factorys_bosses:pile_of_bones",
+      "required": false
+    },
+    {
+      "id": "cataclysm:old_netherite_monstrosity",
+      "required": false
+    },
+    {
+      "id": "cataclysm:ancient_ancient_remnant",
+      "required": false
+    },
+    {
+      "id": "cataclsym:nameless_sorcerer",
+      "required": false
+    },
+    {
+      "id": "cataclysm_spellbooks:extended_death_laser_beam",
+      "required": false
+    },
+    {
+      "id": "cataclysm_spellbooks:extended_laser_beam",
+      "required": false
+    },
+    {
+      "id": "cataclysm_spellbooks:summoned_amethyst_crab",
+      "required": false
+    },
+    {
+      "id": "cataclysm_spellbooks:summoned_aptrgangr",
+      "required": false
+    },
+    {
+      "id": "cataclysm_spellbooks:summoned_clawdian",
+      "required": false
+    },
+    {
+      "id": "cataclysm_spellbooks:summoned_coral_golem",
+      "required": false
+    },
+    {
+      "id": "cataclysm_spellbooks:summoned_coralssus",
+      "required": false
+    },
+    {
+      "id": "cataclysm_spellbooks:summoned_counterspell_watcher",
+      "required": false
+    },
+    {
+      "id": "cataclysm_spellbooks:summoned_draugur",
+      "required": false
+    },
+    {
+      "id": "cataclysm_spellbooks:summoned_elite_draugur",
+      "required": false
+    },
+    {
+      "id": "cataclysm_spellbooks:summoned_ignited_berserker",
+      "required": false
+    },
+    {
+      "id": "cataclysm_spellbooks:summoned_ignited_revenant",
+      "required": false
+    },
+    {
+      "id": "cataclysm_spellbooks:summoned_koboldiator",
+      "required": false
+    },
+    {
+      "id": "cataclysm_spellbooks:summoned_koboleton",
+      "required": false
+    },
+    {
+      "id": "cataclysm_spellbooks:summoned_prowler",
+      "required": false
+    },
+    {
+      "id": "cataclysm_spellbooks:summoned_royal_draugur",
+      "required": false
+    },
+    {
+      "id": "cataclysm_spellbooks:summoned_watcher",
+      "required": false
+    },
+    {
+      "id": "darkdoppelganger:dark_doppelganger_minion",
+      "required": false
+    },
+    {
+      "id": "dungeons_and_combat:chained",
+      "required": false
+    },
+    {
+      "id": "dungeons_and_combat:palehand_minion",
+      "required": false
+    },
+    {
+      "id": "dungeons_and_combat:weakness_despawn",
+      "required": false
+    },
+    {
+      "id": "enlightened_end:nuclear_bomb",
+      "required": false
+    },
+    {
+      "id": "enlightened_end:bouncer",
+      "required": false
+    },
+    {
+      "id": "enlightened_end:disturbed_helium_gas",
+      "required": false
+    },
+    {
+      "id": "enlightened_end:disturbed_xenon_gas",
+      "required": false
+    },
+    {
+      "id": "enlightened_end:falling_bounceling_nut",
+      "required": false
+    },
+    {
+      "id": "enlightened_end:falling_heliosand",
+      "required": false
+    },
+    {
+      "id": "enlightened_end:floating_elevibloom",
+      "required": false
+    },
+    {
+      "id": "enlightened_end:ooze_bubble",
+      "required": false
+    },
+    {
+      "id": "enlightened_end:radiator",
+      "required": false
+    },
+    {
+      "id": "gtbcs_geomancy_plus:summoned_umvuthana_crane",
+      "required": false
+    },
+    {
+      "id": "gtbcs_geomancy_plus:summoned_umvuthana_raptor",
+      "required": false
+    },
+    {
+      "id": "herios_floral_expansion:saddled_bogwalker",
+      "required": false
+    },
+    {
+      "id": "inhabitants:bogre_cauldron",
+      "required": false
+    },
+    {
+      "id": "irons_spellbooks:debug_wizard",
+      "required": false
+    },
+    {
+      "id": "irons_spellbooks:catacombs_zombie",
+      "required": false
+    },
+    {
+      "id": "legionary:petrified_unbreakable",
+      "required": false
+    },
+    {
+      "id": "legionary:wheel_of_death",
+      "required": false
+    },
+    {
+      "id": "leosillagers:vindicator_with_shield",
+      "required": false
+    },
+    {
+      "id": "more_critters:bubble_entity",
+      "required": false
+    },
+    {
+      "id": "more_critters:jelly_torpedo",
+      "required": false
+    },
+    {
+      "id": "more_critters:rot_zombie",
+      "required": false
+    },
+    {
+      "id": "more_critters:ancient_skeleton",
+      "required": false
+    },
+    {
+      "id": "more_critters:ancient_skeleton_exhibit",
+      "required": false
+    },
+    {
+      "id": "more_critters:critter_atlas_model",
+      "required": false
+    },
+    {
+      "id": "more_critters:echo",
+      "required": false
+    },
+    {
+      "id": "more_critters:flying_ooze_rod",
+      "required": false
+    },
+    {
+      "id": "more_critters:heal_echo",
+      "required": false
+    },
+    {
+      "id": "more_critters:small_heal_echo",
+      "required": false
+    },
+    {
+      "id": "more_critters:large_echo",
+      "required": false
+    },
+    {
+      "id": "more_critters:mightshroom_echo",
+      "required": false
+    },
+    {
+      "id": "more_critters:model_10",
+      "required": false
+    },
+    {
+      "id": "more_critters:model_13",
+      "required": false
+    },
+    {
+      "id": "more_critters:model_15",
+      "required": false
+    },
+    {
+      "id": "more_critters:model_16",
+      "required": false
+    },
+    {
+      "id": "more_critters:model_17",
+      "required": false
+    },
+    {
+      "id": "more_critters:model_19",
+      "required": false
+    },
+    {
+      "id": "more_critters:model_7",
+      "required": false
+    },
+    {
+      "id": "more_critters:model_9",
+      "required": false
+    },
+    {
+      "id": "more_critters:mori_roots",
+      "required": false
+    },
+    {
+      "id": "more_critters:resin_puddle",
+      "required": false
+    },
+    {
+      "id": "more_critters:shock_cube",
+      "required": false
+    },
+    {
+      "id": "more_critters:shock_cube_small",
+      "required": false
+    },
+    {
+      "id": "more_critters:slash_effect",
+      "required": false
+    },
+    {
+      "id": "more_critters:tamed_corpse_parrot",
+      "required": false
+    },
+    {
+      "id": "more_critters:tester_shriek",
+      "required": false
+    },
+    {
+      "id": "more_critters:web_entity",
+      "required": false
+    },
+    {
+      "id": "mowziesmobs:umvuthana_crane_player",
+      "required": false
+    },
+    {
+      "id": "mowziesmobs:umvuthana_follower_player",
+      "required": false
+    },
+    {
+      "id": "mowziesmobs:umvuthana_follower_raptor",
+      "required": false
+    },
+    {
+      "id": "mowziesmobs:umvuthana_raptor",
+      "required": false
+    },
+    {
+      "id": "mythsandlegends:imp_clone",
+      "required": false
+    },
+    {
+      "id": "mythsandlegends:molten_ball",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_aptrgangr",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_clawdian",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_deepling",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_draugr",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_elite_draugr",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_ender_golem",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_ignited_berserker",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_ignited_revenant",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_kobolediator",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_koboleton",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_magnetron",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_royal_draugr",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_the_prowler",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_the_watcher",
+      "required": false
+    },
+    {
+      "id": "traveloptics:summoned_wadjet",
+      "required": false
+    },
+    {
+      "id": "traveloptics:test_wizard",
+      "required": false
+    },
+    {
+      "id": "twilightforest:ice_crystal",
+      "required": false
+    },
+    {
+      "id": "twilightforest:rising_zombie",
+      "required": false
+    },
+    {
+      "id": "twilightforest:snow_guardian",
+      "required": false
+    },
+    {
+      "id": "twilightforest:stable_ice_core",
+      "required": false
+    },
+    {
+      "id": "twilightforest:unstable_ice_core",
+      "required": false
+    },
+    {
+      "id": "twilightforest:block_updater",
+      "required": false
+    },
+    {
+      "id": "unusualend:summoned_dragling",
+      "required": false
+    },
+    {
+      "id": "unusualend:void_bomb",
+      "required": false
+    },
+    {
+      "id": "unusualend:void_crack",
+      "required": false
+    },
+    {
+      "id": "unusualend:warped_balloon",
+      "required": false
+    },
+    {
+      "id": "vital_herbs:pedestal_ring",
+      "required": false
     }
   ]
 }
