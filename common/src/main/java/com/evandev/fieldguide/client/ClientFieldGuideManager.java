@@ -312,7 +312,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         ModConfig config = ModConfig.get();
 
         syncedCategories.values().forEach(category -> {
-            List<Object> entries = EntryResolver.resolveCategoryEntries(category, config, Collections.emptyList(), this.redirects);
+            List<Object> entries = EntryResolver.resolveCategoryEntries(category, Collections.emptyList(), this.redirects);
 
             // Group entries
             List<Object> groupedEntries = SearchManager.groupByQueries(entries, category.getGroupByQueries());
@@ -333,8 +333,8 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
                 .collect(Collectors.toList());
     }
 
-    public boolean isValidEntity(EntityType<?> type, ModConfig config) {
-        return EntryResolver.isValidEntity(type, config);
+    public boolean isValidEntity(EntityType<?> type, ResourceLocation categoryId) {
+        return EntryResolver.isValidEntity(type, categoryId);
     }
 
     public Category getCategoryForEntry(Object entry) {

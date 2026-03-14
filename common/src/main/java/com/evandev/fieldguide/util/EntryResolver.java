@@ -70,7 +70,7 @@ public class EntryResolver {
             }
         }
 
-        return entries.get(0);
+        return entries.getFirst();
     }
 
     public static List<Object> getEntriesForTarget(Map<ResourceLocation, List<Object>> resolvedEntries, Object target) {
@@ -112,14 +112,29 @@ public class EntryResolver {
         return false;
     }
 
-    public static boolean isValidEntity(EntityType<?> type, ModConfig config) {
-        return type.canSummon() && !config.isEntityBlacklisted(BuiltInRegistries.ENTITY_TYPE.getKey(type));
+    public static boolean isValidEntity(EntityType<?> type, ResourceLocation categoryId) {
+        if (!type.canSummon()) return false;
+        return BuiltInRegistries.ENTITY_TYPE.getResourceKey(type).flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder).map(h -> {
+            if (h.is(ModTags.EntityTypes.BLACKLISTED)) return false;
+            if (categoryId != null) {
+                TagKey<EntityType<?>> catTag = TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "blacklisted/" + categoryId.getNamespace() + "/" + categoryId.getPath()));
+                return !h.is(catTag);
+            }
+            return true;
+        }).orElse(true);
     }
 
-    public static boolean isValidBlock(Block block, ModConfig config) {
-        if (config.isEntityBlacklisted(BuiltInRegistries.BLOCK.getKey(block))) {
+    public static boolean isValidBlock(Block block, ResourceLocation categoryId) {
+        boolean blacklisted = BuiltInRegistries.BLOCK.getResourceKey(block).flatMap(BuiltInRegistries.BLOCK::getHolder).map(h -> {
+            if (h.is(ModTags.Blocks.BLACKLISTED)) return true;
+            if (categoryId != null) {
+                TagKey<Block> catTag = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "blacklisted/" + categoryId.getNamespace() + "/" + categoryId.getPath()));
+                return (h.is(catTag));
+            }
             return false;
-        }
+        }).orElse(false);
+
+        if (blacklisted) return false;
 
         if (Services.PLATFORM.isModLoaded("reliable_remover") && ModConfig.get().enableReliableRemover && ReliableRemoverCompat.isHidden(block)) {
             return false;
@@ -134,13 +149,14 @@ public class EntryResolver {
         return null;
     }
 
-    public static List<Object> resolveCategoryEntries(Category category, ModConfig config, List<CompositeDefinition> globalComposites, Map<ResourceLocation, ResourceLocation> redirects) {
+    public static List<Object> resolveCategoryEntries(Category category, List<CompositeDefinition> globalComposites, Map<ResourceLocation, ResourceLocation> redirects) {
         Set<Object> foundEntries = new LinkedHashSet<>();
         Set<ResourceLocation> addedIds = new HashSet<>();
+        ResourceLocation categoryId = category.getId();
 
         for (CategoryEntry entry : category.getEntries()) {
             if (entry.type() == CategoryType.Type.ENTRY && entry.id() != null) {
-                resolveSingleEntry(entry.id(), config).ifPresent(e -> {
+                resolveSingleEntry(entry.id(), categoryId).ifPresent(e -> {
                     if (entry.stackedBlocks() != null && !entry.stackedBlocks().isEmpty()) {
                         foundEntries.add(new CompositeFieldGuideEntry(entry.id(), e, new ArrayList<>(), null, entry.stackedBlocks()));
                     } else {
@@ -150,18 +166,18 @@ public class EntryResolver {
                 });
             } else if (entry.type() == CategoryType.Type.COMPOSITE && entry.id() != null) {
                 ResourceLocation displayLoc = entry.displayId() != null ? entry.displayId() : entry.id();
-                resolveSingleEntry(displayLoc, config).ifPresent(displayEntry -> {
+                resolveSingleEntry(displayLoc, categoryId).ifPresent(displayEntry -> {
                     List<Object> components = new ArrayList<>();
                     if (entry.components() != null) {
                         for (ResourceLocation compId : entry.components()) {
-                            resolveSingleEntry(compId, config).ifPresent(components::add);
+                            resolveSingleEntry(compId, categoryId).ifPresent(components::add);
                         }
                     }
                     foundEntries.add(new CompositeFieldGuideEntry(entry.id(), displayEntry, components, entry.structureNbt(), entry.stackedBlocks()));
                     addedIds.add(entry.id());
                 });
             } else if (entry.type() == CategoryType.Type.AUTO_POPULATE) {
-                for (Object obj : getEntriesForStrategy(entry.strategy(), config)) {
+                for (Object obj : getEntriesForStrategy(entry.strategy(), categoryId)) {
                     ResourceLocation id = getEntryId(obj);
                     if (id != null && !addedIds.contains(id)) {
                         foundEntries.add(obj);
@@ -182,7 +198,7 @@ public class EntryResolver {
 
                     if (matchingDef != null) {
                         if (processedComposites.add(matchingDef.id())) {
-                            resolveCompositeDefinition(matchingDef, config).ifPresent(groupedEntries::add);
+                            resolveCompositeDefinition(matchingDef, categoryId).ifPresent(groupedEntries::add);
                         }
                     } else {
                         groupedEntries.add(raw);
@@ -195,7 +211,7 @@ public class EntryResolver {
 
                 if (matchingDef != null) {
                     if (processedComposites.add(matchingDef.id())) {
-                        resolveCompositeDefinition(matchingDef, config).ifPresent(groupedEntries::add);
+                        resolveCompositeDefinition(matchingDef, categoryId).ifPresent(groupedEntries::add);
                     }
                 } else {
                     groupedEntries.add(raw);
@@ -224,43 +240,43 @@ public class EntryResolver {
         return null;
     }
 
-    private static Optional<CompositeFieldGuideEntry> resolveCompositeDefinition(CompositeDefinition def, ModConfig config) {
+    private static Optional<CompositeFieldGuideEntry> resolveCompositeDefinition(CompositeDefinition def, ResourceLocation categoryId) {
         ResourceLocation displayLoc = def.displayId() != null ? def.displayId() : def.id();
-        return resolveSingleEntry(displayLoc, config).map(displayEntry -> {
+        return resolveSingleEntry(displayLoc, categoryId).map(displayEntry -> {
             List<Object> components = new ArrayList<>();
             if (def.components() != null) {
                 for (ResourceLocation compId : def.components()) {
-                    resolveSingleEntry(compId, config).ifPresent(components::add);
+                    resolveSingleEntry(compId, categoryId).ifPresent(components::add);
                 }
             }
             return new CompositeFieldGuideEntry(def.id(), displayEntry, components, def.structureNbt(), def.stackedBlocks());
         });
     }
 
-    private static Optional<Object> resolveSingleEntry(ResourceLocation id, ModConfig config) {
+    private static Optional<Object> resolveSingleEntry(ResourceLocation id, ResourceLocation categoryId) {
         return BuiltInRegistries.ENTITY_TYPE.getOptional(id)
-                .filter(t -> isValidEntity(t, config))
+                .filter(t -> isValidEntity(t, categoryId))
                 .map(Object.class::cast)
                 .or(() -> BuiltInRegistries.BLOCK.getOptional(id)
-                        .filter(b -> isValidBlock(b, config))
+                        .filter(b -> isValidBlock(b, categoryId))
                         .map(Object.class::cast));
     }
 
-    private static List<Object> getEntriesForStrategy(String strategy, ModConfig config) {
+    private static List<Object> getEntriesForStrategy(String strategy, ResourceLocation categoryId) {
         List<Object> results = new ArrayList<>();
         if ("plants".equalsIgnoreCase(strategy)) {
-            results.addAll(getPlants(id -> true, config));
+            results.addAll(getPlants(id -> true, categoryId));
         } else if (strategy.startsWith("mod:")) {
             String modId = strategy.substring(4);
-            results.addAll(BuiltInRegistries.ENTITY_TYPE.stream().filter(t -> BuiltInRegistries.ENTITY_TYPE.getKey(t).getNamespace().equals(modId) && isValidEntity(t, config)).sorted(Comparator.comparing(t -> BuiltInRegistries.ENTITY_TYPE.getKey(t).toString())).toList());
+            results.addAll(BuiltInRegistries.ENTITY_TYPE.stream().filter(t -> BuiltInRegistries.ENTITY_TYPE.getKey(t).getNamespace().equals(modId) && isValidEntity(t, categoryId)).sorted(Comparator.comparing(t -> BuiltInRegistries.ENTITY_TYPE.getKey(t).toString())).toList());
         } else if (strategy.startsWith("mod_plants:")) {
             String modId = strategy.substring(10);
-            results.addAll(getPlants(id -> id.getNamespace().equals(modId), config));
+            results.addAll(getPlants(id -> id.getNamespace().equals(modId), categoryId));
         } else if ("trees".equalsIgnoreCase(strategy)) {
-            results.addAll(getAutoTrees(id -> true, config));
+            results.addAll(getAutoTrees(id -> true, categoryId));
         } else if (strategy.startsWith("mod_trees:")) {
             String modId = strategy.substring(10);
-            results.addAll(getAutoTrees(id -> id.getNamespace().equals(modId), config));
+            results.addAll(getAutoTrees(id -> id.getNamespace().equals(modId), categoryId));
         } else if (strategy.startsWith("tag:")) {
             try {
                 ResourceLocation tagLocation = ResourceLocation.parse(strategy.substring(4));
@@ -268,13 +284,13 @@ public class EntryResolver {
                 TagKey<EntityType<?>> entityTagKey = TagKey.create(Registries.ENTITY_TYPE, tagLocation);
                 BuiltInRegistries.ENTITY_TYPE.forEach(type -> BuiltInRegistries.ENTITY_TYPE.getResourceKey(type)
                         .flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder)
-                        .filter(h -> h.is(entityTagKey) && isValidEntity(type, config))
+                        .filter(h -> h.is(entityTagKey) && isValidEntity(type, categoryId))
                         .ifPresent(h -> results.add(type)));
 
                 TagKey<Block> blockTagKey = TagKey.create(Registries.BLOCK, tagLocation);
                 BuiltInRegistries.BLOCK.forEach(block -> BuiltInRegistries.BLOCK.getResourceKey(block)
                         .flatMap(BuiltInRegistries.BLOCK::getHolder)
-                        .filter(h -> h.is(blockTagKey) && isValidBlock(block, config))
+                        .filter(h -> h.is(blockTagKey) && isValidBlock(block, categoryId))
                         .ifPresent(h -> results.add(block)));
 
                 results.sort(Comparator.comparing(o -> getEntryId(o).toString()));
@@ -289,17 +305,17 @@ public class EntryResolver {
                 if ("animals".equalsIgnoreCase(strategy))
                     return type.getCategory() != MobCategory.MONSTER && (type.getCategory() != MobCategory.MISC || SpawnEggItem.byId(type) != null) && !isBoss;
                 return false;
-            }).filter(type -> isValidEntity(type, config)).sorted(Comparator.comparing(type -> BuiltInRegistries.ENTITY_TYPE.getKey(type).toString())).toList());
+            }).filter(type -> isValidEntity(type, categoryId)).sorted(Comparator.comparing(type -> BuiltInRegistries.ENTITY_TYPE.getKey(type).toString())).toList());
         }
         return results;
     }
 
-    private static List<Object> getAutoTrees(Predicate<ResourceLocation> namespaceFilter, ModConfig config) {
+    private static List<Object> getAutoTrees(Predicate<ResourceLocation> namespaceFilter, ResourceLocation categoryId) {
         List<Object> results = new ArrayList<>();
 
         for (Block block : BuiltInRegistries.BLOCK) {
             ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
-            if (!namespaceFilter.test(id) || !isValidBlock(block, config)) continue;
+            if (!namespaceFilter.test(id) || !isValidBlock(block, categoryId)) continue;
 
             if (id.getPath().endsWith("_sapling")) {
                 String baseName = id.getPath().replace("_sapling", "");
@@ -344,10 +360,10 @@ public class EntryResolver {
         return results;
     }
 
-    private static List<Object> getPlants(Predicate<ResourceLocation> namespaceFilter, ModConfig config) {
+    private static List<Object> getPlants(Predicate<ResourceLocation> namespaceFilter, ResourceLocation categoryId) {
         return BuiltInRegistries.BLOCK.stream()
                 .filter(b -> namespaceFilter.test(BuiltInRegistries.BLOCK.getKey(b)))
-                .filter(b -> isValidBlock(b, config))
+                .filter(b -> isValidBlock(b, categoryId))
                 .filter(b -> b.defaultBlockState().is(ModTags.Blocks.PLANTS) || b instanceof BushBlock)
                 .sorted(Comparator.comparing(b -> BuiltInRegistries.BLOCK.getKey(b).toString()))
                 .map(Object.class::cast)

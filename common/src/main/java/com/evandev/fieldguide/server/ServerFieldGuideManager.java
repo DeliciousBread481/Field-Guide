@@ -255,7 +255,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         Set<Object> allCompositeComponents = new HashSet<>();
 
         for (Category cat : categories.values()) {
-            List<Object> entries = EntryResolver.resolveCategoryEntries(cat, config, composites, redirects);
+            List<Object> entries = EntryResolver.resolveCategoryEntries(cat, composites, redirects);
             for (Object entry : entries) {
                 if (entry instanceof CompositeFieldGuideEntry composite) {
                     if (composite.components() != null) {

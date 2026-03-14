@@ -162,7 +162,8 @@ public class FieldGuideScanner {
                 }
 
                 Object entryForTarget = getContextAwareEntry(actualTargetKey, minecraft, blockHit.getBlockPos());
-                if (entryForTarget != null && !ProgressManager.getInstance().isUnlocked(entryForTarget)) {
+                Category cat = ClientFieldGuideManager.getInstance().getCategoryForEntry(entryForTarget);
+                if (entryForTarget != null && !ProgressManager.getInstance().isUnlocked(entryForTarget) && cat != null) {
                     foundTarget = block;
                 }
             }
@@ -185,7 +186,8 @@ public class FieldGuideScanner {
                 }
 
                 Object entryForTarget = getContextAwareEntry(actualTargetKey, minecraft, firstBlockHit.getBlockPos());
-                if (entryForTarget != null && !ProgressManager.getInstance().isUnlocked(entryForTarget)) {
+                Category cat = ClientFieldGuideManager.getInstance().getCategoryForEntry(entryForTarget);
+                if (entryForTarget != null && !ProgressManager.getInstance().isUnlocked(entryForTarget) && cat != null) {
                     foundTarget = block;
                     blockHit = firstBlockHit;
                     hitDistSq = eyePos.distanceToSqr(firstBlockHit.getLocation());
@@ -259,7 +261,6 @@ public class FieldGuideScanner {
     private Object getContextAwareEntry(Object target, Minecraft minecraft, BlockPos pos) {
         List<Object> possibleEntries = ClientFieldGuideManager.getInstance().getEntriesForTarget(target);
         if (possibleEntries.isEmpty()) return null;
-        if (possibleEntries.size() == 1) return possibleEntries.get(0);
 
         if (pos != null && pos.equals(lastDisambiguatedPos)) {
             return lastDisambiguatedEntry;
@@ -272,10 +273,10 @@ public class FieldGuideScanner {
     }
 
     private Object disambiguateComposite(Minecraft minecraft, BlockPos hitPos, List<Object> possibleEntries, Object actualTargetKey) {
-        if (minecraft.level == null || hitPos == null) return possibleEntries.get(0);
+        if (minecraft.level == null || hitPos == null) return possibleEntries.getFirst();
 
-        Object bestMatch = possibleEntries.get(0);
-        int maxScore = -1;
+        Object bestMatch = null;
+        int maxScore = 0;
 
         int radius = 4;
         Map<Object, Integer> scoreMap = new HashMap<>();
@@ -286,6 +287,8 @@ public class FieldGuideScanner {
                     BlockPos pos = hitPos.offset(dx, dy, dz);
                     BlockState state = minecraft.level.getBlockState(pos);
                     Block block = state.getBlock();
+
+                    if (block.equals(actualTargetKey)) continue;
 
                     for (Object entry : possibleEntries) {
                         if (entry instanceof CompositeFieldGuideEntry composite) {
@@ -309,13 +312,15 @@ public class FieldGuideScanner {
 
         if (maxScore == 0) {
             for (Object entry : possibleEntries) {
+                if (entry.equals(actualTargetKey)) return entry;
                 if (entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() != null && composite.displayEntry().equals(actualTargetKey)) {
                     return entry;
                 }
             }
+            return actualTargetKey;
         }
 
-        return bestMatch;
+        return bestMatch != null ? bestMatch : possibleEntries.getFirst();
     }
 
     private void completeScan(Minecraft minecraft, Object targetKey, Object foundTarget) {

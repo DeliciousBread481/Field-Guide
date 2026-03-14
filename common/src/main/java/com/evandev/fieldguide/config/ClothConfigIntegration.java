@@ -305,12 +305,6 @@ public class ClothConfigIntegration {
         // Content
         ConfigCategory contentCat = builder.getOrCreateCategory(Component.translatable("category.fieldguide.content"));
 
-        contentCat.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.blacklist"), config.entityBlacklist)
-                .setDefaultValue(ModConfig.getDefaultBlacklist())
-                .setTooltip(Component.translatable("option.fieldguide.blacklist.tooltip"))
-                .setSaveConsumer(newValue -> config.entityBlacklist = newValue)
-                .build());
-
         contentCat.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.global_scan_commands"), config.globalScanCommands)
                 .setDefaultValue(new ArrayList<>())
                 .setTooltip(Component.translatable("option.fieldguide.global_scan_commands.tooltip"))
