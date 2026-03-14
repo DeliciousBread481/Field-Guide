@@ -1,8 +1,8 @@
 package com.evandev.fieldguide.client.search;
 
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
-import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.util.EntryResolver;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -124,11 +124,20 @@ public class SearchManager {
 
                         for (MobCategory cat : MobCategory.values()) {
                             for (var spawn : biome.getMobSettings().getMobs(cat).unwrap()) {
-                                if (ClientFieldGuideManager.getInstance().isValidEntity(spawn.type, ModConfig.get())) {
-                                    if (!results.contains(spawn.type)) {
-                                        Object entry = ClientFieldGuideManager.getInstance().getEntryForTarget(spawn.type);
-                                        if (entry != null && !results.contains(entry) && entries.contains(entry))
-                                            results.add(entry);
+
+                                Object entry = ClientFieldGuideManager.getInstance().getEntryForTarget(spawn.type);
+                                ResourceLocation categoryId = null;
+
+                                if (entry != null) {
+                                    var category = ClientFieldGuideManager.getInstance().getCategoryForEntry(entry);
+                                    if (category != null) {
+                                        categoryId = category.getId();
+                                    }
+                                }
+
+                                if (EntryResolver.isValidEntity(spawn.type, categoryId)) {
+                                    if (entry != null && !results.contains(entry) && entries.contains(entry)) {
+                                        results.add(entry);
                                     }
                                 }
                             }

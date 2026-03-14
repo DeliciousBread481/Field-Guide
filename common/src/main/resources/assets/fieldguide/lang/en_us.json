@@ -21,9 +21,6 @@
   "category.fieldguide.interface": "Interface",
   "category.fieldguide.content": "Content",
 
-  "option.fieldguide.blacklist": "Entry Blacklist",
-  "option.fieldguide.blacklist.tooltip": "Entries that should not appear in the Field Guide.\nSupports 'modid:entity_id', 'modid:block_id', or 'modid:*' for wildcards.",
-
   "option.fieldguide.show_inventory_button": "Show Inventory Button",
   "option.fieldguide.show_inventory_button.tooltip": "If enabled, a button to open the Field Guide will appear in the player inventory.",
   "option.fieldguide.inventory_button_x": "Inventory Button X Offset",

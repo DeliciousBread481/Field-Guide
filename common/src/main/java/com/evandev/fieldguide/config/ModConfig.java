@@ -77,8 +77,6 @@ public class ModConfig {
     public boolean exposureUnlockViaPhotograph = true;
     public boolean exposureShowPhotographsInGrid = true;
 
-    public List<String> entityBlacklist = getDefaultBlacklist();
-
     public List<String> globalScanCommands = new ArrayList<>();
     public Map<String, List<String>> categoryScanCommands = new HashMap<>();
     public Map<String, List<String>> entryScanCommands = new HashMap<>();
@@ -103,7 +101,6 @@ public class ModConfig {
             }
         } else {
             INSTANCE = new ModConfig();
-            INSTANCE.entityBlacklist.addAll(getDefaultBlacklist());
             save();
         }
     }
@@ -114,24 +111,6 @@ public class ModConfig {
         } catch (IOException e) {
             Constants.LOG.error("Failed to save fieldguide.json", e);
         }
-    }
-
-    public static List<String> getDefaultBlacklist() {
-        List<String> defaults = new ArrayList<>();
-        defaults.add("minecraft:armor_stand");
-        defaults.add("minecraft:giant");
-        defaults.add("minecraft:illusioner");
-        defaults.add("shades:shade");
-        return defaults;
-    }
-
-    public boolean isEntityBlacklisted(ResourceLocation location) {
-        String id = location.toString();
-        String namespace = location.getNamespace();
-
-        if (entityBlacklist.contains(id)) return true;
-
-        return entityBlacklist.contains(namespace + ":*");
     }
 
     public int getScanOverlayColorInt() {
