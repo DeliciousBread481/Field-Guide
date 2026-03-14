@@ -71,7 +71,7 @@ public class ClothConfigIntegration {
                 .build());
 
         general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.enable_naked_eye_scanning"), config.enableNakedEyeScanning)
-                .setDefaultValue(true)
+                .setDefaultValue(false)
                 .setTooltip(Component.translatable("option.fieldguide.enable_naked_eye_scanning.tooltip"))
                 .setSaveConsumer(newValue -> config.enableNakedEyeScanning = newValue)
                 .build());

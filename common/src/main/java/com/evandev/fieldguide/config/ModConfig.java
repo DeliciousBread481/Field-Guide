@@ -42,7 +42,7 @@ public class ModConfig {
     public boolean enableSpyglassScanning = true;
     public double spyglassScanDistance = 64.0D;
 
-    public boolean enableNakedEyeScanning = true;
+    public boolean enableNakedEyeScanning = false;
     public double nakedEyeScanDistance = 10.0D;
 
     public boolean showUndiscoveredNames = false;
