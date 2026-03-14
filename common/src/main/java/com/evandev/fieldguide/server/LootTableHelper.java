@@ -2,7 +2,6 @@ package com.evandev.fieldguide.server;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.server.loot.ParsedDrop;
-import com.evandev.fieldguide.server.loot.SimulatedLootParser;
 import com.evandev.fieldguide.server.loot.StaticLootParser;
 import com.evandev.fieldguide.util.EntryResolver;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -40,22 +39,6 @@ public class LootTableHelper {
             try {
                 LootTable table = level.getServer().getLootData().getLootTable(tableId);
                 List<ParsedDrop> finalDrops = StaticLootParser.parseTable(table, level);
-
-                List<ParsedDrop> simulatedDrops = new ArrayList<>();
-                if (entry instanceof EntityType<?> entityType) {
-                    simulatedDrops = SimulatedLootParser.simulateEntityDrop(level, entityType, table);
-                } else if (entry instanceof Block block) {
-                    simulatedDrops = SimulatedLootParser.simulateBlockDrop(level, block, table);
-                }
-
-                for (ParsedDrop simDrop : simulatedDrops) {
-                    boolean alreadyExists = finalDrops.stream()
-                            .anyMatch(staticDrop -> ItemStack.isSameItemSameTags(staticDrop.stack, simDrop.stack));
-
-                    if (!alreadyExists) {
-                        finalDrops.add(simDrop);
-                    }
-                }
 
                 for (ParsedDrop drop : finalDrops) {
                     ItemStack stack = drop.stack.copy();

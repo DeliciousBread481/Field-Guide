@@ -1,15 +1,9 @@
-### Added
-
-- Added many more modded bosses to the default bosses category.
-- Added French localization (@TheCreateMaster).
-- Added many more default blacklist entries.
-- Added new config options for naked eye scanning and scan distance.
-- Added optional keybind to initiate scanning when bound.
-
 ### Changed
 
-- Switched to a tag-based blacklist, which now supports blacklisting on a per-category basis.
+- Temporarily disabled LootJS integration due to lag.
+    - To recreate this functionality, just create loot removal/addition datapacks for Field Guide (or better, create
+      vanilla loot table datapacks instead of using LootJS).
 
 ### Fixed
 
-- Fixed Autumnity large pumpkin render.
+- Fixed lag when joining servers and running /reload.
