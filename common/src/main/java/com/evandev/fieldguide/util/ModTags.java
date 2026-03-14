@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.util;
 
+import com.evandev.fieldguide.Constants;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
@@ -15,7 +16,7 @@ public class ModTags {
         public static final TagKey<Block> BLACKLISTED = tag("blacklisted");
 
         private static TagKey<Block> tag(String name) {
-            return TagKey.create(Registries.BLOCK, new ResourceLocation("fieldguide", name));
+            return TagKey.create(Registries.BLOCK, new ResourceLocation(Constants.MOD_ID, name));
         }
     }
 
@@ -23,7 +24,7 @@ public class ModTags {
         public static final TagKey<Item> SPYGLASSES = tag("spyglasses");
 
         private static TagKey<Item> tag(String name) {
-            return TagKey.create(Registries.ITEM, new ResourceLocation("fieldguide", name));
+            return TagKey.create(Registries.ITEM, new ResourceLocation(Constants.MOD_ID, name));
         }
     }
 
@@ -31,7 +32,7 @@ public class ModTags {
         public static final TagKey<EntityType<?>> BLACKLISTED = tag("blacklisted");
 
         private static TagKey<EntityType<?>> tag(String name) {
-            return TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, name));
+            return TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(Constants.MOD_ID, name));
         }
     }
 }

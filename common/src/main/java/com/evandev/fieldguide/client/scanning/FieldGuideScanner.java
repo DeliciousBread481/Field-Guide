@@ -8,7 +8,6 @@ import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.network.ScanUnlockPacket;
 import com.evandev.fieldguide.platform.Services;
-import com.evandev.fieldguide.util.EntryResolver;
 import com.evandev.fieldguide.util.ModTags;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -292,7 +291,7 @@ public class FieldGuideScanner {
     }
 
     private Object disambiguateComposite(Minecraft minecraft, BlockPos hitPos, List<Object> possibleEntries, Object actualTargetKey) {
-        if (minecraft.level == null || hitPos == null) return possibleEntries.getFirst();
+        if (minecraft.level == null || hitPos == null) return possibleEntries.get(0);
 
         Object bestMatch = null;
         int maxScore = 0;
@@ -339,7 +338,7 @@ public class FieldGuideScanner {
             return actualTargetKey;
         }
 
-        return bestMatch != null ? bestMatch : possibleEntries.getFirst();
+        return bestMatch != null ? bestMatch : possibleEntries.get(0);
     }
 
     private void completeScan(Minecraft minecraft, Object targetKey, Object foundTarget) {
