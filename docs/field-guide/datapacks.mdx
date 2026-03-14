@@ -253,3 +253,43 @@ You can use either `entry` (single string) or `entries` (array of strings) to de
 ```
 
 *Note: Setting `"replace": true` at the root of the JSON will clear all previously loaded modifiers of that type (from the mod or other datapacks) before applying yours.*
+
+#### Blacklisting Entries
+
+If you want to hide specific entities or blocks from the Field Guide entirely, or just hide them from a specific category, you can do so using tags.
+
+**Global Blacklists:**
+To completely remove an entity or block from all categories and scanning mechanics, add its ID to the `fieldguide:blacklisted` tag.
+
+* **Entities:** `data/fieldguide/tags/entity_type/blacklisted.json`
+* **Blocks:** `data/fieldguide/tags/block/blacklisted.json`
+
+*Example (`data/fieldguide/tags/entity_type/blacklisted.json`):*
+```json
+{
+  "replace": false,
+  "values": [
+    "minecraft:armor_stand",
+    "minecraft:giant",
+    "minecraft:illusioner"
+  ]
+}
+
+```
+
+**Per-Category Blacklists:**
+You can also blacklist entries from appearing in *specific* categories without hiding them globally. To do this, create a tag formatted as `fieldguide:blacklisted/<category_namespace>/<category_path>`.
+
+For example, to prevent Zombie Piglins from appearing in the `fieldguide:monsters` category (but allow them to appear elsewhere), you would create this file:
+
+*File:* `data/fieldguide/tags/entity_type/blacklisted/fieldguide/monsters.json`
+
+```json
+{
+  "replace": false,
+  "values": [
+    "minecraft:zombified_piglin"
+  ]
+}
+
+```
