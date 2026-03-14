@@ -56,13 +56,9 @@ mods:
 
 ## Future Plans
 
-### 1.21.1+ Update
-
-1.21.1 port is planned and will happen soon! — please don't ask for it!
-
 ### Expanded integration with other mods
 
-We've got exciting features planned for integrations with mods like Jade/WAILA, EMI, Reliable Remover, Exposure and
+We've got exciting features planned for integrations with mods like Jade/WAILA, EMI, and
 Scholar - Stay tuned!
 
 ### More features...
