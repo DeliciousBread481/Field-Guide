@@ -329,7 +329,7 @@ public class FieldGuideScanner {
             }
         }
 
-        if (maxScore == 0) {
+        if (maxScore < 4) {
             for (Object entry : possibleEntries) {
                 if (entry.equals(actualTargetKey)) return entry;
                 if (entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() != null && composite.displayEntry().equals(actualTargetKey)) {

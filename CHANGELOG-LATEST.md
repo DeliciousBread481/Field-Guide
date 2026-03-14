@@ -5,6 +5,7 @@
 - Added many more default blacklist entries.
 - Added new config options for naked eye scanning and scan distance.
 - Added optional keybind to initiate scanning when bound.
+- Added compatibility with mods like Curios, Trinkets, and Accessories for Spyglass scanning.
 
 ### Changed
 
