@@ -1,7 +1,8 @@
 ### Added
 
-- Added Spanish translations (@Pyeko).
+- Added many more modded bosses to the default bosses category.
+- Added French localization (@TheCreateMaster).
 
 ### Fixed
 
-- Fixed potential NPE.
+- Fixed Autumnity large pumpkin render.
