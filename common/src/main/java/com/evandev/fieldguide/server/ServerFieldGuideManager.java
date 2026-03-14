@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.server;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CategoryEntry;
@@ -26,7 +27,6 @@ import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.Item;
@@ -444,6 +444,10 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                     Constants.LOG.error("Failed to load redirect: {}", entry.getKey(), e);
                 }
             }
+        }
+
+        if (Services.PLATFORM.isModLoaded("cobblemon")) {
+            FieldGuideCobblemonCompat.injectCategory(data.categories, resourceManager);
         }
 
         return data;

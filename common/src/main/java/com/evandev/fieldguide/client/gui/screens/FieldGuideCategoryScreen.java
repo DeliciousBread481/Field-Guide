@@ -51,7 +51,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
     public static int lastOpenedJournalPage = 0;
     private static Registry<Biome> biomeRegistry;
     private static ResourceLocation lastOpenedCategory = null;
-    private final Map<EntityType<?>, Entity> entryCache = new HashMap<>();
+    private final Map<ResourceLocation, Entity> entryCache = new HashMap<>();
     public boolean isSearching = false;
     private boolean initialSearchFocus = false;
     private ItemStack searchItemStack;
@@ -364,16 +364,11 @@ public class FieldGuideCategoryScreen extends BookScreen {
         ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
         EntryVisual visual = entryId != null ? ClientFieldGuideManager.getInstance().getEntryVisual(entryId) : null;
         Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
+        boolean isCobblemon = entry instanceof CompositeFieldGuideEntry comp && comp.id() != null && comp.id().getNamespace().equals("fieldguide") && comp.id().getPath().startsWith("cobblemon/");
 
-        if (coreEntry instanceof EntityType<?> type) {
-            Entity entity = entryCache.get(type);
-            if (entity == null && Objects.requireNonNull(this.minecraft).level != null) {
-                try {
-                    entity = type.create(this.minecraft.level);
-                    entryCache.put(type, entity);
-                } catch (Exception ignored) {
-                }
-            }
+        if (coreEntry instanceof EntityType<?> || isCobblemon) {
+            Entity entity = getCachedEntity(entry);
+
             if (entity != null && ClientFieldGuideManager.isUnlocked(entry)) {
                 if (visual != null && visual.customSound != null) {
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(visual.customSound), 1.0F, 1.0F));
@@ -696,6 +691,31 @@ public class FieldGuideCategoryScreen extends BookScreen {
         }
     }
 
+    private Entity getCachedEntity(Object entry) {
+        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        if (id == null) return null;
+        if (entryCache.containsKey(id)) return entryCache.get(id);
+
+        if (this.minecraft == null || this.minecraft.level == null) return null;
+
+        Entity entity = null;
+        if (entry instanceof CompositeFieldGuideEntry && id.getNamespace().equals("fieldguide") && id.getPath().startsWith("cobblemon/")) {
+            entity = com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
+        } else {
+            Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
+            if (coreEntry instanceof EntityType<?> type) {
+                try {
+                    entity = type.create(this.minecraft.level);
+                } catch (Exception e) {
+                    Constants.LOG.error("Failed to create entity for guide: {}", type.getDescription().getString());
+                }
+            }
+        }
+
+        entryCache.put(id, entity);
+        return entity;
+    }
+
     private void renderNewLabel(GuiGraphics guiGraphics, Bounds bounds) {
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0, 0, 200);
@@ -750,6 +770,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
     private void renderEntryInGrid(GuiGraphics guiGraphics, Object entry, int x, int y, int scale, boolean unlocked) {
         Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
+        boolean isCobblemon = entry instanceof CompositeFieldGuideEntry comp && comp.id() != null && comp.id().getNamespace().equals("fieldguide") && comp.id().getPath().startsWith("cobblemon/");
 
         if (unlocked && Services.PLATFORM.isModLoaded("exposure") && ModConfig.get().exposureShowPhotographsInGrid) {
             ItemStack existingPhoto = ProgressManager.getInstance().getPhotograph(entry);
@@ -767,24 +788,12 @@ public class FieldGuideCategoryScreen extends BookScreen {
             } else {
                 EntryRenderHelper.renderBlock(guiGraphics, block, x, y, 15.0F, unlocked, false, 1.0F);
             }
-        } else if (coreEntry instanceof EntityType<?> type) {
-            if (this.minecraft != null && this.minecraft.level != null) {
-                Entity entity = entryCache.get(type);
-                if (entity == null && !entryCache.containsKey(type)) {
-                    if (this.minecraft.level != null) {
-                        try {
-                            entity = type.create(this.minecraft.level);
-                            if (entity != null) {
-                                entryCache.put(type, entity);
-                            }
-                        } catch (Exception e) {
-                            Constants.LOG.error("Failed to create entity for guide: {}", type.getDescription().getString());
-                            entryCache.put(type, null);
-                        }
-                    }
-                }
-
-                if (entity instanceof LivingEntity living) {
+        } else if (coreEntry instanceof EntityType<?> || isCobblemon) {
+            Entity entity = getCachedEntity(entry);
+            if (entity instanceof LivingEntity living) {
+                if (isCobblemon) {
+                    EntryRenderHelper.renderCobblemon(guiGraphics, (CompositeFieldGuideEntry) entry, x, y, CELL_SIZE - 8, CELL_SIZE - 8, scale, unlocked, false, 1.0F);
+                } else {
                     EntryRenderHelper.renderEntityNormalized(guiGraphics, living, x, y, CELL_SIZE - 8, CELL_SIZE - 8, scale, unlocked, false, 1.0F);
                 }
             }

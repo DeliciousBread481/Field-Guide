@@ -1,9 +1,13 @@
 package com.evandev.fieldguide.util;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.reliableremover.ReliableRemoverCompat;
 import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.data.*;
+import com.evandev.fieldguide.data.Category;
+import com.evandev.fieldguide.data.CategoryEntry;
+import com.evandev.fieldguide.data.CompositeDefinition;
+import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.platform.Services;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -254,6 +258,10 @@ public class EntryResolver {
     }
 
     private static Optional<Object> resolveSingleEntry(ResourceLocation id, ResourceLocation categoryId) {
+        if (Services.PLATFORM.isModLoaded("cobblemon") && id.getNamespace().equals("fieldguide") && id.getPath().startsWith("cobblemon/")) {
+            return Optional.of(new CompositeFieldGuideEntry(id, null, new ArrayList<>(), null, null));
+        }
+
         return BuiltInRegistries.ENTITY_TYPE.getOptional(id)
                 .filter(t -> isValidEntity(t, categoryId))
                 .map(Object.class::cast)
@@ -349,7 +357,7 @@ public class EntryResolver {
                 List<Object> components = Arrays.asList(block, leaves, log);
 
                 results.add(new CompositeFieldGuideEntry(
-                       new ResourceLocation(id.getNamespace(), baseName + "_tree"),
+                        new ResourceLocation(id.getNamespace(), baseName + "_tree"),
                         block,
                         components,
                         null,

@@ -3,6 +3,7 @@ package com.evandev.fieldguide.client.gui.util;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.data.EntryVisual;
+import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.mixin.accessor.EntityAccessor;
@@ -22,6 +23,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.WaterAnimal;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
@@ -43,6 +45,7 @@ public class EntryRenderHelper {
     public static void clearCache() {
         OVERRIDE_CACHE.clear();
         IconCacheManager.clearCache();
+        FieldGuideCobblemonCompat.clearCache();
     }
 
     private static Optional<ResourceLocation> getResourcePackOverride(Object entry, boolean isPage) {
@@ -244,6 +247,85 @@ public class EntryRenderHelper {
         }
 
         textureOpt.ifPresent(texture -> drawCachedTexture(guiGraphics, texture, x, y, (int) (baseScale * 2), (int) (baseScale * 2), unlocked, isPage, bounceScale));
+    }
+
+    public static void renderCobblemon(GuiGraphics guiGraphics, CompositeFieldGuideEntry entry, int x, int y, int maxWidth, int maxHeight, float baseScale, boolean unlocked, boolean isPage, float bounceScale) {
+        Optional<ResourceLocation> textureOpt = getResourcePackOverride(entry, isPage);
+
+        if (textureOpt.isEmpty()) {
+            textureOpt = IconCacheManager.getOrGenerateIcon(entry, isPage, () -> {
+                Level level = Minecraft.getInstance().level;
+                if (level == null) return;
+
+                LivingEntity entity = FieldGuideCobblemonCompat.getDummyPokemon(entry.id(), level);
+                if (entity == null) return;
+
+                setupFieldGuideEntityLighting();
+                ResourceLocation id = entry.id();
+                EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(id);
+
+                float visualScale = visual.scale;
+                float yOff = visual.yOffset;
+                float xOff = visual.xOffset;
+
+                if (isPage) {
+                    if (visual.pageScale != null) visualScale = visual.pageScale;
+                    if (visual.pageYOffset != null) yOff = visual.pageYOffset;
+                    if (visual.pageXOffset != null) xOff = visual.pageXOffset;
+                } else {
+                    if (visual.gridScale != null) visualScale = visual.gridScale;
+                    if (visual.gridYOffset != null) yOff = visual.gridYOffset;
+                    if (visual.gridXOffset != null) xOff = visual.gridXOffset;
+                }
+
+                float dynamicFactor = getScaleFactorForEntity(entity);
+                float clampedScale = 85.0F * dynamicFactor * visualScale;
+                float entityHeight = entity.getBbHeight();
+                float entityWidth = entity.getBbWidth();
+                float maxDimension = Math.max(entityHeight, entityWidth);
+
+                float safetyClamp = isPage ? 250.0F : 230.0F;
+
+                if (maxDimension * clampedScale > safetyClamp) {
+                    clampedScale = safetyClamp / maxDimension;
+                }
+
+                PoseStack pose = new PoseStack();
+                pose.scale(clampedScale, -clampedScale, -clampedScale);
+                pose.mulPose(Axis.XP.rotationDegrees(30.0F));
+                pose.mulPose(Axis.YP.rotationDegrees(-30.0F));
+                pose.translate((xOff / clampedScale), (entityHeight / -2.0F) + (yOff / clampedScale), 0);
+
+                entity.setYRot(0.0F);
+                entity.setXRot(0.0F);
+                entity.yHeadRot = 0.0F;
+                entity.yHeadRotO = 0.0F;
+                entity.yBodyRot = 0.0F;
+                entity.yBodyRotO = 0.0F;
+
+                entity.tickCount = 0;
+                entity.walkAnimation.setSpeed(0.0F);
+                entity.walkAnimation.position(0.0F);
+                entity.attackAnim = 0.0F;
+                entity.oAttackAnim = 0.0F;
+
+                if (entity instanceof net.minecraft.world.entity.animal.WaterAnimal) {
+                    ((com.evandev.fieldguide.mixin.accessor.EntityAccessor) entity).fieldguide$setWasTouchingWater(true);
+                }
+
+                MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
+                try {
+                    Minecraft.getInstance().getEntityRenderDispatcher().render(entity, 0, 0, 0, 0.0F, 1.0F, pose, buffers, LightTexture.FULL_BRIGHT);
+                    Minecraft.getInstance().getEntityRenderDispatcher().render(entity, 0, 0, 0, 0.0F, 1.0F, pose, buffers, LightTexture.FULL_BRIGHT);
+                } catch (Exception e) {
+                    Constants.LOG.error("Failed to render Cobblemon in Field Guide: {}", id, e);
+                } finally {
+                    buffers.endBatch();
+                }
+            });
+        }
+
+        textureOpt.ifPresent(texture -> drawCachedTexture(guiGraphics, texture, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale));
     }
 
     public static void renderStructure(GuiGraphics guiGraphics, CompositeFieldGuideEntry composite, int x, int y, int size, boolean unlocked, boolean isPage, float bounceScale) {

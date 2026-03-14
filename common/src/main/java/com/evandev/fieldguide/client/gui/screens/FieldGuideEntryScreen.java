@@ -56,6 +56,13 @@ public class FieldGuideEntryScreen extends BookScreen {
         return Component.translatable("fieldguide.undiscovered");
     }
 
+    private boolean isCobblemon(Object entry) {
+        return entry instanceof CompositeFieldGuideEntry comp &&
+                comp.id() != null &&
+                comp.id().getNamespace().equals("fieldguide") &&
+                comp.id().getPath().startsWith("cobblemon/");
+    }
+
     public FieldGuideCategoryScreen getParentScreen() {
         return parent;
     }
@@ -115,8 +122,16 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private void setupEntityPreview() {
+        if (this.minecraft == null || this.minecraft.level == null) return;
+
+        if (isCobblemon(entry)) {
+            ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+            this.renderedEntity = com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
+            return;
+        }
+
         Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
-        if (renderEntry instanceof EntityType<?> type && this.minecraft != null && this.minecraft.level != null) {
+        if (renderEntry instanceof EntityType<?> type) {
             try {
                 this.renderedEntity = type.create(this.minecraft.level);
             } catch (Exception ignored) {
@@ -262,7 +277,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                     EntryVisual visual = entryId != null ? ClientFieldGuideManager.getInstance().getEntryVisual(entryId) : null;
                     if (visual != null && visual.customSound != null && this.minecraft != null) {
                         this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(visual.customSound), 1.0F, 1.0F));
-                    } else if (clickEntry instanceof EntityType<?> && renderedEntity != null) {
+                    } else if ((clickEntry instanceof EntityType<?> || isCobblemon(entry)) && renderedEntity != null) {
                         FieldGuideClient.playMobCry(this.renderedEntity);
                     } else if (clickEntry instanceof Block block && this.minecraft != null) {
                         this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(block.defaultBlockState().getSoundType().getBreakSound(), 1.0F, 1.0F));
@@ -367,9 +382,13 @@ public class FieldGuideEntryScreen extends BookScreen {
                     EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 40.0F, unlocked, true, bounce);
                 }
             }
-        } else if (renderEntry instanceof EntityType && renderedEntity instanceof LivingEntity living) {
+        } else if ((renderEntry instanceof EntityType || isCobblemon(entry)) && renderedEntity instanceof LivingEntity living) {
             if (!hideEntity) {
-                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 112, 112, 100, unlocked, true, bounce);
+                if (isCobblemon(entry)) {
+                    EntryRenderHelper.renderCobblemon(guiGraphics, (CompositeFieldGuideEntry) entry, xPos, yPos, 112, 112, 100, unlocked, true, bounce);
+                } else {
+                    EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 112, 112, 100, unlocked, true, bounce);
+                }
             }
             if (unlocked) {
                 renderAttributes(guiGraphics, living);
@@ -385,14 +404,14 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private void renderAlignment(GuiGraphics guiGraphics, LivingEntity entity, int mouseX, int mouseY) {
-        if (entry instanceof EntityType<?> type) {
+        if (entry instanceof EntityType<?> || isCobblemon(entry)) {
             ResourceLocation icon;
             Component typeComponent;
 
             if (entity instanceof NeutralMob) {
                 icon = Constants.NEUTRAL_ICON;
                 typeComponent = Component.translatable("fieldguide.alignment.neutral");
-            } else if (type.getCategory() == MobCategory.MONSTER) {
+            } else if (entry instanceof EntityType<?> type && type.getCategory() == MobCategory.MONSTER) {
                 icon = Constants.HOSTILE_ICON;
                 typeComponent = Component.translatable("fieldguide.alignment.hostile");
             } else {

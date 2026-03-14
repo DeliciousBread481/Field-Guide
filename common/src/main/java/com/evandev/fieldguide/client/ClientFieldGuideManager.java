@@ -87,6 +87,15 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         String custom = ProgressManager.getInstance().getCustomDescription(entry);
         if (custom != null) return custom;
 
+        if (id.getNamespace().equals("fieldguide") && id.getPath().startsWith("cobblemon/")) {
+            String species = id.getPath().substring("cobblemon/".length());
+            int underscore = species.lastIndexOf('_');
+            if (underscore != -1) species = species.substring(0, underscore);
+
+            String descKey = "cobblemon.species." + species + ".desc";
+            if (I18n.exists(descKey)) return I18n.get(descKey);
+        }
+
         String overrideKey = "fieldguide." + id.getNamespace() + "." + id.getPath() + ".description";
 
         Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
@@ -116,6 +125,17 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     private static Component getDefaultNameComponent(Object entry) {
         ResourceLocation id = getEntryId(entry);
         if (id != null) {
+            if (id.getNamespace().equals("fieldguide") && id.getPath().startsWith("cobblemon/")) {
+                String species = id.getPath().substring("cobblemon/".length());
+                int underscore = species.lastIndexOf('_');
+                if (underscore != -1) species = species.substring(0, underscore);
+
+                String nameKey = "cobblemon.species." + species + ".name";
+                if (I18n.exists(nameKey)) {
+                    return Component.translatable(nameKey);
+                }
+            }
+
             String overrideKey = "fieldguide.name." + id.getNamespace() + "." + id.getPath();
             if (I18n.exists(overrideKey)) {
                 return Component.translatable(overrideKey);
