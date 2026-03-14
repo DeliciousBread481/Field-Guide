@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.server;
 
 import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.EntryResolver;
 import com.evandev.fieldguide.util.ModTags;
 import net.minecraft.core.BlockPos;
@@ -19,7 +20,9 @@ public class ScanVerifier {
 
         if (config.disableScanning) return false;
 
-        boolean hasSpyglass = player.isHolding(s -> s.is(ModTags.Items.SPYGLASSES));
+        boolean hasSpyglass = player.isScoping() ||
+                player.isHolding(s -> s.is(ModTags.Items.SPYGLASSES)) ||
+                Services.PLATFORM.hasSpyglass(player);
 
         double activeScanDist;
         if (hasSpyglass && config.enableSpyglassScanning) {

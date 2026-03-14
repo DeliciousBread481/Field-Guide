@@ -1,5 +1,7 @@
 package com.evandev.fieldguide.platform.services;
 
+import net.minecraft.world.entity.player.Player;
+
 import java.nio.file.Path;
 
 public interface IPlatformHelper {
@@ -27,9 +29,9 @@ public interface IPlatformHelper {
     boolean isDevelopmentEnvironment();
 
     /**
-     * Gets the name of the environment categoryType as a string.
+     * Gets the name of the environment type as a string.
      *
-     * @return The name of the environment categoryType.
+     * @return The name of the environment type.
      */
     default String getEnvironmentName() {
         return isDevelopmentEnvironment() ? "development" : "production";
@@ -42,4 +44,13 @@ public interface IPlatformHelper {
      */
     Path getConfigDirectory();
 
+    /**
+     * Checks if the player has a spyglass equipped in a platform-specific slot (e.g., Curios, Trinkets)
+     *
+     * @param player The player to check.
+     * @return True if a spyglass is equipped in a special slot, false otherwise.
+     */
+    default boolean hasSpyglass(Player player) {
+        return false;
+    }
 }
