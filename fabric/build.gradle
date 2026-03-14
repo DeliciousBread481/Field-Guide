@@ -39,6 +39,9 @@ dependencies {
     modImplementation "maven.modrinth:exposure:${exposure_fabric_version}"
     modImplementation "maven.modrinth:forge-config-api-port:${fcapi_version}-Fabric"
 
+    // Cobblemon
+    modCompileOnly "com.cobblemon:fabric:${cobblemon_version}"
+
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
     implementation project(":common")
 }

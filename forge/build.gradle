@@ -69,6 +69,9 @@ dependencies {
     // Exposure
     modImplementation "maven.modrinth:exposure:${exposure_forge_version}"
 
+    // Cobblemon
+    modCompileOnly "com.cobblemon:forge:${cobblemon_version}"
+
     compileOnly project(":common")
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
 }

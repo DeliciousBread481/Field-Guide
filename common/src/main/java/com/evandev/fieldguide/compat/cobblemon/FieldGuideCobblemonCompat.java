@@ -1,5 +1,10 @@
 package com.evandev.fieldguide.compat.cobblemon;
 
+import com.cobblemon.mod.common.api.pokemon.PokemonSpecies;
+import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
+import com.cobblemon.mod.common.pokemon.FormData;
+import com.cobblemon.mod.common.pokemon.Pokemon;
+import com.cobblemon.mod.common.pokemon.Species;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CategoryEntry;
@@ -8,7 +13,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -21,6 +25,7 @@ import net.minecraft.world.level.Level;
 import java.io.Reader;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public final class FieldGuideCobblemonCompat {
@@ -48,67 +53,58 @@ public final class FieldGuideCobblemonCompat {
         if (!path.startsWith("cobblemon/")) return null;
 
         String speciesAndForm = path.substring("cobblemon/".length());
-        String species = speciesAndForm;
-        String form = "standard";
+        String speciesName = speciesAndForm;
+        String formName = "standard";
 
         int underscoreIndex = speciesAndForm.lastIndexOf('_');
         if (underscoreIndex != -1) {
-            species = speciesAndForm.substring(0, underscoreIndex);
-            form = speciesAndForm.substring(underscoreIndex + 1);
+            speciesName = speciesAndForm.substring(0, underscoreIndex);
+            formName = speciesAndForm.substring(underscoreIndex + 1);
         }
 
-        EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(new ResourceLocation(MOD_ID, POKEMON_PATH));
-
-        Entity entity = type.create(level);
-        if (!(entity instanceof LivingEntity living)) return null;
-
         try {
-            Object pokemon = entity.getClass().getMethod("getPokemon").invoke(entity);
-            Class<?> speciesClass = Class.forName("com.cobblemon.mod.common.api.pokemon.PokemonSpecies");
-            Object speciesRegistry = speciesClass.getField("INSTANCE").get(null);
-            Object speciesObj = speciesRegistry.getClass().getMethod("getByIdentifier", ResourceLocation.class)
-                    .invoke(speciesRegistry, new ResourceLocation(MOD_ID, species));
+            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(new ResourceLocation(MOD_ID, POKEMON_PATH));
+            Entity entity = type.create(level);
 
-            if (speciesObj != null) {
-                for (java.lang.reflect.Method m : pokemon.getClass().getMethods()) {
-                    if (m.getName().equals("setSpecies") && m.getParameterCount() == 1) {
-                        m.invoke(pokemon, speciesObj);
-                        break;
-                    }
-                }
+            if (!(entity instanceof PokemonEntity pokemonEntity)) return null;
 
-                Object formsList = speciesObj.getClass().getMethod("getForms").invoke(speciesObj);
-                if (formsList instanceof java.util.Collection<?> forms) {
-                    Object targetForm = null;
-                    for (Object f : forms) {
-                        String fName = (String) f.getClass().getMethod("getName").invoke(f);
-                        if (fName.equalsIgnoreCase(form)) {
-                            targetForm = f;
-                            break;
-                        }
-                    }
-                    if (targetForm == null) {
-                        targetForm = speciesObj.getClass().getMethod("getStandardForm").invoke(speciesObj);
-                    }
-                    if (targetForm != null) {
-                        for (java.lang.reflect.Method m : pokemon.getClass().getMethods()) {
-                            if (m.getName().equals("setForm") && m.getParameterCount() == 1) {
-                                m.invoke(pokemon, targetForm);
-                                break;
-                            }
-                        }
-                    }
-                }
+            Pokemon pokemon = pokemonEntity.getPokemon();
 
-                pokemon.getClass().getMethod("updateAspects").invoke(pokemon);
-                entity.refreshDimensions();
+            Species species = PokemonSpecies.INSTANCE.getByIdentifier(new ResourceLocation(MOD_ID, speciesName));
+
+            if (species != null) {
+                pokemon.setSpecies(species);
+
+                final String targetFormName = formName;
+                FormData targetForm = species.getForms().stream()
+                        .filter(f -> f.getName().equalsIgnoreCase(targetFormName))
+                        .findFirst()
+                        .orElse(species.getStandardForm());
+
+                pokemon.setForm(targetForm);
+                pokemon.updateAspects();
             }
+
+            pokemonEntity.setYRot(0.0F);
+            pokemonEntity.yRotO = 0.0F;
+            pokemonEntity.setXRot(0.0F);
+            pokemonEntity.xRotO = 0.0F;
+            pokemonEntity.yBodyRot = 0.0F;
+            pokemonEntity.yBodyRotO = 0.0F;
+            pokemonEntity.yHeadRot = 0.0F;
+            pokemonEntity.yHeadRotO = 0.0F;
+
+            pokemonEntity.setNoAi(true);
+            pokemonEntity.refreshDimensions();
+
+            DUMMY_CACHE.put(id, pokemonEntity);
+            return pokemonEntity;
+
         } catch (Exception e) {
             Constants.LOG.error("Failed to construct Cobblemon dummy entity for Field Guide ID: {}", id, e);
         }
 
-        DUMMY_CACHE.put(id, living);
-        return living;
+        return null;
     }
 
     public static boolean isPokemon(Entity entity) {
@@ -123,32 +119,26 @@ public final class FieldGuideCobblemonCompat {
         return MOD_ID.equals(id.getNamespace());
     }
 
+    /**
+     * Resolves the ID cleanly using API methods instead of hacking through NBT data.
+     */
     public static ResourceLocation getPokemonEntryId(Entity entity) {
-        if (!isPokemon(entity)) return BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+        if (!(entity instanceof PokemonEntity pokemonEntity)) {
+            return BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+        }
 
         try {
-            CompoundTag tag = new CompoundTag();
-            entity.saveWithoutId(tag);
+            Pokemon pokemon = pokemonEntity.getPokemon();
+            Species species = pokemon.getSpecies();
+            FormData form = pokemon.getForm();
 
-            String species = "";
-            String form = "standard";
+            String speciesName = species.getResourceIdentifier().getPath();
+            String formName = form.getName();
+            if (formName.isBlank()) formName = "standard";
 
-            if (tag.contains("Pokemon", CompoundTag.TAG_COMPOUND)) {
-                CompoundTag pokemonTag = tag.getCompound("Pokemon");
-                species = pokemonTag.contains("Species") ? pokemonTag.getString("Species") : pokemonTag.getString("species");
-                form = pokemonTag.contains("Form") ? pokemonTag.getString("Form") : pokemonTag.getString("form");
-            } else if (tag.contains("species", CompoundTag.TAG_STRING)) {
-                species = tag.getString("species");
-                if (tag.contains("form", CompoundTag.TAG_STRING)) form = tag.getString("form");
-            }
-
-            if (!species.isEmpty()) {
-                ResourceLocation speciesId = new ResourceLocation(species);
-                if (form.isBlank()) form = "standard";
-                return new ResourceLocation("fieldguide", "cobblemon/" + speciesId.getPath() + "_" + form.toLowerCase());
-            }
+            return new ResourceLocation("fieldguide", "cobblemon/" + speciesName + "_" + formName.toLowerCase(Locale.ROOT));
         } catch (Exception e) {
-            Constants.LOG.error("Failed to parse Cobblemon NBT for Field Guide ID", e);
+            Constants.LOG.error("Failed to parse Cobblemon properties for Field Guide ID", e);
         }
 
         return BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
@@ -175,7 +165,7 @@ public final class FieldGuideCobblemonCompat {
                         JsonObject json = GsonHelper.parse(reader);
 
                         if (json.has("name")) {
-                            String speciesName = json.get("name").getAsString().toLowerCase();
+                            String speciesName = json.get("name").getAsString().toLowerCase(Locale.ROOT);
 
                             ResourceLocation entryId = new ResourceLocation("fieldguide", "cobblemon/" + speciesName + "_standard");
                             cobblemonCategory.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, entryId, entryId, null, null, null, null));
@@ -183,8 +173,8 @@ public final class FieldGuideCobblemonCompat {
                             if (json.has("forms")) {
                                 JsonArray forms = json.getAsJsonArray("forms");
                                 for (JsonElement formEl : forms) {
-                                    String formName = formEl.getAsJsonObject().get("name").getAsString().toLowerCase();
-                                    if (!formName.equals("standard")) {
+                                    String formName = formEl.getAsJsonObject().get("name").getAsString().toLowerCase(Locale.ROOT);
+                                    if (!formName.equals("standard") && !formName.equals("normal") && !formName.equals("base")) {
                                         ResourceLocation formId = new ResourceLocation("fieldguide", "cobblemon/" + speciesName + "_" + formName);
                                         cobblemonCategory.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, formId, formId, null, null, null, null));
                                     }

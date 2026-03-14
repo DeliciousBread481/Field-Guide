@@ -140,7 +140,9 @@ public class EntryRenderHelper {
                 pose.translate((xOff / clampedScale), (entityHeight / -2.0F) + (yOff / clampedScale), 0);
 
                 entity.setYRot(0.0F);
+                entity.yRotO = 0.0F;
                 entity.setXRot(0.0F);
+                entity.xRotO = 0.0F;
                 entity.yHeadRot = 0.0F;
                 entity.yHeadRotO = 0.0F;
                 entity.yBodyRot = 0.0F;
@@ -297,7 +299,9 @@ public class EntryRenderHelper {
                 pose.translate((xOff / clampedScale), (entityHeight / -2.0F) + (yOff / clampedScale), 0);
 
                 entity.setYRot(0.0F);
+                entity.yRotO = 0.0F;
                 entity.setXRot(0.0F);
+                entity.xRotO = 0.0F;
                 entity.yHeadRot = 0.0F;
                 entity.yHeadRotO = 0.0F;
                 entity.yBodyRot = 0.0F;
