@@ -64,10 +64,16 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.disableScanning = newValue)
                 .build());
 
-        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.require_spyglass"), config.requireSpyglass)
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.enable_spyglass_scanning"), config.enableSpyglassScanning)
                 .setDefaultValue(true)
-                .setTooltip(Component.translatable("option.fieldguide.require_spyglass.tooltip"))
-                .setSaveConsumer(newValue -> config.requireSpyglass = newValue)
+                .setTooltip(Component.translatable("option.fieldguide.enable_spyglass_scanning.tooltip"))
+                .setSaveConsumer(newValue -> config.enableSpyglassScanning = newValue)
+                .build());
+
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.enable_naked_eye_scanning"), config.enableNakedEyeScanning)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.fieldguide.enable_naked_eye_scanning.tooltip"))
+                .setSaveConsumer(newValue -> config.enableNakedEyeScanning = newValue)
                 .build());
 
         general.addEntry(entryBuilder.startDoubleField(Component.translatable("option.fieldguide.scan_speed"), config.scanSpeed)
@@ -78,12 +84,20 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.scanSpeed = newValue)
                 .build());
 
-        general.addEntry(entryBuilder.startDoubleField(Component.translatable("option.fieldguide.scan_distance"), config.scanDistance)
+        general.addEntry(entryBuilder.startDoubleField(Component.translatable("option.fieldguide.spyglass_scan_distance"), config.spyglassScanDistance)
                 .setDefaultValue(64.0D)
                 .setMin(1.0D)
                 .setMax(256.0D)
-                .setTooltip(Component.translatable("option.fieldguide.scan_distance.tooltip"))
-                .setSaveConsumer(newValue -> config.scanDistance = newValue)
+                .setTooltip(Component.translatable("option.fieldguide.spyglass_scan_distance.tooltip"))
+                .setSaveConsumer(newValue -> config.spyglassScanDistance = newValue)
+                .build());
+
+        general.addEntry(entryBuilder.startDoubleField(Component.translatable("option.fieldguide.naked_eye_scan_distance"), config.nakedEyeScanDistance)
+                .setDefaultValue(10.0D)
+                .setMin(1.0D)
+                .setMax(256.0D)
+                .setTooltip(Component.translatable("option.fieldguide.naked_eye_scan_distance.tooltip"))
+                .setSaveConsumer(newValue -> config.nakedEyeScanDistance = newValue)
                 .build());
 
         general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.grant_xp_on_scan"), config.grantXpOnScan)

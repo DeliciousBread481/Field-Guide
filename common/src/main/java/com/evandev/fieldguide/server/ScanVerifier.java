@@ -19,19 +19,28 @@ public class ScanVerifier {
 
         if (config.disableScanning) return false;
 
-        if (config.requireSpyglass) {
-            if (!player.isHolding(s -> s.is(ModTags.Items.SPYGLASSES))) return false;
+        boolean hasSpyglass = player.isHolding(s -> s.is(ModTags.Items.SPYGLASSES));
+
+        double activeScanDist;
+        if (hasSpyglass && config.enableSpyglassScanning) {
+            activeScanDist = config.spyglassScanDistance;
+        } else if (config.enableNakedEyeScanning) {
+            activeScanDist = config.nakedEyeScanDistance;
+        } else {
+            return false;
         }
 
         ResourceLocation categoryId = ServerFieldGuideManager.getInstance().getCategoryForEntryId(entryId);
 
-        double maxDistSq = config.scanDistance * config.scanDistance;
+        double maxDistSq = activeScanDist * activeScanDist;
         ServerLevel level = player.serverLevel();
 
         if (targetEntityId != 0) {
-            if (!verifyEntityPresence(player, scannedTargetId, targetEntityId, level, maxDistSq, categoryId)) return false;
+            if (!verifyEntityPresence(player, scannedTargetId, targetEntityId, level, maxDistSq, categoryId))
+                return false;
         } else if (targetBlockPos != null) {
-            if (!verifyBlockPresence(player, scannedTargetId, targetBlockPos, level, maxDistSq, categoryId)) return false;
+            if (!verifyBlockPresence(player, scannedTargetId, targetBlockPos, level, maxDistSq, categoryId))
+                return false;
         } else {
             return false;
         }
