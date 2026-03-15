@@ -15,9 +15,67 @@ public class UpdateEntryDataPacket {
 
     private static final int MAX_NAME_LENGTH = FieldGuideLimits.MAX_ENTRY_NAME_LENGTH;
     private static final int MAX_DESCRIPTION_LENGTH = FieldGuideLimits.MAX_ENTRY_DESCRIPTION_LENGTH;
+    private final Action action;
+    private final ResourceLocation entryId;
+    private final Data data;
+
+    private UpdateEntryDataPacket(Action action, ResourceLocation entryId, Data data) {
+        this.action = action;
+        this.entryId = entryId;
+        this.data = data;
+    }
+
+    public UpdateEntryDataPacket(FriendlyByteBuf buf) {
+        this.action = buf.readEnum(Action.class);
+        this.entryId = buf.readResourceLocation();
+        this.data = switch (action) {
+            case SET_NAME -> new NameData(buf.readUtf(MAX_NAME_LENGTH));
+            case SET_DESCRIPTION -> new DescriptionData(buf.readUtf(MAX_DESCRIPTION_LENGTH));
+            case SET_PHOTOGRAPH -> new PhotographData(buf.readVarInt());
+            case REMOVE_PHOTOGRAPH -> new RemovePhotographData();
+        };
+    }
+
+    public static UpdateEntryDataPacket setName(ResourceLocation entryId, String name) {
+        return new UpdateEntryDataPacket(Action.SET_NAME, entryId, new NameData(name));
+    }
+
+    public static UpdateEntryDataPacket setDescription(ResourceLocation entryId, String description) {
+        return new UpdateEntryDataPacket(Action.SET_DESCRIPTION, entryId, new DescriptionData(description));
+    }
+
+    public static UpdateEntryDataPacket setPhotograph(ResourceLocation entryId, int slot) {
+        return new UpdateEntryDataPacket(Action.SET_PHOTOGRAPH, entryId, new PhotographData(slot));
+    }
+
+    public static UpdateEntryDataPacket removePhotograph(ResourceLocation entryId) {
+        return new UpdateEntryDataPacket(Action.REMOVE_PHOTOGRAPH, entryId, new RemovePhotographData());
+    }
+
+    public void encode(FriendlyByteBuf buf) {
+        buf.writeEnum(action);
+        buf.writeResourceLocation(entryId);
+        data.encode(buf);
+    }
+
+    public void handleServer(ServerPlayer player) {
+        if (player == null) return;
+        PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
+        if (progress == null || !progress.isUnlocked(entryId)) return;
+
+        data.apply(entryId.toString(), progress, player);
+    }
+
+    private enum Action {
+        SET_NAME,
+        SET_DESCRIPTION,
+        SET_PHOTOGRAPH,
+        REMOVE_PHOTOGRAPH
+    }
 
     private interface Data {
         void encode(FriendlyByteBuf buf);
+
         void apply(String entryId, PlayerFieldGuideProgress progress, ServerPlayer player);
     }
 
@@ -54,12 +112,29 @@ public class UpdateEntryDataPacket {
         @Override
         public void apply(String entryId, PlayerFieldGuideProgress progress, ServerPlayer player) {
             if (!Services.PLATFORM.isModLoaded("exposure")) return;
-            if (slot < 0 || slot >= player.getInventory().getContainerSize()) return;
-            ItemStack stack = player.getInventory().getItem(slot);
+
+            ItemStack stack = ItemStack.EMPTY;
+
+            if (slot >= 0 && slot < player.getInventory().getContainerSize()) {
+                stack = player.getInventory().getItem(slot);
+            }
+
+            if ((stack.isEmpty() || !ExposureCompat.isPhotographItem(stack)) && slot >= 0 && slot < player.containerMenu.slots.size()) {
+                stack = player.containerMenu.getSlot(slot).getItem();
+            }
+
+            if (stack.isEmpty() || !ExposureCompat.isPhotographItem(stack)) {
+                ItemStack carried = player.containerMenu.getCarried();
+                if (!carried.isEmpty() && ExposureCompat.isPhotographItem(carried)) {
+                    stack = carried;
+                }
+            }
+
             if (stack.isEmpty() || !ExposureCompat.isPhotographItem(stack)) {
                 progress.markEntryForResync(entryId);
                 return;
             }
+
             CompoundTag tag = new CompoundTag();
             stack.save(tag);
             progress.setPhotograph(entryId, tag.toString());
@@ -75,63 +150,5 @@ public class UpdateEntryDataPacket {
         public void apply(String entryId, PlayerFieldGuideProgress progress, ServerPlayer player) {
             progress.setPhotograph(entryId, null);
         }
-    }
-
-    private enum Action {
-        SET_NAME,
-        SET_DESCRIPTION,
-        SET_PHOTOGRAPH,
-        REMOVE_PHOTOGRAPH
-    }
-
-    private final Action action;
-    private final ResourceLocation entryId;
-    private final Data data;
-
-    private UpdateEntryDataPacket(Action action, ResourceLocation entryId, Data data) {
-        this.action = action;
-        this.entryId = entryId;
-        this.data = data;
-    }
-
-    public static UpdateEntryDataPacket setName(ResourceLocation entryId, String name) {
-        return new UpdateEntryDataPacket(Action.SET_NAME, entryId, new NameData(name));
-    }
-
-    public static UpdateEntryDataPacket setDescription(ResourceLocation entryId, String description) {
-        return new UpdateEntryDataPacket(Action.SET_DESCRIPTION, entryId, new DescriptionData(description));
-    }
-
-    public static UpdateEntryDataPacket setPhotograph(ResourceLocation entryId, int slot) {
-        return new UpdateEntryDataPacket(Action.SET_PHOTOGRAPH, entryId, new PhotographData(slot));
-    }
-
-    public static UpdateEntryDataPacket removePhotograph(ResourceLocation entryId) {
-        return new UpdateEntryDataPacket(Action.REMOVE_PHOTOGRAPH, entryId, new RemovePhotographData());
-    }
-
-    public UpdateEntryDataPacket(FriendlyByteBuf buf) {
-        this.action = buf.readEnum(Action.class);
-        this.entryId = buf.readResourceLocation();
-        this.data = switch (action) {
-            case SET_NAME -> new NameData(buf.readUtf(MAX_NAME_LENGTH));
-            case SET_DESCRIPTION -> new DescriptionData(buf.readUtf(MAX_DESCRIPTION_LENGTH));
-            case SET_PHOTOGRAPH -> new PhotographData(buf.readVarInt());
-            case REMOVE_PHOTOGRAPH -> new RemovePhotographData();
-        };
-    }
-
-    public void encode(FriendlyByteBuf buf) {
-        buf.writeEnum(action);
-        buf.writeResourceLocation(entryId);
-        data.encode(buf);
-    }
-
-    public void handleServer(ServerPlayer player) {
-        if (player == null) return;
-        PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
-        if (progress == null || !progress.isUnlocked(entryId)) return;
-
-        data.apply(entryId.toString(), progress, player);
     }
 }

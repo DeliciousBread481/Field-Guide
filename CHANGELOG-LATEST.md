@@ -6,3 +6,4 @@
 ### Fixed
 
 - Fixed certain commands causing client crashes.
+- Fixed selected Exposure photographs for entries not persisting.

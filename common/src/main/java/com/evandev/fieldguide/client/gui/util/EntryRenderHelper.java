@@ -320,8 +320,8 @@ public class EntryRenderHelper {
                 entity.attackAnim = 0.0F;
                 entity.oAttackAnim = 0.0F;
 
-                if (entity instanceof net.minecraft.world.entity.animal.WaterAnimal) {
-                    ((com.evandev.fieldguide.mixin.accessor.EntityAccessor) entity).fieldguide$setWasTouchingWater(true);
+                if (entity instanceof WaterAnimal) {
+                    ((EntityAccessor) entity).fieldguide$setWasTouchingWater(true);
                 }
 
                 MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();

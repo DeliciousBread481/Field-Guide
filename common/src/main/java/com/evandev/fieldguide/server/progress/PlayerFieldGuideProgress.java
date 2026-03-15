@@ -146,6 +146,7 @@ public class PlayerFieldGuideProgress {
             entryPhotographs.put(entryId, nbtString);
         }
         dirty = true;
+        pendingEntryResync.add(entryId);
     }
 
     public void setJournalTitle(String title) {

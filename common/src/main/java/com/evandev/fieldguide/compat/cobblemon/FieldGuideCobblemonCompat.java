@@ -9,8 +9,6 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CategoryEntry;
 import com.evandev.fieldguide.platform.Services;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -66,7 +64,6 @@ public final class FieldGuideCobblemonCompat {
             if (!(entity instanceof PokemonEntity pokemonEntity)) return null;
 
             Pokemon pokemon = pokemonEntity.getPokemon();
-
             Species species = PokemonSpecies.INSTANCE.getByIdentifier(new ResourceLocation(MOD_ID, speciesName));
 
             if (species != null) {
@@ -92,7 +89,7 @@ public final class FieldGuideCobblemonCompat {
             pokemonEntity.setYHeadRot(0.0F);
             pokemonEntity.yHeadRot = 0.0F;
             pokemonEntity.yHeadRotO = 0.0F;
-            pokemonEntity.setUUID(UUID.nameUUIDFromBytes(id.toString().getBytes()));
+            pokemonEntity.setUUID(new UUID(0L, 0L));
 
             pokemonEntity.setNoAi(true);
             pokemonEntity.refreshDimensions();
@@ -107,18 +104,6 @@ public final class FieldGuideCobblemonCompat {
         return null;
     }
 
-    public static boolean isPokemon(Entity entity) {
-        if (entity == null || !Services.PLATFORM.isModLoaded(MOD_ID)) return false;
-        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
-        return MOD_ID.equals(id.getNamespace()) && POKEMON_PATH.equals(id.getPath());
-    }
-
-    public static boolean isPokemonType(EntityType<?> type) {
-        if (!Services.PLATFORM.isModLoaded(MOD_ID)) return false;
-        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
-        return MOD_ID.equals(id.getNamespace());
-    }
-
     public static ResourceLocation getPokemonEntryId(Entity entity) {
         if (!(entity instanceof PokemonEntity pokemonEntity)) {
             return BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
@@ -127,35 +112,14 @@ public final class FieldGuideCobblemonCompat {
         try {
             Pokemon pokemon = pokemonEntity.getPokemon();
             Species species = pokemon.getSpecies();
-            FormData form = pokemon.getForm();
 
             String speciesName = species.getResourceIdentifier().getPath();
-            String formName = form.getName();
-            if (formName.isBlank()) formName = "standard";
-
-            return new ResourceLocation("fieldguide", "cobblemon/" + speciesName + "_" + formName.toLowerCase(Locale.ROOT));
+            return new ResourceLocation("fieldguide", "cobblemon/" + speciesName + "_standard");
         } catch (Exception e) {
             Constants.LOG.error("Failed to parse Cobblemon properties for Field Guide ID", e);
         }
 
         return BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
-    }
-
-    public static void cycleCobblemonForm(LivingEntity dummyEntity) {
-        if (!(dummyEntity instanceof PokemonEntity pokemonEntity)) return;
-
-        Pokemon pokemon = pokemonEntity.getPokemon();
-        Species species = pokemon.getSpecies();
-        List<FormData> forms = species.getForms();
-
-        if (forms.isEmpty()) return;
-
-        int currentIndex = forms.indexOf(pokemon.getForm());
-        int nextIndex = (currentIndex + 1) % forms.size();
-
-        pokemon.setForm(forms.get(nextIndex));
-        pokemon.updateAspects();
-        pokemonEntity.refreshDimensions();
     }
 
     /**
@@ -183,22 +147,40 @@ public final class FieldGuideCobblemonCompat {
 
                             ResourceLocation entryId = new ResourceLocation("fieldguide", "cobblemon/" + speciesName + "_standard");
                             cobblemonCategory.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, entryId, entryId, null, null, null, null));
-
-                            if (json.has("forms")) {
-                                JsonArray forms = json.getAsJsonArray("forms");
-                                for (JsonElement formEl : forms) {
-                                    String formName = formEl.getAsJsonObject().get("name").getAsString().toLowerCase(Locale.ROOT);
-                                    if (!formName.equals("standard") && !formName.equals("normal") && !formName.equals("base")) {
-                                        ResourceLocation formId = new ResourceLocation("fieldguide", "cobblemon/" + speciesName + "_" + formName);
-                                        cobblemonCategory.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, formId, formId, null, null, null, null));
-                                    }
-                                }
-                            }
                         }
                     } catch (Exception ignored) {
                     }
                 }
             }
         }
+    }
+
+    public static boolean isPokemon(Entity entity) {
+        if (entity == null || !Services.PLATFORM.isModLoaded(MOD_ID)) return false;
+        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+        return MOD_ID.equals(id.getNamespace()) && POKEMON_PATH.equals(id.getPath());
+    }
+
+    public static boolean isPokemonType(EntityType<?> type) {
+        if (!Services.PLATFORM.isModLoaded(MOD_ID)) return false;
+        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        return MOD_ID.equals(id.getNamespace());
+    }
+
+    public static void cycleCobblemonForm(LivingEntity dummyEntity) {
+        if (!(dummyEntity instanceof PokemonEntity pokemonEntity)) return;
+
+        Pokemon pokemon = pokemonEntity.getPokemon();
+        Species species = pokemon.getSpecies();
+        List<FormData> forms = species.getForms();
+
+        if (forms.isEmpty()) return;
+
+        int currentIndex = forms.indexOf(pokemon.getForm());
+        int nextIndex = (currentIndex + 1) % forms.size();
+
+        pokemon.setForm(forms.get(nextIndex));
+        pokemon.updateAspects();
+        pokemonEntity.refreshDimensions();
     }
 }

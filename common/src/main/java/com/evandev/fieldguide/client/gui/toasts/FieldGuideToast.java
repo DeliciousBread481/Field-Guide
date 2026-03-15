@@ -39,8 +39,17 @@ public class FieldGuideToast implements Toast {
         int iconY = 17;
         Object coreEntry = this.entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : this.entry;
 
-        if (!entityInitialized && coreEntry instanceof EntityType<?> type) {
-            cachedEntity = type.create(Minecraft.getInstance().level);
+        boolean isCobblemon = this.entry instanceof CompositeFieldGuideEntry comp &&
+                comp.id() != null &&
+                comp.id().getNamespace().equals("fieldguide") &&
+                comp.id().getPath().startsWith("cobblemon/");
+
+        if (!entityInitialized) {
+            if (isCobblemon) {
+                cachedEntity = com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat.getDummyPokemon(((CompositeFieldGuideEntry) this.entry).id(), Minecraft.getInstance().level);
+            } else if (coreEntry instanceof EntityType<?> type) {
+                cachedEntity = type.create(Minecraft.getInstance().level);
+            }
             entityInitialized = true;
         }
 
@@ -50,6 +59,8 @@ public class FieldGuideToast implements Toast {
             } else {
                 EntryRenderHelper.renderBlock(guiGraphics, block, iconX, iconY, 12.0F, true, false, 1.0F);
             }
+        } else if (isCobblemon && cachedEntity instanceof LivingEntity living) {
+            EntryRenderHelper.renderCobblemon(guiGraphics, (CompositeFieldGuideEntry) this.entry, iconX, iconY, 24, 24, 22, true, false, 1.0F);
         } else if (coreEntry instanceof EntityType<?>) {
             if (cachedEntity instanceof LivingEntity living) {
                 EntryRenderHelper.renderEntityNormalized(guiGraphics, living, iconX, iconY, 24, 24, 22, true, false, 1.0F);
