@@ -119,9 +119,6 @@ public final class FieldGuideCobblemonCompat {
         return MOD_ID.equals(id.getNamespace());
     }
 
-    /**
-     * Resolves the ID cleanly using API methods instead of hacking through NBT data.
-     */
     public static ResourceLocation getPokemonEntryId(Entity entity) {
         if (!(entity instanceof PokemonEntity pokemonEntity)) {
             return BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());

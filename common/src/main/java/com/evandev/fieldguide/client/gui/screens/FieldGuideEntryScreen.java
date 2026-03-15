@@ -9,6 +9,7 @@ import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.gui.widget.*;
 import com.evandev.fieldguide.client.progress.ProgressManager;
+import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
@@ -126,7 +127,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         if (isCobblemon(entry)) {
             ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-            this.renderedEntity = com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
+            this.renderedEntity = FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
             return;
         }
 

@@ -7,6 +7,7 @@ import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.mixin.accessor.EntityAccessor;
+import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.StructureUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -45,7 +46,9 @@ public class EntryRenderHelper {
     public static void clearCache() {
         OVERRIDE_CACHE.clear();
         IconCacheManager.clearCache();
-        FieldGuideCobblemonCompat.clearCache();
+        if (Services.PLATFORM.isModLoaded("cobblemon")) {
+            FieldGuideCobblemonCompat.clearCache();
+        }
     }
 
     private static Optional<ResourceLocation> getResourcePackOverride(Object entry, boolean isPage) {

@@ -9,6 +9,7 @@ import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.gui.widget.FieldGuideSearchBox;
 import com.evandev.fieldguide.client.gui.widget.PageTurnButton;
 import com.evandev.fieldguide.client.progress.ProgressManager;
+import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
@@ -700,7 +701,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
         Entity entity = null;
         if (entry instanceof CompositeFieldGuideEntry && id.getNamespace().equals("fieldguide") && id.getPath().startsWith("cobblemon/")) {
-            entity = com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
+            entity = FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
         } else {
             Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
             if (coreEntry instanceof EntityType<?> type) {
