@@ -146,8 +146,10 @@ public class EntryRenderHelper {
                 entity.yRotO = 0.0F;
                 entity.setXRot(0.0F);
                 entity.xRotO = 0.0F;
+                entity.setYHeadRot(0.0F);
                 entity.yHeadRot = 0.0F;
                 entity.yHeadRotO = 0.0F;
+                entity.setYBodyRot(0.0F);
                 entity.yBodyRot = 0.0F;
                 entity.yBodyRotO = 0.0F;
 
@@ -305,8 +307,10 @@ public class EntryRenderHelper {
                 entity.yRotO = 0.0F;
                 entity.setXRot(0.0F);
                 entity.xRotO = 0.0F;
+                entity.setYHeadRot(0.0F);
                 entity.yHeadRot = 0.0F;
                 entity.yHeadRotO = 0.0F;
+                entity.setYBodyRot(0.0F);
                 entity.yBodyRot = 0.0F;
                 entity.yBodyRotO = 0.0F;
 

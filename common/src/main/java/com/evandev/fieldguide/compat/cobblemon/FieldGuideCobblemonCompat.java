@@ -23,10 +23,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 
 import java.io.Reader;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 public final class FieldGuideCobblemonCompat {
     public static final String MOD_ID = "cobblemon";
@@ -89,10 +86,13 @@ public final class FieldGuideCobblemonCompat {
             pokemonEntity.yRotO = 0.0F;
             pokemonEntity.setXRot(0.0F);
             pokemonEntity.xRotO = 0.0F;
+            pokemonEntity.setYBodyRot(0.0F);
             pokemonEntity.yBodyRot = 0.0F;
             pokemonEntity.yBodyRotO = 0.0F;
+            pokemonEntity.setYHeadRot(0.0F);
             pokemonEntity.yHeadRot = 0.0F;
             pokemonEntity.yHeadRotO = 0.0F;
+            pokemonEntity.setUUID(UUID.nameUUIDFromBytes(id.toString().getBytes()));
 
             pokemonEntity.setNoAi(true);
             pokemonEntity.refreshDimensions();
@@ -139,6 +139,23 @@ public final class FieldGuideCobblemonCompat {
         }
 
         return BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+    }
+
+    public static void cycleCobblemonForm(LivingEntity dummyEntity) {
+        if (!(dummyEntity instanceof PokemonEntity pokemonEntity)) return;
+
+        Pokemon pokemon = pokemonEntity.getPokemon();
+        Species species = pokemon.getSpecies();
+        List<FormData> forms = species.getForms();
+
+        if (forms.isEmpty()) return;
+
+        int currentIndex = forms.indexOf(pokemon.getForm());
+        int nextIndex = (currentIndex + 1) % forms.size();
+
+        pokemon.setForm(forms.get(nextIndex));
+        pokemon.updateAspects();
+        pokemonEntity.refreshDimensions();
     }
 
     /**

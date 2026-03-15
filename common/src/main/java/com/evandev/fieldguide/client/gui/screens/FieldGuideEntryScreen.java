@@ -7,6 +7,7 @@ import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
+import com.evandev.fieldguide.client.gui.util.IconCacheManager;
 import com.evandev.fieldguide.client.gui.widget.*;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
@@ -15,6 +16,7 @@ import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.platform.Services;
+import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -269,19 +271,31 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         Object clickEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
 
-        if (button == 0 && (renderedEntity != null || clickEntry instanceof Block)) {
+        if ((button == 0 || button == 1) && (renderedEntity != null || clickEntry instanceof Block)) {
             int xPos = leftPageBounds.left() + leftPageBounds.width() / 2;
             int yPos = leftPageBounds.y_center() - 18;
             if (mouseX >= xPos - 50 && mouseX <= xPos + 50 && mouseY >= yPos - 50 && mouseY <= yPos + 50) {
                 if (ClientFieldGuideManager.isUnlocked(entry)) {
-                    ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
-                    EntryVisual visual = entryId != null ? ClientFieldGuideManager.getInstance().getEntryVisual(entryId) : null;
-                    if (visual != null && visual.customSound != null && this.minecraft != null) {
-                        this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(visual.customSound), 1.0F, 1.0F));
-                    } else if ((clickEntry instanceof EntityType<?> || isCobblemon(entry)) && renderedEntity != null) {
-                        FieldGuideClient.playMobCry(this.renderedEntity);
-                    } else if (clickEntry instanceof Block block && this.minecraft != null) {
-                        this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(block.defaultBlockState().getSoundType().getBreakSound(), 1.0F, 1.0F));
+                    if (button == 0) {
+                        // Left click (play sound)
+                        ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
+                        EntryVisual visual = entryId != null ? ClientFieldGuideManager.getInstance().getEntryVisual(entryId) : null;
+                        if (visual != null && visual.customSound != null && this.minecraft != null) {
+                            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(visual.customSound), 1.0F, 1.0F));
+                        } else if ((clickEntry instanceof EntityType<?> || isCobblemon(entry)) && renderedEntity != null) {
+                            FieldGuideClient.playMobCry(this.renderedEntity);
+                        } else if (clickEntry instanceof Block block && this.minecraft != null) {
+                            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(block.defaultBlockState().getSoundType().getBreakSound(), 1.0F, 1.0F));
+                        }
+                    } else if (button == 1 && renderedEntity instanceof LivingEntity living) {
+                        // Right click (cycle variant)
+                        // TODO: proper UI handling
+                        if (isCobblemon(entry)) {
+                            FieldGuideCobblemonCompat.cycleCobblemonForm(living);
+                        } else {
+                            FieldGuideVariantManager.cycleToNextVariant(living);
+                        }
+                        IconCacheManager.clearCache();
                     }
                     this.lastClickTime = System.currentTimeMillis();
                 }
