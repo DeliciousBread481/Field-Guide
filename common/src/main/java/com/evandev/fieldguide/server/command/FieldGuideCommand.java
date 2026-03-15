@@ -24,6 +24,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
@@ -126,7 +127,7 @@ public class FieldGuideCommand {
     private static int grantCategory(CommandSourceStack source, Collection<ServerPlayer> targets, ResourceLocation categoryId) {
         Category category = ServerFieldGuideManager.getInstance().getCategories().get(categoryId);
         if (category == null) {
-            source.sendFailure(Component.translatable("commands.fieldguide.category.not_found", categoryId));
+            source.sendFailure(Component.translatable("commands.fieldguide.category.not_found", categoryId.toString()));
             return 0;
         }
         FieldGuideProgressManager manager = FieldGuideProgressManager.getInstance();
@@ -154,7 +155,7 @@ public class FieldGuideCommand {
         }
     }
 
-    private static int exportFeature(CommandSourceStack source, ResourceLocation featureId, net.minecraft.world.level.block.Block baseBlock) {
+    private static int exportFeature(CommandSourceStack source, ResourceLocation featureId, Block baseBlock) {
         if (!(source.getEntity() instanceof ServerPlayer player)) {
             source.sendFailure(Component.literal("This command must be run by an in-game player."));
             return 0;
@@ -168,7 +169,7 @@ public class FieldGuideCommand {
         ConfiguredFeature<?, ?> feature = registry.get(featureId);
 
         if (feature == null) {
-            source.sendFailure(Component.literal("Feature not found: " + featureId));
+            source.sendFailure(Component.literal("Feature not found: " + featureId.toString()));
             return 0;
         }
 
@@ -258,7 +259,7 @@ public class FieldGuideCommand {
                 progress.unlock(player, entryId);
             }
         }
-        source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.entry.success", entryId), true);
+        source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.entry.success", entryId.toString()), true);
         return targets.size();
     }
 
@@ -285,7 +286,7 @@ public class FieldGuideCommand {
                 }
             }
         }
-        source.sendSuccess(() -> Component.translatable("commands.fieldguide.revoke.category.success", categoryId, targets.size()), true);
+        source.sendSuccess(() -> Component.translatable("commands.fieldguide.revoke.category.success", categoryId.toString(), targets.size()), true);
         return targets.size();
     }
 
@@ -297,7 +298,7 @@ public class FieldGuideCommand {
                 progress.revoke(entryId.toString());
             }
         }
-        source.sendSuccess(() -> Component.translatable("commands.fieldguide.revoke.entry.success", entryId), true);
+        source.sendSuccess(() -> Component.translatable("commands.fieldguide.revoke.entry.success", entryId.toString()), true);
         return targets.size();
     }
 }
