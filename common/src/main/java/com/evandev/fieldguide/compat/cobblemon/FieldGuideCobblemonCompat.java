@@ -13,6 +13,7 @@ import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CategoryEntry;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.platform.Services;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -22,7 +23,9 @@ import net.minecraft.util.GsonHelper;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 
 import java.io.Reader;
@@ -34,6 +37,7 @@ public final class FieldGuideCobblemonCompat {
 
     private static final Map<ResourceLocation, LivingEntity> DUMMY_CACHE = new HashMap<>();
     private static final Map<ResourceLocation, String> FORM_CACHE = new HashMap<>();
+    private static final Map<ResourceLocation, List<ItemStack>> COBBLEMON_DROPS_CACHE = new HashMap<>();
 
     private FieldGuideCobblemonCompat() {
     }
@@ -76,15 +80,35 @@ public final class FieldGuideCobblemonCompat {
         String formName = FORM_CACHE.getOrDefault(id, getDefaultForm(id));
 
         try {
-            String propsStr = speciesName;
+            String propsStr = "species=" + speciesName;
             if (!formName.equals("standard")) {
-                propsStr += " form=" + formName;
+                Species species = PokemonSpecies.INSTANCE.getByIdentifier(new ResourceLocation(MOD_ID, speciesName));
+                if (species != null) {
+                    for (FormData f : species.getForms()) {
+                        if (f.getName().equals(formName)) {
+                            propsStr += " form=" + f.formOnlyShowdownId();
+                            break;
+                        }
+                    }
+                }
             }
 
-            PokemonProperties props = PokemonProperties.Companion.parse(propsStr);
+            PokemonProperties props = PokemonProperties.Companion.parse(propsStr, " ", "=");
             PokemonEntity pokemonEntity = props.createEntity(level);
-
             pokemonEntity.setNoAi(true);
+
+            pokemonEntity.setTicksLived(25);
+            pokemonEntity.setYRot(0.0F);
+            pokemonEntity.yRotO = 0.0F;
+            pokemonEntity.setXRot(0.0F);
+            pokemonEntity.xRotO = 0.0F;
+            pokemonEntity.setYHeadRot(0.0F);
+            pokemonEntity.yHeadRot = 0.0F;
+            pokemonEntity.yHeadRotO = 0.0F;
+            pokemonEntity.setYBodyRot(0.0F);
+            pokemonEntity.yBodyRot = 0.0F;
+            pokemonEntity.yBodyRotO = 0.0F;
+
             DUMMY_CACHE.put(id, pokemonEntity);
             return pokemonEntity;
         } catch (Exception e) {
@@ -131,8 +155,33 @@ public final class FieldGuideCobblemonCompat {
 
                         if (json.has("name")) {
                             String speciesName = json.get("name").getAsString().toLowerCase(Locale.ROOT);
-
                             ResourceLocation entryId = new ResourceLocation("fieldguide", "cobblemon/" + speciesName + "_standard");
+
+                            if (json.has("drops")) {
+                                JsonObject dropsObj = json.getAsJsonObject("drops");
+                                if (dropsObj.has("entries")) {
+                                    List<ItemStack> drops = new ArrayList<>();
+                                    for (JsonElement dropElem : dropsObj.getAsJsonArray("entries")) {
+                                        JsonObject dropJson = dropElem.getAsJsonObject();
+                                        if (dropJson.has("item")) {
+                                            String itemStr = dropJson.get("item").getAsString();
+                                            float chance = dropJson.has("percentage") ? dropJson.get("percentage").getAsFloat() : 100f;
+                                            int quantity = dropJson.has("quantity") ? dropJson.get("quantity").getAsInt() : 1;
+
+                                            Item item = BuiltInRegistries.ITEM.get(new ResourceLocation(itemStr));
+                                            if (item != Items.AIR) {
+                                                ItemStack stack = new ItemStack(item, quantity);
+                                                stack.getOrCreateTag().putFloat("FieldGuideDropChance", chance);
+                                                drops.add(stack);
+                                            }
+                                        }
+                                    }
+                                    if (!drops.isEmpty()) {
+                                        COBBLEMON_DROPS_CACHE.put(entryId, drops);
+                                    }
+                                }
+                            }
+
                             cobblemonCategory.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, entryId, entryId, null, null, null, null));
                         }
                     } catch (Exception ignored) {
@@ -187,14 +236,16 @@ public final class FieldGuideCobblemonCompat {
         }
         if (id == null) return List.of();
 
-        String speciesName = getSpeciesName(id);
-
-        ResourceLocation speciesId = new ResourceLocation(MOD_ID, speciesName);
-        List<ItemStack> drops = ClientFieldGuideManager.getInstance().getDrops(speciesId);
-        if (drops != null && !drops.isEmpty()) {
-            return drops;
+        if (COBBLEMON_DROPS_CACHE.containsKey(id)) {
+            return COBBLEMON_DROPS_CACHE.get(id);
         }
 
-        return ClientFieldGuideManager.getInstance().getDrops(BuiltInRegistries.ENTITY_TYPE.get(new ResourceLocation(MOD_ID, "pokemon")));
+        String speciesName = getSpeciesName(id);
+        ResourceLocation standardId = new ResourceLocation("fieldguide", "cobblemon/" + speciesName + "_standard");
+        if (COBBLEMON_DROPS_CACHE.containsKey(standardId)) {
+            return COBBLEMON_DROPS_CACHE.get(standardId);
+        }
+
+        return List.of();
     }
 }
