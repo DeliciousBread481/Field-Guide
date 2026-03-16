@@ -24,7 +24,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.WaterAnimal;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
@@ -261,15 +260,12 @@ public class EntryRenderHelper {
 
         if (textureOpt.isEmpty()) {
             textureOpt = IconCacheManager.getOrGenerateIcon(entry, isPage, () -> {
-                Level level = Minecraft.getInstance().level;
-                if (level == null) return;
-
-                LivingEntity entity = FieldGuideCobblemonCompat.getDummyPokemon(entry.id(), level);
-                if (entity == null) return;
-
                 setupFieldGuideEntityLighting();
                 ResourceLocation id = entry.id();
                 EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(id);
+
+                LivingEntity dummy = FieldGuideCobblemonCompat.getDummyPokemon(id, Minecraft.getInstance().level);
+                if (dummy == null) return;
 
                 float visualScale = visual.scale;
                 float yOff = visual.yOffset;
@@ -285,10 +281,10 @@ public class EntryRenderHelper {
                     if (visual.gridXOffset != null) xOff = visual.gridXOffset;
                 }
 
-                float dynamicFactor = getScaleFactorForEntity(entity);
+                float dynamicFactor = getScaleFactorForEntity(dummy);
                 float clampedScale = 85.0F * dynamicFactor * visualScale;
-                float entityHeight = entity.getBbHeight();
-                float entityWidth = entity.getBbWidth();
+                float entityHeight = dummy.getBbHeight();
+                float entityWidth = dummy.getBbWidth();
                 float maxDimension = Math.max(entityHeight, entityWidth);
 
                 float safetyClamp = isPage ? 250.0F : 230.0F;
@@ -300,36 +296,36 @@ public class EntryRenderHelper {
                 PoseStack pose = new PoseStack();
                 pose.scale(clampedScale, -clampedScale, -clampedScale);
                 pose.mulPose(Axis.XP.rotationDegrees(30.0F));
-                pose.mulPose(Axis.YP.rotationDegrees(-30.0F));
+                pose.mulPose(Axis.YP.rotationDegrees(150.0F));
                 pose.translate((xOff / clampedScale), (entityHeight / -2.0F) + (yOff / clampedScale), 0);
 
-                entity.setYRot(0.0F);
-                entity.yRotO = 0.0F;
-                entity.setXRot(0.0F);
-                entity.xRotO = 0.0F;
-                entity.setYHeadRot(0.0F);
-                entity.yHeadRot = 0.0F;
-                entity.yHeadRotO = 0.0F;
-                entity.setYBodyRot(0.0F);
-                entity.yBodyRot = 0.0F;
-                entity.yBodyRotO = 0.0F;
+                dummy.setYRot(0.0F);
+                dummy.yRotO = 0.0F;
+                dummy.setXRot(0.0F);
+                dummy.xRotO = 0.0F;
+                dummy.setYHeadRot(0.0F);
+                dummy.yHeadRot = 0.0F;
+                dummy.yHeadRotO = 0.0F;
+                dummy.setYBodyRot(0.0F);
+                dummy.yBodyRot = 0.0F;
+                dummy.yBodyRotO = 0.0F;
 
-                entity.tickCount = 0;
-                entity.walkAnimation.setSpeed(0.0F);
-                entity.walkAnimation.position(0.0F);
-                entity.attackAnim = 0.0F;
-                entity.oAttackAnim = 0.0F;
+                dummy.tickCount = 0;
+                dummy.walkAnimation.setSpeed(0.0F);
+                dummy.walkAnimation.position(0.0F);
+                dummy.attackAnim = 0.0F;
+                dummy.oAttackAnim = 0.0F;
 
-                if (entity instanceof WaterAnimal) {
-                    ((EntityAccessor) entity).fieldguide$setWasTouchingWater(true);
+                if (dummy instanceof WaterAnimal) {
+                    ((EntityAccessor) dummy).fieldguide$setWasTouchingWater(true);
                 }
 
                 MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
                 try {
-                    Minecraft.getInstance().getEntityRenderDispatcher().render(entity, 0, 0, 0, 0.0F, 1.0F, pose, buffers, LightTexture.FULL_BRIGHT);
-                    Minecraft.getInstance().getEntityRenderDispatcher().render(entity, 0, 0, 0, 0.0F, 1.0F, pose, buffers, LightTexture.FULL_BRIGHT);
+                    Minecraft.getInstance().getEntityRenderDispatcher().render(dummy, 0, 0, 0, 0.0F, 1.0F, pose, buffers, LightTexture.FULL_BRIGHT);
+                    Minecraft.getInstance().getEntityRenderDispatcher().render(dummy, 0, 0, 0, 0.0F, 1.0F, pose, buffers, LightTexture.FULL_BRIGHT);
                 } catch (Exception e) {
-                    Constants.LOG.error("Failed to render Cobblemon in Field Guide: {}", id, e);
+                    Constants.LOG.error("Failed to render Cobblemon entity natively in Field Guide: {}", id, e);
                 } finally {
                     buffers.endBatch();
                 }

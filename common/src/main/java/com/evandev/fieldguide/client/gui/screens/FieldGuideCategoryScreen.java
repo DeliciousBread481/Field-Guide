@@ -478,6 +478,11 @@ public class FieldGuideCategoryScreen extends BookScreen {
                     } else {
                         for (Object entry : currentEntries) {
                             List<ItemStack> drops = ClientFieldGuideManager.getInstance().getDrops(entry);
+
+                            if (drops.isEmpty() && entry instanceof CompositeFieldGuideEntry comp && comp.id() != null && comp.id().getNamespace().equals("fieldguide") && comp.id().getPath().startsWith("cobblemon/")) {
+                                drops = FieldGuideCobblemonCompat.getCobblemonDrops(entry);
+                            }
+
                             for (ItemStack stack : drops) {
                                 if (stack.getHoverName().getString().toLowerCase(Locale.ROOT).equals(dropQuery)) {
                                     displayStack = stack;

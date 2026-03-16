@@ -43,6 +43,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     private final FieldGuideCategoryScreen parent;
     private final Object entry;
     private final List<ResourceLocation> spawnBiomes = new ArrayList<>();
+
     private Entity renderedEntity;
     private long lastClickTime = 0;
 
@@ -204,7 +205,13 @@ public class FieldGuideEntryScreen extends BookScreen {
 
     private void setupDropWidget(boolean unlocked) {
         if (ModConfig.get().disableLootDisplay) return;
+
         List<ItemStack> drops = unlocked ? ClientFieldGuideManager.getInstance().getDrops(entry) : List.of();
+
+        if (unlocked && drops.isEmpty() && isCobblemon(entry)) {
+            drops = FieldGuideCobblemonCompat.getCobblemonDrops(entry);
+        }
+
         if (!drops.isEmpty()) {
             int dropItemSize = 20;
             this.addRenderableWidget(new PaginatedGridWidget<>(this.leftPageBounds.left() + 2, this.leftPageBounds.bottom() - 33, this.leftPageBounds.width() - 4, dropItemSize, 5, dropItemSize, 0, drops, (graphics, stack, x, y, mouseX, mouseY) -> {
@@ -280,19 +287,24 @@ public class FieldGuideEntryScreen extends BookScreen {
                         // Left click (play sound)
                         ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
                         EntryVisual visual = entryId != null ? ClientFieldGuideManager.getInstance().getEntryVisual(entryId) : null;
+
                         if (visual != null && visual.customSound != null && this.minecraft != null) {
                             this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(visual.customSound), 1.0F, 1.0F));
-                        } else if ((clickEntry instanceof EntityType<?> || isCobblemon(entry)) && renderedEntity != null) {
+                        } else if ((isCobblemon(entry) || clickEntry instanceof EntityType<?>) && renderedEntity != null) {
                             FieldGuideClient.playMobCry(this.renderedEntity);
                         } else if (clickEntry instanceof Block block && this.minecraft != null) {
                             this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(block.defaultBlockState().getSoundType().getBreakSound(), 1.0F, 1.0F));
                         }
-                    } else if (button == 1 && renderedEntity instanceof LivingEntity living) {
+                    } else {
                         // Right click (cycle variant)
                         // TODO: proper UI handling
                         if (isCobblemon(entry)) {
-                            FieldGuideCobblemonCompat.cycleCobblemonForm(living);
-                        } else {
+                            ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+                            FieldGuideCobblemonCompat.cycleCobblemonForm(id, this.minecraft != null ? this.minecraft.level : null);
+                            if (this.minecraft != null) {
+                                this.renderedEntity = FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
+                            }
+                        } else if (renderedEntity instanceof LivingEntity living) {
                             FieldGuideVariantManager.cycleToNextVariant(living);
                         }
                         IconCacheManager.clearCache();
@@ -353,17 +365,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                 } else {
                     long gameTime = ProgressManager.getInstance().getDiscoveryGameTime(entry);
                     long days = gameTime / 24000L + 1;
-                    long timeOfDay = gameTime % 24000L;
-
-                    String timeKey = "fieldguide.time.day";
-
-                    if (timeOfDay >= 4500 && timeOfDay < 7500) {
-                        timeKey = "fieldguide.time.noon";
-                    } else if (timeOfDay >= 16500 && timeOfDay < 19500) {
-                        timeKey = "fieldguide.time.midnight";
-                    } else if (timeOfDay >= 13000 && timeOfDay < 23000) {
-                        timeKey = "fieldguide.time.night";
-                    }
+                    String timeKey = getTimeKey(gameTime);
 
                     dateComponent = Component.translatable("fieldguide.date.in_game", days, Component.translatable(timeKey));
                 }
@@ -397,13 +399,17 @@ public class FieldGuideEntryScreen extends BookScreen {
                     EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 40.0F, unlocked, true, bounce);
                 }
             }
-        } else if ((renderEntry instanceof EntityType || isCobblemon(entry)) && renderedEntity instanceof LivingEntity living) {
+        } else if (isCobblemon(entry)) {
             if (!hideEntity) {
-                if (isCobblemon(entry)) {
-                    EntryRenderHelper.renderCobblemon(guiGraphics, (CompositeFieldGuideEntry) entry, xPos, yPos, 112, 112, 100, unlocked, true, bounce);
-                } else {
-                    EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 112, 112, 100, unlocked, true, bounce);
-                }
+                EntryRenderHelper.renderCobblemon(guiGraphics, (CompositeFieldGuideEntry) entry, xPos, yPos, 112, 112, 100, unlocked, true, bounce);
+            }
+            if (unlocked && renderedEntity instanceof LivingEntity living) {
+                renderAttributes(guiGraphics, living);
+                renderAlignment(guiGraphics, living, mouseX, mouseY);
+            }
+        } else if (renderEntry instanceof EntityType && renderedEntity instanceof LivingEntity living) {
+            if (!hideEntity) {
+                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 112, 112, 100, unlocked, true, bounce);
             }
             if (unlocked) {
                 renderAttributes(guiGraphics, living);
@@ -418,33 +424,46 @@ public class FieldGuideEntryScreen extends BookScreen {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
     }
 
+    private static @NotNull String getTimeKey(long gameTime) {
+        long timeOfDay = gameTime % 24000L;
+
+        String timeKey = "fieldguide.time.day";
+
+        if (timeOfDay >= 4500 && timeOfDay < 7500) {
+            timeKey = "fieldguide.time.noon";
+        } else if (timeOfDay >= 16500 && timeOfDay < 19500) {
+            timeKey = "fieldguide.time.midnight";
+        } else if (timeOfDay >= 13000 && timeOfDay < 23000) {
+            timeKey = "fieldguide.time.night";
+        }
+        return timeKey;
+    }
+
     private void renderAlignment(GuiGraphics guiGraphics, LivingEntity entity, int mouseX, int mouseY) {
-        if (entry instanceof EntityType<?> || isCobblemon(entry)) {
-            ResourceLocation icon;
-            Component typeComponent;
+        ResourceLocation icon;
+        Component typeComponent;
 
-            if (entity instanceof NeutralMob) {
-                icon = Constants.NEUTRAL_ICON;
-                typeComponent = Component.translatable("fieldguide.alignment.neutral");
-            } else if (entry instanceof EntityType<?> type && type.getCategory() == MobCategory.MONSTER) {
-                icon = Constants.HOSTILE_ICON;
-                typeComponent = Component.translatable("fieldguide.alignment.hostile");
-            } else {
-                icon = Constants.PASSIVE_ICON;
-                typeComponent = Component.translatable("fieldguide.alignment.passive");
-            }
+        if (entity instanceof NeutralMob) {
+            icon = Constants.NEUTRAL_ICON;
+            typeComponent = Component.translatable("fieldguide.alignment.neutral");
+        } else if (entry instanceof EntityType<?> type && type.getCategory() == MobCategory.MONSTER) {
+            icon = Constants.HOSTILE_ICON;
+            typeComponent = Component.translatable("fieldguide.alignment.hostile");
+        } else {
+            icon = Constants.PASSIVE_ICON;
+            typeComponent = Component.translatable("fieldguide.alignment.passive");
+        }
 
-            int titleY = this.leftPageBounds.top() + 8;
-            int iconX = this.rightPageBounds.right() - 14;
-            int iconY = titleY - 3;
+        int titleY = this.leftPageBounds.top() + 8;
+        int iconX = this.rightPageBounds.right() - 14;
+        int iconY = titleY - 3;
 
-            RenderSystem.enableBlend();
-            guiGraphics.blit(icon, iconX, iconY, 0, 0, 12, 12, 12, 12);
-            RenderSystem.disableBlend();
+        RenderSystem.enableBlend();
+        guiGraphics.blit(icon, iconX, iconY, 0, 0, 12, 12, 12, 12);
+        RenderSystem.disableBlend();
 
-            if (Bounds.isMouseOver(mouseX, mouseY, iconX, iconY, 12, 12)) {
-                guiGraphics.renderTooltip(this.font, typeComponent, mouseX, mouseY);
-            }
+        if (Bounds.isMouseOver(mouseX, mouseY, iconX, iconY, 12, 12)) {
+            guiGraphics.renderTooltip(this.font, typeComponent, mouseX, mouseY);
         }
     }
 

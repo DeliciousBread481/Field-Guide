@@ -1,13 +1,17 @@
 package com.evandev.fieldguide.compat.cobblemon;
 
+import com.cobblemon.mod.common.api.pokemon.PokemonProperties;
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.FormData;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 import com.cobblemon.mod.common.pokemon.Species;
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.client.gui.util.IconCacheManager;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CategoryEntry;
+import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.platform.Services;
 import com.google.gson.JsonObject;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -18,6 +22,7 @@ import net.minecraft.util.GsonHelper;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 import java.io.Reader;
@@ -28,6 +33,7 @@ public final class FieldGuideCobblemonCompat {
     private static final String POKEMON_PATH = "pokemon";
 
     private static final Map<ResourceLocation, LivingEntity> DUMMY_CACHE = new HashMap<>();
+    private static final Map<ResourceLocation, String> FORM_CACHE = new HashMap<>();
 
     private FieldGuideCobblemonCompat() {
     }
@@ -36,67 +42,51 @@ public final class FieldGuideCobblemonCompat {
         DUMMY_CACHE.clear();
     }
 
+    private static String getDefaultForm(ResourceLocation id) {
+        String path = id.getPath();
+        if (!path.startsWith("cobblemon/")) return "standard";
+        String speciesAndForm = path.substring("cobblemon/".length());
+        int underscoreIndex = speciesAndForm.lastIndexOf('_');
+        if (underscoreIndex != -1) {
+            return speciesAndForm.substring(underscoreIndex + 1);
+        }
+        return "standard";
+    }
+
+    private static String getSpeciesName(ResourceLocation id) {
+        String path = id.getPath();
+        if (!path.startsWith("cobblemon/")) return path;
+        String speciesAndForm = path.substring("cobblemon/".length());
+        int underscoreIndex = speciesAndForm.lastIndexOf('_');
+        if (underscoreIndex != -1) {
+            return speciesAndForm.substring(0, underscoreIndex);
+        }
+        return speciesAndForm;
+    }
+
     /**
-     * Creates a dummy entity and morphs it into the target species/form.
+     * Used to provide health, drops, and general entity data.
      */
     public static LivingEntity getDummyPokemon(ResourceLocation id, Level level) {
         if (DUMMY_CACHE.containsKey(id)) {
             return DUMMY_CACHE.get(id);
         }
 
-        String path = id.getPath();
-        if (!path.startsWith("cobblemon/")) return null;
-
-        String speciesAndForm = path.substring("cobblemon/".length());
-        String speciesName = speciesAndForm;
-        String formName = "standard";
-
-        int underscoreIndex = speciesAndForm.lastIndexOf('_');
-        if (underscoreIndex != -1) {
-            speciesName = speciesAndForm.substring(0, underscoreIndex);
-            formName = speciesAndForm.substring(underscoreIndex + 1);
-        }
+        String speciesName = getSpeciesName(id);
+        String formName = FORM_CACHE.getOrDefault(id, getDefaultForm(id));
 
         try {
-            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(new ResourceLocation(MOD_ID, POKEMON_PATH));
-            Entity entity = type.create(level);
-
-            if (!(entity instanceof PokemonEntity pokemonEntity)) return null;
-
-            Pokemon pokemon = pokemonEntity.getPokemon();
-            Species species = PokemonSpecies.INSTANCE.getByIdentifier(new ResourceLocation(MOD_ID, speciesName));
-
-            if (species != null) {
-                pokemon.setSpecies(species);
-
-                final String targetFormName = formName;
-                FormData targetForm = species.getForms().stream()
-                        .filter(f -> f.getName().equalsIgnoreCase(targetFormName))
-                        .findFirst()
-                        .orElse(species.getStandardForm());
-
-                pokemon.setForm(targetForm);
-                pokemon.updateAspects();
+            String propsStr = speciesName;
+            if (!formName.equals("standard")) {
+                propsStr += " form=" + formName;
             }
 
-            pokemonEntity.setYRot(0.0F);
-            pokemonEntity.yRotO = 0.0F;
-            pokemonEntity.setXRot(0.0F);
-            pokemonEntity.xRotO = 0.0F;
-            pokemonEntity.setYBodyRot(0.0F);
-            pokemonEntity.yBodyRot = 0.0F;
-            pokemonEntity.yBodyRotO = 0.0F;
-            pokemonEntity.setYHeadRot(0.0F);
-            pokemonEntity.yHeadRot = 0.0F;
-            pokemonEntity.yHeadRotO = 0.0F;
-            pokemonEntity.setUUID(new UUID(0L, 0L));
+            PokemonProperties props = PokemonProperties.Companion.parse(propsStr);
+            PokemonEntity pokemonEntity = props.createEntity(level);
 
             pokemonEntity.setNoAi(true);
-            pokemonEntity.refreshDimensions();
-
             DUMMY_CACHE.put(id, pokemonEntity);
             return pokemonEntity;
-
         } catch (Exception e) {
             Constants.LOG.error("Failed to construct Cobblemon dummy entity for Field Guide ID: {}", id, e);
         }
@@ -122,9 +112,6 @@ public final class FieldGuideCobblemonCompat {
         return BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
     }
 
-    /**
-     * Reads all loaded Cobblemon species JSONs and injects them as virtual entries.
-     */
     public static void injectCategory(Map<ResourceLocation, Category> categories, ResourceManager resourceManager) {
         ResourceLocation cobblemonCatId = new ResourceLocation(Constants.MOD_ID, "cobblemon");
         Category cobblemonCategory = categories.computeIfAbsent(cobblemonCatId, Category::new);
@@ -167,20 +154,47 @@ public final class FieldGuideCobblemonCompat {
         return MOD_ID.equals(id.getNamespace());
     }
 
-    public static void cycleCobblemonForm(LivingEntity dummyEntity) {
-        if (!(dummyEntity instanceof PokemonEntity pokemonEntity)) return;
+    public static void cycleCobblemonForm(ResourceLocation id, Level level) {
+        String speciesName = getSpeciesName(id);
+        Species species = PokemonSpecies.INSTANCE.getByIdentifier(new ResourceLocation(MOD_ID, speciesName));
+        if (species == null) return;
 
-        Pokemon pokemon = pokemonEntity.getPokemon();
-        Species species = pokemon.getSpecies();
         List<FormData> forms = species.getForms();
-
         if (forms.isEmpty()) return;
 
-        int currentIndex = forms.indexOf(pokemon.getForm());
-        int nextIndex = (currentIndex + 1) % forms.size();
+        String currentFormName = FORM_CACHE.getOrDefault(id, getDefaultForm(id));
+        FormData currentForm = forms.stream().filter(f -> f.getName().equals(currentFormName)).findFirst().orElse(species.getStandardForm());
 
-        pokemon.setForm(forms.get(nextIndex));
-        pokemon.updateAspects();
-        pokemonEntity.refreshDimensions();
+        int currentIndex = forms.indexOf(currentForm);
+        int nextIndex = (currentIndex + 1) % forms.size();
+        FormData nextForm = forms.get(nextIndex);
+
+        FORM_CACHE.put(id, nextForm.getName());
+
+        DUMMY_CACHE.remove(id);
+
+        IconCacheManager.clearCache();
+
+        getDummyPokemon(id, level);
+    }
+
+    public static List<ItemStack> getCobblemonDrops(Object entry) {
+        ResourceLocation id;
+        if (entry instanceof CompositeFieldGuideEntry comp) {
+            id = comp.id();
+        } else {
+            id = ClientFieldGuideManager.getEntryId(entry);
+        }
+        if (id == null) return List.of();
+
+        String speciesName = getSpeciesName(id);
+
+        ResourceLocation speciesId = new ResourceLocation(MOD_ID, speciesName);
+        List<ItemStack> drops = ClientFieldGuideManager.getInstance().getDrops(speciesId);
+        if (drops != null && !drops.isEmpty()) {
+            return drops;
+        }
+
+        return ClientFieldGuideManager.getInstance().getDrops(BuiltInRegistries.ENTITY_TYPE.get(new ResourceLocation(MOD_ID, "pokemon")));
     }
 }
