@@ -3,6 +3,9 @@ package com.evandev.fieldguide.client.gui.widget;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
+import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
+import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -11,6 +14,7 @@ import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -101,11 +105,20 @@ public class VariantOverviewWidget extends AbstractWidget {
             FieldGuideVariantManager.VariantDef variant = variants.get(i);
             boolean isUnlocked = ClientFieldGuideManager.isVariantUnlocked(entry, variant.id());
 
+            LivingEntity renderEntity = renderedEntity;
+
             if (provider != null && renderedEntity instanceof Mob mob) {
                 provider.apply(mob, variant);
+
+                if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(renderedEntity)) {
+                    ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+                    if (id != null && Minecraft.getInstance().level != null) {
+                        renderEntity = FieldGuideCobblemonCompat.getDummyPokemon(id, Minecraft.getInstance().level);
+                    }
+                }
             }
 
-            EntryRenderHelper.renderEntityNormalized(graphics, renderedEntity, itemX, itemY + 8, 30, 30, isUnlocked, false, 1.0f);
+            EntryRenderHelper.renderEntityNormalized(graphics, renderEntity, itemX, itemY + 8, 30, 30, isUnlocked, false, 1.0f);
 
             if (mouseX >= itemX - 16 && mouseX <= itemX + 16 && mouseY >= itemY - 16 && mouseY <= itemY + 16) {
                 if (isUnlocked) {
@@ -124,7 +137,7 @@ public class VariantOverviewWidget extends AbstractWidget {
         }
 
         int titleWidth = Minecraft.getInstance().font.width(this.currentTitleText);
-        graphics.drawString(Minecraft.getInstance().font, this.currentTitleText, this.getX() + (this.width / 2) - (titleWidth / 2), this.getY() + 8, 0x404040, false);
+        graphics.drawString(Minecraft.getInstance().font, this.currentTitleText, this.getX() + (this.width / 2) - (titleWidth / 2), this.getY() + 8, ModConfig.get().getTextTitleColorInt(), false);
 
         this.closeButton.render(graphics, mouseX, mouseY, partialTicks);
         if (this.currentPage > 0) this.leftButton.render(graphics, mouseX, mouseY, partialTicks);
@@ -161,6 +174,7 @@ public class VariantOverviewWidget extends AbstractWidget {
                 if (ClientFieldGuideManager.isVariantUnlocked(entry, variant.id())) {
                     this.onVariantSelected.accept(i);
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                    this.visible = false;
                 }
                 return true;
             }
