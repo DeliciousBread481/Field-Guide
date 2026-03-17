@@ -5,6 +5,7 @@ import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.toasts.Toast;
@@ -13,16 +14,25 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
+
 public class FieldGuideToast implements Toast {
     private final Object entry;
+    private final String variantId;
     private Entity cachedEntity = null;
     private boolean entityInitialized = false;
 
     public FieldGuideToast(Object entry) {
+        this(entry, null);
+    }
+
+    public FieldGuideToast(Object entry, String variantId) {
         this.entry = entry;
+        this.variantId = variantId;
     }
 
     @Override
@@ -49,6 +59,19 @@ public class FieldGuideToast implements Toast {
                 cachedEntity = com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat.getDummyPokemon(((CompositeFieldGuideEntry) this.entry).id(), Minecraft.getInstance().level);
             } else if (coreEntry instanceof EntityType<?> type) {
                 cachedEntity = type.create(Minecraft.getInstance().level);
+
+                if (variantId != null && cachedEntity instanceof Mob mob) {
+                    FieldGuideVariantManager.VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(mob);
+                    if (provider != null) {
+                        List<FieldGuideVariantManager.VariantDef> variants = FieldGuideVariantManager.getVariants(mob);
+                        for (FieldGuideVariantManager.VariantDef def : variants) {
+                            if (def.id().equals(variantId)) {
+                                provider.apply(mob, def);
+                                break;
+                            }
+                        }
+                    }
+                }
             }
             entityInitialized = true;
         }

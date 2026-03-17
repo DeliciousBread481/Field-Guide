@@ -84,10 +84,17 @@ public class IconCacheManager {
         }, IO_EXECUTOR);
     }
 
-    public static Optional<ResourceLocation> getOrGenerateIcon(Object entry, boolean isPage, Runnable renderAction) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-        String fileName = id.getPath() + (isPage ? "_page" : "_grid") + ".png";
-        String key = id.toString().replace(":", "_").replace("/", "_") + (isPage ? "_page" : "_grid");
+    public static Optional<ResourceLocation> getOrGenerateIcon(Object baseEntry, Object cacheKey, boolean isPage, Runnable renderAction) {
+        ResourceLocation id = ClientFieldGuideManager.getEntryId(baseEntry);
+        if (id == null) return Optional.empty();
+
+        String variantSuffix = "";
+        if (cacheKey instanceof String str && str.contains("#")) {
+            variantSuffix = "_" + str.substring(str.indexOf('#') + 1).replace(":", "_").toLowerCase(Locale.ROOT);
+        }
+
+        String fileName = (id.getPath() + variantSuffix + (isPage ? "_page" : "_grid") + ".png").toLowerCase(Locale.ROOT);
+        String key = (id.toString().replace(":", "_").replace("/", "_") + variantSuffix + (isPage ? "_page" : "_grid")).toLowerCase(Locale.ROOT);
 
         if (TEXTURE_CACHE.containsKey(key)) {
             return Optional.of(TEXTURE_CACHE.get(key));

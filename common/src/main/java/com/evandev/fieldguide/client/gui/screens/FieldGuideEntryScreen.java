@@ -148,31 +148,40 @@ public class FieldGuideEntryScreen extends BookScreen {
     private void setupEntityPreview() {
         if (this.minecraft == null || this.minecraft.level == null) return;
 
+        Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
+
         if (isCobblemon(entry)) {
             ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
             this.renderedEntity = FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
-            return;
-        }
-
-        Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
-        if (renderEntry instanceof EntityType<?> type) {
+        } else if (renderEntry instanceof EntityType<?> type) {
             try {
                 this.renderedEntity = type.create(this.minecraft.level);
+            } catch (Exception ignored) {
+            }
+        }
 
-                if (this.renderedEntity != null) {
-                    this.entityVariants = FieldGuideVariantManager.getVariants(this.renderedEntity);
-                    if (this.entityVariants.size() > 1) {
-                        int centerX = leftPageBounds.x_center();
-                        int centerY = leftPageBounds.y_center() - 15;
+        if (this.renderedEntity != null) {
+            this.entityVariants = FieldGuideVariantManager.getVariants(this.renderedEntity);
+            if (this.entityVariants.size() > 1) {
+                int centerX = leftPageBounds.x_center();
+                int centerY = leftPageBounds.y_center() - 15;
 
-                        this.prevVariantButton = new PageTurnButton(centerX - 50, centerY - 8, 16, 16, 0, 16, 16, Constants.WIDGETS_TEXTURE, b -> cycleVariant(-1));
-                        this.nextVariantButton = new PageTurnButton(centerX + 34, centerY - 8, 16, 16, 16, 16, 16, Constants.WIDGETS_TEXTURE, b -> cycleVariant(1));
+                this.prevVariantButton = new PageTurnButton(centerX - 64, centerY - 8, 16, 16, 0, 16, 16, Constants.WIDGETS_TEXTURE, b -> cycleVariant(-1));
+                this.nextVariantButton = new PageTurnButton(centerX + 48, centerY - 8, 16, 16, 16, 16, 16, Constants.WIDGETS_TEXTURE, b -> cycleVariant(1));
 
-                        this.addRenderableWidget(prevVariantButton);
-                        this.addRenderableWidget(nextVariantButton);
+                this.addRenderableWidget(prevVariantButton);
+                this.addRenderableWidget(nextVariantButton);
+
+                FieldGuideVariantManager.VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(this.renderedEntity);
+                if (provider != null) {
+                    FieldGuideVariantManager.VariantDef current = provider.getCurrent((Mob) this.renderedEntity);
+                    for (int i = 0; i < this.entityVariants.size(); i++) {
+                        if (this.entityVariants.get(i).id().equals(current.id())) {
+                            this.currentVariantIndex = i;
+                            break;
+                        }
                     }
                 }
-            } catch (Exception ignored) {
             }
         }
     }
@@ -184,6 +193,11 @@ public class FieldGuideEntryScreen extends BookScreen {
         FieldGuideVariantManager.VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(renderedEntity);
         if (provider != null) {
             provider.apply((Mob) renderedEntity, entityVariants.get(currentVariantIndex));
+
+            if (isCobblemon(entry) && this.minecraft != null) {
+                ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+                this.renderedEntity = FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
+            }
         }
         lastClickTime = System.currentTimeMillis();
         IconCacheManager.clearCache();
@@ -341,14 +355,6 @@ public class FieldGuideEntryScreen extends BookScreen {
                         } else if (clickEntry instanceof Block block && this.minecraft != null) {
                             this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(block.defaultBlockState().getSoundType().getBreakSound(), 1.0F, 1.0F));
                         }
-                    } else if (isCobblemon(entry)) {
-                        // TODO: switch cobblemon to vanilla variant manager
-                        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-                        FieldGuideCobblemonCompat.cycleCobblemonForm(id, this.minecraft != null ? this.minecraft.level : null);
-                        if (this.minecraft != null) {
-                            this.renderedEntity = FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
-                        }
-                        IconCacheManager.clearCache();
                     }
                     this.lastClickTime = System.currentTimeMillis();
                 }
@@ -457,7 +463,8 @@ public class FieldGuideEntryScreen extends BookScreen {
             if (!hideEntity) {
                 EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 112, 112, variantUnlocked, true, bounce);
             }
-            if (variantUnlocked) {
+
+            if (unlocked) {
                 renderAttributes(guiGraphics, living);
                 renderAlignment(guiGraphics, living, mouseX, mouseY);
             }

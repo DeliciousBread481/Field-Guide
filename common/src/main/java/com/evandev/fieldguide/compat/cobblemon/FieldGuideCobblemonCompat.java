@@ -8,11 +8,11 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 import com.cobblemon.mod.common.pokemon.Species;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
-import com.evandev.fieldguide.client.gui.util.IconCacheManager;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CategoryEntry;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.platform.Services;
+import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -38,6 +38,32 @@ public final class FieldGuideCobblemonCompat {
     private static final Map<ResourceLocation, LivingEntity> DUMMY_CACHE = new HashMap<>();
     private static final Map<ResourceLocation, String> FORM_CACHE = new HashMap<>();
     private static final Map<ResourceLocation, List<ItemStack>> COBBLEMON_DROPS_CACHE = new HashMap<>();
+
+    static {
+        FieldGuideVariantManager.registerProvider(PokemonEntity.class, new FieldGuideVariantManager.VariantProvider<>() {
+            @Override
+            public List<FieldGuideVariantManager.VariantDef> getVariants(PokemonEntity entity) {
+                Species species = entity.getPokemon().getSpecies();
+                return species.getForms().stream()
+                        .map(f -> new FieldGuideVariantManager.VariantDef(f.getName(), f.getName()))
+                        .toList();
+            }
+
+            @Override
+            public void apply(PokemonEntity entity, FieldGuideVariantManager.VariantDef def) {
+                ResourceLocation id = getPokemonEntryId(entity);
+                FORM_CACHE.put(id, (String) def.value());
+                DUMMY_CACHE.remove(id);
+            }
+
+            @Override
+            public FieldGuideVariantManager.VariantDef getCurrent(PokemonEntity entity) {
+                ResourceLocation id = getPokemonEntryId(entity);
+                String formName = FORM_CACHE.getOrDefault(id, getDefaultForm(id));
+                return new FieldGuideVariantManager.VariantDef(formName, formName);
+            }
+        });
+    }
 
     private FieldGuideCobblemonCompat() {
     }
@@ -218,30 +244,6 @@ public final class FieldGuideCobblemonCompat {
         if (!Services.PLATFORM.isModLoaded(MOD_ID)) return false;
         ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
         return MOD_ID.equals(id.getNamespace());
-    }
-
-    public static void cycleCobblemonForm(ResourceLocation id, Level level) {
-        String speciesName = getSpeciesName(id);
-        Species species = PokemonSpecies.INSTANCE.getByIdentifier(new ResourceLocation(MOD_ID, speciesName));
-        if (species == null) return;
-
-        List<FormData> forms = species.getForms();
-        if (forms.isEmpty()) return;
-
-        String currentFormName = FORM_CACHE.getOrDefault(id, getDefaultForm(id));
-        FormData currentForm = forms.stream().filter(f -> f.getName().equals(currentFormName)).findFirst().orElse(species.getStandardForm());
-
-        int currentIndex = forms.indexOf(currentForm);
-        int nextIndex = (currentIndex + 1) % forms.size();
-        FormData nextForm = forms.get(nextIndex);
-
-        FORM_CACHE.put(id, nextForm.getName());
-
-        DUMMY_CACHE.remove(id);
-
-        IconCacheManager.clearCache();
-
-        getDummyPokemon(id, level);
     }
 
     public static List<ItemStack> getCobblemonDrops(Object entry) {

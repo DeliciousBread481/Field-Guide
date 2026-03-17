@@ -27,7 +27,7 @@ public class FieldGuideVariantManager {
     static {
         registerProvider(Frog.class, new VariantProvider<>() {
             @Override
-            public List<VariantDef> getVariants() {
+            public List<VariantDef> getVariants(Frog entity) {
                 return BuiltInRegistries.FROG_VARIANT.entrySet().stream()
                         .map(e -> new VariantDef(e.getKey().location().toString(), e.getValue()))
                         .toList();
@@ -47,7 +47,7 @@ public class FieldGuideVariantManager {
 
         registerProvider(Cat.class, new VariantProvider<>() {
             @Override
-            public List<VariantDef> getVariants() {
+            public List<VariantDef> getVariants(Cat entity) {
                 return BuiltInRegistries.CAT_VARIANT.entrySet().stream()
                         .map(e -> new VariantDef(e.getKey().location().toString(), e.getValue()))
                         .toList();
@@ -67,7 +67,7 @@ public class FieldGuideVariantManager {
 
         registerProvider(Sheep.class, new VariantProvider<>() {
             @Override
-            public List<VariantDef> getVariants() {
+            public List<VariantDef> getVariants(Sheep entity) {
                 return Arrays.stream(DyeColor.values())
                         .map(c -> new VariantDef(c.getName(), c))
                         .toList();
@@ -110,13 +110,13 @@ public class FieldGuideVariantManager {
 
     public static List<VariantDef> getVariants(Entity entity) {
         VariantProvider<Mob> provider = getProvider(entity);
-        return provider != null ? provider.getVariants() : List.of();
+        return provider != null ? provider.getVariants((Mob) entity) : List.of();
     }
 
     private static VariantProvider<Mob> getVillagerProvider() {
         return new VariantProvider<>() {
             @Override
-            public List<VariantDef> getVariants() {
+            public List<VariantDef> getVariants(Mob entity) {
                 return BuiltInRegistries.VILLAGER_TYPE.entrySet().stream()
                         .map(e -> new VariantDef(e.getKey().location().toString(), e.getValue()))
                         .toList();
@@ -172,7 +172,7 @@ public class FieldGuideVariantManager {
                 if (current instanceof Enum<?> currentEnum) {
                     return new VariantProvider<>() {
                         @Override
-                        public List<VariantDef> getVariants() {
+                        public List<VariantDef> getVariants(Mob entity) {
                             return Arrays.stream(currentEnum.getDeclaringClass().getEnumConstants())
                                     .map(e -> new VariantDef(e.name(), e))
                                     .toList();
@@ -204,7 +204,7 @@ public class FieldGuideVariantManager {
     }
 
     public interface VariantProvider<T extends Mob> {
-        List<VariantDef> getVariants();
+        List<VariantDef> getVariants(T entity);
 
         void apply(T entity, VariantDef def);
 

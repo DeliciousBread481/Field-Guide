@@ -83,16 +83,26 @@ public class ProgressManager {
             entryPhotographs.remove(id);
         }
 
+        Map<String, String> toastsToShow = new HashMap<>();
+
         for (String id : packet.getUnlocked()) {
             if (unlockedEntries.add(id) && !packet.isSilent()) {
-                String baseIdStr = id.contains("#") ? id.split("#")[0] : id;
-                Object entry = resolveEntryFromId(baseIdStr);
+                boolean isVariant = id.contains("#");
+                String baseIdStr = isVariant ? id.split("#")[0] : id;
+                String variantId = isVariant ? id.split("#")[1] : null;
 
-                if (entry != null && !id.contains("#")) {
-                    this.lastUnlockTime = System.currentTimeMillis();
-                    this.lastUnlockedEntry = entry;
-                    Minecraft.getInstance().getToasts().addToast(new FieldGuideToast(entry));
+                if (isVariant || !toastsToShow.containsKey(baseIdStr)) {
+                    toastsToShow.put(baseIdStr, variantId);
                 }
+            }
+        }
+
+        for (Map.Entry<String, String> entryToToast : toastsToShow.entrySet()) {
+            Object entry = resolveEntryFromId(entryToToast.getKey());
+            if (entry != null) {
+                this.lastUnlockTime = System.currentTimeMillis();
+                this.lastUnlockedEntry = entry;
+                Minecraft.getInstance().getToasts().addToast(new FieldGuideToast(entry, entryToToast.getValue()));
             }
         }
 

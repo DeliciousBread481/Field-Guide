@@ -8,6 +8,7 @@ import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.mixin.accessor.EntityAccessor;
 import com.evandev.fieldguide.platform.Services;
+import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import com.evandev.fieldguide.util.StructureUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -23,6 +24,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.WaterAnimal;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -33,10 +35,7 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 import java.awt.*;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public class EntryRenderHelper {
 
@@ -50,15 +49,24 @@ public class EntryRenderHelper {
         }
     }
 
-    private static Optional<ResourceLocation> getResourcePackOverride(Object entry, boolean isPage) {
-        String key = entry.toString() + (isPage ? "_page" : "_grid");
+    private static Optional<ResourceLocation> getResourcePackOverride(Object baseEntry, Object cacheKey, boolean isPage) {
+        String key = cacheKey.toString() + (isPage ? "_page" : "_grid");
 
         if (OVERRIDE_CACHE.containsKey(key)) {
             return OVERRIDE_CACHE.get(key);
         }
 
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        ResourceLocation id = ClientFieldGuideManager.getEntryId(baseEntry);
         if (id != null) {
+            if (cacheKey instanceof String str && str.contains("#")) {
+                String variantId = str.substring(str.indexOf('#') + 1).replace(":", "_").toLowerCase(Locale.ROOT);
+                ResourceLocation specificVariantLoc = new ResourceLocation(id.getNamespace(), "textures/fieldguide/entries/" + id.getPath() + "_" + variantId + (isPage ? "_page.png" : "_grid.png"));
+                if (Minecraft.getInstance().getResourceManager().getResource(specificVariantLoc).isPresent()) {
+                    OVERRIDE_CACHE.put(key, Optional.of(specificVariantLoc));
+                    return Optional.of(specificVariantLoc);
+                }
+            }
+
             ResourceLocation specificLoc = new ResourceLocation(id.getNamespace(), "textures/fieldguide/entries/" + id.getPath() + (isPage ? "_page.png" : "_grid.png"));
             ResourceLocation defaultLoc = new ResourceLocation(id.getNamespace(), "textures/fieldguide/entries/" + id.getPath() + ".png");
 
@@ -76,25 +84,35 @@ public class EntryRenderHelper {
         return Optional.empty();
     }
 
-    private static void renderWithCache(Object cacheKey, GuiGraphics guiGraphics, int x, int y, int width, int height, boolean unlocked, boolean isPage, float bounceScale, Runnable renderAction) {
-        Optional<ResourceLocation> textureOpt = getResourcePackOverride(cacheKey, isPage);
+    private static void renderWithCache(Object baseEntry, Object cacheKey, GuiGraphics guiGraphics, int x, int y, int width, int height, boolean unlocked, boolean isPage, float bounceScale, Runnable renderAction) {
+        Optional<ResourceLocation> textureOpt = getResourcePackOverride(baseEntry, cacheKey, isPage);
 
         if (textureOpt.isEmpty()) {
-            textureOpt = IconCacheManager.getOrGenerateIcon(cacheKey, isPage, renderAction);
+            textureOpt = IconCacheManager.getOrGenerateIcon(baseEntry, cacheKey, isPage, renderAction);
         }
 
         textureOpt.ifPresent(texture -> drawCachedTexture(guiGraphics, texture, x, y, width, height, unlocked, isPage, bounceScale));
     }
 
     public static void renderEntityNormalized(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale) {
-        renderWithCache(entity.getType(), guiGraphics, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, () -> {
+        String variantId = "";
+        if (entity instanceof Mob mob) {
+            FieldGuideVariantManager.VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(mob);
+            if (provider != null) {
+                variantId = provider.getCurrent(mob).id();
+            }
+        }
+
+        Object cacheKey = variantId.isEmpty() ? entity.getType() : entity.getType().toString() + "#" + variantId;
+
+        renderWithCache(entity.getType(), cacheKey, guiGraphics, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, () -> {
             ResourceLocation id = ClientFieldGuideManager.getEntryId(entity.getType());
             renderEntity(entity, id, isPage, -30.0F);
         });
     }
 
     public static void renderCobblemon(GuiGraphics guiGraphics, CompositeFieldGuideEntry entry, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale) {
-        renderWithCache(entry, guiGraphics, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, () -> {
+        renderWithCache(entry, entry, guiGraphics, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, () -> {
             ResourceLocation id = entry.id();
             LivingEntity dummy = FieldGuideCobblemonCompat.getDummyPokemon(id, Minecraft.getInstance().level);
             if (dummy != null) {
@@ -163,7 +181,7 @@ public class EntryRenderHelper {
     public static void renderBlock(GuiGraphics guiGraphics, Block block, int x, int y, float baseScale, boolean unlocked, boolean isPage, float bounceScale) {
         int scaledSize = (int) (baseScale * 2);
 
-        renderWithCache(block, guiGraphics, x, y, scaledSize, scaledSize, unlocked, isPage, bounceScale, () -> {
+        renderWithCache(block, block, guiGraphics, x, y, scaledSize, scaledSize, unlocked, isPage, bounceScale, () -> {
             setupFieldGuideBlockLighting();
             ResourceLocation id = ClientFieldGuideManager.getEntryId(block);
             EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(id);
@@ -225,7 +243,7 @@ public class EntryRenderHelper {
     }
 
     public static void renderStructure(GuiGraphics guiGraphics, CompositeFieldGuideEntry composite, int x, int y, int size, boolean unlocked, boolean isPage, float bounceScale) {
-        renderWithCache(composite, guiGraphics, x, y, size, size, unlocked, isPage, bounceScale, () -> {
+        renderWithCache(composite, composite, guiGraphics, x, y, size, size, unlocked, isPage, bounceScale, () -> {
             setupFieldGuideBlockLighting();
             PoseStack pose = new PoseStack();
 
