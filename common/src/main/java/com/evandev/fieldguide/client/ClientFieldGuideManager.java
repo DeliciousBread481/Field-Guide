@@ -4,6 +4,7 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.data.JournalPage;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
+import com.evandev.fieldguide.client.gui.util.IconCacheManager;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.client.scanning.FieldGuideScanner;
 import com.evandev.fieldguide.client.search.SearchManager;
@@ -405,6 +406,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
     public void onClientTick(Minecraft minecraft) {
         FieldGuideScanner.getInstance().onClientTick(minecraft);
+        IconCacheManager.tick();
 
         if (this.needsResolution && minecraft.level != null) {
             resolveAllEntries();

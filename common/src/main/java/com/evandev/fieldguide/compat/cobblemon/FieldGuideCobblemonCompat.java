@@ -153,6 +153,8 @@ public final class FieldGuideCobblemonCompat {
                     "species", id -> id.getNamespace().equals(MOD_ID) && id.getPath().endsWith(".json")
             );
 
+            List<Map.Entry<CategoryEntry, Integer>> sortedEntries = new ArrayList<>();
+
             for (Map.Entry<ResourceLocation, List<Resource>> entry : speciesFiles.entrySet()) {
                 for (Resource resource : entry.getValue()) {
                     try (Reader reader = resource.openAsReader()) {
@@ -161,6 +163,7 @@ public final class FieldGuideCobblemonCompat {
                         if (json.has("name")) {
                             String speciesName = json.get("name").getAsString().toLowerCase(Locale.ROOT);
                             ResourceLocation entryId = new ResourceLocation("fieldguide", "cobblemon/" + speciesName + "_standard");
+                            int pokedexNumber = json.has("nationalPokedexNumber") ? json.get("nationalPokedexNumber").getAsInt() : Integer.MAX_VALUE;
 
                             if (json.has("drops")) {
                                 JsonObject dropsObj = json.getAsJsonObject("drops");
@@ -187,11 +190,20 @@ public final class FieldGuideCobblemonCompat {
                                 }
                             }
 
-                            cobblemonCategory.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, entryId, entryId, null, null, null, null));
+                            sortedEntries.add(new AbstractMap.SimpleEntry<>(
+                                    new CategoryEntry(CategoryEntry.CategoryType.ENTRY, entryId, entryId, null, null, null, null),
+                                    pokedexNumber
+                            ));
                         }
                     } catch (Exception ignored) {
                     }
                 }
+            }
+
+            sortedEntries.sort(Map.Entry.comparingByValue());
+
+            for (Map.Entry<CategoryEntry, Integer> sortedEntry : sortedEntries) {
+                cobblemonCategory.addEntry(sortedEntry.getKey());
             }
         }
     }

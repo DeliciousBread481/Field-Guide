@@ -20,15 +20,21 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class IconCacheManager {
     private static final Path CACHE_DIR = Services.PLATFORM.getConfigDirectory().resolve("../fieldguide_cache");
     private static final Map<String, ResourceLocation> TEXTURE_CACHE = new HashMap<>();
     private static final int RENDER_SIZE = 256;
+    private static final Queue<Runnable> GENERATION_QUEUE = new LinkedList<>();
+    private static final Set<String> PENDING_GENERATIONS = new HashSet<>();
+
+    public static void tick() {
+        if (!GENERATION_QUEUE.isEmpty()) {
+            GENERATION_QUEUE.poll().run();
+        }
+    }
 
     public static void init() {
         try {
@@ -72,10 +78,17 @@ public class IconCacheManager {
 
         if (!cachedFile.exists()) {
             cachedFile.getParentFile().mkdirs();
-            generateAndSaveIcon(cachedFile, renderAction);
+            if (!PENDING_GENERATIONS.contains(key)) {
+                PENDING_GENERATIONS.add(key);
+                GENERATION_QUEUE.add(() -> {
+                    generateAndSaveIcon(cachedFile, renderAction);
+                    PENDING_GENERATIONS.remove(key);
+                });
+            }
+            return Optional.empty();
         }
 
-        if (cachedFile.exists()) {
+        if (cachedFile.exists() && !PENDING_GENERATIONS.contains(key)) {
             try {
                 NativeImage image = NativeImage.read(Files.newInputStream(cachedFile.toPath()));
                 DynamicTexture texture = new DynamicTexture(image);
