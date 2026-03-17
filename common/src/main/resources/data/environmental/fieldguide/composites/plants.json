@@ -1,0 +1,118 @@
+{
+  "values": [
+    {
+      "id": "environmental:willow_sapling",
+      "structure_nbt": "environmental:willow",
+      "components": [
+        "environmental:willow_log",
+        "environmental:willow_leaves",
+        "environmental:hanging_willow_leaves"
+      ]
+    },
+    {
+      "id": "environmental:pine_sapling",
+      "structure_nbt": "environmental:pine",
+      "components": [
+        "environmental:pine_log",
+        "environmental:pine_leaves"
+      ]
+    },
+    {
+      "id": "environmental:cheerful_plum_sapling",
+      "structure_nbt": "environmental:cheerful_plum",
+      "components": [
+        "environmental:plum_log",
+        "environmental:cheerful_plum_leaves"
+      ]
+    },
+    {
+      "id": "environmental:plum_sapling",
+      "structure_nbt": "environmental:plum",
+      "components": [
+        "environmental:plum_log",
+        "environmental:plum_leaves"
+      ]
+    },
+    {
+      "id": "environmental:moody_plum_sapling",
+      "structure_nbt": "environmental:moody_plum",
+      "components": [
+        "environmental:plum_log",
+        "environmental:moody_plum_leaves"
+      ]
+    },
+    {
+      "id": "environmental:pink_wisteria_sapling",
+      "structure_nbt": "environmental:pink_wisteria",
+      "components": [
+        "environmental:wisteria_log",
+        "environmental:wisteria_leaves",
+        "environmental:pink_wisteria_leaves",
+        "environmental:pink_hanging_wisteria_leaves"
+      ]
+    },
+    {
+      "id": "environmental:purple_wisteria_sapling",
+      "structure_nbt": "environmental:purple_wisteria",
+      "components": [
+        "environmental:wisteria_log",
+        "environmental:wisteria_leaves",
+        "environmental:purple_wisteria_leaves",
+        "environmental:purple_hanging_wisteria_leaves"
+      ]
+    },
+    {
+      "id": "environmental:blue_wisteria_sapling",
+      "structure_nbt": "environmental:blue_wisteria",
+      "components": [
+        "environmental:wisteria_log",
+        "environmental:wisteria_leaves",
+        "environmental:blue_wisteria_leaves",
+        "environmental:blue_hanging_wisteria_leaves"
+      ]
+    },
+    {
+      "id": "environmental:white_wisteria_sapling",
+      "structure_nbt": "environmental:white_wisteria",
+      "components": [
+        "environmental:wisteria_log",
+        "environmental:wisteria_leaves",
+        "environmental:white_wisteria_leaves",
+        "environmental:white_hanging_wisteria_leaves"
+      ]
+    },
+    {
+      "id": "environmental:cattail",
+      "render": [
+        "environmental:cattail_stalk|cattails=3",
+        "environmental:cattail|cattails=3,top=true"
+      ],
+      "components": [
+        "environmental:cattail",
+        "environmental:cattail_stalk"
+      ]
+    },
+    {
+      "id": "environmental:dwarf_spruce",
+      "render": [
+        "environmental:dwarf_spruce_plant|bottom=true",
+        "environmental:dwarf_spruce|top=true"
+
+      ],
+      "components": [
+        "environmental:dwarf_spruce",
+        "environmental:dwarf_spruce_plant",
+        "environmental:dwarf_spruce_plant_cupric_torch",
+        "environmental:dwarf_spruce_plant_ender_torch",
+        "environmental:dwarf_spruce_plant_redstone_torch",
+        "environmental:dwarf_spruce_plant_soul_torch",
+        "environmental:dwarf_spruce_plant_torch",
+        "environmental:dwarf_spruce_cupric_torch",
+        "environmental:dwarf_spruce_ender_torch",
+        "environmental:dwarf_spruce_redstone_torch",
+        "environmental:dwarf_spruce_soul_torch",
+        "environmental:dwarf_spruce_torch"
+      ]
+    }
+  ]
+}
