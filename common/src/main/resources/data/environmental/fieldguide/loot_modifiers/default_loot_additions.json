@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "additions": [
+    {
+      "entry": "environmental:cattail",
+      "value": "environmental:cattail_fluff"
+    }
+  ]
+}

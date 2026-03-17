@@ -1,0 +1,57 @@
+{
+  "removals": [
+    {
+      "entry": [
+        "environmental:dwarf_spruce",
+        "environmental:dwarf_spruce_torch",
+        "environmental:dwarf_spruce_soul_torch",
+        "environmental:dwarf_spruce_ender_torch",
+        "environmental:dwarf_spruce_cupric_torch",
+        "environmental:dwarf_spruce_redstone_torch"
+      ],
+      "value": [
+        "minecraft:nether_star"
+      ]
+    },
+    {
+      "entry": [
+        "environmental:hanging_willow_leaves"
+      ],
+      "value": [
+        "environmental:hanging_willow_leaves"
+      ]
+    },
+    {
+      "entry": [
+        "environmental:pink_hanging_wisteria_leaves"
+      ],
+      "value": [
+        "environmental:pink_hanging_wisteria_leaves"
+      ]
+    },
+    {
+      "entry": [
+        "environmental:purple_hanging_wisteria_leaves"
+      ],
+      "value": [
+        "environmental:purple_hanging_wisteria_leaves"
+      ]
+    },
+    {
+      "entry": [
+        "environmental:blue_hanging_wisteria_leaves"
+      ],
+      "value": [
+        "environmental:blue_hanging_wisteria_leaves"
+      ]
+    },
+    {
+      "entry": [
+        "environmental:white_hanging_wisteria_leaves"
+      ],
+      "value": [
+        "environmental:white_hanging_wisteria_leaves"
+      ]
+    }
+  ]
+}
