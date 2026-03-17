@@ -1,0 +1,179 @@
+package com.evandev.fieldguide.client.gui.widget;
+
+import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
+import com.evandev.fieldguide.util.FieldGuideVariantManager;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.ImageButton;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+public class VariantOverviewWidget extends AbstractWidget {
+
+    private final Object entry;
+    private final LivingEntity renderedEntity;
+    private final List<FieldGuideVariantManager.VariantDef> variants;
+    private final Consumer<Integer> onVariantSelected;
+    private final int maxPages;
+    private final ImageButton closeButton;
+    private final PageTurnButton leftButton;
+    private final PageTurnButton rightButton;
+    private boolean visible = false;
+    private int currentPage = 0;
+    private Component currentTitleText;
+
+    public VariantOverviewWidget(int x, int y, int width, int height, Object entry, LivingEntity renderedEntity, List<FieldGuideVariantManager.VariantDef> variants, Consumer<Integer> onVariantSelected) {
+        super(x, y, width, height, Component.empty());
+        this.entry = entry;
+        this.renderedEntity = renderedEntity;
+        this.variants = variants;
+        this.onVariantSelected = onVariantSelected;
+        this.maxPages = (int) Math.ceil(variants.size() / 9.0);
+        this.currentTitleText = Component.literal("Variants");
+        this.closeButton = new ImageButton(x + width - 16, y + 6, 10, 10, 0, 0, 10, Constants.CLOSE_ICON, 10, 20, (btn) -> this.toggleVisibility());
+
+        this.leftButton = new PageTurnButton(x + (width / 2) - 24, y + height - 20, 16, 16, 0, 16, 16, Constants.WIDGETS_TEXTURE, (btn) -> {
+            if (currentPage > 0) currentPage--;
+        });
+        this.rightButton = new PageTurnButton(x + (width / 2) + 8, y + height - 20, 16, 16, 16, 16, 16, Constants.WIDGETS_TEXTURE, (btn) -> {
+            if (currentPage < maxPages - 1) currentPage++;
+        });
+    }
+
+    public void toggleVisibility() {
+        this.visible = !this.visible;
+    }
+
+    public boolean isVisible() {
+        return this.visible;
+    }
+
+    @Override
+    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+        if (!this.visible) return;
+
+        graphics.pose().pushPose();
+        graphics.pose().translate(0, 0, 300);
+
+        graphics.blit(Constants.VARIANT_WIDGET_TEXTURE, this.getX(), this.getY(), 0, 0, this.width, this.height, this.width, this.height);
+
+        this.currentTitleText = Component.literal("Variants"); // TODO: translation key
+
+        int startIdx = currentPage * 9;
+        int endIdx = Math.min(startIdx + 9, variants.size());
+
+        int spacingX = 36;
+        int spacingY = 40;
+        int startX = this.getX() + (this.width / 2) - spacingX;
+        int startY = this.getY() + 30;
+
+        FieldGuideVariantManager.VariantProvider<Mob> provider = null;
+        FieldGuideVariantManager.VariantDef originalVariant = null;
+
+        if (renderedEntity instanceof Mob mob) {
+            provider = FieldGuideVariantManager.getProvider(mob);
+            if (provider != null) {
+                originalVariant = provider.getCurrent(mob);
+            }
+        }
+
+        for (int i = startIdx; i < endIdx; i++) {
+            int gridIndex = i - startIdx;
+            int row = gridIndex / 3;
+            int col = gridIndex % 3;
+
+            int itemX = startX + (col * spacingX);
+            int itemY = startY + (row * spacingY);
+
+            FieldGuideVariantManager.VariantDef variant = variants.get(i);
+            boolean isUnlocked = ClientFieldGuideManager.isVariantUnlocked(entry, variant.id());
+
+            if (provider != null && renderedEntity instanceof Mob mob) {
+                provider.apply(mob, variant);
+            }
+
+            EntryRenderHelper.renderEntityNormalized(graphics, renderedEntity, itemX, itemY + 8, 30, 30, isUnlocked, false, 1.0f);
+
+            if (mouseX >= itemX - 16 && mouseX <= itemX + 16 && mouseY >= itemY - 16 && mouseY <= itemY + 16) {
+                if (isUnlocked) {
+                    String name = variant.id();
+                    if (name.contains(":")) name = name.substring(name.indexOf(':') + 1);
+                    name = Arrays.stream(name.split("_")).map(s -> s.substring(0, 1).toUpperCase() + s.substring(1)).collect(Collectors.joining(" "));
+                    this.currentTitleText = Component.literal(name);
+                } else {
+                    this.currentTitleText = Component.literal("???");
+                }
+            }
+        }
+
+        if (provider != null && renderedEntity instanceof Mob mob && originalVariant != null) {
+            provider.apply(mob, originalVariant);
+        }
+
+        int titleWidth = Minecraft.getInstance().font.width(this.currentTitleText);
+        graphics.drawString(Minecraft.getInstance().font, this.currentTitleText, this.getX() + (this.width / 2) - (titleWidth / 2), this.getY() + 8, 0x404040, false);
+
+        this.closeButton.render(graphics, mouseX, mouseY, partialTicks);
+        if (this.currentPage > 0) this.leftButton.render(graphics, mouseX, mouseY, partialTicks);
+        if (this.currentPage < maxPages - 1) this.rightButton.render(graphics, mouseX, mouseY, partialTicks);
+
+        graphics.pose().popPose();
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (!this.visible) return false;
+
+        if (this.closeButton.mouseClicked(mouseX, mouseY, button)) return true;
+        if (this.currentPage > 0 && this.leftButton.mouseClicked(mouseX, mouseY, button)) return true;
+        if (this.currentPage < maxPages - 1 && this.rightButton.mouseClicked(mouseX, mouseY, button)) return true;
+
+        int startIdx = currentPage * 9;
+        int endIdx = Math.min(startIdx + 9, variants.size());
+        int spacingX = 36;
+        int spacingY = 40;
+        int startX = this.getX() + (this.width / 2) - spacingX;
+        int startY = this.getY() + 30;
+
+        for (int i = startIdx; i < endIdx; i++) {
+            int gridIndex = i - startIdx;
+            int row = gridIndex / 3;
+            int col = gridIndex % 3;
+
+            int itemX = startX + (col * spacingX);
+            int itemY = startY + (row * spacingY);
+
+            if (mouseX >= itemX - 16 && mouseX <= itemX + 16 && mouseY >= itemY - 16 && mouseY <= itemY + 16) {
+                FieldGuideVariantManager.VariantDef variant = variants.get(i);
+                if (ClientFieldGuideManager.isVariantUnlocked(entry, variant.id())) {
+                    this.onVariantSelected.accept(i);
+                    Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                }
+                return true;
+            }
+        }
+
+        if (mouseX >= this.getX() && mouseX <= this.getX() + this.width && mouseY >= this.getY() && mouseY <= this.getY() + this.height) {
+            return true;
+        }
+
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    protected void updateWidgetNarration(@NotNull NarrationElementOutput narrationElementOutput) {
+    }
+}

@@ -21,6 +21,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.nbt.CompoundTag;
@@ -45,11 +46,12 @@ public class FieldGuideEntryScreen extends BookScreen {
     private String initialVariant = null;
     private Entity renderedEntity;
     private long lastClickTime = 0;
-
     private int currentVariantIndex = 0;
     private List<FieldGuideVariantManager.VariantDef> entityVariants = new ArrayList<>();
     private PageTurnButton prevVariantButton;
     private PageTurnButton nextVariantButton;
+    private VariantOverviewWidget variantOverviewWidget;
+    private ImageButton overviewToggleButton;
 
     public FieldGuideEntryScreen(FieldGuideCategoryScreen parent, Object entry) {
         super(getTitleForEntry(entry));
@@ -123,6 +125,23 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         if (Services.PLATFORM.isModLoaded("exposure")) {
             ClientExposureCompat.setupExposureWidgets(this, entry);
+        }
+
+        if (this.entityVariants.size() > 1 && this.renderedEntity instanceof LivingEntity living) {
+            this.overviewToggleButton = new ImageButton(this.leftPageBounds.left() + 10, this.leftPageBounds.top() + 10, 16, 16, 0, 0, 16, Constants.OVERVIEW_ICON, 16, 32, (btn) -> {
+                if (this.variantOverviewWidget != null) {
+                    this.variantOverviewWidget.toggleVisibility();
+                }
+            });
+            this.addRenderableWidget(this.overviewToggleButton);
+
+            int widgetWidth = 142;
+            int widgetHeight = 166;
+            int widgetX = this.leftPageBounds.left() + (this.leftPageBounds.width() / 2) - (widgetWidth / 2);
+            int widgetY = this.leftPageBounds.top() + (this.leftPageBounds.height() / 2) - (widgetHeight / 2);
+
+            this.variantOverviewWidget = new VariantOverviewWidget(widgetX, widgetY, widgetWidth, widgetHeight, this.entry, living, this.entityVariants, this::setVariantIndex);
+            this.addRenderableWidget(this.variantOverviewWidget);
         }
     }
 
@@ -207,6 +226,23 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
         }
         lastClickTime = System.currentTimeMillis();
+    }
+
+    private void setVariantIndex(int index) {
+        if (entityVariants.isEmpty() || renderedEntity == null || !(renderedEntity instanceof Mob)) return;
+        if (index >= 0 && index < entityVariants.size()) {
+            currentVariantIndex = index;
+            FieldGuideVariantManager.VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(renderedEntity);
+            if (provider != null) {
+                provider.apply((Mob) renderedEntity, entityVariants.get(currentVariantIndex));
+
+                if (isCobblemon(entry) && this.minecraft != null) {
+                    ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+                    this.renderedEntity = FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
+                }
+            }
+            lastClickTime = System.currentTimeMillis();
+        }
     }
 
     private void loadSpawnBiomes() {
@@ -340,6 +376,10 @@ public class FieldGuideEntryScreen extends BookScreen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (this.variantOverviewWidget != null && this.variantOverviewWidget.isVisible()) {
+            if (this.variantOverviewWidget.mouseClicked(mouseX, mouseY, button)) return true;
+        }
+
         if (super.mouseClicked(mouseX, mouseY, button)) return true;
 
         Object clickEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
@@ -350,7 +390,6 @@ public class FieldGuideEntryScreen extends BookScreen {
             if (mouseX >= xPos - 50 && mouseX <= xPos + 50 && mouseY >= yPos - 50 && mouseY <= yPos + 50) {
                 if (ClientFieldGuideManager.isUnlocked(entry)) {
                     if (button == 0) {
-                        // Left click (play sound)
                         ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
                         EntryVisual visual = entryId != null ? ClientFieldGuideManager.getInstance().getEntryVisual(entryId) : null;
 

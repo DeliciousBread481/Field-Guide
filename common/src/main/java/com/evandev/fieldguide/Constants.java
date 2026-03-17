@@ -17,6 +17,7 @@ public class Constants {
     public static final ResourceLocation TOAST_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/toast.png");
     public static final ResourceLocation JOURNAL_TITLE_PAGE_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/page_journal_title.png");
     public static final ResourceLocation JOURNAL_PAGE_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/page_journal.png");
+    public static final ResourceLocation VARIANT_WIDGET_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/variant_overview_bg.png");
 
     // Buttons
     public static final ResourceLocation BUTTON_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/fieldguide_button.png");
@@ -30,6 +31,8 @@ public class Constants {
     // Icons
     public static final ResourceLocation DEFAULT_ICON = new ResourceLocation(MOD_ID, "textures/gui/icons/book.png");
     public static final ResourceLocation TOAST_ICON = new ResourceLocation(MOD_ID, "textures/gui/book_icon.png");
+    public static final ResourceLocation OVERVIEW_ICON = new ResourceLocation(MOD_ID, "textures/gui/overview_icon.png");
+    public static final ResourceLocation CLOSE_ICON = new ResourceLocation(MOD_ID, "textures/gui/close_icon.png");
     public static final ResourceLocation ATTRIBUTES_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/attributes.png");
     public static final ResourceLocation SCANNING_ICON_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/scanning.png");
 
