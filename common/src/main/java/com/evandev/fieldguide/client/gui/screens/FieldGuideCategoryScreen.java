@@ -15,6 +15,7 @@ import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.platform.Services;
+import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -634,7 +635,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
                 guiGraphics.blit(Constants.LIST_ENTRY_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE * 2);
             }
 
-            renderEntryInGrid(guiGraphics, entry, bounds.x_center(), bounds.y_center(), 30, true);
+            renderEntryInGrid(guiGraphics, entry, bounds.x_center(), bounds.y_center(), true);
 
             if (ClientFieldGuideManager.isNew(entry)) {
                 renderNewLabel(guiGraphics, bounds);
@@ -676,7 +677,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
                     guiGraphics.blit(Constants.LIST_ENTRY_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE * 2);
                 }
 
-                renderEntryInGrid(guiGraphics, entry, bounds.x_center(), bounds.y_center(), 30, unlocked);
+                renderEntryInGrid(guiGraphics, entry, bounds.x_center(), bounds.y_center(), unlocked);
 
                 if (ClientFieldGuideManager.isNew(entry)) {
                     renderNewLabel(guiGraphics, bounds);
@@ -732,18 +733,32 @@ public class FieldGuideCategoryScreen extends BookScreen {
     private void renderEntryTooltip(GuiGraphics guiGraphics, Object entry, int mouseX, int mouseY, boolean unlocked) {
         if (unlocked || ModConfig.get().showUndiscoveredNames) {
             Component name = ClientFieldGuideManager.getEntryName(entry);
-
             List<Component> tooltip = new ArrayList<>();
             tooltip.add(name);
 
+            Entity dummy = getCachedEntity(entry);
+            if (dummy != null) {
+                List<FieldGuideVariantManager.VariantDef> variants = FieldGuideVariantManager.getVariants(dummy);
+                if (variants.size() > 1) {
+                    int unlockedCount = ModConfig.get().unlockAllVariants ? variants.size() : 0;
+
+                    if (!ModConfig.get().unlockAllVariants) {
+                        for (FieldGuideVariantManager.VariantDef var : variants) {
+                            if (ClientFieldGuideManager.isVariantUnlocked(entry, var.id())) {
+                                unlockedCount++;
+                            }
+                        }
+                    }
+                    tooltip.add(Component.translatable("fieldguide.tooltip.variants", unlockedCount, variants.size()).withStyle(ChatFormatting.GRAY));
+                }
+            }
+
             if (this.minecraft != null && this.minecraft.options.advancedItemTooltips) {
                 ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-
                 if (id != null) {
                     tooltip.add(Component.literal(id.toString()).withStyle(ChatFormatting.DARK_GRAY));
                 }
             }
-
             guiGraphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
         } else {
             guiGraphics.renderTooltip(this.font, Component.translatable("fieldguide.unknown"), mouseX, mouseY);
@@ -774,7 +789,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
         guiGraphics.drawString(this.font, str, bounds.x_center() - font.width(str) / 2, bounds.bottom() - 11, ModConfig.get().getPageNumberColorInt(), false);
     }
 
-    private void renderEntryInGrid(GuiGraphics guiGraphics, Object entry, int x, int y, int scale, boolean unlocked) {
+    private void renderEntryInGrid(GuiGraphics guiGraphics, Object entry, int x, int y, boolean unlocked) {
         Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
         boolean isCobblemon = entry instanceof CompositeFieldGuideEntry comp && comp.id() != null && comp.id().getNamespace().equals("fieldguide") && comp.id().getPath().startsWith("cobblemon/");
 

@@ -153,6 +153,12 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.keepSilhouetteWhenUnlocked = newValue)
                 .build());
 
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.unlock_variants"), config.unlockAllVariants)
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("option.fieldguide.unlock_variants.tooltip"))
+                .setSaveConsumer(newValue -> config.unlockAllVariants = newValue)
+                .build());
+
         // Interface
         ConfigCategory interfaceCat = builder.getOrCreateCategory(Component.translatable("category.fieldguide.interface"));
 

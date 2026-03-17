@@ -161,6 +161,9 @@
   "option.fieldguide.keep_silhouette": "Keep Silhouette When Unlocked",
   "option.fieldguide.keep_silhouette.tooltip": "If enabled, entities and blocks will still be displayed as silhouettes even after they've been discovered.",
 
+  "option.fieldguide.unlock_variants": "Unlock All Variants",
+  "option.fieldguide.unlock_variants.tooltip": "If enabled, all variants of an entity will be unlocked after they've been discovered.",
+
   "category.fieldguide.exposure": "Exposure Integration",
 
   "option.fieldguide.exposure.add_photograph_button": "Enable 'Add Photograph' Button",
@@ -182,7 +185,7 @@
   "fieldguide.time.night": "Evening",
   "fieldguide.time.midnight": "Night",
 
-  "fieldguide.tooltip.common_spawn": "Common Spawn",
+  "fieldguide.tooltip.variants": "Variants: %s/%s",
 
   "tag.item.fieldguide.spyglasses": "Spyglasses",
 

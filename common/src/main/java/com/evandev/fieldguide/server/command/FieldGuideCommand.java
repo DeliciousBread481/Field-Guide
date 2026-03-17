@@ -116,7 +116,7 @@ public class FieldGuideCommand {
             PlayerFieldGuideProgress progress = manager.getProgress(player);
             if (progress != null) {
                 for (ResourceLocation entryId : allEntries) {
-                    progress.unlock(player, entryId);
+                    progress.unlock(player, entryId, null);
                 }
             }
         }
@@ -136,7 +136,7 @@ public class FieldGuideCommand {
             PlayerFieldGuideProgress progress = manager.getProgress(player);
             if (progress != null) {
                 for (ResourceLocation entryId : entryIds) {
-                    progress.unlock(player, entryId);
+                    progress.unlock(player, entryId, null);
                 }
             }
         }
@@ -256,7 +256,7 @@ public class FieldGuideCommand {
         for (ServerPlayer player : targets) {
             PlayerFieldGuideProgress progress = manager.getProgress(player);
             if (progress != null) {
-                progress.unlock(player, entryId);
+                progress.unlock(player, entryId, null);
             }
         }
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.entry.success", entryId.toString()), true);

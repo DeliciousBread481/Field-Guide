@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.util;
 
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Cat;
@@ -14,80 +15,134 @@ import net.minecraft.world.entity.npc.VillagerType;
 import net.minecraft.world.item.DyeColor;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class FieldGuideVariantManager {
 
-    private static final Map<Class<?>, VariantCycler<?>> CYCLERS = new HashMap<>();
+    private static final Map<Class<?>, VariantProvider<?>> PROVIDERS = new HashMap<>();
 
     static {
-        registerCycler(Frog.class, frog -> {
-            FrogVariant current = frog.getVariant();
-            List<FrogVariant> variants = BuiltInRegistries.FROG_VARIANT.stream().toList();
-            if (!variants.isEmpty()) {
-                int nextIdx = (variants.indexOf(current) + 1) % variants.size();
-                frog.setVariant(variants.get(nextIdx));
+        registerProvider(Frog.class, new VariantProvider<>() {
+            @Override
+            public List<VariantDef> getVariants() {
+                return BuiltInRegistries.FROG_VARIANT.entrySet().stream()
+                        .map(e -> new VariantDef(e.getKey().location().toString(), e.getValue()))
+                        .toList();
+            }
+
+            @Override
+            public void apply(Frog entity, VariantDef def) {
+                entity.setVariant((FrogVariant) def.value());
+            }
+
+            @Override
+            public VariantDef getCurrent(Frog entity) {
+                ResourceLocation id = BuiltInRegistries.FROG_VARIANT.getKey(entity.getVariant());
+                return new VariantDef(id != null ? id.toString() : "default", entity.getVariant());
             }
         });
 
-        registerCycler(Cat.class, cat -> {
-            CatVariant current = cat.getVariant();
-            List<CatVariant> variants = BuiltInRegistries.CAT_VARIANT.stream().toList();
-            if (!variants.isEmpty()) {
-                int nextIdx = (variants.indexOf(current) + 1) % variants.size();
-                cat.setVariant(variants.get(nextIdx));
+        registerProvider(Cat.class, new VariantProvider<>() {
+            @Override
+            public List<VariantDef> getVariants() {
+                return BuiltInRegistries.CAT_VARIANT.entrySet().stream()
+                        .map(e -> new VariantDef(e.getKey().location().toString(), e.getValue()))
+                        .toList();
+            }
+
+            @Override
+            public void apply(Cat entity, VariantDef def) {
+                entity.setVariant((CatVariant) def.value());
+            }
+
+            @Override
+            public VariantDef getCurrent(Cat entity) {
+                ResourceLocation id = BuiltInRegistries.CAT_VARIANT.getKey(entity.getVariant());
+                return new VariantDef(id != null ? id.toString() : "default", entity.getVariant());
             }
         });
 
-        registerCycler(Sheep.class, sheep -> {
-            DyeColor current = sheep.getColor();
-            DyeColor[] colors = DyeColor.values();
-            int nextIdx = (current.ordinal() + 1) % colors.length;
-            sheep.setColor(colors[nextIdx]);
+        registerProvider(Sheep.class, new VariantProvider<>() {
+            @Override
+            public List<VariantDef> getVariants() {
+                return Arrays.stream(DyeColor.values())
+                        .map(c -> new VariantDef(c.getName(), c))
+                        .toList();
+            }
+
+            @Override
+            public void apply(Sheep entity, VariantDef def) {
+                entity.setColor((DyeColor) def.value());
+            }
+
+            @Override
+            public VariantDef getCurrent(Sheep entity) {
+                return new VariantDef(entity.getColor().getName(), entity.getColor());
+            }
         });
     }
 
-    /**
-     * Register a custom variant cycler for a specific mob class.
-     */
-    public static <T extends Mob> void registerCycler(Class<T> entityClass, VariantCycler<T> cycler) {
-        CYCLERS.put(entityClass, cycler);
+    public static <T extends Mob> void registerProvider(Class<T> entityClass, VariantProvider<T> provider) {
+        PROVIDERS.put(entityClass, provider);
     }
 
     @SuppressWarnings("unchecked")
-    public static void cycleToNextVariant(Entity entity) {
-        if (!(entity instanceof Mob mob)) return;
+    public static <T extends Mob> VariantProvider<T> getProvider(Entity entity) {
+        if (!(entity instanceof Mob mob)) return null;
 
-        if (mob instanceof VillagerDataHolder holder) {
-            cycleVillagerData(holder);
-            return;
+        if (mob instanceof VillagerDataHolder) {
+            return (VariantProvider<T>) getVillagerProvider();
         }
 
         Class<?> clazz = mob.getClass();
         while (clazz != null && clazz != Mob.class && clazz != Object.class) {
-            if (CYCLERS.containsKey(clazz)) {
-                ((VariantCycler<Mob>) CYCLERS.get(clazz)).cycle(mob);
-                return;
+            if (PROVIDERS.containsKey(clazz)) {
+                return (VariantProvider<T>) PROVIDERS.get(clazz);
             }
             clazz = clazz.getSuperclass();
         }
 
-        cycleReflectionVariant(mob);
+        return (VariantProvider<T>) getReflectionProvider(mob);
     }
 
-    private static void cycleVillagerData(VillagerDataHolder holder) {
-        VillagerData data = holder.getVillagerData();
-        VillagerType currentType = data.getType();
-        List<VillagerType> types = BuiltInRegistries.VILLAGER_TYPE.stream().toList();
-        if (!types.isEmpty()) {
-            int nextIdx = (types.indexOf(currentType) + 1) % types.size();
-            holder.setVillagerData(data.setType(types.get(nextIdx)));
-        }
+    public static List<VariantDef> getVariants(Entity entity) {
+        VariantProvider<Mob> provider = getProvider(entity);
+        return provider != null ? provider.getVariants() : List.of();
     }
 
-    private static void cycleReflectionVariant(Mob mob) {
+    private static VariantProvider<Mob> getVillagerProvider() {
+        return new VariantProvider<>() {
+            @Override
+            public List<VariantDef> getVariants() {
+                return BuiltInRegistries.VILLAGER_TYPE.entrySet().stream()
+                        .map(e -> new VariantDef(e.getKey().location().toString(), e.getValue()))
+                        .toList();
+            }
+
+            @Override
+            public void apply(Mob entity, VariantDef def) {
+                if (entity instanceof VillagerDataHolder holder) {
+                    VillagerData data = holder.getVillagerData();
+                    holder.setVillagerData(data.setType((VillagerType) def.value()));
+                }
+            }
+
+            @Override
+            public VariantDef getCurrent(Mob entity) {
+                if (entity instanceof VillagerDataHolder holder) {
+                    VillagerType type = holder.getVillagerData().getType();
+                    ResourceLocation id = BuiltInRegistries.VILLAGER_TYPE.getKey(type);
+                    return new VariantDef(id.toString(), type);
+                }
+                return new VariantDef("default", null);
+            }
+        };
+    }
+
+    private static VariantProvider<Mob> getReflectionProvider(Mob mob) {
         Method[] methods = mob.getClass().getMethods();
         Method getter = null;
         Method setter = null;
@@ -109,28 +164,53 @@ public class FieldGuideVariantManager {
         }
 
         if (getter != null) {
-            try {
-                Object current = getter.invoke(mob);
+            final Method finalGetter = getter;
+            final Method finalSetter = setter;
 
-                if (current instanceof Integer currentInt) {
-                    setter.invoke(mob, currentInt + 1);
-                    if (getter.invoke(mob).equals(current)) {
-                        setter.invoke(mob, 0);
-                    }
-                } else if (current instanceof Enum<?> currentEnum) {
-                    Object[] constants = currentEnum.getDeclaringClass().getEnumConstants();
-                    int nextOrdinal = (currentEnum.ordinal() + 1) % constants.length;
-                    setter.invoke(mob, constants[nextOrdinal]);
+            try {
+                Object current = finalGetter.invoke(mob);
+                if (current instanceof Enum<?> currentEnum) {
+                    return new VariantProvider<>() {
+                        @Override
+                        public List<VariantDef> getVariants() {
+                            return Arrays.stream(currentEnum.getDeclaringClass().getEnumConstants())
+                                    .map(e -> new VariantDef(e.name(), e))
+                                    .toList();
+                        }
+
+                        @Override
+                        public void apply(Mob entity, VariantDef def) {
+                            try {
+                                finalSetter.invoke(entity, def.value());
+                            } catch (Exception ignored) {
+                            }
+                        }
+
+                        @Override
+                        public VariantDef getCurrent(Mob entity) {
+                            try {
+                                Object val = finalGetter.invoke(entity);
+                                if (val instanceof Enum<?> e) return new VariantDef(e.name(), e);
+                            } catch (Exception ignored) {
+                            }
+                            return new VariantDef("default", null);
+                        }
+                    };
                 }
             } catch (Exception ignored) {
             }
         }
+        return null;
     }
 
-    /**
-     * Interface for defining custom variant cycling logic for specific entities.
-     */
-    public interface VariantCycler<T extends Mob> {
-        void cycle(T entity);
+    public interface VariantProvider<T extends Mob> {
+        List<VariantDef> getVariants();
+
+        void apply(T entity, VariantDef def);
+
+        VariantDef getCurrent(T entity);
+    }
+
+    public record VariantDef(String id, Object value) {
     }
 }

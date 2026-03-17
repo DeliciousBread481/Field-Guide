@@ -47,6 +47,11 @@ public class FieldGuideEntryScreen extends BookScreen {
     private Entity renderedEntity;
     private long lastClickTime = 0;
 
+    private int currentVariantIndex = 0;
+    private List<FieldGuideVariantManager.VariantDef> entityVariants = new ArrayList<>();
+    private PageTurnButton prevVariantButton;
+    private PageTurnButton nextVariantButton;
+
     public FieldGuideEntryScreen(FieldGuideCategoryScreen parent, Object entry) {
         super(getTitleForEntry(entry));
         this.parent = parent;
@@ -58,6 +63,21 @@ public class FieldGuideEntryScreen extends BookScreen {
             return ClientFieldGuideManager.getEntryName(entry);
         }
         return Component.translatable("fieldguide.undiscovered");
+    }
+
+    private static @NotNull String getTimeKey(long gameTime) {
+        long timeOfDay = gameTime % 24000L;
+
+        String timeKey = "fieldguide.time.day";
+
+        if (timeOfDay >= 4500 && timeOfDay < 7500) {
+            timeKey = "fieldguide.time.noon";
+        } else if (timeOfDay >= 16500 && timeOfDay < 19500) {
+            timeKey = "fieldguide.time.midnight";
+        } else if (timeOfDay >= 13000 && timeOfDay < 23000) {
+            timeKey = "fieldguide.time.night";
+        }
+        return timeKey;
     }
 
     private boolean isCobblemon(Object entry) {
@@ -138,9 +158,35 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (renderEntry instanceof EntityType<?> type) {
             try {
                 this.renderedEntity = type.create(this.minecraft.level);
+
+                if (this.renderedEntity != null) {
+                    this.entityVariants = FieldGuideVariantManager.getVariants(this.renderedEntity);
+                    if (this.entityVariants.size() > 1) {
+                        int centerX = leftPageBounds.x_center();
+                        int centerY = leftPageBounds.y_center() - 15;
+
+                        this.prevVariantButton = new PageTurnButton(centerX - 50, centerY - 8, 16, 16, 0, 16, 16, Constants.WIDGETS_TEXTURE, b -> cycleVariant(-1));
+                        this.nextVariantButton = new PageTurnButton(centerX + 34, centerY - 8, 16, 16, 16, 16, 16, Constants.WIDGETS_TEXTURE, b -> cycleVariant(1));
+
+                        this.addRenderableWidget(prevVariantButton);
+                        this.addRenderableWidget(nextVariantButton);
+                    }
+                }
             } catch (Exception ignored) {
             }
         }
+    }
+
+    private void cycleVariant(int dir) {
+        if (entityVariants.isEmpty() || renderedEntity == null || !(renderedEntity instanceof Mob)) return;
+        currentVariantIndex = (currentVariantIndex + dir + entityVariants.size()) % entityVariants.size();
+
+        FieldGuideVariantManager.VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(renderedEntity);
+        if (provider != null) {
+            provider.apply((Mob) renderedEntity, entityVariants.get(currentVariantIndex));
+        }
+        lastClickTime = System.currentTimeMillis();
+        IconCacheManager.clearCache();
     }
 
     private void loadSpawnBiomes() {
@@ -295,17 +341,12 @@ public class FieldGuideEntryScreen extends BookScreen {
                         } else if (clickEntry instanceof Block block && this.minecraft != null) {
                             this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(block.defaultBlockState().getSoundType().getBreakSound(), 1.0F, 1.0F));
                         }
-                    } else {
-                        // Right click (cycle variant)
-                        // TODO: proper UI handling
-                        if (isCobblemon(entry)) {
-                            ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-                            FieldGuideCobblemonCompat.cycleCobblemonForm(id, this.minecraft != null ? this.minecraft.level : null);
-                            if (this.minecraft != null) {
-                                this.renderedEntity = FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
-                            }
-                        } else if (renderedEntity instanceof LivingEntity living) {
-                            FieldGuideVariantManager.cycleToNextVariant(living);
+                    } else if (isCobblemon(entry)) {
+                        // TODO: switch cobblemon to vanilla variant manager
+                        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+                        FieldGuideCobblemonCompat.cycleCobblemonForm(id, this.minecraft != null ? this.minecraft.level : null);
+                        if (this.minecraft != null) {
+                            this.renderedEntity = FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
                         }
                         IconCacheManager.clearCache();
                     }
@@ -408,10 +449,15 @@ public class FieldGuideEntryScreen extends BookScreen {
                 renderAlignment(guiGraphics, living, mouseX, mouseY);
             }
         } else if (renderEntry instanceof EntityType && renderedEntity instanceof LivingEntity living) {
-            if (!hideEntity) {
-                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 112, 112, unlocked, true, bounce);
+            boolean variantUnlocked = unlocked;
+            if (unlocked && !entityVariants.isEmpty() && !ModConfig.get().unlockAllVariants) {
+                variantUnlocked = ClientFieldGuideManager.isVariantUnlocked(entry, entityVariants.get(currentVariantIndex).id());
             }
-            if (unlocked) {
+
+            if (!hideEntity) {
+                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 112, 112, variantUnlocked, true, bounce);
+            }
+            if (variantUnlocked) {
                 renderAttributes(guiGraphics, living);
                 renderAlignment(guiGraphics, living, mouseX, mouseY);
             }
@@ -422,21 +468,6 @@ public class FieldGuideEntryScreen extends BookScreen {
         }
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
-    }
-
-    private static @NotNull String getTimeKey(long gameTime) {
-        long timeOfDay = gameTime % 24000L;
-
-        String timeKey = "fieldguide.time.day";
-
-        if (timeOfDay >= 4500 && timeOfDay < 7500) {
-            timeKey = "fieldguide.time.noon";
-        } else if (timeOfDay >= 16500 && timeOfDay < 19500) {
-            timeKey = "fieldguide.time.midnight";
-        } else if (timeOfDay >= 13000 && timeOfDay < 23000) {
-            timeKey = "fieldguide.time.night";
-        }
-        return timeKey;
     }
 
     private void renderAlignment(GuiGraphics guiGraphics, LivingEntity entity, int mouseX, int mouseY) {

@@ -8,6 +8,7 @@ import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.network.ScanUnlockPacket;
 import com.evandev.fieldguide.platform.Services;
+import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import com.evandev.fieldguide.util.ModTags;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -18,6 +19,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.boss.EnderDragonPart;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.level.ClipContext;
@@ -148,8 +150,18 @@ public class FieldGuideScanner {
                 }
             }
 
-            if (entryForTarget != null && !ProgressManager.getInstance().isUnlocked(entryForTarget) && isScannable && !requiresKill) {
-                foundTarget = hitEntity;
+            if (entryForTarget != null && isScannable && !requiresKill) {
+                boolean needsScan = !ProgressManager.getInstance().isUnlocked(entryForTarget);
+                if (hitEntity instanceof Mob mob) {
+                    var provider = FieldGuideVariantManager.getProvider(mob);
+                    if (provider != null && !ModConfig.get().unlockAllVariants) {
+                        String variantId = provider.getCurrent(mob).id();
+                        if (!ClientFieldGuideManager.isVariantUnlocked(entryForTarget, variantId)) {
+                            needsScan = true;
+                        }
+                    }
+                }
+                if (needsScan) foundTarget = hitEntity;
             }
         } else {
             if (blockHit.getType() == HitResult.Type.BLOCK) {
@@ -366,14 +378,23 @@ public class FieldGuideScanner {
         ResourceLocation entryId = ClientFieldGuideManager.getEntryId(targetKey);
         if (entryId != null) {
             ResourceLocation scannedTargetId;
+            String variantId = "";
+
             if (foundTarget instanceof Entity entity) {
                 scannedTargetId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+                if (entity instanceof Mob mob) {
+                    var provider = FieldGuideVariantManager.getProvider(mob);
+                    if (provider != null) {
+                        variantId = provider.getCurrent(mob).id();
+                    }
+                }
             } else {
                 scannedTargetId = BuiltInRegistries.BLOCK.getKey((Block) foundTarget);
             }
             BlockPos targetBlockPos = (foundTarget instanceof Block) ? scanningPos : null;
             int targetEntityId = (foundTarget instanceof Entity) ? ((Entity) foundTarget).getId() : 0;
-            Services.NETWORK.sendToServer(new ScanUnlockPacket(entryId, scannedTargetId, targetBlockPos, targetEntityId));
+
+            Services.NETWORK.sendToServer(new ScanUnlockPacket(entryId, variantId, scannedTargetId, targetBlockPos, targetEntityId));
         }
 
         fadingTarget = foundTarget;

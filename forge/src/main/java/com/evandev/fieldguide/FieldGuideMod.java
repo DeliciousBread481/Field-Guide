@@ -8,12 +8,14 @@ import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.command.FieldGuideCommand;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
+import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
@@ -183,7 +185,17 @@ public class FieldGuideMod {
                     ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType());
                     PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
                     if (progress != null) {
-                        progress.unlock(player, entityId);
+                        String variantId = null;
+                        if (event.getEntity() instanceof Mob mob) {
+                            FieldGuideVariantManager.VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(mob);
+                            if (provider != null) {
+                                FieldGuideVariantManager.VariantDef current = provider.getCurrent(mob);
+                                if (current != null) {
+                                    variantId = current.id();
+                                }
+                            }
+                        }
+                        progress.unlock(player, entityId, variantId);
                     }
                 }
             }

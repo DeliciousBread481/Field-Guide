@@ -67,7 +67,8 @@ dependencies {
     modCompileOnly "maven.modrinth:reliable-remover:${reliable_remover_version}-forge-1.20.1"
 
     // Exposure
-    modImplementation "maven.modrinth:exposure:${exposure_forge_version}"
+    // This crashes in dev for some reason
+    modCompileOnly "maven.modrinth:exposure:${exposure_forge_version}"
 
     // Cobblemon
     modCompileOnly "com.cobblemon:forge:${cobblemon_version}"

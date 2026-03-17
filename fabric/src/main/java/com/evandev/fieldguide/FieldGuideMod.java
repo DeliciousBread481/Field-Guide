@@ -11,6 +11,7 @@ import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.command.FieldGuideCommand;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
+import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityCombatEvents;
@@ -29,6 +30,7 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
@@ -117,7 +119,17 @@ public class FieldGuideMod implements ModInitializer {
                         ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(killedEntity.getType());
                         PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
                         if (progress != null) {
-                            progress.unlock(player, entityId);
+                            String variantId = null;
+                            if (killedEntity instanceof Mob mob) {
+                                FieldGuideVariantManager.VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(mob);
+                                if (provider != null) {
+                                    FieldGuideVariantManager.VariantDef current = provider.getCurrent(mob);
+                                    if (current != null) {
+                                        variantId = current.id();
+                                    }
+                                }
+                            }
+                            progress.unlock(player, entityId, variantId);
                         }
                     }
                 }

@@ -49,18 +49,31 @@ public class PlayerFieldGuideProgress {
         return list.subList(Math.min(index, list.size()), Math.min(index + length, list.size()));
     }
 
-    public boolean unlock(ServerPlayer player, ResourceLocation entryId) {
+    public void unlock(ServerPlayer player, ResourceLocation entryId, String variantId) {
         String id = entryId.toString();
+        boolean newlyUnlocked = false;
+
         if (unlockedEntries.add(id)) {
             discoveryTimes.put(id, System.currentTimeMillis());
             discoveryGameTimes.put(id, player.serverLevel().dayTime());
             pendingUnlocks.add(id);
             pendingRevokes.remove(id);
-            dirty = true;
+            newlyUnlocked = true;
             UnlockRewards.grant(player, entryId);
-            return true;
         }
-        return false;
+
+        if (variantId != null && !variantId.isEmpty()) {
+            String fullVariantId = id + "#" + variantId;
+            if (unlockedEntries.add(fullVariantId)) {
+                pendingUnlocks.add(fullVariantId);
+                pendingRevokes.remove(fullVariantId);
+                newlyUnlocked = true;
+            }
+        }
+
+        if (newlyUnlocked) {
+            dirty = true;
+        }
     }
 
     public boolean revoke(String entryId) {

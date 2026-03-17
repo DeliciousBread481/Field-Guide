@@ -74,6 +74,13 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         return ProgressManager.getInstance().isUnlocked(entry);
     }
 
+    public static boolean isVariantUnlocked(Object entry, String variantId) {
+        ResourceLocation id = getEntryId(entry);
+        if (id == null) return false;
+        String fullId = id + "#" + variantId;
+        return ProgressManager.getInstance().getUnlockedEntries().contains(fullId);
+    }
+
     public static boolean isNew(Object entry) {
         return ProgressManager.getInstance().isNew(entry);
     }
@@ -332,8 +339,6 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
         syncedCategories.values().forEach(category -> {
             List<Object> entries = EntryResolver.resolveCategoryEntries(category, Collections.emptyList(), this.redirects);
-
-            // Group entries
             List<Object> groupedEntries = SearchManager.groupByQueries(entries, category.getGroupByQueries());
 
             resolvedCategoryEntries.put(category.getId(), groupedEntries);

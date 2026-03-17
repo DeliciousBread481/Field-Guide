@@ -11,7 +11,9 @@ import com.evandev.fieldguide.network.UpdateEntryDataPacket;
 import com.evandev.fieldguide.network.UpdateJournalPacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -52,6 +54,16 @@ public class ProgressManager {
         return INSTANCE;
     }
 
+    private static void applyEntryMap(Map<String, String> source, Map<String, String> target) {
+        source.forEach((key, value) -> {
+            if (value.isEmpty()) {
+                target.remove(key);
+            } else {
+                target.put(key, value);
+            }
+        });
+    }
+
     public void applyServerUpdate(ProgressUpdatePacket packet) {
         if (packet.isReset()) {
             unlockedEntries.clear();
@@ -73,8 +85,10 @@ public class ProgressManager {
 
         for (String id : packet.getUnlocked()) {
             if (unlockedEntries.add(id) && !packet.isSilent()) {
-                Object entry = resolveEntryFromId(id);
-                if (entry != null) {
+                String baseIdStr = id.contains("#") ? id.split("#")[0] : id;
+                Object entry = resolveEntryFromId(baseIdStr);
+
+                if (entry != null && !id.contains("#")) {
                     this.lastUnlockTime = System.currentTimeMillis();
                     this.lastUnlockedEntry = entry;
                     Minecraft.getInstance().getToasts().addToast(new FieldGuideToast(entry));
@@ -94,16 +108,6 @@ public class ProgressManager {
             journalPages.clear();
             for (PlayerFieldGuideProgress.JournalPageData page : pages) {
                 journalPages.add(new JournalPage(page.title(), page.content(), page.timestamp()));
-            }
-        });
-    }
-
-    private static void applyEntryMap(Map<String, String> source, Map<String, String> target) {
-        source.forEach((key, value) -> {
-            if (value.isEmpty()) {
-                target.remove(key);
-            } else {
-                target.put(key, value);
             }
         });
     }
@@ -266,6 +270,10 @@ public class ProgressManager {
         entryPhotographs.clear();
         journalPages.clear();
         journalTitle = "My Field Guide";
+    }
+
+    public Set<String> getUnlockedEntries() {
+        return Collections.unmodifiableSet(unlockedEntries);
     }
 
     public void exportToLang(String type) {

@@ -10,17 +10,20 @@ import net.minecraft.server.level.ServerPlayer;
 
 public class ScanUnlockPacket {
     private final ResourceLocation entryId;
+    private final String variantId;
     private final ResourceLocation scannedTargetId;
     private final BlockPos targetBlockPos;
     private final int targetEntityId;
 
     public ScanUnlockPacket(
             ResourceLocation entryId,
+            String variantId,
             ResourceLocation scannedTargetId,
             BlockPos targetBlockPos,
             int targetEntityId
     ) {
         this.entryId = entryId;
+        this.variantId = variantId != null ? variantId : "";
         this.scannedTargetId = scannedTargetId;
         this.targetBlockPos = targetBlockPos;
         this.targetEntityId = targetEntityId;
@@ -28,6 +31,7 @@ public class ScanUnlockPacket {
 
     public ScanUnlockPacket(FriendlyByteBuf buf) {
         this.entryId = buf.readResourceLocation();
+        this.variantId = buf.readUtf();
         this.scannedTargetId = buf.readResourceLocation();
         this.targetBlockPos = buf.readNullable(FriendlyByteBuf::readBlockPos);
         this.targetEntityId = buf.readVarInt();
@@ -35,6 +39,7 @@ public class ScanUnlockPacket {
 
     public void encode(FriendlyByteBuf buf) {
         buf.writeResourceLocation(entryId);
+        buf.writeUtf(variantId);
         buf.writeResourceLocation(scannedTargetId);
         buf.writeNullable(targetBlockPos, FriendlyByteBuf::writeBlockPos);
         buf.writeVarInt(targetEntityId);
@@ -49,9 +54,9 @@ public class ScanUnlockPacket {
 
         if (!manager.isValidEntry(entryId)) return;
         if (manager.isKillToUnlock(entryId)) return;
-        if (progress.isUnlocked(entryId)) return;
+
         if (!ScanVerifier.verifyScan(player, entryId, scannedTargetId, targetBlockPos, targetEntityId)) return;
 
-        progress.unlock(player, entryId);
+        progress.unlock(player, entryId, variantId);
     }
 }
