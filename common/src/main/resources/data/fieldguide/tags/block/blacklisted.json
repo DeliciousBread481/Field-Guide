@@ -1,6 +1,9 @@
 {
   "replace": false,
   "values": [
-    "environmental:hibiscus_leaves"
+    {
+      "id": "environmental:hibiscus_leaves",
+      "required": false
+    }
   ]
 }
