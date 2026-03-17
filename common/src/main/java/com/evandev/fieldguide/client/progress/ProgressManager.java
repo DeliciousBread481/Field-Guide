@@ -41,6 +41,7 @@ public class ProgressManager {
     private final Map<String, String> customNames = new HashMap<>();
     private final Map<String, String> entryPhotographs = new HashMap<>();
     private final List<JournalPage> journalPages = new ArrayList<>();
+    private String lastUnlockedVariant = null;
 
     private String journalTitle = "My Field Guide";
 
@@ -52,6 +53,10 @@ public class ProgressManager {
 
     public static ProgressManager getInstance() {
         return INSTANCE;
+    }
+
+    public String getLastUnlockedVariant() {
+        return lastUnlockedVariant;
     }
 
     private static void applyEntryMap(Map<String, String> source, Map<String, String> target) {
@@ -102,6 +107,7 @@ public class ProgressManager {
             if (entry != null) {
                 this.lastUnlockTime = System.currentTimeMillis();
                 this.lastUnlockedEntry = entry;
+                this.lastUnlockedVariant = entryToToast.getValue();
                 Minecraft.getInstance().getToasts().addToast(new FieldGuideToast(entry, entryToToast.getValue()));
             }
         }
@@ -268,6 +274,9 @@ public class ProgressManager {
         entryPhotographs.clear();
         journalPages.clear();
         journalTitle = "My Field Guide";
+        lastUnlockTime = 0;
+        lastUnlockedEntry = null;
+        lastUnlockedVariant = null;
     }
 
     public void onWorldUnload() {
@@ -280,6 +289,9 @@ public class ProgressManager {
         entryPhotographs.clear();
         journalPages.clear();
         journalTitle = "My Field Guide";
+        lastUnlockTime = 0;
+        lastUnlockedEntry = null;
+        lastUnlockedVariant = null;
     }
 
     public Set<String> getUnlockedEntries() {

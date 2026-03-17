@@ -57,6 +57,7 @@ public class FieldGuideClient {
                 ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
                 long lastTime = manager.getLastUnlockTime();
                 Object lastEntry = manager.getLastUnlockedEntry();
+                String lastVariant = manager.getLastUnlockedVariant();
 
                 boolean isRecent = (System.currentTimeMillis() - lastTime) < AUTO_OPEN_THRESHOLD_MS;
                 if (isRecent && lastEntry != null) {
@@ -64,7 +65,13 @@ public class FieldGuideClient {
                     if (targetCategory != null) {
                         int page = FieldGuideCategoryScreen.getPageForEntry(targetCategory, lastEntry);
                         FieldGuideCategoryScreen mainScreen = new FieldGuideCategoryScreen(targetCategory, page);
-                        minecraft.setScreen(new FieldGuideEntryScreen(mainScreen, lastEntry));
+                        FieldGuideEntryScreen entryScreen = new FieldGuideEntryScreen(mainScreen, lastEntry);
+
+                        if (lastVariant != null) {
+                            entryScreen.setInitialVariant(lastVariant);
+                        }
+
+                        minecraft.setScreen(entryScreen);
                         return;
                     }
                 }

@@ -3,6 +3,11 @@
 - Added Pokémon category for when Cobblemon is installed.
 - Added ore icon to the default icon pack.
 - Added Environmental compatibility.
+- Added support for variants.
+
+### Changed
+
+- Improved icon cache generation speeds.
 
 ### Fixed
 

@@ -206,9 +206,13 @@
   "commands.fieldguide.grant.everything.success": "Granted all Field Guide entries to %s players",
   "commands.fieldguide.grant.category.success": "Granted category %s to %s players",
   "commands.fieldguide.grant.entry.success": "Granted entry %s to targets",
+  "commands.fieldguide.grant.variant.success": "Granted variant %s of %s to players",
+
   "commands.fieldguide.revoke.everything.success": "Revoked all Field Guide entries from targets",
   "commands.fieldguide.revoke.category.success": "Revoked category %s from %s players",
   "commands.fieldguide.revoke.entry.success": "Revoked entry %s from targets",
+  "commands.fieldguide.revoke.variant.success": "Revoked variant %s of %s from players",
+
   "commands.fieldguide.category.not_found": "Category %s not found",
   "commands.fieldguide.entry.not_found": "Entry %s not found",
   "commands.fieldguide.reload.started": "Reloading Field Guide data...",

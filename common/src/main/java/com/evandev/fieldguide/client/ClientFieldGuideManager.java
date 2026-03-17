@@ -173,6 +173,10 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         return INSTANCE.resolvedCategoryEntries.values().stream().flatMap(List::stream).distinct().collect(Collectors.toList());
     }
 
+    public String getLastUnlockedVariant() {
+        return ProgressManager.getInstance().getLastUnlockedVariant();
+    }
+
     public List<String> getBiomeAdditions() {
         return biomeAdditions;
     }

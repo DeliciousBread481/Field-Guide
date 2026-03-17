@@ -7,7 +7,6 @@ import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
-import com.evandev.fieldguide.client.gui.util.IconCacheManager;
 import com.evandev.fieldguide.client.gui.widget.*;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
@@ -43,7 +42,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     private final FieldGuideCategoryScreen parent;
     private final Object entry;
     private final List<ResourceLocation> spawnBiomes = new ArrayList<>();
-
+    private String initialVariant = null;
     private Entity renderedEntity;
     private long lastClickTime = 0;
 
@@ -85,6 +84,10 @@ public class FieldGuideEntryScreen extends BookScreen {
                 comp.id() != null &&
                 comp.id().getNamespace().equals("fieldguide") &&
                 comp.id().getPath().startsWith("cobblemon/");
+    }
+
+    public void setInitialVariant(String variantId) {
+        this.initialVariant = variantId;
     }
 
     public FieldGuideCategoryScreen getParentScreen() {
@@ -176,7 +179,11 @@ public class FieldGuideEntryScreen extends BookScreen {
                 if (provider != null) {
                     FieldGuideVariantManager.VariantDef current = provider.getCurrent((Mob) this.renderedEntity);
                     for (int i = 0; i < this.entityVariants.size(); i++) {
-                        if (this.entityVariants.get(i).id().equals(current.id())) {
+                        if (this.entityVariants.get(i).id().equals(this.initialVariant)) {
+                            this.currentVariantIndex = i;
+                            provider.apply((Mob) this.renderedEntity, this.entityVariants.get(i));
+                            break;
+                        } else if (this.initialVariant == null && this.entityVariants.get(i).id().equals(current.id())) {
                             this.currentVariantIndex = i;
                             break;
                         }
@@ -200,7 +207,6 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
         }
         lastClickTime = System.currentTimeMillis();
-        IconCacheManager.clearCache();
     }
 
     private void loadSpawnBiomes() {
