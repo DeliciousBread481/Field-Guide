@@ -52,6 +52,10 @@
     {
       "id": "autumnity:tall_foul_berry_bush",
       "required": false
+    },
+    {
+      "id": "environmental:giant_tall_grass",
+      "required": false
     }
   ]
 }

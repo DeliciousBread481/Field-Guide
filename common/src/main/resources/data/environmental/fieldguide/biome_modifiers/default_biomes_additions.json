@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "additions": [
+    {
+      "entry": [
+        "environmental:zebra"
+      ],
+      "value": "minecraft:savanna"
+    }
+  ]
+}

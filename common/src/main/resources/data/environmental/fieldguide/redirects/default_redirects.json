@@ -1,0 +1,164 @@
+{
+  "entries": [
+    {
+      "source": "environmental:dwarf_spruce_plant",
+      "target": "environmental:dwarf_spruce"
+    },
+    {
+      "source": "environmental:dwarf_spruce_plant_cupric_torch",
+      "target": "environmental:dwarf_spruce"
+    },
+    {
+      "source": "environmental:dwarf_spruce_plant_ender_torch",
+      "target": "environmental:dwarf_spruce"
+    },
+    {
+      "source": "environmental:dwarf_spruce_plant_redstone_torch",
+      "target": "environmental:dwarf_spruce"
+    },
+    {
+      "source": "environmental:dwarf_spruce_plant_soul_torch",
+      "target": "environmental:dwarf_spruce"
+    },
+    {
+      "source": "environmental:dwarf_spruce_plant_torch",
+      "target": "environmental:dwarf_spruce"
+    },
+    {
+      "source": "environmental:dwarf_spruce_cupric_torch",
+      "target": "environmental:dwarf_spruce"
+    },
+    {
+      "source": "environmental:dwarf_spruce_ender_torch",
+      "target": "environmental:dwarf_spruce"
+    },
+    {
+      "source": "environmental:dwarf_spruce_redstone_torch",
+      "target": "environmental:dwarf_spruce"
+    },
+    {
+      "source": "environmental:dwarf_spruce_soul_torch",
+      "target": "environmental:dwarf_spruce"
+    },
+    {
+      "source": "environmental:dwarf_spruce_torch",
+      "target": "environmental:dwarf_spruce"
+    },
+    {
+      "source": "environmental:cattail_stalk",
+      "target": "environmental:cattail"
+    },
+    {
+      "source": "environmental:cattail_sprout",
+      "target": "environmental:cattail"
+    },
+    {
+      "source": "environmental:magenta_wall_hibiscus",
+      "target": "environmental:magenta_hibiscus"
+    },
+    {
+      "source": "environmental:orange_wall_hibiscus",
+      "target": "environmental:orange_hibiscus"
+    },
+    {
+      "source": "environmental:red_wall_hibiscus",
+      "target": "environmental:red_hibiscus"
+    },
+    {
+      "source": "environmental:yellow_wall_hibiscus",
+      "target": "environmental:yellow_hibiscus"
+    },
+    {
+      "source": "environmental:pink_wall_hibiscus",
+      "target": "environmental:pink_hibiscus"
+    },
+    {
+      "source": "environmental:purple_wall_hibiscus",
+      "target": "environmental:purple_hibiscus"
+    },
+    {
+      "source": "environmental:potted_bluebell",
+      "target": "environmental:bluebell"
+    },
+    {
+      "source": "environmental:potted_cup_lichen",
+      "target": "environmental:cup_lichen"
+    },
+    {
+      "source": "environmental:potted_bird_of_paradise",
+      "target": "environmental:bird_of_paradise"
+    },
+    {
+      "source": "environmental:potted_white_delphinium",
+      "target": "environmental:white_delphinium"
+    },
+    {
+      "source": "environmental:potted_blue_delphinium",
+      "target": "environmental:blue_delphinium"
+    },
+    {
+      "source": "environmental:potted_purple_delphinium",
+      "target": "environmental:purple_delphinium"
+    },
+    {
+      "source": "environmental:potted_pink_delphinium",
+      "target": "environmental:pink_delphinium"
+    },
+    {
+      "source": "environmental:potted_cattail",
+      "target": "environmental:cattail"
+    },
+    {
+      "source": "environmental:potted_magenta_hibiscus",
+      "target": "environmental:magenta_hibiscus"
+    },
+    {
+      "source": "environmental:potted_pink_hibiscus",
+      "target": "environmental:pink_hibiscus"
+    },
+    {
+      "source": "environmental:potted_red_hibiscus",
+      "target": "environmental:red_hibiscus"
+    },
+    {
+      "source": "environmental:potted_orange_hibiscus",
+      "target": "environmental:orange_hibiscus"
+    },
+    {
+      "source": "environmental:potted_yellow_hibiscus",
+      "target": "environmental:yellow_hibiscus"
+    },
+    {
+      "source": "environmental:potted_purple_hibiscus",
+      "target": "environmental:purple_hibiscus"
+    },
+    {
+      "source": "environmental:potted_cartwheel",
+      "target": "environmental:cartwheel"
+    },
+    {
+      "source": "environmental:potted_white_lotus_flower",
+      "target": "environmental:white_lotus_flower"
+    },
+    {
+      "source": "environmental:potted_red_lotus_flower",
+      "target": "environmental:red_lotus_flower"
+    },
+    {
+      "source": "environmental:potted_tasselflower",
+      "target": "environmental:tasselflower"
+    },
+    {
+      "source": "environmental:potted_violet",
+      "target": "environmental:violet"
+    },
+    {
+      "source": "environmental:potted_dianthus",
+      "target": "environmental:dianthus"
+    },
+    {
+      "source": "environmental:potted_dwarf_spruce",
+      "target": "environmental:dwarf_spruce"
+    }
+  ]
+}
