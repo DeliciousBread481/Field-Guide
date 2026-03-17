@@ -96,18 +96,36 @@ public class EntryRenderHelper {
 
     public static void renderEntityNormalized(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale) {
         String variantId = "";
+        FieldGuideVariantManager.VariantProvider<Mob> provider = null;
+        FieldGuideVariantManager.VariantDef currentVariant = null;
+
         if (entity instanceof Mob mob) {
-            FieldGuideVariantManager.VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(mob);
+            provider = FieldGuideVariantManager.getProvider(mob);
             if (provider != null) {
-                variantId = provider.getCurrent(mob).id();
+                currentVariant = provider.getCurrent(mob);
+                variantId = currentVariant.id();
             }
         }
 
-        Object cacheKey = variantId.isEmpty() ? entity.getType() : entity.getType().toString() + "#" + variantId;
+        Object cacheKey = variantId.isEmpty() ? entity.getType() : entity.getType() + "#" + variantId;
+
+        final FieldGuideVariantManager.VariantProvider<Mob> finalProvider = provider;
+        final FieldGuideVariantManager.VariantDef finalVariant = currentVariant;
 
         renderWithCache(entity.getType(), cacheKey, guiGraphics, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, () -> {
+
+            FieldGuideVariantManager.VariantDef tempOriginal = null;
+            if (finalProvider != null && entity instanceof Mob mob) {
+                tempOriginal = finalProvider.getCurrent(mob);
+                finalProvider.apply(mob, finalVariant);
+            }
+
             ResourceLocation id = ClientFieldGuideManager.getEntryId(entity.getType());
             renderEntity(entity, id, isPage, -30.0F);
+
+            if (finalProvider != null && entity instanceof Mob mob && tempOriginal != null) {
+                finalProvider.apply(mob, tempOriginal);
+            }
         });
     }
 
