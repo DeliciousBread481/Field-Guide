@@ -401,7 +401,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
         } else if (isCobblemon(entry)) {
             if (!hideEntity) {
-                EntryRenderHelper.renderCobblemon(guiGraphics, (CompositeFieldGuideEntry) entry, xPos, yPos, 112, 112, 100, unlocked, true, bounce);
+                EntryRenderHelper.renderCobblemon(guiGraphics, (CompositeFieldGuideEntry) entry, xPos, yPos, 112, 112, unlocked, true, bounce);
             }
             if (unlocked && renderedEntity instanceof LivingEntity living) {
                 renderAttributes(guiGraphics, living);
@@ -409,7 +409,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
         } else if (renderEntry instanceof EntityType && renderedEntity instanceof LivingEntity living) {
             if (!hideEntity) {
-                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 112, 112, 100, unlocked, true, bounce);
+                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 112, 112, unlocked, true, bounce);
             }
             if (unlocked) {
                 renderAttributes(guiGraphics, living);

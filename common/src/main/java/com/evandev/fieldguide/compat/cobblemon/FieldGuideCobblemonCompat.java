@@ -80,22 +80,27 @@ public final class FieldGuideCobblemonCompat {
         String formName = FORM_CACHE.getOrDefault(id, getDefaultForm(id));
 
         try {
-            String propsStr = "species=" + speciesName;
+            StringBuilder propsStr = new StringBuilder("species=" + speciesName);
             if (!formName.equals("standard")) {
                 Species species = PokemonSpecies.INSTANCE.getByIdentifier(new ResourceLocation(MOD_ID, speciesName));
                 if (species != null) {
                     for (FormData f : species.getForms()) {
                         if (f.getName().equals(formName)) {
-                            propsStr += " form=" + f.formOnlyShowdownId();
+                            for (String aspect : f.getAspects()) {
+                                propsStr.append(" ").append(aspect);
+                            }
                             break;
                         }
                     }
                 }
             }
 
-            PokemonProperties props = PokemonProperties.Companion.parse(propsStr, " ", "=");
+            PokemonProperties props = PokemonProperties.Companion.parse(propsStr.toString(), " ", "=");
             PokemonEntity pokemonEntity = props.createEntity(level);
             pokemonEntity.setNoAi(true);
+
+            pokemonEntity.getEntityData().set(PokemonEntity.getASPECTS(), pokemonEntity.getPokemon().getAspects());
+            pokemonEntity.getEntityData().set(PokemonEntity.getSPECIES(), pokemonEntity.getPokemon().getSpecies().getResourceIdentifier().toString());
 
             pokemonEntity.setTicksLived(25);
             pokemonEntity.setYRot(0.0F);

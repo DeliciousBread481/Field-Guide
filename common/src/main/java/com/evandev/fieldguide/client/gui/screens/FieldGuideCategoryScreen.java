@@ -798,9 +798,9 @@ public class FieldGuideCategoryScreen extends BookScreen {
             Entity entity = getCachedEntity(entry);
             if (entity instanceof LivingEntity living) {
                 if (isCobblemon) {
-                    EntryRenderHelper.renderCobblemon(guiGraphics, (CompositeFieldGuideEntry) entry, x, y, CELL_SIZE - 8, CELL_SIZE - 8, scale, unlocked, false, 1.0F);
+                    EntryRenderHelper.renderCobblemon(guiGraphics, (CompositeFieldGuideEntry) entry, x, y, CELL_SIZE - 8, CELL_SIZE - 8, unlocked, false, 1.0F);
                 } else {
-                    EntryRenderHelper.renderEntityNormalized(guiGraphics, living, x, y, CELL_SIZE - 8, CELL_SIZE - 8, scale, unlocked, false, 1.0F);
+                    EntryRenderHelper.renderEntityNormalized(guiGraphics, living, x, y, CELL_SIZE - 8, CELL_SIZE - 8, unlocked, false, 1.0F);
                 }
             }
         } else if (coreEntry instanceof Block block) {
