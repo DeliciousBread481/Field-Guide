@@ -92,6 +92,12 @@
   "option.fieldguide.text_muted_color": "Muted Text Color",
   "option.fieldguide.text_muted_color.tooltip": "The hex color code used for muted/secondary text.",
 
+  "option.fieldguide.text_new_color": "New Text Color",
+  "option.fieldguide.text_new_color.tooltip": "Hex color code for the text used when indicating a new entry.",
+
+  "option.fieldguide.text_cursor_color": "Text Cursor Color",
+  "option.fieldguide.text_cursor_color.tooltip": "Hex color code for the text cursor.",
+
   "option.fieldguide.page_number_color": "Page Number Color",
   "option.fieldguide.page_number_color.tooltip": "The hex color code used for the page numbers.",
 
@@ -145,6 +151,12 @@
 
   "option.fieldguide.global_scan_commands": "Global Scan Commands",
   "option.fieldguide.global_scan_commands.tooltip": "A list of commands to run whenever any entry is successfully scanned. Use @p for the player name.",
+
+  "option.fieldguide.category_scan_commands": "Category Scan Commands",
+  "option.fieldguide.category_scan_commands.tooltip": "Commands to execute when a specific category is fully scanned. Format: category_id=/command1;/command2",
+
+  "option.fieldguide.entry_scan_commands": "Entry Scan Commands",
+  "option.fieldguide.entry_scan_commands.tooltip": "Commands to execute when a specific entry is scanned. Format: entry_id=/command1;/command2",
 
   "option.fieldguide.keep_silhouette": "Keep Silhouette When Unlocked",
   "option.fieldguide.keep_silhouette.tooltip": "If enabled, entities and blocks will still be displayed as silhouettes even after they've been discovered.",

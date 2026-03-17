@@ -10,6 +10,9 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ClothConfigIntegration {
 
@@ -144,10 +147,10 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.disableEditingNames = newValue)
                 .build());
 
-        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.keep_silhouette"), config.disableBiomeDisplay)
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.keep_silhouette"), config.keepSilhouetteWhenUnlocked)
                 .setDefaultValue(false)
-                .setTooltip(Component.translatable("option.fieldguide.disable_biome_display.tooltip"))
-                .setSaveConsumer(newValue -> config.disableBiomeDisplay = newValue)
+                .setTooltip(Component.translatable("option.fieldguide.keep_silhouette.tooltip"))
+                .setSaveConsumer(newValue -> config.keepSilhouetteWhenUnlocked = newValue)
                 .build());
 
         // Interface
@@ -252,6 +255,18 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.textMutedColor = newValue)
                 .build());
 
+        interfaceCat.addEntry(entryBuilder.startStrField(Component.translatable("option.fieldguide.text_new_color"), config.textNewColor)
+                .setDefaultValue("#63B40C")
+                .setTooltip(Component.translatable("option.fieldguide.text_new_color.tooltip"))
+                .setSaveConsumer(newValue -> config.textNewColor = newValue)
+                .build());
+
+        interfaceCat.addEntry(entryBuilder.startStrField(Component.translatable("option.fieldguide.text_cursor_color"), config.textCursorColor)
+                .setDefaultValue("#0xFF704623")
+                .setTooltip(Component.translatable("option.fieldguide.text_cursor_color.tooltip"))
+                .setSaveConsumer(newValue -> config.textCursorColor = newValue)
+                .build());
+
         interfaceCat.addEntry(entryBuilder.startStrField(Component.translatable("option.fieldguide.page_number_color"), config.pageNumberColor)
                 .setDefaultValue("#C7A875")
                 .setTooltip(Component.translatable("option.fieldguide.page_number_color.tooltip"))
@@ -325,6 +340,18 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.globalScanCommands = newValue)
                 .build());
 
+        contentCat.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.category_scan_commands"), convertMapToList(config.categoryScanCommands))
+                .setDefaultValue(new ArrayList<>())
+                .setTooltip(Component.translatable("option.fieldguide.category_scan_commands.tooltip"))
+                .setSaveConsumer(newValue -> config.categoryScanCommands = convertListToMap(newValue))
+                .build());
+
+        contentCat.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.entry_scan_commands"), convertMapToList(config.entryScanCommands))
+                .setDefaultValue(new ArrayList<>())
+                .setTooltip(Component.translatable("option.fieldguide.entry_scan_commands.tooltip"))
+                .setSaveConsumer(newValue -> config.entryScanCommands = convertListToMap(newValue))
+                .build());
+
         // Exposure
         ConfigCategory exposureCat = builder.getOrCreateCategory(Component.translatable("category.fieldguide.exposure"));
 
@@ -347,5 +374,36 @@ public class ClothConfigIntegration {
                 .build());
 
         return builder.build();
+    }
+
+    private static List<String> convertMapToList(Map<String, List<String>> map) {
+        List<String> list = new ArrayList<>();
+        if (map != null) {
+            for (Map.Entry<String, List<String>> entry : map.entrySet()) {
+                list.add(entry.getKey() + "=" + String.join(";", entry.getValue()));
+            }
+        }
+        return list;
+    }
+
+    private static Map<String, List<String>> convertListToMap(List<String> list) {
+        Map<String, List<String>> map = new HashMap<>();
+        if (list != null) {
+            for (String s : list) {
+                String[] parts = s.split("=", 2);
+                if (parts.length == 2) {
+                    String key = parts[0].trim();
+                    String[] commands = parts[1].split(";");
+                    List<String> commandList = new ArrayList<>();
+                    for (String cmd : commands) {
+                        if (!cmd.trim().isEmpty()) {
+                            commandList.add(cmd.trim());
+                        }
+                    }
+                    map.put(key, commandList);
+                }
+            }
+        }
+        return map;
     }
 }
