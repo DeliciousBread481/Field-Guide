@@ -215,6 +215,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                             break;
                         } else if (this.initialVariant == null && this.entityVariants.get(i).id().equals(current.id())) {
                             this.currentVariantIndex = i;
+                            this.initialVariant = this.entityVariants.get(i).id();
                             break;
                         }
                     }
@@ -226,6 +227,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     private void cycleVariant(int dir) {
         if (entityVariants.isEmpty() || renderedEntity == null || !(renderedEntity instanceof Mob)) return;
         currentVariantIndex = (currentVariantIndex + dir + entityVariants.size()) % entityVariants.size();
+        this.initialVariant = entityVariants.get(currentVariantIndex).id();
 
         VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(renderedEntity);
         if (provider != null) {
@@ -244,6 +246,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (entityVariants.isEmpty() || renderedEntity == null || !(renderedEntity instanceof Mob)) return;
         if (index >= 0 && index < entityVariants.size()) {
             currentVariantIndex = index;
+            this.initialVariant = entityVariants.get(currentVariantIndex).id();
             VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(renderedEntity);
             if (provider != null) {
                 provider.apply((Mob) renderedEntity, entityVariants.get(currentVariantIndex));

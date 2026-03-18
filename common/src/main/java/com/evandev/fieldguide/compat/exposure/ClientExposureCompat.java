@@ -90,7 +90,9 @@ public class ClientExposureCompat {
 
                     () -> {
                         ProgressManager.getInstance().setPhotograph(entry, -1, ItemStack.EMPTY, variantId);
-                        Minecraft.getInstance().setScreen(new FieldGuideEntryScreen(screen.getParentScreen(), entry));
+                        FieldGuideEntryScreen newScreen = new FieldGuideEntryScreen(screen.getParentScreen(), entry);
+                        newScreen.setInitialVariant(variantId);
+                        Minecraft.getInstance().setScreen(newScreen);
                     },
                     tooltipText
             );
@@ -158,7 +160,9 @@ public class ClientExposureCompat {
             if (slot != null) {
                 ProgressManager.getInstance().setPhotograph(entry, slot, stack, variantId);
             }
-            Minecraft.getInstance().setScreen(new FieldGuideEntryScreen(parent.getParentScreen(), entry));
+            FieldGuideEntryScreen newScreen = new FieldGuideEntryScreen(parent.getParentScreen(), entry);
+            newScreen.setInitialVariant(variantId);
+            Minecraft.getInstance().setScreen(newScreen);
         }));
     }
 
