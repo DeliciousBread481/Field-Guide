@@ -81,7 +81,7 @@ public class EntryResolver {
         List<Object> matches = new ArrayList<>();
         for (List<Object> entries : resolvedEntries.values()) {
             for (Object entry : entries) {
-                if (entry.equals(target)) {
+                if (entry.equals(target) || (target instanceof ResourceLocation loc && loc.equals(getEntryId(entry)))) {
                     matches.add(entry);
                 } else if (entry instanceof CompositeFieldGuideEntry composite) {
                     if ((composite.displayEntry() != null && composite.displayEntry().equals(target)) ||

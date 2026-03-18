@@ -3,6 +3,7 @@ package com.evandev.fieldguide.client.scanning;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.progress.ProgressManager;
+import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
@@ -127,7 +128,9 @@ public class FieldGuideScanner {
             ResourceLocation redirectId = ClientFieldGuideManager.getInstance().getRedirect(originalId);
 
             Object actualTargetKey = type;
-            if (redirectId != null) {
+            if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(hitEntity)) {
+                actualTargetKey = FieldGuideCobblemonCompat.getPokemonEntryId(hitEntity);
+            } else if (redirectId != null) {
                 Optional<EntityType<?>> opt = BuiltInRegistries.ENTITY_TYPE.getOptional(redirectId);
                 if (opt.isPresent()) actualTargetKey = opt.get();
                 else {
@@ -242,10 +245,19 @@ public class FieldGuideScanner {
                 this.outOfRangePos = null;
 
                 BlockPos posContext = (foundTarget instanceof Block) ? blockHit.getBlockPos() : ((Entity) foundTarget).blockPosition();
-                Object targetKey = getContextAwareEntry((foundTarget instanceof Entity) ? ((Entity) foundTarget).getType() : foundTarget, minecraft, posContext);
+                Object baseTarget = foundTarget;
+                if (foundTarget instanceof Entity entity) {
+                    if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
+                        baseTarget = FieldGuideCobblemonCompat.getPokemonEntryId(entity);
+                    } else {
+                        baseTarget = entity.getType();
+                    }
+                }
+
+                Object targetKey = getContextAwareEntry(baseTarget, minecraft, posContext);
 
                 if (targetKey == null)
-                    targetKey = (foundTarget instanceof Entity) ? ((Entity) foundTarget).getType() : foundTarget;
+                    targetKey = baseTarget;
 
                 boolean sameTarget = (scanningTarget instanceof Entity && foundTarget instanceof Entity)
                         ? scanningTarget == foundTarget

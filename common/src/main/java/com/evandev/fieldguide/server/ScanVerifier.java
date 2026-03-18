@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.server;
 
+import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.EntryResolver;
@@ -33,22 +34,26 @@ public class ScanVerifier {
             return false;
         }
 
-        ResourceLocation categoryId = ServerFieldGuideManager.getInstance().getCategoryForEntryId(entryId);
-
         double maxDistSq = activeScanDist * activeScanDist;
         ServerLevel level = player.serverLevel();
+
+        ResourceLocation categoryId = ServerFieldGuideManager.getInstance().getCategoryForEntryId(entryId);
+        if (categoryId == null) {
+            return false;
+        }
 
         if (targetEntityId != 0) {
             if (!verifyEntityPresence(player, scannedTargetId, targetEntityId, level, maxDistSq, categoryId))
                 return false;
+            Entity entity = level.getEntity(targetEntityId);
+            if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
+                ResourceLocation pokemonEntryId = FieldGuideCobblemonCompat.getPokemonEntryId(entity);
+                return pokemonEntryId.equals(entryId);
+            }
         } else if (targetBlockPos != null) {
             if (!verifyBlockPresence(player, scannedTargetId, targetBlockPos, level, maxDistSq, categoryId))
                 return false;
         } else {
-            return false;
-        }
-
-        if (ServerFieldGuideManager.getInstance().getCategoryForEntryId(entryId) == null) {
             return false;
         }
 
