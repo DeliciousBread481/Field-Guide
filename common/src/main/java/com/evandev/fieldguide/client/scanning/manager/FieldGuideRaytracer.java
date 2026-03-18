@@ -1,11 +1,11 @@
 package com.evandev.fieldguide.client.scanning.manager;
 
+import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
@@ -228,6 +228,10 @@ public class FieldGuideRaytracer {
         if (maxScore == 0) {
             for (Object entry : possibleEntries) {
                 if (entry.equals(actualTargetKey)) return entry;
+
+                ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
+                if (Objects.equals(entryId, actualTargetKey)) return entry;
+
                 if (entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() != null && composite.displayEntry().equals(actualTargetKey)) {
                     return entry;
                 }

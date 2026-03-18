@@ -90,6 +90,7 @@ public class AutoPopulateRegistry {
     }
 
     public static ResourceLocation getEntryId(Object obj) {
+        if (obj instanceof ResourceLocation loc) return loc;
         if (obj instanceof EntityType<?> type) return BuiltInRegistries.ENTITY_TYPE.getKey(type);
         if (obj instanceof Block block) return BuiltInRegistries.BLOCK.getKey(block);
         if (obj instanceof CompositeFieldGuideEntry comp) return comp.id();

@@ -2,6 +2,9 @@ package com.evandev.fieldguide.client.gui.screens;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.FieldGuideLimits;
+import com.evandev.fieldguide.api.Category;
+import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.api.VariantDef;
 import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
@@ -13,9 +16,6 @@ import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
 import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.api.Category;
-import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
-import com.evandev.fieldguide.api.VariantDef;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -85,10 +85,8 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private boolean isCobblemon(Object entry) {
-        return entry instanceof CompositeFieldGuideEntry comp &&
-                comp.id() != null &&
-                comp.id().getNamespace().equals("fieldguide") &&
-                comp.id().getPath().startsWith("cobblemon/");
+        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        return id != null && id.getNamespace().equals("fieldguide") && id.getPath().startsWith("cobblemon/");
     }
 
     public void setInitialVariant(String variantId) {

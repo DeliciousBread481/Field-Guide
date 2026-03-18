@@ -1,13 +1,13 @@
 package com.evandev.fieldguide.client.gui.util;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.api.VariantDef;
 import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
-import com.evandev.fieldguide.api.VariantDef;
 import com.evandev.fieldguide.mixin.accessor.EntityAccessor;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
@@ -109,12 +109,18 @@ public class EntryRenderHelper {
             }
         }
 
-        Object cacheKey = variantId.isEmpty() ? entity.getType() : entity.getType() + "#" + variantId;
+        ResourceLocation baseId = ClientFieldGuideManager.getEntryId(entity.getType());
+        if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
+            baseId = FieldGuideCobblemonCompat.getPokemonEntryId(entity);
+        }
+
+        Object cacheKey = variantId.isEmpty() ? baseId : baseId.toString() + "#" + variantId;
 
         final VariantProvider<Mob> finalProvider = provider;
         final VariantDef finalVariant = currentVariant;
+        final ResourceLocation finalBaseId = baseId;
 
-        renderWithCache(entity.getType(), cacheKey, guiGraphics, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, () -> {
+        renderWithCache(baseId, cacheKey, guiGraphics, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, () -> {
 
             VariantDef tempOriginal = null;
             if (finalProvider != null && entity instanceof Mob mob) {
@@ -122,8 +128,7 @@ public class EntryRenderHelper {
                 finalProvider.apply(mob, finalVariant);
             }
 
-            ResourceLocation id = ClientFieldGuideManager.getEntryId(entity.getType());
-            renderEntity(entity, id, isPage, -30.0F);
+            renderEntity(entity, finalBaseId, isPage, -30.0F);
 
             if (finalProvider != null && entity instanceof Mob mob && tempOriginal != null) {
                 finalProvider.apply(mob, tempOriginal);
@@ -132,7 +137,10 @@ public class EntryRenderHelper {
     }
 
     public static void renderCobblemon(GuiGraphics guiGraphics, CompositeFieldGuideEntry entry, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale) {
-        renderWithCache(entry, entry, guiGraphics, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, () -> {
+        String formName = FieldGuideCobblemonCompat.getFormForEntry(entry.id());
+        Object cacheKey = formName.equals("standard") ? entry : entry.id().toString() + "#" + formName;
+
+        renderWithCache(entry, cacheKey, guiGraphics, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, () -> {
             ResourceLocation id = entry.id();
             LivingEntity dummy = FieldGuideCobblemonCompat.getDummyPokemon(id, Minecraft.getInstance().level);
             if (dummy != null) {

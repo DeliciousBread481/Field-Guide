@@ -228,18 +228,64 @@ public class FieldGuideCommand {
             if (progress != null) {
                 for (ResourceLocation entryId : allEntries) {
                     progress.unlock(player, entryId, null);
-                    EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(entryId);
-                    if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
-                        List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, source.getLevel());
-                        for (VariantDef variant : variants) {
-                            progress.unlock(player, entryId, variant.id());
-                        }
-                    }
+                    unlockVariants(player, entryId, source.getLevel());
                 }
             }
         }
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.everything.success", targets.size()), true);
         return targets.size();
+    }
+
+    private static void unlockVariants(ServerPlayer player, ResourceLocation entryId, ServerLevel level) {
+        PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
+        if (progress == null) return;
+
+        if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getNamespace().equals("fieldguide") && entryId.getPath().startsWith("cobblemon/")) {
+            String speciesName = entryId.getPath().substring("cobblemon/".length());
+            int underscore = speciesName.lastIndexOf('_');
+            if (underscore != -1) speciesName = speciesName.substring(0, underscore);
+
+            com.cobblemon.mod.common.pokemon.Species species = com.cobblemon.mod.common.api.pokemon.PokemonSpecies.INSTANCE.getByIdentifier(new ResourceLocation("cobblemon", speciesName));
+            if (species != null) {
+                for (com.cobblemon.mod.common.pokemon.FormData form : species.getForms()) {
+                    progress.unlock(player, entryId, form.getName());
+                }
+            }
+        } else {
+            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(entryId);
+            if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
+                List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, level);
+                for (VariantDef variant : variants) {
+                    progress.unlock(player, entryId, variant.id());
+                }
+            }
+        }
+    }
+
+    private static void revokeVariants(ServerPlayer player, ResourceLocation entryId, ServerLevel level) {
+        PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
+        if (progress == null) return;
+
+        if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getNamespace().equals("fieldguide") && entryId.getPath().startsWith("cobblemon/")) {
+            String speciesName = entryId.getPath().substring("cobblemon/".length());
+            int underscore = speciesName.lastIndexOf('_');
+            if (underscore != -1) speciesName = speciesName.substring(0, underscore);
+
+            com.cobblemon.mod.common.pokemon.Species species = com.cobblemon.mod.common.api.pokemon.PokemonSpecies.INSTANCE.getByIdentifier(new ResourceLocation("cobblemon", speciesName));
+            if (species != null) {
+                for (com.cobblemon.mod.common.pokemon.FormData form : species.getForms()) {
+                    progress.revoke(entryId + "#" + form.getName());
+                }
+            }
+        } else {
+            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(entryId);
+            if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
+                List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, level);
+                for (VariantDef variant : variants) {
+                    progress.revoke(entryId + "#" + variant.id());
+                }
+            }
+        }
     }
 
     private static int grantCategory(CommandSourceStack source, Collection<ServerPlayer> targets, ResourceLocation categoryId) {
@@ -255,13 +301,7 @@ public class FieldGuideCommand {
             if (progress != null) {
                 for (ResourceLocation entryId : entryIds) {
                     progress.unlock(player, entryId, null);
-                    EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(entryId);
-                    if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
-                        List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, source.getLevel());
-                        for (VariantDef variant : variants) {
-                            progress.unlock(player, entryId, variant.id());
-                        }
-                    }
+                    unlockVariants(player, entryId, source.getLevel());
                 }
             }
         }
@@ -382,13 +422,7 @@ public class FieldGuideCommand {
             PlayerFieldGuideProgress progress = manager.getProgress(player);
             if (progress != null) {
                 progress.unlock(player, entryId, null);
-                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(entryId);
-                if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
-                    List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, source.getLevel());
-                    for (VariantDef variant : variants) {
-                        progress.unlock(player, entryId, variant.id());
-                    }
-                }
+                unlockVariants(player, entryId, source.getLevel());
             }
         }
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.entry.success", entryId.toString()), true);
@@ -415,13 +449,7 @@ public class FieldGuideCommand {
             if (progress != null) {
                 for (ResourceLocation entryId : entryIds) {
                     progress.revoke(entryId.toString());
-                    EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(entryId);
-                    if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
-                        List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, source.getLevel());
-                        for (VariantDef variant : variants) {
-                            progress.revoke(entryId + "#" + variant.id());
-                        }
-                    }
+                    revokeVariants(player, entryId, source.getLevel());
                 }
             }
         }
@@ -435,13 +463,7 @@ public class FieldGuideCommand {
             PlayerFieldGuideProgress progress = manager.getProgress(player);
             if (progress != null) {
                 progress.revoke(entryId.toString());
-                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(entryId);
-                if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
-                    List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, source.getLevel());
-                    for (VariantDef variant : variants) {
-                        progress.revoke(entryId + "#" + variant.id());
-                    }
-                }
+                revokeVariants(player, entryId, source.getLevel());
             }
         }
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.revoke.entry.success", entryId.toString()), true);

@@ -7,12 +7,8 @@ import com.cobblemon.mod.common.pokemon.FormData;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 import com.cobblemon.mod.common.pokemon.Species;
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.api.VariantProvider;
+import com.evandev.fieldguide.api.*;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
-import com.evandev.fieldguide.api.Category;
-import com.evandev.fieldguide.api.CategoryEntry;
-import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
-import com.evandev.fieldguide.api.VariantDef;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import com.google.gson.JsonElement;
@@ -38,6 +34,7 @@ public final class FieldGuideCobblemonCompat {
     private static final String POKEMON_PATH = "pokemon";
 
     private static final Map<ResourceLocation, LivingEntity> DUMMY_CACHE = new HashMap<>();
+    private static final Map<String, LivingEntity> VARIANT_DUMMY_CACHE = new HashMap<>();
     private static final Map<ResourceLocation, String> FORM_CACHE = new HashMap<>();
     private static final Map<ResourceLocation, List<ItemStack>> COBBLEMON_DROPS_CACHE = new HashMap<>();
 
@@ -46,22 +43,24 @@ public final class FieldGuideCobblemonCompat {
             @Override
             public List<VariantDef> getVariants(PokemonEntity entity) {
                 Species species = entity.getPokemon().getSpecies();
-                return species.getForms().stream()
-                        .map(f -> new VariantDef(f.getName(), f.getName()))
-                        .toList();
+                List<VariantDef> variants = new ArrayList<>();
+                for (FormData form : species.getForms()) {
+                    variants.add(new VariantDef(form.getName(), form.getName()));
+                }
+                return variants;
             }
 
             @Override
             public void apply(PokemonEntity entity, VariantDef def) {
                 ResourceLocation id = getPokemonEntryId(entity);
-                FORM_CACHE.put(id, (String) def.value());
+                String formName = (String) def.value();
+                FORM_CACHE.put(id, formName);
                 DUMMY_CACHE.remove(id);
             }
 
             @Override
             public VariantDef getCurrent(PokemonEntity entity) {
-                ResourceLocation id = getPokemonEntryId(entity);
-                String formName = FORM_CACHE.getOrDefault(id, getDefaultForm(id));
+                String formName = entity.getPokemon().getForm().getName();
                 return new VariantDef(formName, formName);
             }
         });
@@ -72,6 +71,11 @@ public final class FieldGuideCobblemonCompat {
 
     public static void clearCache() {
         DUMMY_CACHE.clear();
+        VARIANT_DUMMY_CACHE.clear();
+    }
+
+    public static String getFormForEntry(ResourceLocation id) {
+        return FORM_CACHE.getOrDefault(id, getDefaultForm(id));
     }
 
     private static String getDefaultForm(ResourceLocation id) {
@@ -94,6 +98,46 @@ public final class FieldGuideCobblemonCompat {
             return speciesAndForm.substring(0, underscoreIndex);
         }
         return speciesAndForm;
+    }
+
+    public static LivingEntity getDummyVariant(ResourceLocation id, String variantName, Level level) {
+        String cacheKey = id.toString() + "#" + variantName;
+        if (VARIANT_DUMMY_CACHE.containsKey(cacheKey)) {
+            return VARIANT_DUMMY_CACHE.get(cacheKey);
+        }
+
+        String speciesName = getSpeciesName(id);
+
+        try {
+            StringBuilder propsStr = new StringBuilder("species=" + speciesName);
+            if (!variantName.equals("standard")) {
+                Species species = PokemonSpecies.INSTANCE.getByIdentifier(new ResourceLocation(MOD_ID, speciesName));
+                if (species != null) {
+                    for (FormData f : species.getForms()) {
+                        if (f.getName().equals(variantName)) {
+                            for (String aspect : f.getAspects()) {
+                                propsStr.append(" ").append(aspect);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
+            PokemonProperties props = PokemonProperties.Companion.parse(propsStr.toString(), " ", "=");
+            PokemonEntity pokemonEntity = props.createEntity(level);
+            pokemonEntity.setNoAi(true);
+
+            pokemonEntity.getEntityData().set(PokemonEntity.getASPECTS(), pokemonEntity.getPokemon().getAspects());
+            pokemonEntity.getEntityData().set(PokemonEntity.getSPECIES(), pokemonEntity.getPokemon().getSpecies().getResourceIdentifier().toString());
+
+            VARIANT_DUMMY_CACHE.put(cacheKey, pokemonEntity);
+            return pokemonEntity;
+        } catch (Exception e) {
+            Constants.LOG.error("Failed to construct Cobblemon dummy variant for Field Guide ID: {} variant: {}", id, variantName, e);
+        }
+
+        return null;
     }
 
     /**

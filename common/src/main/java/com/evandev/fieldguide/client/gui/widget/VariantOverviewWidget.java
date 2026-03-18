@@ -1,12 +1,12 @@
 package com.evandev.fieldguide.client.gui.widget;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.api.VariantDef;
 import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.api.VariantDef;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
@@ -131,13 +131,13 @@ public class VariantOverviewWidget extends AbstractWidget {
             LivingEntity renderEntity = renderedEntity;
 
             if (provider != null && renderedEntity instanceof Mob mob) {
-                provider.apply(mob, variant);
-
                 if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(renderedEntity)) {
                     ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
                     if (id != null && Minecraft.getInstance().level != null) {
-                        renderEntity = FieldGuideCobblemonCompat.getDummyPokemon(id, Minecraft.getInstance().level);
+                        renderEntity = FieldGuideCobblemonCompat.getDummyVariant(id, variant.id(), Minecraft.getInstance().level);
                     }
+                } else {
+                    provider.apply(mob, variant);
                 }
             }
 
