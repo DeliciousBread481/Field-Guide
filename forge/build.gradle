@@ -73,6 +73,9 @@ dependencies {
     // Cobblemon
     modCompileOnly "com.cobblemon:forge:${cobblemon_version}"
 
+    // KubeJS
+    modCompileOnly "maven.modrinth:kubejs:${kubejs_forge_version}"
+
     compileOnly project(":common")
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
 }

@@ -4,6 +4,7 @@
 - Added ore icon to the default icon pack.
 - Added Environmental compatibility (@proxillus).
 - Added support for variants.
+- Added KubeJS integration.
 
 ### Changed
 

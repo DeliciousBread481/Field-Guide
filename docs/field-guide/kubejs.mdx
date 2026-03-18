@@ -1,0 +1,57 @@
+---
+title: KubeJS Integration
+---
+
+Field Guide provides KubeJS integration that allows you to interact with player progress and mod systems through scripts.
+
+### The 'FieldGuide' Global
+You can access the integration via the global `FieldGuide` object in your server scripts.
+
+#### Methods
+
+| Method | Description |
+| :--- | :--- |
+| `isUnlocked(player, entryId)` | Returns `true` if the player has unlocked the specified entry. |
+| `unlock(player, entryId)` | Unlocks an entry for the player. |
+| `unlock(player, entryId, variantId)` | Unlocks a specific variant of an entry for the player. |
+| `revoke(player, entryId)` | Revokes an entry from the player's progress. |
+| `revokeAll(player)` | Clears all progress for the player. |
+| `getProgress(player)` | Returns the `PlayerFieldGuideProgress` object for the player. |
+| `getManager()` | Returns the `ServerFieldGuideManager` instance. |
+| `getProgressManager()` | Returns the `FieldGuideProgressManager` instance. |
+
+### Examples
+
+#### Unlocking an entry when an item is used
+```javascript
+ItemEvents.rightClicked('minecraft:stick', event => {
+    if (event.player.isCrouching()) {
+        FieldGuide.unlock(event.player, 'minecraft:cow')
+        event.player.tell('You unlocked the Cow entry!')
+    }
+})
+```
+
+#### Checking if an entry is unlocked
+```javascript
+PlayerEvents.loggedIn(event => {
+    if (FieldGuide.isUnlocked(event.player, 'minecraft:zombie')) {
+        event.player.tell('Welcome back, zombie hunter!')
+    }
+})
+```
+
+#### Revoking progress
+```javascript
+ServerEvents.command('reset_guide', event => {
+    FieldGuide.revokeAll(event.player)
+    event.player.tell('Your Field Guide has been reset.')
+})
+```
+
+### Advanced Usage
+For more advanced interactions, you can access the internal managers directly:
+
+*   **`FieldGuide.getManager()`**: Access categories, entries, redirects, and more.
+*   **`FieldGuide.getProgressManager()`**: Access global player progress tracking.
+*   **`FieldGuide.getProgress(player)`**: Access low-level progress data (discovery times, custom names, etc.).

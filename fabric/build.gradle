@@ -42,6 +42,9 @@ dependencies {
     // Cobblemon
     modCompileOnly "com.cobblemon:fabric:${cobblemon_version}"
 
+    // KubeJS
+    modCompileOnly "maven.modrinth:kubejs:${kubejs_fabric_version}"
+
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
     implementation project(":common")
 }
