@@ -1,7 +1,9 @@
 package com.evandev.fieldguide.compat.exposure;
 
+import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.data.VariantDef;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
@@ -68,9 +70,9 @@ public class ExposureCompat {
 
             String variantId = null;
             if (hitEntity instanceof Mob mob) {
-                FieldGuideVariantManager.VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(mob);
+                VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(mob);
                 if (provider != null) {
-                    FieldGuideVariantManager.VariantDef current = provider.getCurrent(mob);
+                    VariantDef current = provider.getCurrent(mob);
                     if (current != null) {
                         variantId = current.id();
                     }

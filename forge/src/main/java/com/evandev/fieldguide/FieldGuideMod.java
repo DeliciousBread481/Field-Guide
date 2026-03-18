@@ -1,6 +1,8 @@
 package com.evandev.fieldguide;
 
+import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.compat.exposure.ExposureForgeEventHandler;
+import com.evandev.fieldguide.data.VariantDef;
 import com.evandev.fieldguide.network.*;
 import com.evandev.fieldguide.platform.ForgeNetworkHelper;
 import com.evandev.fieldguide.platform.Services;
@@ -187,9 +189,9 @@ public class FieldGuideMod {
                     if (progress != null) {
                         String variantId = null;
                         if (event.getEntity() instanceof Mob mob) {
-                            FieldGuideVariantManager.VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(mob);
+                            VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(mob);
                             if (provider != null) {
-                                FieldGuideVariantManager.VariantDef current = provider.getCurrent(mob);
+                                VariantDef current = provider.getCurrent(mob);
                                 if (current != null) {
                                     variantId = current.id();
                                 }

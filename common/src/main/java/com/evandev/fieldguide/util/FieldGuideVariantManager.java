@@ -1,8 +1,11 @@
 package com.evandev.fieldguide.util;
 
+import com.evandev.fieldguide.api.VariantProvider;
+import com.evandev.fieldguide.data.VariantDef;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Cat;
 import net.minecraft.world.entity.animal.CatVariant;
@@ -13,6 +16,7 @@ import net.minecraft.world.entity.npc.VillagerData;
 import net.minecraft.world.entity.npc.VillagerDataHolder;
 import net.minecraft.world.entity.npc.VillagerType;
 import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.Level;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -23,6 +27,8 @@ import java.util.Map;
 public class FieldGuideVariantManager {
 
     private static final Map<Class<?>, VariantProvider<?>> PROVIDERS = new HashMap<>();
+    private static final Map<Class<?>, List<VariantDef>> VARIANT_CACHE = new HashMap<>();
+    private static final Map<EntityType<?>, List<VariantDef>> ENTITY_TYPE_VARIANT_CACHE = new HashMap<>();
 
     static {
         registerProvider(Frog.class, new VariantProvider<>() {
@@ -92,12 +98,16 @@ public class FieldGuideVariantManager {
     @SuppressWarnings("unchecked")
     public static <T extends Mob> VariantProvider<T> getProvider(Entity entity) {
         if (!(entity instanceof Mob mob)) return null;
+        return getProvider((Class<T>) mob.getClass());
+    }
 
-        if (mob instanceof VillagerDataHolder) {
+    @SuppressWarnings("unchecked")
+    public static <T extends Mob> VariantProvider<T> getProvider(Class<T> entityClass) {
+        if (VillagerDataHolder.class.isAssignableFrom(entityClass)) {
             return (VariantProvider<T>) getVillagerProvider();
         }
 
-        Class<?> clazz = mob.getClass();
+        Class<?> clazz = entityClass;
         while (clazz != null && clazz != Mob.class && clazz != Object.class) {
             if (PROVIDERS.containsKey(clazz)) {
                 return (VariantProvider<T>) PROVIDERS.get(clazz);
@@ -105,12 +115,60 @@ public class FieldGuideVariantManager {
             clazz = clazz.getSuperclass();
         }
 
-        return (VariantProvider<T>) getReflectionProvider(mob);
+        return null;
     }
 
+    @SuppressWarnings("unchecked")
     public static List<VariantDef> getVariants(Entity entity) {
+        if (!(entity instanceof Mob mob)) return List.of();
+        Class<?> clazz = mob.getClass();
+
+        if (VARIANT_CACHE.containsKey(clazz)) {
+            return VARIANT_CACHE.get(clazz);
+        }
+
         VariantProvider<Mob> provider = getProvider(entity);
-        return provider != null ? provider.getVariants((Mob) entity) : List.of();
+        boolean fromReflection = false;
+        if (provider == null) {
+            provider = getReflectionProvider(mob);
+            fromReflection = true;
+        }
+
+        if (provider != null) {
+
+            List<VariantDef> variants = provider.getVariants(mob);
+            VARIANT_CACHE.put(clazz, variants);
+            if (fromReflection) {
+                registerProvider((Class<Mob>) clazz, provider);
+            }
+            return variants;
+        }
+
+        return List.of();
+    }
+
+    public static List<VariantDef> getVariants(EntityType<?> type, Level level) {
+        if (ENTITY_TYPE_VARIANT_CACHE.containsKey(type)) {
+            return ENTITY_TYPE_VARIANT_CACHE.get(type);
+        }
+
+        if (level != null) {
+            try {
+                Entity entity = type.create(level);
+                if (entity instanceof Mob mob) {
+                    List<VariantDef> variants = getVariants(mob);
+                    ENTITY_TYPE_VARIANT_CACHE.put(type, variants);
+                    return variants;
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        return List.of();
+    }
+
+    public static List<String> getVariantIds(EntityType<?> type, Level level) {
+        return getVariants(type, level).stream().map(VariantDef::id).toList();
     }
 
     private static VariantProvider<Mob> getVillagerProvider() {
@@ -201,16 +259,5 @@ public class FieldGuideVariantManager {
             }
         }
         return null;
-    }
-
-    public interface VariantProvider<T extends Mob> {
-        List<VariantDef> getVariants(T entity);
-
-        void apply(T entity, VariantDef def);
-
-        VariantDef getCurrent(T entity);
-    }
-
-    public record VariantDef(String id, Object value) {
     }
 }

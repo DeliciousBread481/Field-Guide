@@ -7,10 +7,12 @@ import com.cobblemon.mod.common.pokemon.FormData;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 import com.cobblemon.mod.common.pokemon.Species;
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CategoryEntry;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.data.VariantDef;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import com.google.gson.JsonElement;
@@ -40,27 +42,27 @@ public final class FieldGuideCobblemonCompat {
     private static final Map<ResourceLocation, List<ItemStack>> COBBLEMON_DROPS_CACHE = new HashMap<>();
 
     static {
-        FieldGuideVariantManager.registerProvider(PokemonEntity.class, new FieldGuideVariantManager.VariantProvider<>() {
+        FieldGuideVariantManager.registerProvider(PokemonEntity.class, new VariantProvider<>() {
             @Override
-            public List<FieldGuideVariantManager.VariantDef> getVariants(PokemonEntity entity) {
+            public List<VariantDef> getVariants(PokemonEntity entity) {
                 Species species = entity.getPokemon().getSpecies();
                 return species.getForms().stream()
-                        .map(f -> new FieldGuideVariantManager.VariantDef(f.getName(), f.getName()))
+                        .map(f -> new VariantDef(f.getName(), f.getName()))
                         .toList();
             }
 
             @Override
-            public void apply(PokemonEntity entity, FieldGuideVariantManager.VariantDef def) {
+            public void apply(PokemonEntity entity, VariantDef def) {
                 ResourceLocation id = getPokemonEntryId(entity);
                 FORM_CACHE.put(id, (String) def.value());
                 DUMMY_CACHE.remove(id);
             }
 
             @Override
-            public FieldGuideVariantManager.VariantDef getCurrent(PokemonEntity entity) {
+            public VariantDef getCurrent(PokemonEntity entity) {
                 ResourceLocation id = getPokemonEntryId(entity);
                 String formName = FORM_CACHE.getOrDefault(id, getDefaultForm(id));
-                return new FieldGuideVariantManager.VariantDef(formName, formName);
+                return new VariantDef(formName, formName);
             }
         });
     }

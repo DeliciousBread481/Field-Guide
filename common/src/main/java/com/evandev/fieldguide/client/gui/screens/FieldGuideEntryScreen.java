@@ -2,6 +2,7 @@ package com.evandev.fieldguide.client.gui.screens;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.FieldGuideLimits;
+import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.data.EntryVisual;
@@ -14,6 +15,7 @@ import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.data.VariantDef;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -43,11 +45,12 @@ public class FieldGuideEntryScreen extends BookScreen {
     private final FieldGuideCategoryScreen parent;
     private final Object entry;
     private final List<ResourceLocation> spawnBiomes = new ArrayList<>();
+    private final List<AbstractWidget> exposureWidgets = new ArrayList<>();
     private String initialVariant = null;
     private Entity renderedEntity;
     private long lastClickTime = 0;
     private int currentVariantIndex = 0;
-    private List<FieldGuideVariantManager.VariantDef> entityVariants = new ArrayList<>();
+    private List<VariantDef> entityVariants = new ArrayList<>();
     private PageTurnButton prevVariantButton;
     private PageTurnButton nextVariantButton;
     private VariantOverviewWidget variantOverviewWidget;
@@ -100,8 +103,21 @@ public class FieldGuideEntryScreen extends BookScreen {
         return leftPageBounds;
     }
 
-    public void addWidgetPublic(AbstractWidget widget) {
+    public void addExposureWidget(AbstractWidget widget) {
         this.addRenderableWidget(widget);
+        this.exposureWidgets.add(widget);
+    }
+
+    private void refreshExposureWidgets() {
+        if (Services.PLATFORM.isModLoaded("exposure")) {
+            for (AbstractWidget widget : exposureWidgets) {
+                this.removeWidget(widget);
+            }
+            exposureWidgets.clear();
+
+            String variantId = (!entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) ? entityVariants.get(currentVariantIndex).id() : null;
+            ClientExposureCompat.setupExposureWidgets(this, entry, variantId);
+        }
     }
 
     @Override
@@ -122,10 +138,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         setupBiomeWidget(unlocked);
         setupDropWidget(unlocked);
         setupNavigationButtons();
-
-        if (Services.PLATFORM.isModLoaded("exposure")) {
-            ClientExposureCompat.setupExposureWidgets(this, entry);
-        }
+        refreshExposureWidgets();
 
         if (this.entityVariants.size() > 1 && this.renderedEntity instanceof LivingEntity living) {
             this.overviewToggleButton = new ImageButton(this.leftPageBounds.left() + 10, this.leftPageBounds.top() + 10, 16, 16, 0, 0, 16, Constants.OVERVIEW_ICON, 16, 32, (btn) -> {
@@ -194,9 +207,9 @@ public class FieldGuideEntryScreen extends BookScreen {
                 this.addRenderableWidget(prevVariantButton);
                 this.addRenderableWidget(nextVariantButton);
 
-                FieldGuideVariantManager.VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(this.renderedEntity);
+                VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(this.renderedEntity);
                 if (provider != null) {
-                    FieldGuideVariantManager.VariantDef current = provider.getCurrent((Mob) this.renderedEntity);
+                    VariantDef current = provider.getCurrent((Mob) this.renderedEntity);
                     for (int i = 0; i < this.entityVariants.size(); i++) {
                         if (this.entityVariants.get(i).id().equals(this.initialVariant)) {
                             this.currentVariantIndex = i;
@@ -216,7 +229,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (entityVariants.isEmpty() || renderedEntity == null || !(renderedEntity instanceof Mob)) return;
         currentVariantIndex = (currentVariantIndex + dir + entityVariants.size()) % entityVariants.size();
 
-        FieldGuideVariantManager.VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(renderedEntity);
+        VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(renderedEntity);
         if (provider != null) {
             provider.apply((Mob) renderedEntity, entityVariants.get(currentVariantIndex));
 
@@ -225,6 +238,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                 this.renderedEntity = FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
             }
         }
+        refreshExposureWidgets();
         lastClickTime = System.currentTimeMillis();
     }
 
@@ -232,7 +246,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (entityVariants.isEmpty() || renderedEntity == null || !(renderedEntity instanceof Mob)) return;
         if (index >= 0 && index < entityVariants.size()) {
             currentVariantIndex = index;
-            FieldGuideVariantManager.VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(renderedEntity);
+            VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(renderedEntity);
             if (provider != null) {
                 provider.apply((Mob) renderedEntity, entityVariants.get(currentVariantIndex));
 
@@ -241,6 +255,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                     this.renderedEntity = FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
                 }
             }
+            refreshExposureWidgets();
             lastClickTime = System.currentTimeMillis();
         }
     }
@@ -318,7 +333,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             int dropItemSize = 20;
             this.addRenderableWidget(new PaginatedGridWidget<>(this.leftPageBounds.left() + 2, this.leftPageBounds.bottom() - 33, this.leftPageBounds.width() - 4, dropItemSize, 5, dropItemSize, 0, drops, (graphics, stack, x, y, mouseX, mouseY) -> {
                 RenderSystem.enableDepthTest();
-                boolean mouseOver = Bounds.isMouseOver(mouseX, mouseY, x, y, dropItemSize, dropItemSize);
+                boolean mouseOver = Bounds.isMouseOver(mouseX, mouseY, x, y, dropItemSize, dropItemSize) && (this.variantOverviewWidget == null || !this.variantOverviewWidget.isMouseOver(mouseX, mouseY));
                 int backgroundOffset = mouseOver ? dropItemSize : 0;
                 graphics.blit(Constants.WIDGETS_TEXTURE, x, y, 0, 64 + backgroundOffset, dropItemSize, dropItemSize);
                 int offset = (dropItemSize - 16) / 2;

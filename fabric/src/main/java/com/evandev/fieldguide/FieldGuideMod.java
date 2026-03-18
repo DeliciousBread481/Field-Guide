@@ -1,6 +1,8 @@
 package com.evandev.fieldguide;
 
+import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.compat.exposure.ExposureFabricEventHandler;
+import com.evandev.fieldguide.data.VariantDef;
 import com.evandev.fieldguide.network.MarkSeenPacket;
 import com.evandev.fieldguide.network.ScanUnlockPacket;
 import com.evandev.fieldguide.network.UpdateEntryDataPacket;
@@ -121,9 +123,9 @@ public class FieldGuideMod implements ModInitializer {
                         if (progress != null) {
                             String variantId = null;
                             if (killedEntity instanceof Mob mob) {
-                                FieldGuideVariantManager.VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(mob);
+                                VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(mob);
                                 if (provider != null) {
-                                    FieldGuideVariantManager.VariantDef current = provider.getCurrent(mob);
+                                    VariantDef current = provider.getCurrent(mob);
                                     if (current != null) {
                                         variantId = current.id();
                                     }

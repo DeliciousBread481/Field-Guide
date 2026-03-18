@@ -1,11 +1,13 @@
 package com.evandev.fieldguide.client.gui.util;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.data.VariantDef;
 import com.evandev.fieldguide.mixin.accessor.EntityAccessor;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
@@ -96,8 +98,8 @@ public class EntryRenderHelper {
 
     public static void renderEntityNormalized(GuiGraphics guiGraphics, LivingEntity entity, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale) {
         String variantId = "";
-        FieldGuideVariantManager.VariantProvider<Mob> provider = null;
-        FieldGuideVariantManager.VariantDef currentVariant = null;
+        VariantProvider<Mob> provider = null;
+        VariantDef currentVariant = null;
 
         if (entity instanceof Mob mob) {
             provider = FieldGuideVariantManager.getProvider(mob);
@@ -109,12 +111,12 @@ public class EntryRenderHelper {
 
         Object cacheKey = variantId.isEmpty() ? entity.getType() : entity.getType() + "#" + variantId;
 
-        final FieldGuideVariantManager.VariantProvider<Mob> finalProvider = provider;
-        final FieldGuideVariantManager.VariantDef finalVariant = currentVariant;
+        final VariantProvider<Mob> finalProvider = provider;
+        final VariantDef finalVariant = currentVariant;
 
         renderWithCache(entity.getType(), cacheKey, guiGraphics, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, () -> {
 
-            FieldGuideVariantManager.VariantDef tempOriginal = null;
+            VariantDef tempOriginal = null;
             if (finalProvider != null && entity instanceof Mob mob) {
                 tempOriginal = finalProvider.getCurrent(mob);
                 finalProvider.apply(mob, finalVariant);

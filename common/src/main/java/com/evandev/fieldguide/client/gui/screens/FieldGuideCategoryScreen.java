@@ -14,6 +14,7 @@ import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.Category;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.data.VariantDef;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -738,12 +739,12 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
             Entity dummy = getCachedEntity(entry);
             if (dummy != null) {
-                List<FieldGuideVariantManager.VariantDef> variants = FieldGuideVariantManager.getVariants(dummy);
+                List<VariantDef> variants = FieldGuideVariantManager.getVariants(dummy);
                 if (variants.size() > 1) {
                     int unlockedCount = ModConfig.get().unlockAllVariants ? variants.size() : 0;
 
                     if (!ModConfig.get().unlockAllVariants) {
-                        for (FieldGuideVariantManager.VariantDef var : variants) {
+                        for (VariantDef var : variants) {
                             if (ClientFieldGuideManager.isVariantUnlocked(entry, var.id())) {
                                 unlockedCount++;
                             }

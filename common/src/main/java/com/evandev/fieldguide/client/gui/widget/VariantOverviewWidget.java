@@ -1,10 +1,12 @@
 package com.evandev.fieldguide.client.gui.widget;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.data.VariantDef;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
@@ -29,7 +31,7 @@ public class VariantOverviewWidget extends AbstractWidget {
 
     private final Object entry;
     private final LivingEntity renderedEntity;
-    private final List<FieldGuideVariantManager.VariantDef> variants;
+    private final List<VariantDef> variants;
     private final Consumer<Integer> onVariantSelected;
     private final int maxPages;
     private final ImageButton closeButton;
@@ -38,7 +40,7 @@ public class VariantOverviewWidget extends AbstractWidget {
     private int currentPage = 0;
     private Component currentTitleText;
 
-    public VariantOverviewWidget(int x, int y, int width, int height, Object entry, LivingEntity renderedEntity, List<FieldGuideVariantManager.VariantDef> variants, Consumer<Integer> onVariantSelected) {
+    public VariantOverviewWidget(int x, int y, int width, int height, Object entry, LivingEntity renderedEntity, List<VariantDef> variants, Consumer<Integer> onVariantSelected) {
         super(x, y, width, height, Component.empty());
         this.entry = entry;
         this.renderedEntity = renderedEntity;
@@ -105,8 +107,8 @@ public class VariantOverviewWidget extends AbstractWidget {
         int startX = this.getX() + (this.width / 2) - spacingX;
         int startY = this.getY() + 30;
 
-        FieldGuideVariantManager.VariantProvider<Mob> provider = null;
-        FieldGuideVariantManager.VariantDef originalVariant = null;
+        VariantProvider<Mob> provider = null;
+        VariantDef originalVariant = null;
 
         if (renderedEntity instanceof Mob mob) {
             provider = FieldGuideVariantManager.getProvider(mob);
@@ -123,7 +125,7 @@ public class VariantOverviewWidget extends AbstractWidget {
             int itemX = startX + (col * spacingX);
             int itemY = startY + (row * spacingY);
 
-            FieldGuideVariantManager.VariantDef variant = variants.get(i);
+            VariantDef variant = variants.get(i);
             boolean isUnlocked = ClientFieldGuideManager.isVariantUnlocked(entry, variant.id());
 
             LivingEntity renderEntity = renderedEntity;
@@ -194,7 +196,7 @@ public class VariantOverviewWidget extends AbstractWidget {
             int itemY = startY + (row * spacingY);
 
             if (mouseX >= itemX - 16 && mouseX <= itemX + 16 && mouseY >= itemY - 16 && mouseY <= itemY + 16) {
-                FieldGuideVariantManager.VariantDef variant = variants.get(i);
+                VariantDef variant = variants.get(i);
                 if (ClientFieldGuideManager.isVariantUnlocked(entry, variant.id())) {
                     this.onVariantSelected.accept(i);
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));

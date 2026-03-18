@@ -206,29 +206,43 @@ public class ProgressManager {
     }
 
     public ItemStack getPhotograph(Object entry) {
+        return getPhotograph(entry, null);
+    }
+
+    public ItemStack getPhotograph(Object entry, String variantId) {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-        if (id != null && entryPhotographs.containsKey(id.toString())) {
-            try {
-                CompoundTag tag = TagParser.parseTag(entryPhotographs.get(id.toString()));
-                return ItemStack.of(tag);
-            } catch (Exception e) {
-                return ItemStack.EMPTY;
+        if (id != null) {
+            String key = id.toString();
+            if (variantId != null && !variantId.isEmpty()) {
+                key += "#" + variantId;
+            }
+            if (entryPhotographs.containsKey(key)) {
+                try {
+                    CompoundTag tag = TagParser.parseTag(entryPhotographs.get(key));
+                    return ItemStack.of(tag);
+                } catch (Exception e) {
+                    return ItemStack.EMPTY;
+                }
             }
         }
         return ItemStack.EMPTY;
     }
 
-    public void setPhotograph(Object entry, int slot, ItemStack stack) {
+    public void setPhotograph(Object entry, int slot, ItemStack stack, String variantId) {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
         if (id != null) {
+            String key = id.toString();
+            if (variantId != null && !variantId.isEmpty()) {
+                key += "#" + variantId;
+            }
             if (slot < 0 || stack == null || stack.isEmpty()) {
-                entryPhotographs.remove(id.toString());
-                Services.NETWORK.sendToServer(UpdateEntryDataPacket.removePhotograph(id));
+                entryPhotographs.remove(key);
+                Services.NETWORK.sendToServer(UpdateEntryDataPacket.removePhotograph(id, variantId));
             } else {
                 CompoundTag tag = new CompoundTag();
                 stack.save(tag);
-                entryPhotographs.put(id.toString(), tag.toString());
-                Services.NETWORK.sendToServer(UpdateEntryDataPacket.setPhotograph(id, slot));
+                entryPhotographs.put(key, tag.toString());
+                Services.NETWORK.sendToServer(UpdateEntryDataPacket.setPhotograph(id, slot, variantId));
             }
         }
     }

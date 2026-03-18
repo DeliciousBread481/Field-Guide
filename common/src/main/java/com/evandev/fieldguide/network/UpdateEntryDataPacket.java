@@ -17,17 +17,20 @@ public class UpdateEntryDataPacket {
     private static final int MAX_DESCRIPTION_LENGTH = FieldGuideLimits.MAX_ENTRY_DESCRIPTION_LENGTH;
     private final Action action;
     private final ResourceLocation entryId;
+    private final String variantId;
     private final Data data;
 
-    private UpdateEntryDataPacket(Action action, ResourceLocation entryId, Data data) {
+    private UpdateEntryDataPacket(Action action, ResourceLocation entryId, String variantId, Data data) {
         this.action = action;
         this.entryId = entryId;
+        this.variantId = variantId;
         this.data = data;
     }
 
     public UpdateEntryDataPacket(FriendlyByteBuf buf) {
         this.action = buf.readEnum(Action.class);
         this.entryId = buf.readResourceLocation();
+        this.variantId = buf.readUtf(128);
         this.data = switch (action) {
             case SET_NAME -> new NameData(buf.readUtf(MAX_NAME_LENGTH));
             case SET_DESCRIPTION -> new DescriptionData(buf.readUtf(MAX_DESCRIPTION_LENGTH));
@@ -37,33 +40,41 @@ public class UpdateEntryDataPacket {
     }
 
     public static UpdateEntryDataPacket setName(ResourceLocation entryId, String name) {
-        return new UpdateEntryDataPacket(Action.SET_NAME, entryId, new NameData(name));
+        return new UpdateEntryDataPacket(Action.SET_NAME, entryId, "", new NameData(name));
     }
 
     public static UpdateEntryDataPacket setDescription(ResourceLocation entryId, String description) {
-        return new UpdateEntryDataPacket(Action.SET_DESCRIPTION, entryId, new DescriptionData(description));
+        return new UpdateEntryDataPacket(Action.SET_DESCRIPTION, entryId, "", new DescriptionData(description));
     }
 
-    public static UpdateEntryDataPacket setPhotograph(ResourceLocation entryId, int slot) {
-        return new UpdateEntryDataPacket(Action.SET_PHOTOGRAPH, entryId, new PhotographData(slot));
+    public static UpdateEntryDataPacket setPhotograph(ResourceLocation entryId, int slot, String variantId) {
+        return new UpdateEntryDataPacket(Action.SET_PHOTOGRAPH, entryId, variantId != null ? variantId : "", new PhotographData(slot));
     }
 
-    public static UpdateEntryDataPacket removePhotograph(ResourceLocation entryId) {
-        return new UpdateEntryDataPacket(Action.REMOVE_PHOTOGRAPH, entryId, new RemovePhotographData());
+    public static UpdateEntryDataPacket removePhotograph(ResourceLocation entryId, String variantId) {
+        return new UpdateEntryDataPacket(Action.REMOVE_PHOTOGRAPH, entryId, variantId != null ? variantId : "", new RemovePhotographData());
     }
 
     public void encode(FriendlyByteBuf buf) {
         buf.writeEnum(action);
         buf.writeResourceLocation(entryId);
+        buf.writeUtf(variantId != null ? variantId : "", 128);
         data.encode(buf);
     }
 
     public void handleServer(ServerPlayer player) {
         if (player == null) return;
         PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
-        if (progress == null || !progress.isUnlocked(entryId)) return;
+        if (progress == null) return;
 
-        data.apply(entryId.toString(), progress, player);
+        String id = entryId.toString();
+        if (variantId != null && !variantId.isEmpty()) {
+            id += "#" + variantId;
+        }
+
+        if (!progress.isUnlocked(id)) return;
+
+        data.apply(id, progress, player);
     }
 
     private enum Action {

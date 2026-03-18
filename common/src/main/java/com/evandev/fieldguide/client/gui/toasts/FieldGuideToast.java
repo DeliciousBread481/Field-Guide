@@ -1,10 +1,12 @@
 package com.evandev.fieldguide.client.gui.toasts;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.data.VariantDef;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -61,10 +63,10 @@ public class FieldGuideToast implements Toast {
                 cachedEntity = type.create(Minecraft.getInstance().level);
 
                 if (variantId != null && cachedEntity instanceof Mob mob) {
-                    FieldGuideVariantManager.VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(mob);
+                    VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(mob);
                     if (provider != null) {
-                        List<FieldGuideVariantManager.VariantDef> variants = FieldGuideVariantManager.getVariants(mob);
-                        for (FieldGuideVariantManager.VariantDef def : variants) {
+                        List<VariantDef> variants = FieldGuideVariantManager.getVariants(mob);
+                        for (VariantDef def : variants) {
                             if (def.id().equals(variantId)) {
                                 provider.apply(mob, def);
                                 break;
