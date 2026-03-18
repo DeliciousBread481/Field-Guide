@@ -228,6 +228,13 @@ public class FieldGuideCommand {
             if (progress != null) {
                 for (ResourceLocation entryId : allEntries) {
                     progress.unlock(player, entryId, null);
+                    EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(entryId);
+                    if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
+                        List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, source.getLevel());
+                        for (VariantDef variant : variants) {
+                            progress.unlock(player, entryId, variant.id());
+                        }
+                    }
                 }
             }
         }
@@ -248,6 +255,13 @@ public class FieldGuideCommand {
             if (progress != null) {
                 for (ResourceLocation entryId : entryIds) {
                     progress.unlock(player, entryId, null);
+                    EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(entryId);
+                    if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
+                        List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, source.getLevel());
+                        for (VariantDef variant : variants) {
+                            progress.unlock(player, entryId, variant.id());
+                        }
+                    }
                 }
             }
         }
@@ -368,6 +382,13 @@ public class FieldGuideCommand {
             PlayerFieldGuideProgress progress = manager.getProgress(player);
             if (progress != null) {
                 progress.unlock(player, entryId, null);
+                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(entryId);
+                if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
+                    List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, source.getLevel());
+                    for (VariantDef variant : variants) {
+                        progress.unlock(player, entryId, variant.id());
+                    }
+                }
             }
         }
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.entry.success", entryId.toString()), true);
@@ -394,6 +415,13 @@ public class FieldGuideCommand {
             if (progress != null) {
                 for (ResourceLocation entryId : entryIds) {
                     progress.revoke(entryId.toString());
+                    EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(entryId);
+                    if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
+                        List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, source.getLevel());
+                        for (VariantDef variant : variants) {
+                            progress.revoke(entryId + "#" + variant.id());
+                        }
+                    }
                 }
             }
         }
@@ -407,6 +435,13 @@ public class FieldGuideCommand {
             PlayerFieldGuideProgress progress = manager.getProgress(player);
             if (progress != null) {
                 progress.revoke(entryId.toString());
+                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(entryId);
+                if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
+                    List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, source.getLevel());
+                    for (VariantDef variant : variants) {
+                        progress.revoke(entryId + "#" + variant.id());
+                    }
+                }
             }
         }
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.revoke.entry.success", entryId.toString()), true);
