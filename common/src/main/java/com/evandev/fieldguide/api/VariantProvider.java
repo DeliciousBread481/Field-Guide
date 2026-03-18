@@ -1,6 +1,5 @@
 package com.evandev.fieldguide.api;
 
-import com.evandev.fieldguide.data.VariantDef;
 import net.minecraft.world.entity.Mob;
 
 import java.util.List;

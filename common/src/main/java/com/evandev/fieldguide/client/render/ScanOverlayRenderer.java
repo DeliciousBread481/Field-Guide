@@ -5,7 +5,7 @@ import com.evandev.fieldguide.client.ModRenderTypes;
 import com.evandev.fieldguide.client.scanning.FieldGuideScanner;
 import com.evandev.fieldguide.compat.etf.EtfCompat;
 import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.ModTags;
 import com.mojang.blaze3d.systems.RenderSystem;

@@ -1,7 +1,7 @@
 package com.evandev.fieldguide.util;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.mixin.accessor.StructureTemplateAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;

@@ -2,7 +2,7 @@ package com.evandev.fieldguide;
 
 import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.compat.exposure.ExposureForgeEventHandler;
-import com.evandev.fieldguide.data.VariantDef;
+import com.evandev.fieldguide.api.VariantDef;
 import com.evandev.fieldguide.network.*;
 import com.evandev.fieldguide.platform.ForgeNetworkHelper;
 import com.evandev.fieldguide.platform.Services;

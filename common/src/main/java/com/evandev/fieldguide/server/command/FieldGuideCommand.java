@@ -1,8 +1,8 @@
 package com.evandev.fieldguide.server.command;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.data.Category;
-import com.evandev.fieldguide.data.VariantDef;
+import com.evandev.fieldguide.api.Category;
+import com.evandev.fieldguide.api.VariantDef;
 import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;

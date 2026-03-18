@@ -1,7 +1,7 @@
 package com.evandev.fieldguide.network;
 
-import com.evandev.fieldguide.data.Category;
-import com.evandev.fieldguide.data.CategoryEntry;
+import com.evandev.fieldguide.api.Category;
+import com.evandev.fieldguide.api.CategoryEntry;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 

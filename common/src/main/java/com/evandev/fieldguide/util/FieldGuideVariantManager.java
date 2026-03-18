@@ -1,7 +1,7 @@
 package com.evandev.fieldguide.util;
 
 import com.evandev.fieldguide.api.VariantProvider;
-import com.evandev.fieldguide.data.VariantDef;
+import com.evandev.fieldguide.api.VariantDef;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;

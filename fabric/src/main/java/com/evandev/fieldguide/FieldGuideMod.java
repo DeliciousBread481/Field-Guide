@@ -2,7 +2,7 @@ package com.evandev.fieldguide;
 
 import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.compat.exposure.ExposureFabricEventHandler;
-import com.evandev.fieldguide.data.VariantDef;
+import com.evandev.fieldguide.api.VariantDef;
 import com.evandev.fieldguide.network.MarkSeenPacket;
 import com.evandev.fieldguide.network.ScanUnlockPacket;
 import com.evandev.fieldguide.network.UpdateEntryDataPacket;

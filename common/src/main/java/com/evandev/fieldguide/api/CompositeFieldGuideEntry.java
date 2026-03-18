@@ -1,4 +1,4 @@
-package com.evandev.fieldguide.data;
+package com.evandev.fieldguide.api;
 
 import net.minecraft.resources.ResourceLocation;
 

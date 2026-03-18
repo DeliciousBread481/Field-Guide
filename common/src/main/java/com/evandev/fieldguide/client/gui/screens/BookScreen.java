@@ -6,7 +6,7 @@ import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.widget.TabButton;
 import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.data.Category;
+import com.evandev.fieldguide.api.Category;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ImageButton;

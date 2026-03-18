@@ -10,7 +10,7 @@ import com.evandev.fieldguide.client.gui.widget.BookTextFieldWidget;
 import com.evandev.fieldguide.client.gui.widget.FieldGuideSearchBox;
 import com.evandev.fieldguide.client.gui.widget.PageTurnButton;
 import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.data.Category;
+import com.evandev.fieldguide.api.Category;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;

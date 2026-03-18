@@ -6,7 +6,7 @@ import com.evandev.fieldguide.client.gui.screens.FieldGuideCategoryScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.client.scanning.FieldGuideScanner;
 import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.data.Category;
+import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.mixin.accessor.MobAccessor;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
