@@ -9,6 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -31,6 +32,11 @@ public class AutoPopulateRegistry {
         register("mod_plants", (modId, categoryId) -> new ArrayList<>(getPlants(id -> id.getNamespace().equals(modId), categoryId)));
         register("trees", (params, categoryId) -> new ArrayList<>(getAutoTrees(id -> true, categoryId)));
         register("mod_trees", (modId, categoryId) -> new ArrayList<>(getAutoTrees(id -> id.getNamespace().equals(modId), categoryId)));
+        register("mod_items", (modId, categoryId) -> BuiltInRegistries.ITEM.stream()
+                .filter(i -> BuiltInRegistries.ITEM.getKey(i).getNamespace().equals(modId) && EntryValidator.isValidItem(i, categoryId))
+                .sorted(Comparator.comparing(i -> BuiltInRegistries.ITEM.getKey(i).toString()))
+                .map(Object.class::cast)
+                .toList());
         register("tag", (tagPath, categoryId) -> {
             List<Object> results = new ArrayList<>();
             try {
@@ -47,6 +53,12 @@ public class AutoPopulateRegistry {
                         .flatMap(BuiltInRegistries.BLOCK::getHolder)
                         .filter(h -> h.is(blockTagKey) && EntryValidator.isValidBlock(block, categoryId))
                         .ifPresent(h -> results.add(block)));
+
+                TagKey<Item> itemTagKey = TagKey.create(Registries.ITEM, tagLocation);
+                BuiltInRegistries.ITEM.forEach(item -> BuiltInRegistries.ITEM.getResourceKey(item)
+                        .flatMap(BuiltInRegistries.ITEM::getHolder)
+                        .filter(h -> h.is(itemTagKey) && EntryValidator.isValidItem(item, categoryId))
+                        .ifPresent(h -> results.add(item)));
 
                 results.sort(Comparator.comparing(o -> getEntryId(o).toString()));
             } catch (Exception e) {
@@ -93,6 +105,7 @@ public class AutoPopulateRegistry {
         if (obj instanceof ResourceLocation loc) return loc;
         if (obj instanceof EntityType<?> type) return BuiltInRegistries.ENTITY_TYPE.getKey(type);
         if (obj instanceof Block block) return BuiltInRegistries.BLOCK.getKey(block);
+        if (obj instanceof Item item) return BuiltInRegistries.ITEM.getKey(item);
         if (obj instanceof CompositeFieldGuideEntry comp) return comp.id();
         return null;
     }

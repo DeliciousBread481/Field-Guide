@@ -1,6 +1,9 @@
 package com.evandev.fieldguide.client.gui.screens;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.api.Category;
+import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.api.VariantDef;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.data.EntryVisual;
@@ -12,9 +15,6 @@ import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
 import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.api.Category;
-import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
-import com.evandev.fieldguide.api.VariantDef;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -32,7 +32,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
@@ -812,15 +812,17 @@ public class FieldGuideCategoryScreen extends BookScreen {
             }
         } else if (coreEntry instanceof EntityType<?> || isCobblemon) {
             Entity entity = getCachedEntity(entry);
-            if (entity instanceof LivingEntity living) {
+            if (entity != null) {
                 if (isCobblemon) {
                     EntryRenderHelper.renderCobblemon(guiGraphics, (CompositeFieldGuideEntry) entry, x, y, CELL_SIZE - 8, CELL_SIZE - 8, unlocked, false, 1.0F);
                 } else {
-                    EntryRenderHelper.renderEntityNormalized(guiGraphics, living, x, y, CELL_SIZE - 8, CELL_SIZE - 8, unlocked, false, 1.0F);
+                    EntryRenderHelper.renderEntityNormalized(guiGraphics, entity, x, y, CELL_SIZE - 8, CELL_SIZE - 8, unlocked, false, 1.0F);
                 }
             }
         } else if (coreEntry instanceof Block block) {
             EntryRenderHelper.renderBlock(guiGraphics, block, x, y, 15.0F, unlocked, false, 1.0F);
+        } else if (coreEntry instanceof Item item) {
+            EntryRenderHelper.renderItem(guiGraphics, item, x, y, 15.0F, unlocked, false, 1.0F);
         }
     }
 }

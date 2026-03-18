@@ -31,6 +31,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.*;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
@@ -400,7 +401,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         Object clickEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
 
-        if ((button == 0 || button == 1) && (renderedEntity != null || clickEntry instanceof Block)) {
+        if ((button == 0 || button == 1) && (renderedEntity != null || clickEntry instanceof Block || clickEntry instanceof Item)) {
             int xPos = leftPageBounds.left() + leftPageBounds.width() / 2;
             int yPos = leftPageBounds.y_center() - 18;
             if (mouseX >= xPos - 50 && mouseX <= xPos + 50 && mouseY >= yPos - 50 && mouseY <= yPos + 50) {
@@ -415,6 +416,8 @@ public class FieldGuideEntryScreen extends BookScreen {
                             FieldGuideClient.playMobCry(this.renderedEntity);
                         } else if (clickEntry instanceof Block block && this.minecraft != null) {
                             this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(block.defaultBlockState().getSoundType().getBreakSound(), 1.0F, 1.0F));
+                        } else if (clickEntry instanceof Item && this.minecraft != null) {
+                            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(Constants.ITEM_PICKUP_SOUND), 1.0F, 1.0F));
                         }
                     }
                     this.lastClickTime = System.currentTimeMillis();
@@ -515,23 +518,27 @@ public class FieldGuideEntryScreen extends BookScreen {
                 renderAttributes(guiGraphics, living);
                 renderAlignment(guiGraphics, living, mouseX, mouseY);
             }
-        } else if (renderEntry instanceof EntityType && renderedEntity instanceof LivingEntity living) {
+        } else if (renderEntry instanceof EntityType && renderedEntity != null) {
             boolean variantUnlocked = unlocked;
             if (unlocked && !entityVariants.isEmpty() && !ModConfig.get().unlockAllVariants) {
                 variantUnlocked = ClientFieldGuideManager.isVariantUnlocked(entry, entityVariants.get(currentVariantIndex).id());
             }
 
             if (!hideEntity) {
-                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, xPos, yPos, 112, 112, variantUnlocked, true, bounce);
+                EntryRenderHelper.renderEntityNormalized(guiGraphics, renderedEntity, xPos, yPos, 112, 112, variantUnlocked, true, bounce);
             }
 
-            if (unlocked) {
+            if (unlocked && renderedEntity instanceof LivingEntity living) {
                 renderAttributes(guiGraphics, living);
                 renderAlignment(guiGraphics, living, mouseX, mouseY);
             }
         } else if (renderEntry instanceof Block block) {
             if (!hideEntity) {
                 EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 40.0F, unlocked, true, bounce);
+            }
+        } else if (renderEntry instanceof Item item) {
+            if (!hideEntity) {
+                EntryRenderHelper.renderItem(guiGraphics, item, xPos, yPos, 40.0F, unlocked, true, bounce);
             }
         }
 

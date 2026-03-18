@@ -30,6 +30,7 @@ public class ClientLootManager {
             List<ItemStack> drops = entry.getValue();
             BuiltInRegistries.ENTITY_TYPE.getOptional(id).ifPresent(type -> dropCache.put(type, drops));
             BuiltInRegistries.BLOCK.getOptional(id).ifPresent(block -> dropCache.put(block, drops));
+            BuiltInRegistries.ITEM.getOptional(id).ifPresent(item -> dropCache.put(item, drops));
         }
     }
 

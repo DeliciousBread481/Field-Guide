@@ -11,6 +11,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
 public class ScanVerifier {
@@ -64,6 +66,14 @@ public class ScanVerifier {
         Entity entity = level.getEntity(entityId);
         if (entity == null || entity.isSpectator()) return false;
         if (player.distanceToSqr(entity) > maxDistSq) return false;
+
+        if (entity instanceof ItemEntity itemEntity) {
+            Item item = itemEntity.getItem().getItem();
+            if (!EntryResolver.isValidItem(item, categoryId)) return false;
+            ResourceLocation actualItemId = BuiltInRegistries.ITEM.getKey(item);
+            return actualItemId.equals(scannedTargetId);
+        }
+
         if (!EntryResolver.isValidEntity(entity.getType(), categoryId)) return false;
 
         ResourceLocation actualTypeId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());

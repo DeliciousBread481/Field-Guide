@@ -30,6 +30,9 @@ public class LootTableHelper {
         for (Block block : BuiltInRegistries.BLOCK) {
             processEntry(level, block, block.getLootTable(), lootMap);
         }
+        for (Item item : BuiltInRegistries.ITEM) {
+            processEntry(level, item, null, lootMap);
+        }
         return lootMap;
     }
 
@@ -72,6 +75,8 @@ public class LootTableHelper {
                     return BuiltInRegistries.ENTITY_TYPE.getHolder(BuiltInRegistries.ENTITY_TYPE.getResourceKey(type).get()).get().is(TagKey.create(Registries.ENTITY_TYPE, tagId));
                 } else if (entry instanceof Block block) {
                     return BuiltInRegistries.BLOCK.getHolder(BuiltInRegistries.BLOCK.getResourceKey(block).get()).get().is(TagKey.create(Registries.BLOCK, tagId));
+                } else if (entry instanceof Item item) {
+                    return BuiltInRegistries.ITEM.getHolder(BuiltInRegistries.ITEM.getResourceKey(item).get()).get().is(TagKey.create(Registries.ITEM, tagId));
                 }
             } catch (Exception ignored) {
             }

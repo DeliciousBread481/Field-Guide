@@ -16,6 +16,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.BlockHitResult;
 
@@ -171,14 +172,18 @@ public class FieldGuideScanManager {
 
             if (foundTarget instanceof Entity entity) {
                 scannedTargetId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
-                if (entity instanceof Mob mob) {
+                if (entity instanceof ItemEntity itemEntity) {
+                    scannedTargetId = BuiltInRegistries.ITEM.getKey(itemEntity.getItem().getItem());
+                } else if (entity instanceof Mob mob) {
                     var provider = FieldGuideVariantManager.getProvider(mob);
                     if (provider != null) {
                         variantId = provider.getCurrent(mob).id();
                     }
                 }
+            } else if (foundTarget instanceof Block block) {
+                scannedTargetId = BuiltInRegistries.BLOCK.getKey(block);
             } else {
-                scannedTargetId = BuiltInRegistries.BLOCK.getKey((Block) foundTarget);
+                scannedTargetId = ClientFieldGuideManager.getEntryId(foundTarget);
             }
             BlockPos targetBlockPos = (foundTarget instanceof Block) ? state.getScanningPos() : null;
             int targetEntityId = (foundTarget instanceof Entity) ? ((Entity) foundTarget).getId() : 0;

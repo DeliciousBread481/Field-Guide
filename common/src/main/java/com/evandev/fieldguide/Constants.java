@@ -23,6 +23,9 @@ public class Constants {
     public static final ResourceLocation BUTTON_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/fieldguide_button.png");
     public static final ResourceLocation INVENTORY_BUTTON_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/fieldguide_inventory_button.png");
 
+    // Sounds
+    public static final ResourceLocation ITEM_PICKUP_SOUND = new ResourceLocation("minecraft", "entity.item.pickup");
+
     // Elements
     public static final ResourceLocation WIDGETS_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/widgets.png");
     public static final ResourceLocation LIST_ENTRY_BACKGROUND_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/list_entry_background.png");
@@ -36,7 +39,7 @@ public class Constants {
     public static final ResourceLocation ATTRIBUTES_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/attributes.png");
     public static final ResourceLocation SCANNING_ICON_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/scanning.png");
 
-    // Mob CategoryType Icons
+    // Mob Alignment Icons
     public static final ResourceLocation HOSTILE_ICON = new ResourceLocation(MOD_ID, "textures/gui/icons/hostile.png");
     public static final ResourceLocation PASSIVE_ICON = new ResourceLocation(MOD_ID, "textures/gui/icons/passive.png");
     public static final ResourceLocation NEUTRAL_ICON = new ResourceLocation(MOD_ID, "textures/gui/icons/neutral.png");

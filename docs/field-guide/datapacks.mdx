@@ -40,7 +40,7 @@ The Field Guide automatically hides empty categories.
 
 #### Content Types
 
-1. **Manual Entry:** Adds a specific Entity or Block.
+1. **Manual Entry:** Adds a specific Entity, Block, or Item.
 
 ```json
 {
@@ -69,7 +69,8 @@ The Field Guide automatically hides empty categories.
 * `mod:<mod_id>`: All entities from a specific mod.
 * `mod_plants:<mod_id>`: All plant-like blocks from a specific mod.
 * `mod_trees:<mod_id>`: All dynamically generated tree structures from a specific mod.
-* `tag:<tag_id>`: All entities and blocks with a specific tag (e.g., `tag:minecraft:raiders` or `tag:minecraft:logs`).
+* `mod_items:<mod_id>`: All items from a specific mod.
+* `tag:<tag_id>`: All entities, blocks and items with a specific tag (e.g., `tag:minecraft:raiders` or `tag:minecraft:logs`).
 
 #### Content grouping
 
@@ -294,13 +295,14 @@ You can use either `entry` (single string) or `entries` (array of strings) to de
 
 ### Blacklisting Entries
 
-If you want to hide specific entities or blocks from the Field Guide entirely, or just hide them from a specific category, you can do so using tags.
+If you want to hide specific entities, blocks, or items from the Field Guide entirely, or just hide them from a specific category, you can do so using tags.
 
 **Global Blacklists:**
-To completely remove an entity or block from all categories and scanning mechanics, add its ID to the `fieldguide:blacklisted` tag.
+To completely remove an entity, block, or item from all categories and scanning mechanics, add its ID to the `fieldguide:blacklisted` tag.
 
 * **Entities:** `data/fieldguide/tags/entity_type/blacklisted.json`
 * **Blocks:** `data/fieldguide/tags/block/blacklisted.json`
+* **Items:** `data/fieldguide/tags/item/blacklisted.json`
 
 *Example (`data/fieldguide/tags/entity_type/blacklisted.json`):*
 ```json
@@ -331,3 +333,5 @@ For example, to prevent Zombie Piglins from appearing in the `fieldguide:monster
 }
 
 ```
+
+This works for `entity_type`, `block`, and `item` tags.

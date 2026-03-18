@@ -22,6 +22,7 @@ public class ModTags {
 
     public static class Items {
         public static final TagKey<Item> SPYGLASSES = tag("spyglasses");
+        public static final TagKey<Item> BLACKLISTED = tag("blacklisted");
 
         private static TagKey<Item> tag(String name) {
             return TagKey.create(Registries.ITEM, new ResourceLocation(Constants.MOD_ID, name));

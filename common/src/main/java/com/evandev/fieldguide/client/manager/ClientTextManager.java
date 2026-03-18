@@ -7,6 +7,7 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
 public class ClientTextManager {
@@ -35,10 +36,25 @@ public class ClientTextManager {
         }
 
         String overrideKey = "fieldguide." + id.getNamespace() + "." + id.getPath() + ".description";
+        if (I18n.exists(overrideKey)) return I18n.get(overrideKey);
 
         Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
+
+        // Quark JEI Hint
+        String quarkJeiKey = "quark.jei.hint." + id.getPath();
+        if (id.getNamespace().equals("quark") && I18n.exists(quarkJeiKey)) {
+            return I18n.get(quarkJeiKey);
+        }
+
+        // Item Descriptions
+        String loreKey = "lore." + id.getNamespace() + "." + id.getPath();
+        if (I18n.exists(loreKey)) return I18n.get(loreKey);
+
         String fallbackKey = (coreEntry instanceof EntityType) ? "entity." + id.getNamespace() + "." + id.getPath() + ".description" : "lore." + id.getNamespace() + "." + id.getPath();
-        return I18n.exists(overrideKey) ? I18n.get(overrideKey) : (I18n.exists(fallbackKey) ? I18n.get(fallbackKey) : I18n.get("fieldguide.description.missing"));
+        if (coreEntry instanceof Item) {
+            fallbackKey = "item." + id.getNamespace() + "." + id.getPath() + ".description";
+        }
+        return I18n.exists(fallbackKey) ? I18n.get(fallbackKey) : I18n.get("fieldguide.description.missing");
     }
 
     public void setCustomDescription(Object entry, String desc) {
@@ -91,6 +107,7 @@ public class ClientTextManager {
 
         if (coreEntry instanceof EntityType<?> type) return type.getDescription();
         if (coreEntry instanceof Block block) return block.getName();
+        if (coreEntry instanceof Item item) return item.getDescription();
 
         return Component.translatable("fieldguide.unknown");
     }

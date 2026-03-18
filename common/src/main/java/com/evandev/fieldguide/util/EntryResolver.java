@@ -7,6 +7,7 @@ import com.evandev.fieldguide.util.entry.EntryResolutionHelper;
 import com.evandev.fieldguide.util.entry.EntryValidator;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
 import java.util.*;
@@ -110,6 +111,10 @@ public class EntryResolver {
 
     public static boolean isValidBlock(Block block, ResourceLocation categoryId) {
         return EntryValidator.isValidBlock(block, categoryId);
+    }
+
+    public static boolean isValidItem(Item item, ResourceLocation categoryId) {
+        return EntryValidator.isValidItem(item, categoryId);
     }
 
     public static ResourceLocation getEntryId(Object obj) {

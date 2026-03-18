@@ -1,7 +1,7 @@
 package com.evandev.fieldguide.client.search;
 
-import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.util.EntryResolver;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -9,6 +9,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
@@ -86,6 +87,12 @@ public class SearchManager {
             } else if (coreEntry instanceof Block block) {
                 var key = BuiltInRegistries.BLOCK.getResourceKey(block);
                 key.flatMap(BuiltInRegistries.BLOCK::getHolder).ifPresent(holder -> {
+                    if (holder.tags().anyMatch(tag -> matchLocation(tag.location(), tagQuery, exactMatch)))
+                        results.add(entry);
+                });
+            } else if (coreEntry instanceof Item item) {
+                var key = BuiltInRegistries.ITEM.getResourceKey(item);
+                key.flatMap(BuiltInRegistries.ITEM::getHolder).ifPresent(holder -> {
                     if (holder.tags().anyMatch(tag -> matchLocation(tag.location(), tagQuery, exactMatch)))
                         results.add(entry);
                 });

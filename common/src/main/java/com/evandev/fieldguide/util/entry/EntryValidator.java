@@ -10,6 +10,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
 public class EntryValidator {
@@ -42,5 +43,16 @@ public class EntryValidator {
             return false;
         }
         return true;
+    }
+
+    public static boolean isValidItem(Item item, ResourceLocation categoryId) {
+        return BuiltInRegistries.ITEM.getResourceKey(item).flatMap(BuiltInRegistries.ITEM::getHolder).map(h -> {
+            if (h.is(ModTags.Items.BLACKLISTED)) return false;
+            if (categoryId != null) {
+                TagKey<Item> catTag = TagKey.create(Registries.ITEM, new ResourceLocation(Constants.MOD_ID, "blacklisted/" + categoryId.getNamespace() + "/" + categoryId.getPath()));
+                return !h.is(catTag);
+            }
+            return true;
+        }).orElse(true);
     }
 }

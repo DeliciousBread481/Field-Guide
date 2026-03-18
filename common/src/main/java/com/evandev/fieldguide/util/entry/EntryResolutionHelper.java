@@ -123,6 +123,9 @@ public class EntryResolutionHelper {
                 .map(Object.class::cast)
                 .or(() -> BuiltInRegistries.BLOCK.getOptional(id)
                         .filter(b -> EntryValidator.isValidBlock(b, categoryId))
+                        .map(Object.class::cast))
+                .or(() -> BuiltInRegistries.ITEM.getOptional(id)
+                        .filter(i -> EntryValidator.isValidItem(i, categoryId))
                         .map(Object.class::cast));
     }
 

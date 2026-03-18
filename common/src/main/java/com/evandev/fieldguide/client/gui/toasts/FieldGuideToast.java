@@ -17,6 +17,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 
@@ -87,13 +88,15 @@ public class FieldGuideToast implements Toast {
         } else if (isCobblemon && cachedEntity instanceof LivingEntity) {
             EntryRenderHelper.renderCobblemon(guiGraphics, (CompositeFieldGuideEntry) this.entry, iconX, iconY, 24, 24, true, false, 1.0F);
         } else if (coreEntry instanceof EntityType<?>) {
-            if (cachedEntity instanceof LivingEntity living) {
-                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, iconX, iconY, 24, 24, true, false, 1.0F);
+            if (cachedEntity != null) {
+                EntryRenderHelper.renderEntityNormalized(guiGraphics, cachedEntity, iconX, iconY, 24, 24, true, false, 1.0F);
             } else {
                 guiGraphics.blit(Constants.TOAST_ICON, 8, 8, 0, 0, 16, 16, 16, 16);
             }
         } else if (coreEntry instanceof Block block) {
             EntryRenderHelper.renderBlock(guiGraphics, block, iconX, iconY, 12.0F, true, false, 1.0F);
+        } else if (coreEntry instanceof Item item) {
+            EntryRenderHelper.renderItem(guiGraphics, item, iconX, iconY, 12.0F, true, false, 1.0F);
         } else {
             guiGraphics.blit(Constants.TOAST_ICON, 8, 8, 0, 0, 16, 16, 16, 16);
         }

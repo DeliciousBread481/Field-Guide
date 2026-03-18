@@ -1,8 +1,8 @@
 package com.evandev.fieldguide;
 
+import com.evandev.fieldguide.api.VariantDef;
 import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.compat.exposure.ExposureForgeEventHandler;
-import com.evandev.fieldguide.api.VariantDef;
 import com.evandev.fieldguide.network.*;
 import com.evandev.fieldguide.platform.ForgeNetworkHelper;
 import com.evandev.fieldguide.platform.Services;
@@ -25,6 +25,7 @@ import net.minecraftforge.event.OnDatapackSyncEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
@@ -199,6 +200,19 @@ public class FieldGuideMod {
                         }
                         progress.unlock(player, entityId, variantId);
                     }
+                }
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void onItemPickup(EntityItemPickupEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(event.getItem().getItem().getItem());
+            if (FieldGuideProgressManager.getInstance().isValidEntry(itemId)) {
+                PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
+                if (progress != null) {
+                    progress.unlock(player, itemId, null);
                 }
             }
         }

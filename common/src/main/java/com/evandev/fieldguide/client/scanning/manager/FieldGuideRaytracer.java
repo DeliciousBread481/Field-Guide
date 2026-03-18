@@ -18,6 +18,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.boss.EnderDragonPart;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.Block;
@@ -79,7 +80,9 @@ public class FieldGuideRaytracer {
             ResourceLocation redirectId = ClientFieldGuideManager.getInstance().getRedirect(originalId);
 
             Object actualTargetKey = type;
-            if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(hitEntity)) {
+            if (hitEntity instanceof ItemEntity itemEntity) {
+                actualTargetKey = itemEntity.getItem().getItem();
+            } else if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(hitEntity)) {
                 actualTargetKey = FieldGuideCobblemonCompat.getPokemonEntryId(hitEntity);
             } else if (redirectId != null) {
                 Optional<EntityType<?>> opt = BuiltInRegistries.ENTITY_TYPE.getOptional(redirectId);
