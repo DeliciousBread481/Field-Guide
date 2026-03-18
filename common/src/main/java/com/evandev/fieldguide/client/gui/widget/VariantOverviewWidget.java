@@ -35,7 +35,6 @@ public class VariantOverviewWidget extends AbstractWidget {
     private final ImageButton closeButton;
     private final PageTurnButton leftButton;
     private final PageTurnButton rightButton;
-    private boolean visible = false;
     private int currentPage = 0;
     private Component currentTitleText;
 
@@ -46,7 +45,9 @@ public class VariantOverviewWidget extends AbstractWidget {
         this.variants = variants;
         this.onVariantSelected = onVariantSelected;
         this.maxPages = (int) Math.ceil(variants.size() / 9.0);
-        this.currentTitleText = Component.literal("Variants");
+        this.currentTitleText = Component.translatable("gui.fieldguide.variants");
+        this.visible = false;
+
         this.closeButton = new ImageButton(x + width - 16, y + 6, 10, 10, 0, 0, 10, Constants.CLOSE_ICON, 10, 20, (btn) -> this.toggleVisibility());
 
         this.leftButton = new PageTurnButton(x + (width / 2) - 24, y + height - 20, 16, 16, 0, 16, 16, Constants.WIDGETS_TEXTURE, (btn) -> {
@@ -66,6 +67,26 @@ public class VariantOverviewWidget extends AbstractWidget {
     }
 
     @Override
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        return this.visible && mouseX >= this.getX() && mouseX <= this.getX() + this.width && mouseY >= this.getY() && mouseY <= this.getY() + this.height;
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDelta) {
+        if (!this.visible) return false;
+
+        if (scrollDelta > 0 && this.currentPage > 0) {
+            this.currentPage--;
+            return true;
+        } else if (scrollDelta < 0 && this.currentPage < maxPages - 1) {
+            this.currentPage++;
+            return true;
+        }
+
+        return super.mouseScrolled(mouseX, mouseY, scrollDelta);
+    }
+
+    @Override
     public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         if (!this.visible) return;
 
@@ -74,7 +95,7 @@ public class VariantOverviewWidget extends AbstractWidget {
 
         graphics.blit(Constants.VARIANT_WIDGET_TEXTURE, this.getX(), this.getY(), 0, 0, this.width, this.height, this.width, this.height);
 
-        this.currentTitleText = Component.literal("Variants"); // TODO: translation key
+        this.currentTitleText = Component.translatable("gui.fieldguide.variants");
 
         int startIdx = currentPage * 9;
         int endIdx = Math.min(startIdx + 9, variants.size());
@@ -124,7 +145,10 @@ public class VariantOverviewWidget extends AbstractWidget {
                 if (isUnlocked) {
                     String name = variant.id();
                     if (name.contains(":")) name = name.substring(name.indexOf(':') + 1);
-                    name = Arrays.stream(name.split("_")).map(s -> s.substring(0, 1).toUpperCase() + s.substring(1)).collect(Collectors.joining(" "));
+
+                    name = Arrays.stream(name.split("_"))
+                            .map(s -> s.isEmpty() ? s : s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase())
+                            .collect(Collectors.joining(" "));
                     this.currentTitleText = Component.literal(name);
                 } else {
                     this.currentTitleText = Component.literal("???");
