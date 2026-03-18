@@ -43,15 +43,45 @@ PlayerEvents.loggedIn(event => {
 
 #### Revoking progress
 ```javascript
-ServerEvents.command('reset_guide', event => {
-    FieldGuide.revokeAll(event.player)
-    event.player.tell('Your Field Guide has been reset.')
-})
+ServerEvents.commandRegistry(event => {
+    const { commands: Commands, arguments: Arguments } = event;
+    
+    event.register(
+        Commands.literal('reset_guide')
+            .executes(ctx => {
+                const player = ctx.source.player;
+                if (player) {
+                    FieldGuide.revokeAll(player);
+                    player.tell('Your Field Guide has been reset.');
+                }
+                return 1;
+            })
+    );
+});
 ```
 
-### Advanced Usage
-For more advanced interactions, you can access the internal managers directly:
+### API Reference
 
-*   **`FieldGuide.getManager()`**: Access categories, entries, redirects, and more.
-*   **`FieldGuide.getProgressManager()`**: Access global player progress tracking.
-*   **`FieldGuide.getProgress(player)`**: Access low-level progress data (discovery times, custom names, etc.).
+For advanced users, `FieldGuide.getManager()` and `FieldGuide.getProgress(player)` return the actual Java objects used by the mod. Below are some of the most useful methods available on these objects.
+
+#### PlayerFieldGuideProgress
+Accessible via `FieldGuide.getProgress(player)`.
+
+| Method | Description |
+| :--- | :--- |
+| `getUnlockedEntries()` | Returns a `Set<String>` of all entry IDs the player has unlocked. |
+| `markSeen(String entryId)` | Marks an unlocked entry as "seen" (removes the notification dot). |
+| `setCustomName(String entryId, String name)` | Sets a custom name for an entry for this player. |
+| `setCustomDescription(String entryId, String desc)` | Sets a custom description for an entry for this player. |
+| `setJournalTitle(String title)` | Changes the title of the player's journal. |
+| `isUnlocked(String entryId)` | Check if an entry (or variant like `minecraft:cow#variant`) is unlocked. |
+
+#### ServerFieldGuideManager
+Accessible via `FieldGuide.getManager()`.
+
+| Method | Description |
+| :--- | :--- |
+| `getAllEntryIds()` | Returns a `Set<ResourceLocation>` of every valid entry in the guide. |
+| `hasEntry(ResourceLocation id)` | Returns `true` if the ID is a valid entry defined in a category. |
+| `getCategoryForEntryId(ResourceLocation id)` | Returns the `ResourceLocation` of the category containing the entry. |
+| `isKillToUnlock(ResourceLocation id)` | Returns `true` if the entry is tagged as `#fieldguide:kill_to_unlock`. |
