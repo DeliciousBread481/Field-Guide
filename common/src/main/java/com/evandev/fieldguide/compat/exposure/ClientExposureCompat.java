@@ -39,6 +39,10 @@ public class ClientExposureCompat {
     public static void setupExposureWidgets(FieldGuideEntryScreen screen, Object entry, String variantId) {
         if (!ClientFieldGuideManager.isUnlocked(entry)) return;
 
+        if (variantId != null && !variantId.isEmpty() && !ModConfig.get().unlockAllVariants) {
+            if (!ClientFieldGuideManager.isVariantUnlocked(entry, variantId)) return;
+        }
+
         int leftX = screen.getLeftPageBounds().left();
         int leftY = screen.getLeftPageBounds().top();
         int leftWidth = screen.getLeftPageBounds().width();

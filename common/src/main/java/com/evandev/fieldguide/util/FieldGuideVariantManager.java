@@ -98,7 +98,14 @@ public class FieldGuideVariantManager {
     @SuppressWarnings("unchecked")
     public static <T extends Mob> VariantProvider<T> getProvider(Entity entity) {
         if (!(entity instanceof Mob mob)) return null;
-        return getProvider((Class<T>) mob.getClass());
+        VariantProvider<T> provider = getProvider((Class<T>) mob.getClass());
+        if (provider == null) {
+            provider = (VariantProvider<T>) getReflectionProvider(mob);
+            if (provider != null) {
+                registerProvider((Class<T>) mob.getClass(), provider);
+            }
+        }
+        return provider;
     }
 
     @SuppressWarnings("unchecked")
