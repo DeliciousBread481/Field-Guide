@@ -113,13 +113,11 @@ public class PlayerFieldGuideProgress {
         }
     }
 
-    public boolean markSeen(String entryId) {
+    public void markSeen(String entryId) {
         if (unlockedEntries.contains(entryId) && seenEntries.add(entryId)) {
             pendingSeen.add(entryId);
             dirty = true;
-            return true;
         }
-        return false;
     }
 
     public boolean isUnlocked(String entryId) {

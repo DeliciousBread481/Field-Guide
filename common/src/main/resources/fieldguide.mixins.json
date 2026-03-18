@@ -20,7 +20,6 @@
     "accessor.RandomChanceWithLootingConditionAccessor",
     "accessor.SetItemCountFunctionAccessor",
     "accessor.StructureTemplateAccessor",
-    "accessor.TagEntryAccessor",
     "accessor.UniformGeneratorAccessor",
     "server.PlayerListMixin"
   ],

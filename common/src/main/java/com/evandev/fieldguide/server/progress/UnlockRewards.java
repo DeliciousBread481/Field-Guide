@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 class UnlockRewards {
 
@@ -44,7 +45,7 @@ class UnlockRewards {
         if (!commandsToRun.isEmpty()) {
             CommandSourceStack sourceStack = createRewardSourceStack(player, entryId);
             for (String cmd : commandsToRun) {
-                player.getServer().getCommands().performPrefixedCommand(sourceStack, cmd);
+                Objects.requireNonNull(player.getServer()).getCommands().performPrefixedCommand(sourceStack, cmd);
             }
         }
     }
@@ -74,7 +75,7 @@ class UnlockRewards {
                     }
                 },
                 player.position(), player.getRotationVector(), player.serverLevel(),
-                2, sourceName, Component.literal(sourceName), player.getServer(), player
+                2, sourceName, Component.literal(sourceName), Objects.requireNonNull(player.getServer()), player
         );
     }
 }

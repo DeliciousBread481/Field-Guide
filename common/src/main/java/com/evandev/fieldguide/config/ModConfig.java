@@ -4,7 +4,6 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.platform.Services;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.minecraft.resources.ResourceLocation;
 
 import java.io.File;
 import java.io.FileReader;
@@ -65,7 +64,6 @@ public class ModConfig {
     public String textColor = "#8A5E3B";
     public String textTitleColor = "#704623";
     public String textMutedColor = "#C7A875";
-    public String textNewColor = "#63B40C";
     public String textCursorColor = "#0xFF704623";
     public String pageNumberColor = "#C7A875";
 
@@ -136,10 +134,6 @@ public class ModConfig {
         return parseColor(textMutedColor, 0xC7A875);
     }
 
-    public int getTextNewColorInt() {
-        return parseColor(textNewColor, 0x63B40C);
-    }
-
     public int getTextCursorColorInt() {
         return parseColor(textCursorColor, 0xFF704623);
     }
@@ -151,6 +145,7 @@ public class ModConfig {
     public int getListSilhouetteColorInt() {
         return parseColor(listSilhouetteColor, 0xDDC69B);
     }
+
     public int getListUnlockedSilhouetteColorInt() {
         return parseColor(listUnlockedSilhouetteColor, 0xDDC69B);
     }
@@ -158,6 +153,7 @@ public class ModConfig {
     public int getDetailsSilhouetteColorInt() {
         return parseColor(detailsSilhouetteColor, 0xDDC69B);
     }
+
     public int getDetailsUnlockedSilhouetteColorInt() {
         return parseColor(detailsUnlockedSilhouetteColor, 0xDDC69B);
     }

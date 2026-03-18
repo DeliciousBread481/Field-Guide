@@ -4,7 +4,6 @@ import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.api.CategoryEntry;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.client.search.SearchManager;
-import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.util.EntryResolver;
 import net.minecraft.resources.ResourceLocation;
 

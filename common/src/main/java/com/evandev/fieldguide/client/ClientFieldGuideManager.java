@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.client;
 
+import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.data.JournalPage;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
@@ -12,9 +13,6 @@ import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.client.scanning.FieldGuideScanner;
 import com.evandev.fieldguide.client.search.SearchManager;
 import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.api.Category;
-import com.evandev.fieldguide.api.CategoryEntry;
-import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.util.EntryResolver;
 import net.minecraft.client.Minecraft;
@@ -26,7 +24,8 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     private static final ClientFieldGuideManager INSTANCE = new ClientFieldGuideManager();

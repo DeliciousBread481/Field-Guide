@@ -1,12 +1,12 @@
 package com.evandev.fieldguide.server;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
-import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.api.CategoryEntry;
 import com.evandev.fieldguide.api.CompositeDefinition;
 import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
+import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
@@ -258,7 +258,6 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
     private void resolveAllCategories() {
         resolvedCategoryEntries.clear();
-        ModConfig config = ModConfig.get();
         Set<Object> allCompositeComponents = new HashSet<>();
 
         for (Category cat : categories.values()) {

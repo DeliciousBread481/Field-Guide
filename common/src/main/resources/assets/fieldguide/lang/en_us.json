@@ -93,9 +93,6 @@
   "option.fieldguide.text_muted_color": "Muted Text Color",
   "option.fieldguide.text_muted_color.tooltip": "The hex color code used for muted/secondary text.",
 
-  "option.fieldguide.text_new_color": "New Text Color",
-  "option.fieldguide.text_new_color.tooltip": "Hex color code for the text used when indicating a new entry.",
-
   "option.fieldguide.text_cursor_color": "Text Cursor Color",
   "option.fieldguide.text_cursor_color.tooltip": "Hex color code for the text cursor.",
 

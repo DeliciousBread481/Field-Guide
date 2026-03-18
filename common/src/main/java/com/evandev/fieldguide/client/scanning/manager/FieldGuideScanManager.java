@@ -23,8 +23,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 public class FieldGuideScanManager {
-    private static final FieldGuideScanManager INSTANCE = new FieldGuideScanManager();
     public static final int FADE_DURATION = 10;
+    private static final FieldGuideScanManager INSTANCE = new FieldGuideScanManager();
 
     private FieldGuideScanManager() {
     }
@@ -38,9 +38,7 @@ public class FieldGuideScanManager {
 
         FieldGuideScanState state = FieldGuideScanState.getInstance();
 
-        boolean hasSpyglass = minecraft.player.isScoping() ||
-                (minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(ModTags.Items.SPYGLASSES)) ||
-                Services.PLATFORM.hasSpyglass(minecraft.player);
+        boolean hasSpyglass = minecraft.player.isScoping() || (minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(ModTags.Items.SPYGLASSES));
 
         boolean canScan = (hasSpyglass && ModConfig.get().enableSpyglassScanning) || ModConfig.get().enableNakedEyeScanning;
         boolean isScanningActive = canScan && !ModConfig.get().disableScanning;
@@ -68,8 +66,7 @@ public class FieldGuideScanManager {
         FieldGuideScanState state = FieldGuideScanState.getInstance();
         if (foundTarget != null) {
             boolean usingSpyglass = minecraft.player != null && (minecraft.player.isScoping() ||
-                    (minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(ModTags.Items.SPYGLASSES)) ||
-                    Services.PLATFORM.hasSpyglass(minecraft.player));
+                    (minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(ModTags.Items.SPYGLASSES)));
 
             double activeScanDist = 0;
             if (usingSpyglass && ModConfig.get().enableSpyglassScanning) {

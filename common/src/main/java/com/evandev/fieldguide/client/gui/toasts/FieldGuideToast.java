@@ -84,7 +84,7 @@ public class FieldGuideToast implements Toast {
             } else {
                 EntryRenderHelper.renderBlock(guiGraphics, block, iconX, iconY, 12.0F, true, false, 1.0F);
             }
-        } else if (isCobblemon && cachedEntity instanceof LivingEntity living) {
+        } else if (isCobblemon && cachedEntity instanceof LivingEntity) {
             EntryRenderHelper.renderCobblemon(guiGraphics, (CompositeFieldGuideEntry) this.entry, iconX, iconY, 24, 24, true, false, 1.0F);
         } else if (coreEntry instanceof EntityType<?>) {
             if (cachedEntity instanceof LivingEntity living) {

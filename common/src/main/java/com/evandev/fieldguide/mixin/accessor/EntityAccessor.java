@@ -10,6 +10,4 @@ public interface EntityAccessor {
     @Accessor("wasTouchingWater")
     void fieldguide$setWasTouchingWater(boolean wasTouchingWater);
 
-    @Accessor("wasTouchingWater")
-    boolean fieldguide$wasTouchingWater();
 }
