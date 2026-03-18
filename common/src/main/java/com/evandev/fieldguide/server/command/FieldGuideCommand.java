@@ -3,6 +3,7 @@ package com.evandev.fieldguide.server.command;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.api.VariantDef;
+import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
@@ -241,15 +242,8 @@ public class FieldGuideCommand {
         if (progress == null) return;
 
         if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getNamespace().equals("fieldguide") && entryId.getPath().startsWith("cobblemon/")) {
-            String speciesName = entryId.getPath().substring("cobblemon/".length());
-            int underscore = speciesName.lastIndexOf('_');
-            if (underscore != -1) speciesName = speciesName.substring(0, underscore);
-
-            com.cobblemon.mod.common.pokemon.Species species = com.cobblemon.mod.common.api.pokemon.PokemonSpecies.INSTANCE.getByIdentifier(new ResourceLocation("cobblemon", speciesName));
-            if (species != null) {
-                for (com.cobblemon.mod.common.pokemon.FormData form : species.getForms()) {
-                    progress.unlock(player, entryId, form.getName());
-                }
+            for (String variantId : FieldGuideCobblemonCompat.getVariantIds(entryId)) {
+                progress.unlock(player, entryId, variantId);
             }
         } else {
             EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(entryId);
@@ -267,15 +261,8 @@ public class FieldGuideCommand {
         if (progress == null) return;
 
         if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getNamespace().equals("fieldguide") && entryId.getPath().startsWith("cobblemon/")) {
-            String speciesName = entryId.getPath().substring("cobblemon/".length());
-            int underscore = speciesName.lastIndexOf('_');
-            if (underscore != -1) speciesName = speciesName.substring(0, underscore);
-
-            com.cobblemon.mod.common.pokemon.Species species = com.cobblemon.mod.common.api.pokemon.PokemonSpecies.INSTANCE.getByIdentifier(new ResourceLocation("cobblemon", speciesName));
-            if (species != null) {
-                for (com.cobblemon.mod.common.pokemon.FormData form : species.getForms()) {
-                    progress.revoke(entryId + "#" + form.getName());
-                }
+            for (String variantId : FieldGuideCobblemonCompat.getVariantIds(entryId)) {
+                progress.revoke(entryId + "#" + variantId);
             }
         } else {
             EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(entryId);

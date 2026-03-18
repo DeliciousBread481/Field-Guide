@@ -131,6 +131,18 @@ public final class FieldGuideCobblemonCompat {
             pokemonEntity.getEntityData().set(PokemonEntity.getASPECTS(), pokemonEntity.getPokemon().getAspects());
             pokemonEntity.getEntityData().set(PokemonEntity.getSPECIES(), pokemonEntity.getPokemon().getSpecies().getResourceIdentifier().toString());
 
+            pokemonEntity.setTicksLived(25);
+            pokemonEntity.setYRot(0.0F);
+            pokemonEntity.yRotO = 0.0F;
+            pokemonEntity.setXRot(0.0F);
+            pokemonEntity.xRotO = 0.0F;
+            pokemonEntity.setYHeadRot(0.0F);
+            pokemonEntity.yHeadRot = 0.0F;
+            pokemonEntity.yHeadRotO = 0.0F;
+            pokemonEntity.setYBodyRot(0.0F);
+            pokemonEntity.yBodyRot = 0.0F;
+            pokemonEntity.yBodyRotO = 0.0F;
+
             VARIANT_DUMMY_CACHE.put(cacheKey, pokemonEntity);
             return pokemonEntity;
         } catch (Exception e) {
@@ -138,6 +150,18 @@ public final class FieldGuideCobblemonCompat {
         }
 
         return null;
+    }
+
+    public static List<String> getVariantIds(ResourceLocation entryId) {
+        String speciesName = entryId.getPath().substring("cobblemon/".length());
+        int underscore = speciesName.lastIndexOf('_');
+        if (underscore != -1) speciesName = speciesName.substring(0, underscore);
+
+        com.cobblemon.mod.common.pokemon.Species species = com.cobblemon.mod.common.api.pokemon.PokemonSpecies.INSTANCE.getByIdentifier(new ResourceLocation("cobblemon", speciesName));
+        if (species != null) {
+            return species.getForms().stream().map(FormData::getName).toList();
+        }
+        return List.of();
     }
 
     /**
