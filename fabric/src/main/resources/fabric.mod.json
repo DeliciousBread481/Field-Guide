@@ -37,6 +37,9 @@
     },
     "suggests": {
         "cloth-config": "*"
+    },
+    "breaks": {
+        "exposure": "<=1.9.0"
     }
 }
   

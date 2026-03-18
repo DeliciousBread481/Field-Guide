@@ -2,12 +2,13 @@
 
 - Added Pokémon category for when Cobblemon is installed.
 - Added ore icon to the default icon pack.
-- Added Environmental compatibility.
+- Added Environmental compatibility (@proxillus).
 - Added support for variants.
 
 ### Changed
 
 - Improved icon cache generation speeds.
+- Outdated Exposure versions will now intentionally trigger a crash. Please update Exposure!
 
 ### Fixed
 
