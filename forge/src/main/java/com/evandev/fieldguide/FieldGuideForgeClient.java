@@ -41,6 +41,8 @@ public class FieldGuideForgeClient {
                 packet.getLootRemovals(),
                 packet.shouldClearCache()
         );
+
+        ClientFieldGuideManager.getInstance().updateVariants(packet.getVariants());
     }
 
     public static void handleProgressUpdate(ProgressUpdatePacket packet) {

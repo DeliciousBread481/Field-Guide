@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.client;
 
 import com.evandev.fieldguide.api.Category;
+import com.evandev.fieldguide.api.DatapackVariant;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.data.JournalPage;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
@@ -15,6 +16,7 @@ import com.evandev.fieldguide.client.search.SearchManager;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.util.EntryResolver;
+import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -161,6 +163,12 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
     public void updateLootCache(Map<ResourceLocation, List<ItemStack>> lootCache, boolean clearCache) {
         ClientLootManager.getInstance().updateLootCache(lootCache, clearCache);
+    }
+
+    public void updateVariants(Map<ResourceLocation, List<DatapackVariant>> variants) {
+        if (variants != null && !variants.isEmpty()) {
+            FieldGuideVariantManager.setDatapackVariants(variants);
+        }
     }
 
     public EntryVisual getEntryVisual(ResourceLocation entryId) {

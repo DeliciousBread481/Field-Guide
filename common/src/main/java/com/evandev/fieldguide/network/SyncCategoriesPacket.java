@@ -2,6 +2,7 @@ package com.evandev.fieldguide.network;
 
 import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.api.CategoryEntry;
+import com.evandev.fieldguide.api.DatapackVariant;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
@@ -15,6 +16,7 @@ public class SyncCategoriesPacket {
     private final List<String> lootAdditions;
     private final List<String> lootRemovals;
     private final Map<ResourceLocation, ResourceLocation> redirects;
+    private final Map<ResourceLocation, List<DatapackVariant>> variants;
     private final boolean clearCache;
     private final boolean resolveEntries;
 
@@ -25,6 +27,7 @@ public class SyncCategoriesPacket {
             List<String> lootAdditions,
             List<String> lootRemovals,
             Map<ResourceLocation, ResourceLocation> redirects,
+            Map<ResourceLocation, List<DatapackVariant>> variants,
             boolean clearCache,
             boolean resolveEntries
     ) {
@@ -34,6 +37,7 @@ public class SyncCategoriesPacket {
         this.lootAdditions = lootAdditions;
         this.lootRemovals = lootRemovals;
         this.redirects = redirects;
+        this.variants = variants;
         this.clearCache = clearCache;
         this.resolveEntries = resolveEntries;
     }
@@ -64,6 +68,7 @@ public class SyncCategoriesPacket {
         this.lootAdditions = buf.readList(FriendlyByteBuf::readUtf);
         this.lootRemovals = buf.readList(FriendlyByteBuf::readUtf);
         this.redirects = buf.readMap(FriendlyByteBuf::readResourceLocation, FriendlyByteBuf::readResourceLocation);
+        this.variants = buf.readMap(FriendlyByteBuf::readResourceLocation, b -> b.readList(vb -> new DatapackVariant(vb.readUtf(), vb.readNbt())));
         this.clearCache = buf.readBoolean();
         this.resolveEntries = buf.readBoolean();
     }
@@ -91,6 +96,10 @@ public class SyncCategoriesPacket {
         buf.writeCollection(lootAdditions, FriendlyByteBuf::writeUtf);
         buf.writeCollection(lootRemovals, FriendlyByteBuf::writeUtf);
         buf.writeMap(redirects, FriendlyByteBuf::writeResourceLocation, FriendlyByteBuf::writeResourceLocation);
+        buf.writeMap(variants, FriendlyByteBuf::writeResourceLocation, (b, list) -> b.writeCollection(list, (vb, v) -> {
+            vb.writeUtf(v.id());
+            vb.writeNbt(v.nbt());
+        }));
         buf.writeBoolean(clearCache);
         buf.writeBoolean(resolveEntries);
     }
@@ -117,6 +126,10 @@ public class SyncCategoriesPacket {
 
     public Map<ResourceLocation, ResourceLocation> getRedirects() {
         return redirects;
+    }
+
+    public Map<ResourceLocation, List<DatapackVariant>> getVariants() {
+        return variants;
     }
 
     public boolean shouldClearCache() {

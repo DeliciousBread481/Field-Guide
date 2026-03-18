@@ -1,0 +1,70 @@
+{
+  "entries": [
+    {
+      "id": "minecraft:frog",
+      "variants": [
+        {
+          "id": "temperate",
+          "nbt": "{variant: \"minecraft:temperate\"}"
+        },
+        {
+          "id": "warm",
+          "nbt": "{variant: \"minecraft:warm\"}"
+        },
+        {
+          "id": "cold",
+          "nbt": "{variant: \"minecraft:cold\"}"
+        }
+      ]
+    },
+    {
+      "id": "minecraft:cat",
+      "variants": [
+        {
+          "id": "tabby",
+          "nbt": "{variant: \"minecraft:tabby\"}"
+        },
+        {
+          "id": "black",
+          "nbt": "{variant: \"minecraft:black\"}"
+        },
+        {
+          "id": "red",
+          "nbt": "{variant: \"minecraft:red\"}"
+        },
+        {
+          "id": "siamese",
+          "nbt": "{variant: \"minecraft:siamese\"}"
+        },
+        {
+          "id": "british_shorthair",
+          "nbt": "{variant: \"minecraft:british_shorthair\"}"
+        },
+        {
+          "id": "calico",
+          "nbt": "{variant: \"minecraft:calico\"}"
+        },
+        {
+          "id": "persian",
+          "nbt": "{variant: \"minecraft:persian\"}"
+        },
+        {
+          "id": "ragdoll",
+          "nbt": "{variant: \"minecraft:ragdoll\"}"
+        },
+        {
+          "id": "white",
+          "nbt": "{variant: \"minecraft:white\"}"
+        },
+        {
+          "id": "jellie",
+          "nbt": "{variant: \"minecraft:jellie\"}"
+        },
+        {
+          "id": "all_black",
+          "nbt": "{variant: \"minecraft:all_black\"}"
+        }
+      ]
+    }
+  ]
+}

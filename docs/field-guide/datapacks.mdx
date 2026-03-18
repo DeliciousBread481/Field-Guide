@@ -187,6 +187,42 @@ You can define composites by creating a JSON file at:
 
 ---
 
+### Variants
+
+Modpack/mod creators can manually define variants for entities using NBT. This is useful for mods that use custom variant systems that Field Guide can't automatically detect, or for adding custom variants via other datapacks.
+
+Variants can be defined by creating a JSON file at:
+`data/<namespace>/fieldguide/variants/<filename>.json`
+
+```json
+{
+  "entries": [
+    {
+      "id": "minecraft:wolf",
+      "replace": false,
+      "variants": [
+        {
+          "id": "pale",
+          "nbt": "{variant: \"minecraft:pale\"}"
+        },
+        {
+          "id": "woods",
+          "nbt": "{variant: \"minecraft:woods\"}"
+        }
+      ]
+    }
+  ]
+}
+```
+
+* `id`: The unique identifier for the entity type.
+* `replace` *(Optional)*: If set to `true`, all existing variants for this entity (including auto-detected ones) will be removed before adding these new ones.
+* `variants`: A list of variant definitions.
+    * `id`: A unique ID for the variant. This ID is used for translation keys in the format `entity.<namespace>.<entity_id>.variant.<variant_id>` (e.g., `entity.minecraft.wolf.variant.pale`).
+    * `nbt`: The NBT string to apply to the entity to set this variant. This is also used to detect if an entity has this variant by comparing the provided NBT against the entity's current NBT.
+
+---
+
 ### Biome & Loot Modifiers
 
 Field Guide uses datapacks to modify which biomes and loot drops appear on an entry's page.

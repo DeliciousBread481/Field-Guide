@@ -73,6 +73,8 @@ public class FieldGuideFabricClient implements ClientModInitializer {
                         packet.getLootRemovals(),
                         packet.shouldClearCache()
                 );
+
+                manager.updateVariants(packet.getVariants());
             });
         });
 

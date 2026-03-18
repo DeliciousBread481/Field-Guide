@@ -1,10 +1,7 @@
 package com.evandev.fieldguide.server;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.api.Category;
-import com.evandev.fieldguide.api.CategoryEntry;
-import com.evandev.fieldguide.api.CompositeDefinition;
-import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.api.*;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.network.ExportContentPacket;
@@ -18,6 +15,8 @@ import com.google.gson.JsonObject;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -45,6 +44,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     private List<CompositeDefinition> composites = new ArrayList<>();
     private Map<ResourceLocation, List<ItemStack>> serverLootCache = new HashMap<>();
     private Map<ResourceLocation, ResourceLocation> redirects = new HashMap<>();
+    private Map<ResourceLocation, List<DatapackVariant>> variants = new HashMap<>();
 
     private List<String> biomeAdditions = new ArrayList<>();
     private List<String> biomeRemovals = new ArrayList<>();
@@ -106,6 +106,10 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
     public List<CompositeDefinition> getComposites() {
         return composites;
+    }
+
+    public Map<ResourceLocation, List<DatapackVariant>> getVariants() {
+        return variants;
     }
 
     public List<Object> getEntriesForTarget(Object target) {
@@ -181,28 +185,28 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             }
         }
 
-        Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), true, false), player);
+        Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), variants, true, false), player);
 
         int maxModifiersChunkSize = 500;
 
         for (int i = 0; i < biomeAdditions.size(); i += maxModifiersChunkSize) {
             List<String> chunk = biomeAdditions.subList(i, Math.min(i + maxModifiersChunkSize, biomeAdditions.size()));
-            Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), chunk, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), false, false), player);
+            Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), chunk, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap(), false, false), player);
         }
 
         for (int i = 0; i < biomeRemovals.size(); i += maxModifiersChunkSize) {
             List<String> chunk = biomeRemovals.subList(i, Math.min(i + maxModifiersChunkSize, biomeRemovals.size()));
-            Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), chunk, Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), false, false), player);
+            Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), chunk, Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap(), false, false), player);
         }
 
         for (int i = 0; i < lootAdditions.size(); i += maxModifiersChunkSize) {
             List<String> chunk = lootAdditions.subList(i, Math.min(i + maxModifiersChunkSize, lootAdditions.size()));
-            Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), chunk, Collections.emptyList(), Collections.emptyMap(), false, false), player);
+            Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), chunk, Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap(), false, false), player);
         }
 
         for (int i = 0; i < lootRemovals.size(); i += maxModifiersChunkSize) {
             List<String> chunk = lootRemovals.subList(i, Math.min(i + maxModifiersChunkSize, lootRemovals.size()));
-            Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), chunk, Collections.emptyMap(), false, false), player);
+            Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), chunk, Collections.emptyMap(), Collections.emptyMap(), false, false), player);
         }
 
         if (!redirects.isEmpty()) {
@@ -212,23 +216,23 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                 redChunk.put(entry.getKey(), entry.getValue());
                 count++;
                 if (count >= maxModifiersChunkSize) {
-                    Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), redChunk, false, false), player);
+                    Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), redChunk, Collections.emptyMap(), false, false), player);
                     redChunk = new HashMap<>();
                     count = 0;
                 }
             }
             if (!redChunk.isEmpty()) {
-                Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), redChunk, false, false), player);
+                Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), redChunk, Collections.emptyMap(), false, false), player);
             }
         }
 
         if (flattenedCategories.isEmpty()) {
-            Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), false, true), player);
+            Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap(), false, true), player);
         } else {
             for (int i = 0; i < flattenedCategories.size(); i++) {
                 List<Category> chunk = Collections.singletonList(flattenedCategories.get(i));
                 boolean isLast = (i == flattenedCategories.size() - 1);
-                Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(chunk, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), false, isLast), player);
+                Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(chunk, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap(), false, isLast), player);
             }
         }
 
@@ -449,6 +453,43 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             FieldGuideCobblemonCompat.injectCategory(data.categories, resourceManager);
         }
 
+        Map<ResourceLocation, List<Resource>> variantResources = resourceManager.listResourceStacks(
+                "fieldguide/variants",
+                id -> id.getPath().endsWith(".json")
+        );
+
+        for (Map.Entry<ResourceLocation, List<Resource>> entry : variantResources.entrySet()) {
+            for (Resource resource : entry.getValue()) {
+                try (Reader reader = resource.openAsReader()) {
+                    JsonObject json = GsonHelper.parse(reader);
+
+                    if (json.has("entries")) {
+                        for (JsonElement el : GsonHelper.getAsJsonArray(json, "entries")) {
+                            JsonObject obj = el.getAsJsonObject();
+                            ResourceLocation entityId = new ResourceLocation(GsonHelper.getAsString(obj, "id"));
+
+                            List<DatapackVariant> variantList = data.variants.computeIfAbsent(entityId, k -> new ArrayList<>());
+
+                            if (GsonHelper.getAsBoolean(obj, "replace", false)) {
+                                variantList.clear();
+                            }
+
+                            if (obj.has("variants")) {
+                                for (JsonElement vEl : GsonHelper.getAsJsonArray(obj, "variants")) {
+                                    JsonObject vObj = vEl.getAsJsonObject();
+                                    String id = GsonHelper.getAsString(vObj, "id");
+                                    CompoundTag nbt = TagParser.parseTag(GsonHelper.getAsString(vObj, "nbt"));
+                                    variantList.add(new DatapackVariant(id, nbt));
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    Constants.LOG.error("Failed to load variant: {}", entry.getKey(), e);
+                }
+            }
+        }
+
         return data;
     }
 
@@ -590,6 +631,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         this.lootAdditions = data.lootAdditions;
         this.lootRemovals = data.lootRemovals;
         this.redirects = data.redirects;
+        this.variants = data.variants;
     }
 
     public static class ReloadData {
@@ -600,5 +642,6 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         public List<String> lootAdditions = new ArrayList<>();
         public List<String> lootRemovals = new ArrayList<>();
         public Map<ResourceLocation, ResourceLocation> redirects = new HashMap<>();
+        public Map<ResourceLocation, List<DatapackVariant>> variants = new HashMap<>();
     }
 }

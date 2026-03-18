@@ -1,19 +1,18 @@
 package com.evandev.fieldguide.util;
 
+import com.evandev.fieldguide.api.DatapackVariant;
 import com.evandev.fieldguide.api.VariantDef;
 import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.platform.Services;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.animal.Cat;
-import net.minecraft.world.entity.animal.CatVariant;
-import net.minecraft.world.entity.animal.FrogVariant;
 import net.minecraft.world.entity.animal.Sheep;
-import net.minecraft.world.entity.animal.frog.Frog;
 import net.minecraft.world.entity.npc.VillagerData;
 import net.minecraft.world.entity.npc.VillagerDataHolder;
 import net.minecraft.world.entity.npc.VillagerType;
@@ -31,48 +30,9 @@ public class FieldGuideVariantManager {
     private static final Map<Class<?>, VariantProvider<?>> PROVIDERS = new HashMap<>();
     private static final Map<String, List<VariantDef>> VARIANT_CACHE = new HashMap<>();
     private static final Map<String, List<VariantDef>> ENTITY_TYPE_VARIANT_CACHE = new HashMap<>();
+    private static final Map<ResourceLocation, List<DatapackVariant>> DATAPACK_VARIANTS = new HashMap<>();
 
     static {
-        registerProvider(Frog.class, new VariantProvider<>() {
-            @Override
-            public List<VariantDef> getVariants(Frog entity) {
-                return BuiltInRegistries.FROG_VARIANT.entrySet().stream()
-                        .map(e -> new VariantDef(e.getKey().location().toString(), e.getValue()))
-                        .toList();
-            }
-
-            @Override
-            public void apply(Frog entity, VariantDef def) {
-                entity.setVariant((FrogVariant) def.value());
-            }
-
-            @Override
-            public VariantDef getCurrent(Frog entity) {
-                ResourceLocation id = BuiltInRegistries.FROG_VARIANT.getKey(entity.getVariant());
-                return new VariantDef(id != null ? id.toString() : "default", entity.getVariant());
-            }
-        });
-
-        registerProvider(Cat.class, new VariantProvider<>() {
-            @Override
-            public List<VariantDef> getVariants(Cat entity) {
-                return BuiltInRegistries.CAT_VARIANT.entrySet().stream()
-                        .map(e -> new VariantDef(e.getKey().location().toString(), e.getValue()))
-                        .toList();
-            }
-
-            @Override
-            public void apply(Cat entity, VariantDef def) {
-                entity.setVariant((CatVariant) def.value());
-            }
-
-            @Override
-            public VariantDef getCurrent(Cat entity) {
-                ResourceLocation id = BuiltInRegistries.CAT_VARIANT.getKey(entity.getVariant());
-                return new VariantDef(id != null ? id.toString() : "default", entity.getVariant());
-            }
-        });
-
         registerProvider(Sheep.class, new VariantProvider<>() {
             @Override
             public List<VariantDef> getVariants(Sheep entity) {
@@ -97,9 +57,22 @@ public class FieldGuideVariantManager {
         PROVIDERS.put(entityClass, provider);
     }
 
+    public static void setDatapackVariants(Map<ResourceLocation, List<DatapackVariant>> variants) {
+        DATAPACK_VARIANTS.clear();
+        DATAPACK_VARIANTS.putAll(variants);
+        VARIANT_CACHE.clear();
+        ENTITY_TYPE_VARIANT_CACHE.clear();
+    }
+
     @SuppressWarnings("unchecked")
     public static <T extends Mob> VariantProvider<T> getProvider(Entity entity) {
         if (!(entity instanceof Mob mob)) return null;
+
+        ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
+        if (DATAPACK_VARIANTS.containsKey(entityId)) {
+            return (VariantProvider<T>) getDatapackProvider(entityId);
+        }
+
         VariantProvider<T> provider = getProvider((Class<T>) mob.getClass());
         if (provider == null) {
             provider = (VariantProvider<T>) getReflectionProvider(mob);
@@ -190,6 +163,41 @@ public class FieldGuideVariantManager {
 
     public static List<String> getVariantIds(EntityType<?> type, Level level) {
         return getVariants(type, level).stream().map(VariantDef::id).toList();
+    }
+
+    private static VariantProvider<Mob> getDatapackProvider(ResourceLocation entityId) {
+        List<DatapackVariant> variants = DATAPACK_VARIANTS.get(entityId);
+        if (variants == null) return null;
+        return new VariantProvider<>() {
+            @Override
+            public List<VariantDef> getVariants(Mob entity) {
+                return variants.stream()
+                        .map(v -> new VariantDef(v.id(), v.nbt()))
+                        .toList();
+            }
+
+            @Override
+            public void apply(Mob entity, VariantDef def) {
+                if (def.value() instanceof CompoundTag nbt) {
+                    CompoundTag current = new CompoundTag();
+                    entity.saveWithoutId(current);
+                    current.merge(nbt);
+                    entity.load(current);
+                }
+            }
+
+            @Override
+            public VariantDef getCurrent(Mob entity) {
+                CompoundTag entityNbt = new CompoundTag();
+                entity.saveWithoutId(entityNbt);
+                for (DatapackVariant v : variants) {
+                    if (NbtUtils.compareNbt(v.nbt(), entityNbt, true)) {
+                        return new VariantDef(v.id(), v.nbt());
+                    }
+                }
+                return new VariantDef("default", null);
+            }
+        };
     }
 
     private static VariantProvider<Mob> getVillagerProvider() {
