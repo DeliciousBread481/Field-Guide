@@ -161,7 +161,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         int titleY = this.leftPageBounds.top() + 8;
         int textY = this.rightPageBounds.top() + 38;
         int textAreaWidth = this.rightPageBounds.width() - 12;
-        int textAreaHeight = this.rightPageBounds.height() - 98;
+        int textAreaHeight = this.rightPageBounds.height() - 74;
 
         if (unlocked) {
             String initialName = ClientFieldGuideManager.getEntryName(entry).getString();

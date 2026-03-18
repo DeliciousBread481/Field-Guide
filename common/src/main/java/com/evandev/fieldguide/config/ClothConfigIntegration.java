@@ -147,6 +147,12 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.disableEditingNames = newValue)
                 .build());
 
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.show_toasts"), config.showToasts)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.fieldguide.show_toasts.tooltip"))
+                .setSaveConsumer(newValue -> config.showToasts = newValue)
+                .build());
+
         general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.keep_silhouette"), config.keepSilhouetteWhenUnlocked)
                 .setDefaultValue(false)
                 .setTooltip(Component.translatable("option.fieldguide.keep_silhouette.tooltip"))

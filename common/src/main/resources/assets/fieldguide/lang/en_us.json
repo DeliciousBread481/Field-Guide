@@ -156,6 +156,9 @@
   "option.fieldguide.entry_scan_commands": "Entry Scan Commands",
   "option.fieldguide.entry_scan_commands.tooltip": "Commands to execute when a specific entry is scanned. Format: entry_id=/command1;/command2",
 
+  "option.fieldguide.show_toasts": "Show Toasts",
+  "option.fieldguide.show_toasts.tooltip": "Whether to show a toast notification when a new entry is discovered.",
+
   "option.fieldguide.keep_silhouette": "Keep Silhouette When Unlocked",
   "option.fieldguide.keep_silhouette.tooltip": "If enabled, entities and blocks will still be displayed as silhouettes even after they've been discovered.",
 
