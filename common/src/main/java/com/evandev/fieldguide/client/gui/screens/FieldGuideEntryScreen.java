@@ -200,8 +200,8 @@ public class FieldGuideEntryScreen extends BookScreen {
                 int centerX = leftPageBounds.x_center();
                 int centerY = leftPageBounds.y_center() - 15;
 
-                this.prevVariantButton = new PageTurnButton(centerX - 64, centerY - 8, 16, 16, 0, 16, 16, Constants.WIDGETS_TEXTURE, b -> cycleVariant(-1));
-                this.nextVariantButton = new PageTurnButton(centerX + 48, centerY - 8, 16, 16, 16, 16, 16, Constants.WIDGETS_TEXTURE, b -> cycleVariant(1));
+                this.prevVariantButton = new PageTurnButton(centerX - 70, centerY - 8, 16, 16, 0, 16, 16, Constants.WIDGETS_TEXTURE, b -> cycleVariant(-1));
+                this.nextVariantButton = new PageTurnButton(centerX + 54, centerY - 8, 16, 16, 16, 16, 16, Constants.WIDGETS_TEXTURE, b -> cycleVariant(1));
 
                 this.addRenderableWidget(prevVariantButton);
                 this.addRenderableWidget(nextVariantButton);
