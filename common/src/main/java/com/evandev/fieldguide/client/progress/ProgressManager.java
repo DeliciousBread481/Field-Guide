@@ -12,6 +12,7 @@ import com.evandev.fieldguide.network.UpdateEntryDataPacket;
 import com.evandev.fieldguide.network.UpdateJournalPacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
+import com.evandev.fieldguide.util.EntryResolver;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -153,12 +154,19 @@ public class ProgressManager {
 
     public boolean isUnlocked(Object entry) {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-        return id != null && unlockedEntries.contains(id.toString());
+        if (id == null) return false;
+        if (unlockedEntries.contains(id.toString())) return true;
+        return unlockedEntries.contains(EntryResolver.getRawId(id).toString());
     }
 
     public boolean isNew(Object entry) {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-        return id != null && unlockedEntries.contains(id.toString()) && !seenEntries.contains(id.toString());
+        if (id == null) return false;
+        String idStr = id.toString();
+        String rawIdStr = EntryResolver.getRawId(id).toString();
+        boolean unlocked = unlockedEntries.contains(idStr) || unlockedEntries.contains(rawIdStr);
+        boolean seen = seenEntries.contains(idStr) || seenEntries.contains(rawIdStr);
+        return unlocked && !seen;
     }
 
     public long getLastUnlockTime() {

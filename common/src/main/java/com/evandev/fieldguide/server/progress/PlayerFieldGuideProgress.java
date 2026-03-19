@@ -4,6 +4,7 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
+import com.evandev.fieldguide.util.EntryResolver;
 import com.google.gson.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -122,7 +123,14 @@ public class PlayerFieldGuideProgress {
     }
 
     public boolean isUnlocked(String entryId) {
-        return unlockedEntries.contains(entryId);
+        if (unlockedEntries.contains(entryId)) return true;
+        try {
+            ResourceLocation id = new ResourceLocation(entryId);
+            ResourceLocation rawId = EntryResolver.getRawId(id);
+            return unlockedEntries.contains(rawId.toString());
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public boolean isUnlocked(ResourceLocation entryId) {

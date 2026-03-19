@@ -119,7 +119,20 @@ public class EntryResolver {
     }
 
     public static ResourceLocation getEntryId(Object obj) {
-        return AutoPopulateRegistry.getEntryId(obj, false);
+        return getEntryId(obj, true);
+    }
+
+    public static ResourceLocation getEntryId(Object obj, boolean prefixed) {
+        return AutoPopulateRegistry.getEntryId(obj, prefixed);
+    }
+
+    public static ResourceLocation getRawId(ResourceLocation id) {
+        if (id == null) return null;
+        String ns = id.getNamespace();
+        if (ns.equals("item") || ns.equals("entity") || ns.equals("block")) {
+            return new ResourceLocation(id.getPath().replace("/", ":"));
+        }
+        return id;
     }
 
     public static List<Object> resolveCategoryEntries(Category category, List<CompositeDefinition> globalComposites, Map<ResourceLocation, ResourceLocation> redirects) {

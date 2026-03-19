@@ -70,13 +70,13 @@ public class ScanVerifier {
         if (entity instanceof ItemEntity itemEntity) {
             Item item = itemEntity.getItem().getItem();
             if (!EntryResolver.isValidItem(item, categoryId)) return false;
-            ResourceLocation actualItemId = BuiltInRegistries.ITEM.getKey(item);
+            ResourceLocation actualItemId = EntryResolver.getEntryId(item, true);
             return actualItemId.equals(scannedTargetId);
         }
 
         if (!EntryResolver.isValidEntity(entity.getType(), categoryId)) return false;
 
-        ResourceLocation actualTypeId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+        ResourceLocation actualTypeId = EntryResolver.getEntryId(entity.getType(), true);
         return actualTypeId.equals(scannedTargetId);
     }
 
@@ -90,7 +90,7 @@ public class ScanVerifier {
         Block block = level.getBlockState(blockPos).getBlock();
         if (!EntryResolver.isValidBlock(block, categoryId)) return false;
 
-        ResourceLocation actualBlockId = BuiltInRegistries.BLOCK.getKey(block);
+        ResourceLocation actualBlockId = EntryResolver.getEntryId(block, true);
         return actualBlockId.equals(scannedTargetId);
     }
 

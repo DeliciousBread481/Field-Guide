@@ -21,7 +21,7 @@ public class ClientTextManager {
     }
 
     public String getEntryDescription(Object entry) {
-        ResourceLocation id = EntryResolver.getEntryId(entry);
+        ResourceLocation id = EntryResolver.getRawId(EntryResolver.getEntryId(entry));
         if (id == null) return "";
         String custom = ProgressManager.getInstance().getCustomDescription(entry);
         if (custom != null) return custom;
@@ -83,7 +83,7 @@ public class ClientTextManager {
     }
 
     public Component getDefaultNameComponent(Object entry) {
-        ResourceLocation id = EntryResolver.getEntryId(entry);
+        ResourceLocation id = EntryResolver.getRawId(EntryResolver.getEntryId(entry));
         if (id != null) {
             if (id.getNamespace().equals("fieldguide") && id.getPath().startsWith("cobblemon/")) {
                 String species = id.getPath().substring("cobblemon/".length());

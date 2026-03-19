@@ -54,33 +54,38 @@ public class AutoPopulateRegistry {
         register("mod_trees", (modId, categoryId) -> new ArrayList<>(getAutoTrees(id -> id.getNamespace().equals(modId), categoryId)));
 
         register("tag", (tagPath, categoryId) -> {
-            List<Object> results = new ArrayList<>();
+            Map<ResourceLocation, Object> results = new LinkedHashMap<>();
             try {
                 ResourceLocation tagLocation = new ResourceLocation(tagPath);
 
-                TagKey<EntityType<?>> entityTagKey = TagKey.create(Registries.ENTITY_TYPE, tagLocation);
-                BuiltInRegistries.ENTITY_TYPE.forEach(type -> BuiltInRegistries.ENTITY_TYPE.getResourceKey(type)
-                        .flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder)
-                        .filter(h -> h.is(entityTagKey) && EntryValidator.isValidEntity(type, categoryId))
-                        .ifPresent(h -> results.add(type)));
-
+                // Blocks first (highest priority)
                 TagKey<Block> blockTagKey = TagKey.create(Registries.BLOCK, tagLocation);
                 BuiltInRegistries.BLOCK.forEach(block -> BuiltInRegistries.BLOCK.getResourceKey(block)
                         .flatMap(BuiltInRegistries.BLOCK::getHolder)
                         .filter(h -> h.is(blockTagKey) && EntryValidator.isValidBlock(block, categoryId))
-                        .ifPresent(h -> results.add(block)));
+                        .ifPresent(h -> results.put(BuiltInRegistries.BLOCK.getKey(block), block)));
 
+                // Items second
                 TagKey<Item> itemTagKey = TagKey.create(Registries.ITEM, tagLocation);
                 BuiltInRegistries.ITEM.forEach(item -> BuiltInRegistries.ITEM.getResourceKey(item)
                         .flatMap(BuiltInRegistries.ITEM::getHolder)
                         .filter(h -> h.is(itemTagKey) && EntryValidator.isValidItem(item, categoryId))
-                        .ifPresent(h -> results.add(item)));
+                        .ifPresent(h -> results.putIfAbsent(BuiltInRegistries.ITEM.getKey(item), item)));
 
-                results.sort(Comparator.comparing(o -> getEntryId(o).toString()));
+                // Entities last
+                TagKey<EntityType<?>> entityTagKey = TagKey.create(Registries.ENTITY_TYPE, tagLocation);
+                BuiltInRegistries.ENTITY_TYPE.forEach(type -> BuiltInRegistries.ENTITY_TYPE.getResourceKey(type)
+                        .flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder)
+                        .filter(h -> h.is(entityTagKey) && EntryValidator.isValidEntity(type, categoryId))
+                        .ifPresent(h -> results.putIfAbsent(BuiltInRegistries.ENTITY_TYPE.getKey(type), type)));
+
+                List<Object> sortedResults = new ArrayList<>(results.values());
+                sortedResults.sort(Comparator.comparing(o -> getEntryId(o).toString()));
+                return sortedResults;
             } catch (Exception e) {
                 Constants.LOG.error("Invalid tag strategy: {}", tagPath, e);
             }
-            return results;
+            return Collections.emptyList();
         });
 
         register("monsters", (params, categoryId) -> getEntityStrategy("monsters", categoryId));

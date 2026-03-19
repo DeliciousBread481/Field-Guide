@@ -67,7 +67,7 @@ public class LootTableHelper {
     }
 
     private static boolean matchesTarget(Object entry, String targetStr) {
-        ResourceLocation entryId = EntryResolver.getEntryId(entry);
+        ResourceLocation entryId = EntryResolver.getRawId(EntryResolver.getEntryId(entry));
         if (entryId == null) return false;
         if (targetStr.startsWith("#")) {
             try {

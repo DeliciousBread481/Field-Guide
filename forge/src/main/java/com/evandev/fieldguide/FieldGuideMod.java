@@ -10,6 +10,7 @@ import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.command.FieldGuideCommand;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
+import com.evandev.fieldguide.util.EntryResolver;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -185,7 +186,7 @@ public class FieldGuideMod {
             if (key.isPresent()) {
                 var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
                 if (holder.isPresent() && holder.get().is(killToUnlockTag)) {
-                    ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType());
+                    ResourceLocation entityId = EntryResolver.getEntryId(event.getEntity().getType());
                     PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
                     if (progress != null) {
                         String variantId = null;
@@ -208,7 +209,7 @@ public class FieldGuideMod {
     @SubscribeEvent
     public void onItemPickup(EntityItemPickupEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
-            ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(event.getItem().getItem().getItem());
+            ResourceLocation itemId = EntryResolver.getEntryId(event.getItem().getItem().getItem());
             if (FieldGuideProgressManager.getInstance().isValidEntry(itemId)) {
                 PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
                 if (progress != null) {

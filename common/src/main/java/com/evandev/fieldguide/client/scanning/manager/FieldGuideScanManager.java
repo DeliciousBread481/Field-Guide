@@ -181,17 +181,19 @@ public class FieldGuideScanManager {
             String variantId = "";
 
             if (foundTarget instanceof Entity entity) {
-                scannedTargetId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
                 if (entity instanceof ItemEntity itemEntity) {
-                    scannedTargetId = BuiltInRegistries.ITEM.getKey(itemEntity.getItem().getItem());
-                } else if (entity instanceof Mob mob) {
-                    var provider = FieldGuideVariantManager.getProvider(mob);
-                    if (provider != null) {
-                        variantId = provider.getCurrent(mob).id();
+                    scannedTargetId = ClientFieldGuideManager.getEntryId(itemEntity.getItem().getItem());
+                } else {
+                    scannedTargetId = ClientFieldGuideManager.getEntryId(entity.getType());
+                    if (entity instanceof Mob mob) {
+                        var provider = FieldGuideVariantManager.getProvider(mob);
+                        if (provider != null) {
+                            variantId = provider.getCurrent(mob).id();
+                        }
                     }
                 }
             } else if (foundTarget instanceof Block block) {
-                scannedTargetId = BuiltInRegistries.BLOCK.getKey(block);
+                scannedTargetId = ClientFieldGuideManager.getEntryId(block);
             } else {
                 scannedTargetId = ClientFieldGuideManager.getEntryId(foundTarget);
             }

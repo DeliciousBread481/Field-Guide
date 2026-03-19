@@ -13,6 +13,7 @@ import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.command.FieldGuideCommand;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
+import com.evandev.fieldguide.util.EntryResolver;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -118,7 +119,7 @@ public class FieldGuideMod implements ModInitializer {
                 if (key.isPresent()) {
                     var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
                     if (holder.isPresent() && holder.get().is(killToUnlockTag)) {
-                        ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(killedEntity.getType());
+                        ResourceLocation entityId = EntryResolver.getEntryId(killedEntity.getType());
                         PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
                         if (progress != null) {
                             String variantId = null;

@@ -176,13 +176,13 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                 for (int j = index; j < endIndex; j++) {
                     Object obj = resolved.get(j);
                     if (obj instanceof EntityType<?> type) {
-                        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+                        ResourceLocation id = AutoPopulateRegistry.getEntryId(type, true);
                         chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, "animals", null, null, null));
                     } else if (obj instanceof Block block) {
-                        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
+                        ResourceLocation id = AutoPopulateRegistry.getEntryId(block, true);
                         chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, "plants", null, null, null));
                     } else if (obj instanceof Item item) {
-                        ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
+                        ResourceLocation id = AutoPopulateRegistry.getEntryId(item, true);
                         chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, "mod_items", null, null, null));
                     } else if (obj instanceof CompositeFieldGuideEntry composite) {
                         ResourceLocation id = composite.id();
@@ -194,11 +194,11 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                         List<ResourceLocation> compIds = new ArrayList<>();
                         if (components != null) {
                             for (Object c : components) {
-                                compIds.add(AutoPopulateRegistry.getEntryId(c, false));
+                                compIds.add(AutoPopulateRegistry.getEntryId(c, true));
                             }
                         }
 
-                        ResourceLocation displayId = AutoPopulateRegistry.getEntryId(displayEntry, false);
+                        ResourceLocation displayId = AutoPopulateRegistry.getEntryId(displayEntry, true);
                         chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.COMPOSITE, id, displayId, null, compIds, structureNbt, stackedBlocks));
                     }
                 }

@@ -2,6 +2,7 @@ package com.evandev.fieldguide.mixin;
 
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
+import com.evandev.fieldguide.util.EntryResolver;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -25,7 +26,7 @@ public abstract class InventoryMixin {
     @Inject(method = "add(ILnet/minecraft/world/item/ItemStack;)Z", at = @At("HEAD"))
     private void onAddItem(int slot, ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
         if (!stack.isEmpty() && player instanceof ServerPlayer serverPlayer) {
-            ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
+            ResourceLocation itemId = EntryResolver.getEntryId(stack.getItem());
             if (FieldGuideProgressManager.getInstance().isValidEntry(itemId)) {
                 PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(serverPlayer);
                 if (progress != null) {
@@ -38,7 +39,7 @@ public abstract class InventoryMixin {
     @Inject(method = "setItem", at = @At("HEAD"))
     private void onSetItem(int slot, ItemStack stack, CallbackInfo ci) {
         if (!stack.isEmpty() && player instanceof ServerPlayer serverPlayer) {
-            ResourceLocation itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
+            ResourceLocation itemId = EntryResolver.getEntryId(stack.getItem());
             if (FieldGuideProgressManager.getInstance().isValidEntry(itemId)) {
                 PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(serverPlayer);
                 if (progress != null) {
