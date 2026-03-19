@@ -117,6 +117,32 @@ public class FieldGuideEntryScreen extends BookScreen {
             String variantId = (!entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) ? entityVariants.get(currentVariantIndex).id() : null;
             ClientExposureCompat.setupExposureWidgets(this, entry, variantId);
         }
+        updateWidgetVisibility();
+    }
+
+    private void updateWidgetVisibility() {
+        boolean overviewVisible = this.variantOverviewWidget != null && this.variantOverviewWidget.isVisible();
+
+        for (AbstractWidget widget : exposureWidgets) {
+            widget.visible = !overviewVisible;
+        }
+
+        if (this.overviewToggleButton != null) {
+            if (overviewVisible) {
+                this.overviewToggleButton.visible = false;
+            } else {
+                String variantId = (!entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) ? entityVariants.get(currentVariantIndex).id() : null;
+                boolean hasPhoto = !ProgressManager.getInstance().getPhotograph(entry, variantId).isEmpty();
+                this.overviewToggleButton.visible = !hasPhoto;
+            }
+        }
+
+        if (this.prevVariantButton != null) {
+            this.prevVariantButton.visible = !overviewVisible && currentVariantIndex > 0;
+        }
+        if (this.nextVariantButton != null) {
+            this.nextVariantButton.visible = !overviewVisible && currentVariantIndex < entityVariants.size() - 1;
+        }
     }
 
     @Override
@@ -152,8 +178,10 @@ public class FieldGuideEntryScreen extends BookScreen {
             int widgetX = this.leftPageBounds.left() + (this.leftPageBounds.width() / 2) - (widgetWidth / 2);
             int widgetY = this.leftPageBounds.top() + (this.leftPageBounds.height() / 2) - (widgetHeight / 2);
 
-            this.variantOverviewWidget = new VariantOverviewWidget(widgetX, widgetY, widgetWidth, widgetHeight, this.entry, living, this.entityVariants, this::setVariantIndex);
+            this.variantOverviewWidget = new VariantOverviewWidget(widgetX, widgetY, widgetWidth, widgetHeight, this.entry, living, this.entityVariants, this::setVariantIndex, this::updateWidgetVisibility);
             this.addRenderableWidget(this.variantOverviewWidget);
+
+            updateWidgetVisibility();
         }
     }
 

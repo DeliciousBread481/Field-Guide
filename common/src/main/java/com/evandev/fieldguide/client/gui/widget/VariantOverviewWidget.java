@@ -33,6 +33,7 @@ public class VariantOverviewWidget extends AbstractWidget {
     private final LivingEntity renderedEntity;
     private final List<VariantDef> variants;
     private final Consumer<Integer> onVariantSelected;
+    private final Runnable onToggle;
     private final int maxPages;
     private final ImageButton closeButton;
     private final PageTurnButton leftButton;
@@ -40,12 +41,13 @@ public class VariantOverviewWidget extends AbstractWidget {
     private int currentPage = 0;
     private Component currentTitleText;
 
-    public VariantOverviewWidget(int x, int y, int width, int height, Object entry, LivingEntity renderedEntity, List<VariantDef> variants, Consumer<Integer> onVariantSelected) {
+    public VariantOverviewWidget(int x, int y, int width, int height, Object entry, LivingEntity renderedEntity, List<VariantDef> variants, Consumer<Integer> onVariantSelected, Runnable onToggle) {
         super(x, y, width, height, Component.empty());
         this.entry = entry;
         this.renderedEntity = renderedEntity;
         this.variants = variants;
         this.onVariantSelected = onVariantSelected;
+        this.onToggle = onToggle;
         this.maxPages = (int) Math.ceil(variants.size() / 9.0);
         this.currentTitleText = Component.translatable("gui.fieldguide.variants");
         this.visible = false;
@@ -62,6 +64,7 @@ public class VariantOverviewWidget extends AbstractWidget {
 
     public void toggleVisibility() {
         this.visible = !this.visible;
+        if (this.onToggle != null) this.onToggle.run();
     }
 
     public boolean isVisible() {
