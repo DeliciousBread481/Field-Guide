@@ -279,12 +279,16 @@
   "advancements.fieldguide.monster_hunter.description": "Complete the Monsters category in your Field Guide",
   "advancements.fieldguide.tree_hugger.title": "Nature Calls",
   "advancements.fieldguide.tree_hugger.description": "Complete the Plants category in your Field Guide",
-  "advancements.fieldguide.creeper_scan.title": "Aw Man...",
-  "advancements.fieldguide.creeper_scan.description": "Stare at a Creeper through a Spyglass. Bold move",
   "advancements.fieldguide.enderman_scan.title": "Staring Contest",
   "advancements.fieldguide.enderman_scan.description": "Scan an Enderman. Try not to blink",
+  "advancements.fieldguide.invisible_scan.title": "You Can't See Me",
+  "advancements.fieldguide.invisible_scan.description": "Scan an invisible mob",
   "advancements.fieldguide.gem_alert.title": "Gem Alert",
   "advancements.fieldguide.gem_alert.description": "Scan a mob within 2 blocks of it",
+  "advancements.fieldguide.let_him_cook.title": "Let Him Cook",
+  "advancements.fieldguide.let_him_cook.description": "Scan a mob that is on fire",
+  "advancements.fieldguide.quick_review.title": "I Don't Want to Play with You",
+  "advancements.fieldguide.quick_review.description": "Scan a mob and then immediately kill it",
 
   "fieldguide.journal.default": ""
 }

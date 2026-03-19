@@ -12,6 +12,7 @@ import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.command.FieldGuideCommand;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
+import com.evandev.fieldguide.server.progress.FieldGuideTriggers;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
 import com.evandev.fieldguide.util.EntryResolver;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
@@ -113,6 +114,11 @@ public class FieldGuideMod implements ModInitializer {
 
         ServerEntityCombatEvents.AFTER_KILLED_OTHER_ENTITY.register((world, entity, killedEntity) -> {
             if (entity instanceof ServerPlayer player) {
+                FieldGuideProgressManager manager = FieldGuideProgressManager.getInstance();
+                if (manager.wasRecentlyScanned(player, killedEntity.getId())) {
+                    FieldGuideTriggers.SCAN_AND_KILL.trigger(player, killedEntity);
+                }
+
                 TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(Constants.MOD_ID, "kill_to_unlock"));
 
                 var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(killedEntity.getType());

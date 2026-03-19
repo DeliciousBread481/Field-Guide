@@ -63,6 +63,7 @@ public class ScanUnlockPacket {
             Entity entity = player.serverLevel().getEntity(targetEntityId);
             if (entity != null) {
                 FieldGuideTriggers.SCAN_ENTITY.trigger(player, entity);
+                manager.recordScan(player, targetEntityId);
             }
         }
 
