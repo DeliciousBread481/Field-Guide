@@ -144,6 +144,9 @@ public class ScanOverlayRenderer {
                                 int vDist = Math.abs(neighbor.getY() - targetBlock.getY());
                                 if (hDist > 6 || vDist > 32) continue;
 
+                                boolean isHorizontal = dx != 0 || dz != 0;
+                                if (isHorizontal && !composite.components().contains(mc.level.getBlockState(neighbor).getBlock())) continue;
+
                                 if (!blocksToRender.contains(neighbor)) {
                                     Block neighborBlock = mc.level.getBlockState(neighbor).getBlock();
                                     if (composite.components().contains(neighborBlock) || composite.displayEntry() == neighborBlock) {
@@ -173,6 +176,9 @@ public class ScanOverlayRenderer {
                                 int hDist = Math.max(Math.abs(neighbor.getX() - targetBlock.getX()), Math.abs(neighbor.getZ() - targetBlock.getZ()));
                                 int vDist = Math.abs(neighbor.getY() - targetBlock.getY());
                                 if (hDist > 5 || vDist > 32) continue;
+
+                                boolean isHorizontal = dx != 0 || dz != 0;
+                                if (isHorizontal) continue;
 
                                 if (!blocksToRender.contains(neighbor)) {
                                     Block neighborBlock = mc.level.getBlockState(neighbor).getBlock();

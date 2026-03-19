@@ -240,5 +240,26 @@
   "fieldguide.name.fieldguide.huge_crimson_fungus": "Huge Crimson Fungus",
   "fieldguide.name.fieldguide.huge_warped_fungus": "Huge Warped Fungus",
 
+  "fieldguide.minecraft.oak_sapling.description": "A common tree, found in a variety of biomes. Can grow into a much larger fancier variant. When near flowers, they may grow with a bee nest.",
+  "fieldguide.minecraft.dark_oak_sapling.description": "Found in the dark forest, these trees grow thicker trunks and branches that create a canopy. This filters enough light that a dense forest of them is sufficiently dark for hostile mobs to spawn during the daytime.",
+  "fieldguide.minecraft.spruce_sapling.description": "Spruce are mainly found in the taiga biome, but also appear in other colder biomes. They can also be grown into a mega variant. Spruce logs have the same texture as oak logs, but it is a darker shade of brown.",
+  "fieldguide.minecraft.birch_sapling.description": "Similar to oak structure, This tree is most commonly found in birch forests. They can only grow short, but can be found taller in old growth birch forests. When near flowers, they may grow with a bee nest.",
+  "fieldguide.minecraft.jungle_sapling.description": "A type of tree found in rare jungle biomes. Can grow into a mega variant. Jungle trees are able to grow cocoa beans on their logs.",
+  "fieldguide.minecraft.acacia_sapling.description": "Acacias are found in the savanna biome. They are somewhat tall and feature diagonal trunks, and may occasionally have multiple canopies.",
+  "fieldguide.minecraft.azalea_leaves.description": "The tree usually appears at the surface with roots consisting of rooted dirt and hanging roots that reach down to a lush cave. They can be grown from regular or flowering azalea bushes.",
+  "fieldguide.minecraft.mangrove_propagule.description": "Mangroves are found in muddy mangrove swamps, growing in water or on land. They are grown from propagules, which can be found hanging from the trees.",
+  "fieldguide.minecraft.cherry_sapling.description": "These trees are found in cherry groves. They have distinct pink leaves and horizontally facing branches. They may occasionally have multiple canopies. When near flowers, they may grow with a bee nest.",
+  "fieldguide.minecraft.pale_oak_sapling.description": "Found in the pale garden, these trees grow thicker trunks and branches that create a canopy. Pale hanging moss grows from the leaves. Sometimes these trees may contain a creaking heart within.",
+
+  "fieldguide.environmental.pine_sapling.description": "These trees are found in colder biomes. They are very tall, thin, and sometimes have knots. May rarely grow with a pinecone block.",
+  "fieldguide.environmental.willow_sapling.description": "In swamp biomes, willow trees are found. Vines hang off the leaves and are sometimes naturally seen growing in shallow water. Can grow into a larger variant.",
+  "fieldguide.environmental.cheerful_plum_sapling.description": "Cheerful plum trees are found in blossom biomes, and have very similar variants with two other plum trees. They are large and branch out diagonally with bulky canopies.",
+  "fieldguide.environmental.plum_sapling.description": "Plum trees are found in blossom biomes, and have very similar variants with two other plum trees. They are large and branch out diagonally with bulky canopies.",
+  "fieldguide.environmental.moody_plum_sapling.description": "Moody plum trees are found in blossom biomes, and have very similar variants with two other plum trees. They are large and branch out diagonally with bulky canopies.",
+  "fieldguide.environmental.pink_wisteria_sapling.description": "Found in the rare flower forest, pink wisterias are normally woody vines that grow up and branch out into three branch segments. Those segments hold colorful droopy leaves.",
+  "fieldguide.environmental.purple_wisteria_sapling.description": "Found in the rare flower forest, purple wisterias are normally woody vines that grow up and branch out into three branch segments. Those segments hold colorful droopy leaves.",
+  "fieldguide.environmental.blue_wisteria_sapling.description": "Found in the rare flower forest, blue wisterias are normally woody vines that grow up and branch out into three branch segments. Those segments hold colorful droopy leaves.",
+  "fieldguide.environmental.white_wisteria_sapling.description": "Found in the rare flower forest, white wisterias are normally woody vines that grow up and branch out into three branch segments. Those segments hold colorful droopy leaves.",
+
   "fieldguide.journal.default": ""
 }
