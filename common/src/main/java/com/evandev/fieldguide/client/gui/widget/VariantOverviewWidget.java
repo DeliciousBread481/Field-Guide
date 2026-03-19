@@ -50,7 +50,7 @@ public class VariantOverviewWidget extends AbstractWidget {
         this.currentTitleText = Component.translatable("gui.fieldguide.variants");
         this.visible = false;
 
-        this.closeButton = new ImageButton(x + width - 16, y + 6, 10, 10, 0, 0, 10, Constants.CLOSE_ICON, 10, 20, (btn) -> this.toggleVisibility());
+        this.closeButton = new ImageButton(x + width - 21, y + 11, 10, 10, 0, 0, 10, Constants.CLOSE_ICON, 10, 20, (btn) -> this.toggleVisibility());
 
         this.leftButton = new PageTurnButton(x + (width / 2) - 24, y + height - 20, 16, 16, 0, 16, 16, Constants.WIDGETS_TEXTURE, (btn) -> {
             if (currentPage > 0) currentPage--;
@@ -105,7 +105,7 @@ public class VariantOverviewWidget extends AbstractWidget {
         int spacingX = 36;
         int spacingY = 40;
         int startX = this.getX() + (this.width / 2) - spacingX;
-        int startY = this.getY() + 30;
+        int startY = this.getY() + 40;
 
         VariantProvider<Mob> provider = null;
         VariantDef originalVariant = null;
@@ -163,7 +163,7 @@ public class VariantOverviewWidget extends AbstractWidget {
         }
 
         int titleWidth = Minecraft.getInstance().font.width(this.currentTitleText);
-        graphics.drawString(Minecraft.getInstance().font, this.currentTitleText, this.getX() + (this.width / 2) - (titleWidth / 2), this.getY() + 8, ModConfig.get().getTextTitleColorInt(), false);
+        graphics.drawString(Minecraft.getInstance().font, this.currentTitleText, this.getX() + (this.width / 2) - (titleWidth / 2), this.getY() + 13, ModConfig.get().getTextTitleColorInt(), false);
 
         this.closeButton.render(graphics, mouseX, mouseY, partialTicks);
         if (this.currentPage > 0) this.leftButton.render(graphics, mouseX, mouseY, partialTicks);
@@ -185,7 +185,7 @@ public class VariantOverviewWidget extends AbstractWidget {
         int spacingX = 36;
         int spacingY = 40;
         int startX = this.getX() + (this.width / 2) - spacingX;
-        int startY = this.getY() + 30;
+        int startY = this.getY() + 40;
 
         for (int i = startIdx; i < endIdx; i++) {
             int gridIndex = i - startIdx;
