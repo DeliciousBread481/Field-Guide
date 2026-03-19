@@ -9,6 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.level.block.Block;
@@ -23,20 +24,35 @@ public class AutoPopulateRegistry {
     private static final Map<String, BiFunction<String, ResourceLocation, List<Object>>> STRATEGIES = new HashMap<>();
 
     static {
-        register("plants", (params, categoryId) -> new ArrayList<>(getPlants(id -> true, categoryId)));
-        register("mod", (modId, categoryId) -> BuiltInRegistries.ENTITY_TYPE.stream()
+        register("mod_entities", (modId, categoryId) -> BuiltInRegistries.ENTITY_TYPE.stream()
                 .filter(t -> BuiltInRegistries.ENTITY_TYPE.getKey(t).getNamespace().equals(modId) && EntryValidator.isValidEntity(t, categoryId))
                 .sorted(Comparator.comparing(t -> BuiltInRegistries.ENTITY_TYPE.getKey(t).toString()))
                 .map(Object.class::cast)
                 .toList());
-        register("mod_plants", (modId, categoryId) -> new ArrayList<>(getPlants(id -> id.getNamespace().equals(modId), categoryId)));
-        register("trees", (params, categoryId) -> new ArrayList<>(getAutoTrees(id -> true, categoryId)));
-        register("mod_trees", (modId, categoryId) -> new ArrayList<>(getAutoTrees(id -> id.getNamespace().equals(modId), categoryId)));
+
+        // Legacy alias to prevent breaking existing datapacks
+        register("mod", (modId, categoryId) -> getEntries("mod_entities:" + modId, categoryId));
+
         register("mod_items", (modId, categoryId) -> BuiltInRegistries.ITEM.stream()
-                .filter(i -> BuiltInRegistries.ITEM.getKey(i).getNamespace().equals(modId) && EntryValidator.isValidItem(i, categoryId))
+                .filter(i -> BuiltInRegistries.ITEM.getKey(i).getNamespace().equals(modId))
+                .filter(i -> !(i instanceof BlockItem)) // Prevents trees, dirt, slabs, etc. from showing up
+                .filter(i -> EntryValidator.isValidItem(i, categoryId))
                 .sorted(Comparator.comparing(i -> BuiltInRegistries.ITEM.getKey(i).toString()))
                 .map(Object.class::cast)
                 .toList());
+
+        register("mod_blocks", (modId, categoryId) -> BuiltInRegistries.BLOCK.stream()
+                .filter(b -> BuiltInRegistries.BLOCK.getKey(b).getNamespace().equals(modId))
+                .filter(b -> EntryValidator.isValidBlock(b, categoryId))
+                .sorted(Comparator.comparing(b -> BuiltInRegistries.BLOCK.getKey(b).toString()))
+                .map(Object.class::cast)
+                .toList());
+
+        register("plants", (params, categoryId) -> new ArrayList<>(getPlants(id -> true, categoryId)));
+        register("mod_plants", (modId, categoryId) -> new ArrayList<>(getPlants(id -> id.getNamespace().equals(modId), categoryId)));
+        register("trees", (params, categoryId) -> new ArrayList<>(getAutoTrees(id -> true, categoryId)));
+        register("mod_trees", (modId, categoryId) -> new ArrayList<>(getAutoTrees(id -> id.getNamespace().equals(modId), categoryId)));
+
         register("tag", (tagPath, categoryId) -> {
             List<Object> results = new ArrayList<>();
             try {
@@ -66,6 +82,7 @@ public class AutoPopulateRegistry {
             }
             return results;
         });
+
         register("monsters", (params, categoryId) -> getEntityStrategy("monsters", categoryId));
         register("animals", (params, categoryId) -> getEntityStrategy("animals", categoryId));
     }
