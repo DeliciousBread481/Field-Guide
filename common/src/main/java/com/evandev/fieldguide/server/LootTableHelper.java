@@ -28,18 +28,21 @@ public class LootTableHelper {
         Map<ResourceLocation, List<ItemStack>> lootMap = new HashMap<>();
         Set<ResourceLocation> allEntryIds = ServerFieldGuideManager.getInstance().getAllEntryIds();
 
+        Set<Object> uniqueEntries = new HashSet<>();
         for (ResourceLocation entryId : allEntryIds) {
-            EntryResolutionHelper.resolveSingleEntry(entryId, null, null).ifPresent(entry -> {
-                ResourceLocation tableId = null;
-                if (entry instanceof EntityType<?> type) tableId = type.getDefaultLootTable();
-                else if (entry instanceof Block block) tableId = block.getLootTable();
-                else if (entry instanceof CompositeFieldGuideEntry composite) {
-                    Object display = composite.displayEntry();
-                    if (display instanceof EntityType<?> type) tableId = type.getDefaultLootTable();
-                    else if (display instanceof Block block) tableId = block.getLootTable();
-                }
-                processEntry(level, entry, tableId, lootMap);
-            });
+            EntryResolutionHelper.resolveSingleEntry(entryId, null, null).ifPresent(uniqueEntries::add);
+        }
+
+        for (Object entry : uniqueEntries) {
+            ResourceLocation tableId = null;
+            if (entry instanceof EntityType<?> type) tableId = type.getDefaultLootTable();
+            else if (entry instanceof Block block) tableId = block.getLootTable();
+            else if (entry instanceof CompositeFieldGuideEntry composite) {
+                Object display = composite.displayEntry();
+                if (display instanceof EntityType<?> type) tableId = type.getDefaultLootTable();
+                else if (display instanceof Block block) tableId = block.getLootTable();
+            }
+            processEntry(level, entry, tableId, lootMap);
         }
         return lootMap;
     }
@@ -68,22 +71,51 @@ public class LootTableHelper {
         if (!formattedDrops.isEmpty()) {
             ResourceLocation id = AutoPopulateRegistry.getEntryId(entry, true);
             if (id != null) {
-                lootMap.computeIfAbsent(id, k -> new ArrayList<>()).addAll(formattedDrops);
+                List<ItemStack> existing = lootMap.computeIfAbsent(id, k -> new ArrayList<>());
+                for (ItemStack newStack : formattedDrops) {
+                    boolean found = false;
+                    for (ItemStack s : existing) {
+                        if (ItemStack.isSameItemSameTags(s, newStack)) {
+                            CompoundTag existingTag = s.getOrCreateTag();
+                            CompoundTag newTag = newStack.getOrCreateTag();
+
+                            float existingChance = existingTag.getFloat("FieldGuideDropChance");
+                            float newChance = newTag.getFloat("FieldGuideDropChance");
+                            existingTag.putFloat("FieldGuideDropChance", Math.min(100.0f, existingChance + newChance));
+
+                            int existingMin = existingTag.contains("FieldGuideMin") ? existingTag.getInt("FieldGuideMin") : 1;
+                            int newMin = newTag.contains("FieldGuideMin") ? newTag.getInt("FieldGuideMin") : 1;
+                            existingTag.putInt("FieldGuideMin", Math.min(existingMin, newMin));
+
+                            int existingMax = existingTag.contains("FieldGuideMax") ? existingTag.getInt("FieldGuideMax") : 1;
+                            int newMax = newTag.contains("FieldGuideMax") ? newTag.getInt("FieldGuideMax") : 1;
+                            existingTag.putInt("FieldGuideMax", Math.max(existingMax, newMax));
+
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        existing.add(newStack);
+                    }
+                }
             }
         }
     }
 
     private static boolean matchesTarget(Object entry, String targetStr) {
-        ResourceLocation entryId = EntryResolver.getRawId(EntryResolver.getEntryId(entry));
+        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
+        ResourceLocation entryId = EntryResolver.getRawId(EntryResolver.getEntryId(coreEntry));
+
         if (entryId == null) return false;
         if (targetStr.startsWith("#")) {
             try {
                 ResourceLocation tagId = new ResourceLocation(targetStr.substring(1));
-                if (entry instanceof EntityType<?> type) {
+                if (coreEntry instanceof EntityType<?> type) {
                     return BuiltInRegistries.ENTITY_TYPE.getHolder(BuiltInRegistries.ENTITY_TYPE.getResourceKey(type).get()).get().is(TagKey.create(Registries.ENTITY_TYPE, tagId));
-                } else if (entry instanceof Block block) {
+                } else if (coreEntry instanceof Block block) {
                     return BuiltInRegistries.BLOCK.getHolder(BuiltInRegistries.BLOCK.getResourceKey(block).get()).get().is(TagKey.create(Registries.BLOCK, tagId));
-                } else if (entry instanceof Item item) {
+                } else if (coreEntry instanceof Item item) {
                     return BuiltInRegistries.ITEM.getHolder(BuiltInRegistries.ITEM.getResourceKey(item).get()).get().is(TagKey.create(Registries.ITEM, tagId));
                 }
             } catch (Exception ignored) {

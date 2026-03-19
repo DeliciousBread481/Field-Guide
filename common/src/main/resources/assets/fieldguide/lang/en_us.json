@@ -203,7 +203,7 @@
   "item.fieldguide.page": "Field Guide Page",
   "item.fieldguide.page.entry": "Entry: %s",
   "item.fieldguide.page.author": "Author: %s",
-  "item.fieldguide.page.tooltip": "Right-click to restore this entry to your Field Guide",
+  "item.fieldguide.page.tooltip": "Right-click to add this entry to your Field Guide",
 
   "gui.fieldguide.rip_out.tooltip": "Rip Out Page",
 

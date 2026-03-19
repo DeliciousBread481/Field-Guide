@@ -379,27 +379,6 @@ public class FieldGuideEntryScreen extends BookScreen {
             drops = FieldGuideCobblemonCompat.getCobblemonDrops(entry);
         }
 
-        if (unlocked) {
-            List<ItemStack> additionalDrops = new ArrayList<>();
-            ClientCategoryManager categoryManager = ClientCategoryManager.getInstance();
-            for (String addition : categoryManager.getLootAdditions()) {
-                String[] parts = addition.split("\\|", 2);
-                if (parts.length == 2 && categoryManager.isLootMatch(entry, new ResourceLocation(parts[1]))) {
-                    ResourceLocation itemId = EntryResolver.getRawId(new ResourceLocation(parts[1]));
-                    ItemStack stack = new ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(itemId));
-                    if (!stack.isEmpty()) {
-                        stack.getOrCreateTag().putFloat("FieldGuideDropChance", 100.0f);
-                        additionalDrops.add(stack);
-                    }
-                }
-            }
-            if (!additionalDrops.isEmpty()) {
-                List<ItemStack> combined = new ArrayList<>(drops);
-                combined.addAll(additionalDrops);
-                drops = combined;
-            }
-        }
-
         if (!drops.isEmpty()) {
             int dropItemSize = 20;
             this.addRenderableWidget(new PaginatedGridWidget<>(this.leftPageBounds.left() + 2, this.leftPageBounds.bottom() - 33, this.leftPageBounds.width() - 4, dropItemSize, 5, dropItemSize, 0, drops, (graphics, stack, x, y, mouseX, mouseY) -> {
