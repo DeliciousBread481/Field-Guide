@@ -2,7 +2,7 @@ package com.evandev.fieldguide.util.entry;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.compat.reliableremover.ReliableRemoverCompat;
-import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.ModTags;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -39,7 +39,7 @@ public class EntryValidator {
 
         if (blacklisted) return false;
 
-        if (Services.PLATFORM.isModLoaded("reliable_remover") && ModConfig.get().enableReliableRemover && ReliableRemoverCompat.isHidden(block)) {
+        if (Services.PLATFORM.isModLoaded("reliable_remover") && ServerConfig.get().enableReliableRemover && ReliableRemoverCompat.isHidden(block)) {
             return false;
         }
         return true;

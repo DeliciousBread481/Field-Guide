@@ -5,7 +5,7 @@ import com.evandev.fieldguide.FieldGuideLimits;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.data.JournalPage;
 import com.evandev.fieldguide.client.gui.toasts.FieldGuideToast;
-import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.network.MarkSeenPacket;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.network.UpdateEntryDataPacket;
@@ -116,7 +116,7 @@ public class ProgressManager {
                 this.lastUnlockTime = System.currentTimeMillis();
                 this.lastUnlockedEntry = entry;
                 this.lastUnlockedVariant = entryToToast.getValue();
-                if (ModConfig.get().showToasts) {
+                if (ClientConfig.get().showToasts) {
                     Minecraft.getInstance().getToasts().addToast(new FieldGuideToast(entry, entryToToast.getValue()));
                 }
             }

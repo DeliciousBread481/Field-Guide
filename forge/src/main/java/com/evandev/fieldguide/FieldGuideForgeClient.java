@@ -4,8 +4,10 @@ import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.ModRenderTypes;
 import com.evandev.fieldguide.config.ClothConfigIntegration;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
+import com.evandev.fieldguide.network.SyncConfigPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
@@ -25,6 +27,12 @@ public class FieldGuideForgeClient {
     public static void handleSyncLoot(SyncLootPacket packet) {
         ClientFieldGuideManager.getInstance().updateLootCache(packet.getLootCache(), packet.isClearCache());
     }
+
+    public static void handleSyncConfig(SyncConfigPacket packet) {
+        ServerConfig synced = ServerConfig.fromJson(packet.configJson());
+        ServerConfig.setSyncedConfig(synced);
+    }
+
 
     public static void handleSyncCategories(SyncCategoriesPacket packet) {
         ClientFieldGuideManager.getInstance().updateCategoriesFromServer(

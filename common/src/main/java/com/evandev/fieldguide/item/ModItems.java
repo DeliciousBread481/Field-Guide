@@ -1,6 +1,6 @@
 package com.evandev.fieldguide.item;
 
-import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.platform.Services;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -15,7 +15,7 @@ public class ModItems {
     public static Supplier<PageItem> PAGE;
 
     public static void init() {
-        if (ModConfig.get().enableFieldGuideItem) {
+        if (ServerConfig.get().enableFieldGuideItem) {
             FIELD_GUIDE = Services.REGISTRY.registerItem("field_guide", () -> new FieldGuideItem(new Item.Properties().stacksTo(1)));
             Services.REGISTRY.registerToTab(ResourceKey.create(Registries.CREATIVE_MODE_TAB, new ResourceLocation("minecraft", "tools_and_utilities")), FIELD_GUIDE);
         }

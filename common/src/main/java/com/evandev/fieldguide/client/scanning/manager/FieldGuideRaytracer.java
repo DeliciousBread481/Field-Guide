@@ -6,7 +6,7 @@ import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
-import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.EntryResolver;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
@@ -130,7 +130,7 @@ public class FieldGuideRaytracer {
                 boolean needsScan = !ProgressManager.getInstance().isUnlocked(entryForTarget);
                 if (hitEntity instanceof Mob mob) {
                     var provider = FieldGuideVariantManager.getProvider(mob);
-                    if (provider != null && !ModConfig.get().unlockAllVariants) {
+                    if (provider != null && !ServerConfig.get().unlockAllVariants) {
                         String variantId = provider.getCurrent(mob).id();
                         if (!ClientFieldGuideManager.isVariantUnlocked(entryForTarget, variantId)) {
                             needsScan = true;

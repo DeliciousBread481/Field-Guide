@@ -6,7 +6,7 @@ import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
-import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
@@ -166,7 +166,7 @@ public class VariantOverviewWidget extends AbstractWidget {
         }
 
         int titleWidth = Minecraft.getInstance().font.width(this.currentTitleText);
-        graphics.drawString(Minecraft.getInstance().font, this.currentTitleText, this.getX() + (this.width / 2) - (titleWidth / 2), this.getY() + 13, ModConfig.get().getTextTitleColorInt(), false);
+        graphics.drawString(Minecraft.getInstance().font, this.currentTitleText, this.getX() + (this.width / 2) - (titleWidth / 2), this.getY() + 13, ClientConfig.get().getTextTitleColorInt(), false);
 
         this.closeButton.render(graphics, mouseX, mouseY, partialTicks);
         if (this.currentPage > 0) this.leftButton.render(graphics, mouseX, mouseY, partialTicks);

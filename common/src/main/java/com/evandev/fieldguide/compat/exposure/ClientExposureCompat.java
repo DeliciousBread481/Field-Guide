@@ -6,7 +6,8 @@ import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuidePhotographScreen;
 import com.evandev.fieldguide.client.gui.widget.FieldGuidePhotographWidget;
 import com.evandev.fieldguide.client.progress.ProgressManager;
-import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.config.ClientConfig;
+import com.evandev.fieldguide.config.ServerConfig;
 import io.github.mortuusars.exposure.ExposureClient;
 import io.github.mortuusars.exposure.client.gui.screen.ItemListScreen;
 import io.github.mortuusars.exposure.client.render.photograph.PhotographStyle;
@@ -39,7 +40,7 @@ public class ClientExposureCompat {
     public static void setupExposureWidgets(FieldGuideEntryScreen screen, Object entry, String variantId) {
         if (!ClientFieldGuideManager.isUnlocked(entry)) return;
 
-        if (variantId != null && !variantId.isEmpty() && !ModConfig.get().unlockAllVariants) {
+        if (variantId != null && !variantId.isEmpty() && !ServerConfig.get().unlockAllVariants) {
             if (!ClientFieldGuideManager.isVariantUnlocked(entry, variantId)) return;
         }
 
@@ -55,7 +56,7 @@ public class ClientExposureCompat {
         ItemStack existingPhoto = ProgressManager.getInstance().getPhotograph(entry, variantId);
 
         if (existingPhoto.isEmpty()) {
-            if (ModConfig.get().exposureAddPhotographButton) {
+            if (ClientConfig.get().exposureAddPhotographButton) {
                 ImageButton addPhotoButton = new ImageButton(iconX, iconY, iconSize, iconSize, 0, 0, iconSize, ADD_PHOTO_ICON, 16, 32, btn -> {
                     openPhotographSelector(screen, entry, variantId);
                 }, Component.translatable("gui.fieldguide.add_photograph"));

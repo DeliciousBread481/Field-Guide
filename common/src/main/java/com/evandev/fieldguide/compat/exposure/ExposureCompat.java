@@ -3,7 +3,7 @@ package com.evandev.fieldguide.compat.exposure;
 import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.api.VariantDef;
 import com.evandev.fieldguide.api.VariantProvider;
-import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
@@ -32,7 +32,7 @@ import java.util.Map;
 public class ExposureCompat {
 
     public static void onPhotographTaken(Player player, Frame frame) {
-        if (!ModConfig.get().exposureUnlockViaPhotograph) return;
+        if (!ServerConfig.get().exposureUnlockViaPhotograph) return;
         unlockContentInFrame(player, frame);
     }
 

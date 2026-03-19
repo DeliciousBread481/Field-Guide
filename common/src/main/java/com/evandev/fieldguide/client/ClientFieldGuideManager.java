@@ -15,6 +15,7 @@ import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.client.scanning.FieldGuideScanner;
 import com.evandev.fieldguide.client.search.SearchManager;
 import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.util.EntryResolver;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
@@ -52,7 +53,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public static boolean hideFromSearch(Object entry) {
-        return ModConfig.get().hideUndiscoveredFromSearch && !isUnlocked(entry);
+        return ServerConfig.get().hideUndiscoveredFromSearch && !isUnlocked(entry);
     }
 
     public static boolean isUnlocked(Object entry) {
@@ -244,6 +245,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     public void onWorldUnload() {
         ClientLootManager.getInstance().getDropCache().clear();
         ProgressManager.getInstance().onWorldUnload();
+        ServerConfig.resetSyncedConfig();
     }
 
     public void applyServerUpdate(ProgressUpdatePacket packet) {

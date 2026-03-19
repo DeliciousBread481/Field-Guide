@@ -1,7 +1,7 @@
 package com.evandev.fieldguide.server.loot;
 
 import com.evandev.fieldguide.compat.reliableremover.ReliableRemoverCompat;
-import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.mixin.accessor.*;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.LootTableExpansion;
@@ -85,7 +85,7 @@ public class StaticLootParser {
 
                 if (stack.isEmpty()) stack.setCount(1);
                 if (!stack.is(Items.AIR)) {
-                    boolean isHidden = Services.PLATFORM.isModLoaded("reliable_remover") && ModConfig.get().enableReliableRemover && ReliableRemoverCompat.isHidden(stack);
+                    boolean isHidden = Services.PLATFORM.isModLoaded("reliable_remover") && ServerConfig.get().enableReliableRemover && ReliableRemoverCompat.isHidden(stack);
                     if (!isHidden) {
                         drops.add(new ParsedDrop(stack, branchChance, min, max));
                     }

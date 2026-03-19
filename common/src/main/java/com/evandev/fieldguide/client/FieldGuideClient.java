@@ -6,7 +6,7 @@ import com.evandev.fieldguide.client.gui.screens.BookScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideCategoryScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.client.scanning.FieldGuideScanner;
-import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.mixin.accessor.MobAccessor;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -82,7 +82,7 @@ public class FieldGuideClient {
                 }
             }
 
-            String defaultMode = ModConfig.get().defaultScreen;
+            String defaultMode = ClientConfig.get().defaultScreen;
             if ("last_opened_screen".equals(defaultMode) && BookScreen.lastOpenedScreen != null) {
                 minecraft.setScreen(BookScreen.lastOpenedScreen);
             } else {
@@ -92,7 +92,7 @@ public class FieldGuideClient {
     }
 
     public static void renderScanningIcon(GuiGraphics guiGraphics, float partialTick) {
-        ModConfig config = ModConfig.get();
+        ClientConfig config = ClientConfig.get();
         if (!config.showScanIcon) return;
 
         FieldGuideScanner scanner = FieldGuideScanner.getInstance();

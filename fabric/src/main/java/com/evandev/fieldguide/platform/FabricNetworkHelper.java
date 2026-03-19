@@ -14,6 +14,7 @@ public class FabricNetworkHelper implements INetworkHelper {
     public static final ResourceLocation SYNC_CATEGORIES_CHANNEL = new ResourceLocation(Constants.MOD_ID, "sync_categories");
     public static final ResourceLocation PROGRESS_UPDATE_CHANNEL = new ResourceLocation(Constants.MOD_ID, "progress_update");
     public static final ResourceLocation SYNC_LOOT_CHANNEL = new ResourceLocation(Constants.MOD_ID, "sync_loot");
+    public static final ResourceLocation SYNC_CONFIG_CHANNEL = new ResourceLocation(Constants.MOD_ID, "sync_config");
     public static final ResourceLocation EXPORT_CONTENT_CHANNEL = new ResourceLocation(Constants.MOD_ID, "export_content");
     public static final ResourceLocation SCAN_UNLOCK_CHANNEL = new ResourceLocation(Constants.MOD_ID, "scan_unlock");
     public static final ResourceLocation MARK_SEEN_CHANNEL = new ResourceLocation(Constants.MOD_ID, "mark_seen");
@@ -54,6 +55,9 @@ public class FabricNetworkHelper implements INetworkHelper {
         } else if (packet instanceof SyncLootPacket syncLoot) {
             syncLoot.encode(buf);
             ServerPlayNetworking.send(player, SYNC_LOOT_CHANNEL, buf);
+        } else if (packet instanceof SyncConfigPacket syncConfig) {
+            syncConfig.encode(buf);
+            ServerPlayNetworking.send(player, SYNC_CONFIG_CHANNEL, buf);
         } else if (packet instanceof ExportContentPacket export) {
             export.encode(buf);
             ServerPlayNetworking.send(player, EXPORT_CONTENT_CHANNEL, buf);

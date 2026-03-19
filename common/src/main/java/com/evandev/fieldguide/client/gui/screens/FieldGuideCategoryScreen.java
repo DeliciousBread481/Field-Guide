@@ -14,7 +14,8 @@ import com.evandev.fieldguide.client.gui.widget.PageTurnButton;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
-import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.config.ClientConfig;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -110,7 +111,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
     @Override
     protected void init() {
         if (this.getSelectedCategory() == null && this.searchQuery.isEmpty()) {
-            String defaultMode = ModConfig.get().defaultScreen;
+            String defaultMode = ClientConfig.get().defaultScreen;
             if ("current_biome".equals(defaultMode) && this.minecraft != null && this.minecraft.level != null && this.minecraft.player != null) {
                 var biomeOpt = this.minecraft.level.getBiome(this.minecraft.player.blockPosition()).unwrapKey();
                 biomeOpt.ifPresent(biomeResourceKey -> this.searchQuery = "=!" + biomeResourceKey.location());
@@ -447,7 +448,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
                 if (searchQuery.startsWith("=!")) {
                     ResourceLocation biomeId = ResourceLocation.tryParse(searchQuery.substring(2));
                     if (biomeId != null && biomeRegistry.containsKey(biomeId)) {
-                        int titleColor = ModConfig.get().getTextColorInt();
+                        int titleColor = ClientConfig.get().getTextColorInt();
                         int iconOffset = 0;
 
                         if (Services.PLATFORM.isModLoaded("immersiveoverlays")) {
@@ -467,7 +468,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
                         renderTitle(guiGraphics, Component.translatable("gui.fieldguide.searching_biomes"));
                     }
                 } else if (searchQuery.startsWith("=#")) {
-                    renderTitle(guiGraphics, Component.literal("#" + searchQuery.substring(2)), 0, ModConfig.get().getTextColorInt());
+                    renderTitle(guiGraphics, Component.literal("#" + searchQuery.substring(2)), 0, ClientConfig.get().getTextColorInt());
                 } else if (searchQuery.startsWith("=^")) {
                     String dropQuery = searchQuery.substring(2).toLowerCase(Locale.ROOT);
                     ItemStack displayStack = ItemStack.EMPTY;
@@ -501,7 +502,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
                     if (!displayStack.isEmpty()) {
                         guiGraphics.renderItem(displayStack, iconX, iconY);
-                        renderTitle(guiGraphics, Component.translatable("gui.fieldguide.drops", dropName), iconSize, ModConfig.get().getTextColorInt());
+                        renderTitle(guiGraphics, Component.translatable("gui.fieldguide.drops", dropName), iconSize, ClientConfig.get().getTextColorInt());
                     } else {
                         renderTitle(guiGraphics, Component.translatable("gui.fieldguide.searching_drops"));
                     }
@@ -527,7 +528,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
         } else if (isSearching) {
             if (currentEntries.isEmpty()) {
                 Component noResults = Component.translatable("gui.fieldguide.no_results");
-                guiGraphics.drawString(this.font, noResults, this.leftPageBounds.x_center() - this.font.width(noResults) / 2, this.leftPageBounds.y_center() - (font.lineHeight / 2), ModConfig.get().getTextMutedColorInt(), false);
+                guiGraphics.drawString(this.font, noResults, this.leftPageBounds.x_center() - this.font.width(noResults) / 2, this.leftPageBounds.y_center() - (font.lineHeight / 2), ClientConfig.get().getTextMutedColorInt(), false);
             }
         }
 
@@ -556,7 +557,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
     }
 
     private void renderTitle(GuiGraphics guiGraphics, Component text) {
-        renderTitle(guiGraphics, text, 0, ModConfig.get().getTextMutedColorInt());
+        renderTitle(guiGraphics, text, 0, ClientConfig.get().getTextMutedColorInt());
     }
 
     private void renderTitle(GuiGraphics guiGraphics, Component text, int offset, int color) {
@@ -585,7 +586,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
         for (FormattedCharSequence line : lines) {
             int lineWidth = this.font.width(line);
             int lineX = this.leftPageBounds.x_center() - lineWidth / 2;
-            guiGraphics.drawString(this.font, line, lineX, titleY, ModConfig.get().getTextTitleColorInt(), false);
+            guiGraphics.drawString(this.font, line, lineX, titleY, ClientConfig.get().getTextTitleColorInt(), false);
             titleY += font.lineHeight;
         }
 
@@ -599,8 +600,8 @@ public class FieldGuideCategoryScreen extends BookScreen {
             String countText = String.valueOf(unlocked);
             String totalText = String.valueOf(total);
 
-            guiGraphics.drawString(this.font, countText, x - xOffset - font.width(countText) / 2, y, ModConfig.get().getTextColorInt(), false);
-            guiGraphics.drawString(this.font, totalText, x + xOffset - font.width(totalText) / 2, y, ModConfig.get().getTextColorInt(), false);
+            guiGraphics.drawString(this.font, countText, x - xOffset - font.width(countText) / 2, y, ClientConfig.get().getTextColorInt(), false);
+            guiGraphics.drawString(this.font, totalText, x + xOffset - font.width(totalText) / 2, y, ClientConfig.get().getTextColorInt(), false);
 
             // Progress Bar
             if (unlocked > 0) {
@@ -620,7 +621,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
         // Title
         Component title = Component.translatable("gui.fieldguide.main.default");
         int titleY = this.rightPageBounds.top() + 8;
-        guiGraphics.drawString(this.font, title, this.rightPageBounds.x_center() - font.width(title) / 2, titleY, ModConfig.get().getTextMutedColorInt(), false);
+        guiGraphics.drawString(this.font, title, this.rightPageBounds.x_center() - font.width(title) / 2, titleY, ClientConfig.get().getTextMutedColorInt(), false);
 
         for (int i = 0; i < ITEMS_PER_PAGE; i++) {
             if (i >= recentEntries.size()) break;
@@ -731,7 +732,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
     }
 
     private void renderEntryTooltip(GuiGraphics guiGraphics, Object entry, int mouseX, int mouseY, boolean unlocked) {
-        if (unlocked || ModConfig.get().showUndiscoveredNames) {
+        if (unlocked || ServerConfig.get().showUndiscoveredNames) {
             Component name = ClientFieldGuideManager.getEntryName(entry);
             List<Component> tooltip = new ArrayList<>();
             tooltip.add(name);
@@ -741,9 +742,9 @@ public class FieldGuideCategoryScreen extends BookScreen {
             if (dummy != null && (coreEntry instanceof EntityType<?>)) {
                 List<VariantDef> variants = FieldGuideVariantManager.getVariants(dummy);
                 if (variants.size() > 1) {
-                    int unlockedCount = ModConfig.get().unlockAllVariants ? variants.size() : 0;
+                    int unlockedCount = ServerConfig.get().unlockAllVariants ? variants.size() : 0;
 
-                    if (!ModConfig.get().unlockAllVariants) {
+                    if (!ServerConfig.get().unlockAllVariants) {
                         for (VariantDef var : variants) {
                             if (ClientFieldGuideManager.isVariantUnlocked(entry, var.id())) {
                                 unlockedCount++;
@@ -787,19 +788,19 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
     private void renderPageNumber(int page, Bounds bounds, GuiGraphics guiGraphics) {
         String str = page + "";
-        guiGraphics.drawString(this.font, str, bounds.x_center() - font.width(str) / 2, bounds.bottom() - 11, ModConfig.get().getPageNumberColorInt(), false);
+        guiGraphics.drawString(this.font, str, bounds.x_center() - font.width(str) / 2, bounds.bottom() - 11, ClientConfig.get().getPageNumberColorInt(), false);
     }
 
     private void renderEntryInGrid(GuiGraphics guiGraphics, Object entry, int x, int y, boolean unlocked) {
         Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
         boolean isCobblemon = entry instanceof CompositeFieldGuideEntry comp && comp.id() != null && comp.id().getNamespace().equals("fieldguide") && comp.id().getPath().startsWith("cobblemon/");
 
-        if (unlocked && Services.PLATFORM.isModLoaded("exposure") && ModConfig.get().exposureShowPhotographsInGrid) {
+        if (unlocked && Services.PLATFORM.isModLoaded("exposure") && ClientConfig.get().exposureShowPhotographsInGrid) {
             ItemStack existingPhoto = ProgressManager.getInstance().getPhotograph(entry);
             if (!existingPhoto.isEmpty()) {
                 ClientExposureCompat.renderPhotographInGrid(guiGraphics, x - (CELL_SIZE / 2), y - (CELL_SIZE / 2), CELL_SIZE, CELL_SIZE, existingPhoto);
                 return;
-            } else if (ModConfig.get().keepSilhouetteWhenUnlocked) {
+            } else if (ServerConfig.get().keepSilhouetteWhenUnlocked) {
                 ClientExposureCompat.renderMissingPhotoBackground(guiGraphics, x - (CELL_SIZE / 2), y - (CELL_SIZE / 2), CELL_SIZE, CELL_SIZE);
             }
         }

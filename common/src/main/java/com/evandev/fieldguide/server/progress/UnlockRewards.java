@@ -1,7 +1,7 @@
 package com.evandev.fieldguide.server.progress;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
@@ -18,7 +18,7 @@ class UnlockRewards {
 
     static void grant(ServerPlayer player, ResourceLocation entryId) {
         try {
-            ModConfig config = ModConfig.get();
+            ServerConfig config = ServerConfig.get();
             if (config.grantXpOnScan && config.xpAmountOnScan > 0) {
                 player.giveExperiencePoints(config.xpAmountOnScan);
             }
@@ -29,7 +29,7 @@ class UnlockRewards {
         }
     }
 
-    private static void executeCommands(ServerPlayer player, ResourceLocation entryId, ModConfig config) {
+    private static void executeCommands(ServerPlayer player, ResourceLocation entryId, ServerConfig config) {
         List<String> commandsToRun = new ArrayList<>(config.globalScanCommands);
 
         String idStr = entryId.toString();

@@ -1,13 +1,21 @@
 package com.evandev.fieldguide;
 
+import com.google.gson.reflect.TypeToken;
 import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Type;
+import java.util.List;
+import java.util.Map;
 
 public class Constants {
     public static final String MOD_ID = "fieldguide";
     public static final String MOD_NAME = "FieldGuide";
     public static final Logger LOG = LoggerFactory.getLogger(MOD_NAME);
+
+    public static final Type LIST_STRING_TYPE = new TypeToken<List<String>>() {}.getType();
+    public static final Type MAP_STRING_LIST_STRING_TYPE = new TypeToken<Map<String, List<String>>>() {}.getType();
 
     // Backgrounds
     public static final ResourceLocation BOOK_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/book.png");

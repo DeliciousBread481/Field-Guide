@@ -1,7 +1,7 @@
 package com.evandev.fieldguide.server;
 
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
-import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.EntryResolver;
 import com.evandev.fieldguide.util.ModTags;
@@ -18,7 +18,7 @@ public class ScanVerifier {
 
     public static boolean verifyScan(ServerPlayer player, ResourceLocation entryId,
                                      ResourceLocation scannedTargetId, BlockPos targetBlockPos, int targetEntityId) {
-        ModConfig config = ModConfig.get();
+        ServerConfig config = ServerConfig.get();
 
         if (config.disableScanning) return false;
 
@@ -43,12 +43,20 @@ public class ScanVerifier {
         }
 
         if (targetEntityId != 0) {
-            if (!verifyEntityPresence(player, scannedTargetId, targetEntityId, level, maxDistSq, categoryId))
-                return false;
             Entity entity = level.getEntity(targetEntityId);
+
             if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
+
+                if (entity.isSpectator() || player.distanceToSqr(entity) > maxDistSq) {
+                    return false;
+                }
+
                 ResourceLocation pokemonEntryId = FieldGuideCobblemonCompat.getPokemonEntryId(entity);
                 return pokemonEntryId.equals(entryId);
+            }
+
+            if (!verifyEntityPresence(player, scannedTargetId, targetEntityId, level, maxDistSq, categoryId)) {
+                return false;
             }
         } else if (targetBlockPos != null) {
             if (!verifyBlockPresence(player, scannedTargetId, targetBlockPos, level, maxDistSq, categoryId))

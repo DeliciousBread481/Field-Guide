@@ -16,7 +16,8 @@ import com.evandev.fieldguide.client.manager.ClientCategoryManager;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
-import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.config.ClientConfig;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.network.RipOutPacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.EntryResolver;
@@ -68,7 +69,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private static Component getTitleForEntry(Object entry) {
-        if (ClientFieldGuideManager.isUnlocked(entry) || ModConfig.get().showUndiscoveredNames) {
+        if (ClientFieldGuideManager.isUnlocked(entry) || ServerConfig.get().showUndiscoveredNames) {
             return ClientFieldGuideManager.getEntryName(entry);
         }
         return Component.translatable("fieldguide.undiscovered");
@@ -169,7 +170,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         setupNavigationButtons();
         refreshExposureWidgets();
 
-        if (unlocked && ModConfig.get().enableTearingOutPages) {
+        if (unlocked && ServerConfig.get().enableTearingOutPages) {
             this.addRenderableWidget(new PageTurnButton(this.bounds.right() - 13, this.bounds.top() + 54, 24, 24, 24, 144, 24, Constants.WIDGETS_TEXTURE, (btn) -> {
                 ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
                 if (id != null) {
@@ -209,14 +210,14 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         if (unlocked) {
             String initialName = ClientFieldGuideManager.getEntryName(entry).getString();
-            if (!ModConfig.get().disableEditingNames) {
-                this.addRenderableWidget(new BookTextFieldWidget(this.font, textX, titleY, textAreaWidth, font.lineHeight, initialName, ModConfig.get().getTextTitleColorInt(), textAreaWidth, FieldGuideLimits.MAX_ENTRY_NAME_LENGTH,
+            if (!ServerConfig.get().disableEditingNames) {
+                this.addRenderableWidget(new BookTextFieldWidget(this.font, textX, titleY, textAreaWidth, font.lineHeight, initialName, ClientConfig.get().getTextTitleColorInt(), textAreaWidth, FieldGuideLimits.MAX_ENTRY_NAME_LENGTH,
                         newName -> ClientFieldGuideManager.setCustomName(entry, newName)));
             }
 
             String initialDesc = ClientFieldGuideManager.getEntryDescription(entry);
-            if (!ModConfig.get().disableEditingDescriptions) {
-                this.addRenderableWidget(new BookTextAreaWidget(this.font, textX, textY, textAreaWidth, textAreaHeight, 10, ModConfig.get().getTextColorInt(), true, FieldGuideLimits.MAX_ENTRY_DESCRIPTION_LENGTH, initialDesc,
+            if (!ServerConfig.get().disableEditingDescriptions) {
+                this.addRenderableWidget(new BookTextAreaWidget(this.font, textX, textY, textAreaWidth, textAreaHeight, 10, ClientConfig.get().getTextColorInt(), true, FieldGuideLimits.MAX_ENTRY_DESCRIPTION_LENGTH, initialDesc,
                         newDesc -> ClientFieldGuideManager.setCustomDescription(entry, newDesc)));
             }
         }
@@ -347,7 +348,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private void setupBiomeWidget(boolean unlocked) {
-        if (ModConfig.get().disableBiomeDisplay || !Services.PLATFORM.isModLoaded("immersiveoverlays")) return;
+        if (ServerConfig.get().disableBiomeDisplay || !Services.PLATFORM.isModLoaded("immersiveoverlays")) return;
 
         if (unlocked && !spawnBiomes.isEmpty()) {
             int itemSize = 20;
@@ -371,7 +372,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private void setupDropWidget(boolean unlocked) {
-        if (ModConfig.get().disableLootDisplay) return;
+        if (ServerConfig.get().disableLootDisplay) return;
 
         List<ItemStack> drops = unlocked ? ClientFieldGuideManager.getInstance().getDrops(entry) : List.of();
 
@@ -508,14 +509,14 @@ public class FieldGuideEntryScreen extends BookScreen {
         int textAreaWidth = this.rightPageBounds.width() - 10;
 
         if (!unlocked) {
-            guiGraphics.drawString(this.font, getTitleForEntry(entry), titleX, titleY, ModConfig.get().getTextMutedColorInt(), false);
-            guiGraphics.drawWordWrap(font, Component.translatable("fieldguide.description.locked"), textX, titleY + 30, textAreaWidth, ModConfig.get().getTextMutedColorInt());
+            guiGraphics.drawString(this.font, getTitleForEntry(entry), titleX, titleY, ClientConfig.get().getTextMutedColorInt(), false);
+            guiGraphics.drawWordWrap(font, Component.translatable("fieldguide.description.locked"), textX, titleY + 30, textAreaWidth, ClientConfig.get().getTextMutedColorInt());
         } else {
             long discoveryTime = ProgressManager.getInstance().getDiscoveryTime(entry);
             if (discoveryTime > 0) {
                 Component dateComponent;
 
-                if (ModConfig.get().useRealWorldDate) {
+                if (ClientConfig.get().useRealWorldDate) {
                     String realDate = new SimpleDateFormat("MMM dd, yyyy")
                             .format(new Date(discoveryTime));
 
@@ -527,15 +528,15 @@ public class FieldGuideEntryScreen extends BookScreen {
 
                     dateComponent = Component.translatable("fieldguide.date.in_game", days, Component.translatable(timeKey));
                 }
-                guiGraphics.drawString(this.font, dateComponent, titleX, titleY + this.font.lineHeight + 2, ModConfig.get().getTextMutedColorInt(), false);
+                guiGraphics.drawString(this.font, dateComponent, titleX, titleY + this.font.lineHeight + 2, ClientConfig.get().getTextMutedColorInt(), false);
             }
 
-            if (ModConfig.get().disableEditingNames) {
-                guiGraphics.drawString(this.font, ClientFieldGuideManager.getEntryName(entry), titleX, titleY, ModConfig.get().getTextTitleColorInt(), false);
+            if (ServerConfig.get().disableEditingNames) {
+                guiGraphics.drawString(this.font, ClientFieldGuideManager.getEntryName(entry), titleX, titleY, ClientConfig.get().getTextTitleColorInt(), false);
             }
-            if (ModConfig.get().disableEditingDescriptions) {
+            if (ServerConfig.get().disableEditingDescriptions) {
                 int textY = this.rightPageBounds.top() + 38;
-                guiGraphics.drawWordWrap(font, Component.literal(ClientFieldGuideManager.getEntryDescription(entry)), textX, textY, textAreaWidth, ModConfig.get().getTextColorInt());
+                guiGraphics.drawWordWrap(font, Component.literal(ClientFieldGuideManager.getEntryDescription(entry)), textX, textY, textAreaWidth, ClientConfig.get().getTextColorInt());
             }
         }
 
@@ -567,7 +568,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
         } else if (renderEntry instanceof EntityType && renderedEntity != null) {
             boolean variantUnlocked = unlocked;
-            if (unlocked && !entityVariants.isEmpty() && !ModConfig.get().unlockAllVariants) {
+            if (unlocked && !entityVariants.isEmpty() && !ServerConfig.get().unlockAllVariants) {
                 variantUnlocked = ClientFieldGuideManager.isVariantUnlocked(entry, entityVariants.get(currentVariantIndex).id());
             }
 
@@ -644,12 +645,12 @@ public class FieldGuideEntryScreen extends BookScreen {
         guiGraphics.blitNineSliced(Constants.WIDGETS_TEXTURE, xPos - 4, yPos - 3, totalWidth + 8, 16, 6, 16, 16, 48, 0);
 
         guiGraphics.blit(Constants.ATTRIBUTES_TEXTURE, xPos, yPos, 0, 0, iconSize, iconSize, 32, 32);
-        guiGraphics.drawString(this.font, health, xPos + iconSize + iconSpacing, yPos + 1, ModConfig.get().getTextColorInt(), false);
+        guiGraphics.drawString(this.font, health, xPos + iconSize + iconSpacing, yPos + 1, ClientConfig.get().getTextColorInt(), false);
 
         if (showArmor) {
             xPos = xPos + healthWidth + gap;
             guiGraphics.blit(Constants.ATTRIBUTES_TEXTURE, xPos, yPos, 0, iconSize, iconSize, iconSize, 32, 32);
-            guiGraphics.drawString(this.font, armor, xPos + iconSize + iconSpacing, yPos + 1, ModConfig.get().getTextColorInt(), false);
+            guiGraphics.drawString(this.font, armor, xPos + iconSize + iconSpacing, yPos + 1, ClientConfig.get().getTextColorInt(), false);
         }
         guiGraphics.pose().popPose();
     }

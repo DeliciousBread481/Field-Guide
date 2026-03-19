@@ -3,7 +3,7 @@ package com.evandev.fieldguide.mixin.client;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.gui.screens.BookScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideCategoryScreen;
-import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.config.ClientConfig;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.PauseScreen;
@@ -23,7 +23,7 @@ public class PauseScreenMixin extends Screen {
 
     @Inject(method = "createPauseMenu", at = @At("RETURN"))
     private void addFieldGuideButton(CallbackInfo ci) {
-        ModConfig config = ModConfig.get();
+        ClientConfig config = ClientConfig.get();
         if (!config.showPauseMenuButton) {
             return;
         }
@@ -70,7 +70,7 @@ public class PauseScreenMixin extends Screen {
                 textureHeight,
                 (button) -> {
                     if (this.minecraft != null) {
-                        String defaultMode = ModConfig.get().defaultScreen;
+                        String defaultMode = ClientConfig.get().defaultScreen;
                         if ("last_opened_screen".equals(defaultMode) && BookScreen.lastOpenedScreen != null) {
                             this.minecraft.setScreen(BookScreen.lastOpenedScreen);
                         } else {

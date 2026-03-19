@@ -8,7 +8,8 @@ import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
-import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.config.ClientConfig;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.mixin.accessor.EntityAccessor;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
@@ -434,17 +435,17 @@ public class EntryRenderHelper {
         int drawX = x - scaledWidth / 2;
         int drawY = y - scaledHeight / 2;
 
-        boolean silhouette = !unlocked || ModConfig.get().keepSilhouetteWhenUnlocked;
+        boolean silhouette = !unlocked || ServerConfig.get().keepSilhouetteWhenUnlocked;
 
         if (silhouette) {
             int color;
             double alpha;
             if (isPage) {
-                color = unlocked ? ModConfig.get().getDetailsSilhouetteColorInt() : ModConfig.get().getDetailsUnlockedSilhouetteColorInt();
-                alpha = unlocked ? ModConfig.get().detailsUnlockedSilhouetteAlpha : ModConfig.get().detailsSilhouetteAlpha;
+                color = unlocked ? ClientConfig.get().getDetailsSilhouetteColorInt() : ClientConfig.get().getDetailsUnlockedSilhouetteColorInt();
+                alpha = unlocked ? ClientConfig.get().detailsUnlockedSilhouetteAlpha : ClientConfig.get().detailsSilhouetteAlpha;
             } else {
-                color = unlocked ? ModConfig.get().getListSilhouetteColorInt() : ModConfig.get().getListUnlockedSilhouetteColorInt();
-                alpha = unlocked ? ModConfig.get().listUnlockedSilhouetteAlpha : ModConfig.get().listSilhouetteAlpha;
+                color = unlocked ? ClientConfig.get().getListSilhouetteColorInt() : ClientConfig.get().getListUnlockedSilhouetteColorInt();
+                alpha = unlocked ? ClientConfig.get().listUnlockedSilhouetteAlpha : ClientConfig.get().listSilhouetteAlpha;
             }
 
             Color rgb = new Color(color);

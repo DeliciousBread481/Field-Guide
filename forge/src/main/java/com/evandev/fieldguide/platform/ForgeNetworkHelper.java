@@ -25,6 +25,7 @@ public class ForgeNetworkHelper implements INetworkHelper {
     public static void register() {
         int id = 0;
         CHANNEL.registerMessage(id++, SyncLootPacket.class, SyncLootPacket::encode, SyncLootPacket::new, FieldGuideMod::handleSyncLoot, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        CHANNEL.registerMessage(id++, SyncConfigPacket.class, SyncConfigPacket::encode, SyncConfigPacket::new, FieldGuideMod::handleSyncConfig, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         CHANNEL.registerMessage(id++, SyncCategoriesPacket.class, SyncCategoriesPacket::encode, SyncCategoriesPacket::new, FieldGuideMod::handleSyncCategories, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         CHANNEL.registerMessage(id++, ProgressUpdatePacket.class, ProgressUpdatePacket::encode, ProgressUpdatePacket::new, FieldGuideMod::handleProgressUpdate, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
         CHANNEL.registerMessage(id++, ExportContentPacket.class, ExportContentPacket::encode, ExportContentPacket::new, FieldGuideMod::handleExportContent, Optional.of(NetworkDirection.PLAY_TO_CLIENT));

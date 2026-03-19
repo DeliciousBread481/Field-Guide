@@ -4,9 +4,11 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
-import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
+import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.api.VariantDef;
+import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -29,10 +31,6 @@ public class FieldGuideToast implements Toast {
     private Entity cachedEntity = null;
     private boolean entityInitialized = false;
 
-    public FieldGuideToast(Object entry) {
-        this(entry, null);
-    }
-
     public FieldGuideToast(Object entry, String variantId) {
         this.entry = entry;
         this.variantId = variantId;
@@ -45,7 +43,7 @@ public class FieldGuideToast implements Toast {
         Component name = ClientFieldGuideManager.getEntryName(entry);
         Component discovered = Component.translatable("fieldguide.toast.discovered");
 
-        guiGraphics.drawString(toastComponent.getMinecraft().font, name, 30, 7, ModConfig.get().getTextTitleColorInt(), false);
+        guiGraphics.drawString(toastComponent.getMinecraft().font, name, 30, 7, ClientConfig.get().getTextTitleColorInt(), false);
         guiGraphics.drawString(toastComponent.getMinecraft().font, discovered, 30, 17, 0xAF8C5C, false);
 
         int iconX = 16;
@@ -58,8 +56,8 @@ public class FieldGuideToast implements Toast {
                 comp.id().getPath().startsWith("cobblemon/");
 
         if (!entityInitialized) {
-            if (isCobblemon) {
-                cachedEntity = com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat.getDummyPokemon(((CompositeFieldGuideEntry) this.entry).id(), Minecraft.getInstance().level);
+            if (Services.PLATFORM.isModLoaded("cobblemon") && isCobblemon) {
+                cachedEntity = FieldGuideCobblemonCompat.getDummyPokemon(((CompositeFieldGuideEntry) this.entry).id(), Minecraft.getInstance().level);
             } else if (coreEntry instanceof EntityType<?> type) {
                 cachedEntity = type.create(Minecraft.getInstance().level);
 

@@ -4,8 +4,10 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.*;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
+import com.evandev.fieldguide.network.SyncConfigPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.EntryResolver;
@@ -147,6 +149,8 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     }
 
     public void syncToPlayer(ServerPlayer player) {
+        Services.NETWORK.sendToPlayer(new SyncConfigPacket(ServerConfig.get()), player);
+
         List<Category> flattenedCategories = new ArrayList<>();
         int maxEntriesPerChunk = 100;
 

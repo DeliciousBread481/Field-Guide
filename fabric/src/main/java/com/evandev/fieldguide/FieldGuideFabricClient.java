@@ -3,9 +3,11 @@ package com.evandev.fieldguide;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.ModRenderTypes;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
+import com.evandev.fieldguide.network.SyncConfigPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
 import com.evandev.fieldguide.platform.FabricNetworkHelper;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -82,6 +84,15 @@ public class FieldGuideFabricClient implements ClientModInitializer {
             ProgressUpdatePacket packet = new ProgressUpdatePacket(buf);
             client.execute(() -> ClientFieldGuideManager.getInstance().applyServerUpdate(packet));
         });
+
+        ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.SYNC_CONFIG_CHANNEL, (client, handler, buf, responseSender) -> {
+            SyncConfigPacket packet = new SyncConfigPacket(buf);
+            client.execute(() -> {
+                ServerConfig synced = ServerConfig.fromJson(packet.configJson());
+                ServerConfig.setSyncedConfig(synced);
+            });
+        });
+
 
         CoreShaderRegistrationCallback.EVENT.register(context -> {
             try {
