@@ -40,6 +40,12 @@ public class ClientTextManager {
 
         Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
 
+        // Entity Descriptions
+        if (coreEntry instanceof EntityType) {
+            String entityKey = "entity." + id.getNamespace() + "." + id.getPath() + ".description";
+            if (I18n.exists(entityKey)) return I18n.get(entityKey);
+        }
+
         // Quark JEI Hint
         String quarkJeiKey = "quark.jei.hint." + id.getPath();
         if (id.getNamespace().equals("quark") && I18n.exists(quarkJeiKey)) {

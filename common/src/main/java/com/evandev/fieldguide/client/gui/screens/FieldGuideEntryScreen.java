@@ -25,6 +25,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ImageButton;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.nbt.CompoundTag;
@@ -172,6 +173,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                     this.variantOverviewWidget.toggleVisibility();
                 }
             });
+            this.overviewToggleButton.setTooltip(Tooltip.create(Component.translatable("gui.fieldguide.variant_selector.tooltip")));
             this.addRenderableWidget(this.overviewToggleButton);
 
             int widgetWidth = 142;
@@ -270,6 +272,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         }
         refreshExposureWidgets();
         lastClickTime = System.currentTimeMillis();
+        this.updateWidgetVisibility();
     }
 
     private void setVariantIndex(int index) {

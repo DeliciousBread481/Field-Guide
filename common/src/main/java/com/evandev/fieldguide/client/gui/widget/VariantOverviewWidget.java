@@ -201,9 +201,10 @@ public class VariantOverviewWidget extends AbstractWidget {
             if (mouseX >= itemX - 16 && mouseX <= itemX + 16 && mouseY >= itemY - 16 && mouseY <= itemY + 16) {
                 VariantDef variant = variants.get(i);
                 if (ClientFieldGuideManager.isVariantUnlocked(entry, variant.id())) {
-                    this.onVariantSelected.accept(i);
-                    Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                     this.visible = false;
+                    this.onVariantSelected.accept(i);
+                    if (this.onToggle != null) this.onToggle.run();
+                    Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 }
                 return true;
             }

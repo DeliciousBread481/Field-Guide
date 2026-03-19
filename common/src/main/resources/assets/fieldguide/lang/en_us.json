@@ -187,6 +187,7 @@
   "fieldguide.time.midnight": "Night",
 
   "fieldguide.tooltip.variants": "Variants: %s/%s",
+  "gui.fieldguide.variant_selector.tooltip": "Select Variant",
 
   "tag.item.fieldguide.spyglasses": "Spyglasses",
 
