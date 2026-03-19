@@ -237,7 +237,8 @@ public class FieldGuideVariantManager {
         for (Method m : methods) {
             String name = m.getName();
             if (m.getParameterCount() == 0 && (name.startsWith("get") || name.startsWith("is")) &&
-                    (name.contains("Variant") || name.contains("Type") || name.contains("Color"))) {
+                    (name.contains("Variant") || name.contains("Type") || name.contains("Color")) &&
+                    !name.equals("getCollarColor")) {
 
                 String suffix = name.startsWith("get") ? name.substring(3) : name.substring(2);
                 try {
