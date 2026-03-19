@@ -176,6 +176,9 @@
   "option.fieldguide.exposure.show_photographs_in_grid": "Show Photos in Category Grid",
   "option.fieldguide.exposure.show_photographs_in_grid.tooltip": "If enabled, the category grid will display a photograph instead of the standard model.",
 
+  "option.fieldguide.enable_field_guide_item": "Enable Field Guide Item (Requires Restart)",
+  "option.fieldguide.enable_field_guide_item.tooltip": "If enabled, a craftable Field Guide item will be available in the game.",
+
   "fieldguide.alignment.passive": "Passive",
   "fieldguide.alignment.neutral": "Neutral",
   "fieldguide.alignment.hostile": "Hostile",
@@ -190,6 +193,9 @@
   "gui.fieldguide.variant_selector.tooltip": "Select Variant",
 
   "tag.item.fieldguide.spyglasses": "Spyglasses",
+
+  "item.fieldguide.field_guide": "Field Guide",
+  "item.fieldguide.field_guide.tooltip": "Right-click to open your Field Guide",
 
   "key.fieldguide.open": "Open Field Guide",
   "key.fieldguide.scan": "Start Scanning",
@@ -263,7 +269,7 @@
 
   "advancements.fieldguide.root.title": "Field Guide",
   "advancements.fieldguide.root.description": "Obtain a Spyglass to begin your journey",
-  "advancements.fieldguide.first_discovery.title": "Now You See Me",
+  "advancements.fieldguide.first_discovery.title": "Aha!",
   "advancements.fieldguide.first_discovery.description": "Make your first discovery using a Spyglass",
   "advancements.fieldguide.mushroom_collector.title": "Mushroom for Improvement",
   "advancements.fieldguide.mushroom_collector.description": "Discover all four types of huge mushrooms",
@@ -279,4 +285,4 @@
   "advancements.fieldguide.enderman_scan.description": "Scan an Enderman. Try not to blink",
 
   "fieldguide.journal.default": ""
-  }
+}

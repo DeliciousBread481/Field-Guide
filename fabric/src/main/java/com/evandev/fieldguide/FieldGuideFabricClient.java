@@ -45,7 +45,7 @@ public class FieldGuideFabricClient implements ClientModInitializer {
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             ClientFieldGuideManager.getInstance().onClientTick(client);
-            FieldGuideClient.onClientTick(client);
+            FieldGuideClient.onClientTick();
         });
 
         ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.SYNC_LOOT_CHANNEL, (client, handler, buf, responseSender) -> {

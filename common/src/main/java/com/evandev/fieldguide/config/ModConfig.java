@@ -32,6 +32,7 @@ public class ModConfig {
     public boolean keepSilhouetteWhenUnlocked = false;
     public boolean unlockAllVariants = false;
     public boolean showToasts = true;
+    public boolean enableFieldGuideItem = false;
 
     public boolean showInventoryButton = true;
     public int inventoryButtonXOffset = 126;

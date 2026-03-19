@@ -101,7 +101,7 @@ public class FieldGuideForgeClient {
             if (event.phase == TickEvent.Phase.END) {
                 Minecraft client = Minecraft.getInstance();
                 ClientFieldGuideManager.getInstance().onClientTick(client);
-                FieldGuideClient.onClientTick(client);
+                FieldGuideClient.onClientTick();
             }
         }
 

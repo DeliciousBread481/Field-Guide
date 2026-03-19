@@ -5,6 +5,7 @@ import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.compat.exposure.ExposureForgeEventHandler;
 import com.evandev.fieldguide.network.*;
 import com.evandev.fieldguide.platform.ForgeNetworkHelper;
+import com.evandev.fieldguide.platform.ForgeRegistryHelper;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.command.FieldGuideCommand;
@@ -53,6 +54,7 @@ public class FieldGuideMod {
 
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(this::commonSetup);
+        ForgeRegistryHelper.init(modEventBus);
     }
 
     public static void handleProgressUpdate(ProgressUpdatePacket packet, Supplier<NetworkEvent.Context> contextSupplier) {

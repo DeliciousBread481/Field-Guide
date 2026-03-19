@@ -6,6 +6,7 @@
 - Added Environmental compatibility (@proxillus).
 - Added descriptions for trees (@proxillus).
 - Added KubeJS integration.
+- Added an option to enable a physical Field Guide item.
 
 ### Changed
 

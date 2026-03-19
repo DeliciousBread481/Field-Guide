@@ -1,12 +1,12 @@
 package com.evandev.fieldguide.client;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.client.gui.screens.BookScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideCategoryScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.client.scanning.FieldGuideScanner;
 import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.mixin.accessor.MobAccessor;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -50,38 +50,43 @@ public class FieldGuideClient {
         }
     }
 
-    public static void onClientTick(Minecraft minecraft) {
+    public static void onClientTick() {
         if (OPEN_GUIDE_KEY.consumeClick()) {
-            if (minecraft.screen == null && minecraft.player != null) {
-                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F, 1.0F));
-                ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
-                long lastTime = manager.getLastUnlockTime();
-                Object lastEntry = manager.getLastUnlockedEntry();
-                String lastVariant = manager.getLastUnlockedVariant();
+            openGuide();
+        }
+    }
 
-                boolean isRecent = (System.currentTimeMillis() - lastTime) < AUTO_OPEN_THRESHOLD_MS;
-                if (isRecent && lastEntry != null) {
-                    Category targetCategory = manager.getCategoryForEntry(lastEntry);
-                    if (targetCategory != null) {
-                        int page = FieldGuideCategoryScreen.getPageForEntry(targetCategory, lastEntry);
-                        FieldGuideCategoryScreen mainScreen = new FieldGuideCategoryScreen(targetCategory, page);
-                        FieldGuideEntryScreen entryScreen = new FieldGuideEntryScreen(mainScreen, lastEntry);
+    public static void openGuide() {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.screen == null && minecraft.player != null) {
+            minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F, 1.0F));
+            ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
+            long lastTime = manager.getLastUnlockTime();
+            Object lastEntry = manager.getLastUnlockedEntry();
+            String lastVariant = manager.getLastUnlockedVariant();
 
-                        if (lastVariant != null) {
-                            entryScreen.setInitialVariant(lastVariant);
-                        }
+            boolean isRecent = (System.currentTimeMillis() - lastTime) < AUTO_OPEN_THRESHOLD_MS;
+            if (isRecent && lastEntry != null) {
+                Category targetCategory = manager.getCategoryForEntry(lastEntry);
+                if (targetCategory != null) {
+                    int page = FieldGuideCategoryScreen.getPageForEntry(targetCategory, lastEntry);
+                    FieldGuideCategoryScreen mainScreen = new FieldGuideCategoryScreen(targetCategory, page);
+                    FieldGuideEntryScreen entryScreen = new FieldGuideEntryScreen(mainScreen, lastEntry);
 
-                        minecraft.setScreen(entryScreen);
-                        return;
+                    if (lastVariant != null) {
+                        entryScreen.setInitialVariant(lastVariant);
                     }
-                }
 
-                String defaultMode = ModConfig.get().defaultScreen;
-                if ("last_opened_screen".equals(defaultMode) && BookScreen.lastOpenedScreen != null) {
-                    minecraft.setScreen(BookScreen.lastOpenedScreen);
-                } else {
-                    minecraft.setScreen(new FieldGuideCategoryScreen());
+                    minecraft.setScreen(entryScreen);
+                    return;
                 }
+            }
+
+            String defaultMode = ModConfig.get().defaultScreen;
+            if ("last_opened_screen".equals(defaultMode) && BookScreen.lastOpenedScreen != null) {
+                minecraft.setScreen(BookScreen.lastOpenedScreen);
+            } else {
+                minecraft.setScreen(new FieldGuideCategoryScreen());
             }
         }
     }
