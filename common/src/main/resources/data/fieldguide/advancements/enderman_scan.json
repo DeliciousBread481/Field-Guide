@@ -19,7 +19,7 @@
     "scan": {
       "trigger": "fieldguide:entry_unlocked",
       "conditions": {
-        "entry": "minecraft:enderman"
+        "entry": "entity:minecraft/enderman"
       }
     }
   }

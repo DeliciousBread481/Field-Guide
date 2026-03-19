@@ -19,25 +19,25 @@
     "huge_brown_mushroom": {
       "trigger": "fieldguide:entry_unlocked",
       "conditions": {
-        "entry": "fieldguide:huge_brown_mushroom"
+        "entry": "block:fieldguide/huge_brown_mushroom"
       }
     },
     "huge_red_mushroom": {
       "trigger": "fieldguide:entry_unlocked",
       "conditions": {
-        "entry": "fieldguide:huge_red_mushroom"
+        "entry": "block:fieldguide/huge_red_mushroom"
       }
     },
     "huge_crimson_fungus": {
       "trigger": "fieldguide:entry_unlocked",
       "conditions": {
-        "entry": "fieldguide:huge_crimson_fungus"
+        "entry": "block:fieldguide/huge_crimson_fungus"
       }
     },
     "huge_warped_fungus": {
       "trigger": "fieldguide:entry_unlocked",
       "conditions": {
-        "entry": "fieldguide:huge_warped_fungus"
+        "entry": "block:fieldguide/huge_warped_fungus"
       }
     }
   },

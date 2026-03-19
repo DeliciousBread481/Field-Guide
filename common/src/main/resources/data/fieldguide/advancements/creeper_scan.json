@@ -19,7 +19,7 @@
     "scan": {
       "trigger": "fieldguide:entry_unlocked",
       "conditions": {
-        "entry": "minecraft:creeper"
+        "entry": "entity:minecraft/creeper"
       }
     }
   }
