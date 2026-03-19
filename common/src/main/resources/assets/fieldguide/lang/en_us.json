@@ -179,6 +179,9 @@
   "option.fieldguide.enable_field_guide_item": "Enable Field Guide Item (Requires Restart)",
   "option.fieldguide.enable_field_guide_item.tooltip": "If enabled, a craftable Field Guide item will be available in the game.",
 
+  "option.fieldguide.enable_tearing_out_pages": "Enable Tearing Out Pages",
+  "option.fieldguide.enable_tearing_out_pages.tooltip": "If enabled, players can rip out pages from their Field Guide to share with others.",
+
   "fieldguide.alignment.passive": "Passive",
   "fieldguide.alignment.neutral": "Neutral",
   "fieldguide.alignment.hostile": "Hostile",
@@ -196,6 +199,13 @@
 
   "item.fieldguide.field_guide": "Field Guide",
   "item.fieldguide.field_guide.tooltip": "Right-click to open your Field Guide",
+
+  "item.fieldguide.page": "Field Guide Page",
+  "item.fieldguide.page.entry": "Entry: %s",
+  "item.fieldguide.page.author": "Author: %s",
+  "item.fieldguide.page.tooltip": "Right-click to restore this entry to your Field Guide",
+
+  "gui.fieldguide.rip_out.tooltip": "Rip Out Page",
 
   "key.fieldguide.open": "Open Field Guide",
   "key.fieldguide.scan": "Start Scanning",

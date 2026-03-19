@@ -88,19 +88,102 @@ public class PlayerFieldGuideProgress {
     }
 
     public boolean revoke(String entryId) {
-        if (unlockedEntries.remove(entryId)) {
-            seenEntries.remove(entryId);
-            discoveryTimes.remove(entryId);
-            discoveryGameTimes.remove(entryId);
-            entryPhotographs.remove(entryId);
-            customNames.remove(entryId);
-            customDescriptions.remove(entryId);
-            pendingRevokes.add(entryId);
-            pendingUnlocks.remove(entryId);
-            dirty = true;
-            return true;
+        boolean removed = false;
+        List<String> toRemove = new ArrayList<>();
+        for (String id : unlockedEntries) {
+            if (id.equals(entryId) || id.startsWith(entryId + "#")) {
+                toRemove.add(id);
+            }
         }
-        return false;
+
+        for (String id : toRemove) {
+            if (unlockedEntries.remove(id)) {
+                seenEntries.remove(id);
+                discoveryTimes.remove(id);
+                discoveryGameTimes.remove(id);
+                entryPhotographs.remove(id);
+                customNames.remove(id);
+                customDescriptions.remove(id);
+                pendingRevokes.add(id);
+                pendingUnlocks.remove(id);
+                removed = true;
+            }
+        }
+
+        if (removed) {
+            dirty = true;
+        }
+        return removed;
+    }
+
+    public List<String> getUnlockedVariants(String entryId) {
+        List<String> variants = new ArrayList<>();
+        for (String id : unlockedEntries) {
+            if (id.startsWith(entryId + "#")) {
+                variants.add(id.substring(entryId.length() + 1));
+            }
+        }
+        return variants;
+    }
+
+    public String getCustomName(String entryId) {
+        return customNames.get(entryId);
+    }
+
+    public String getCustomDescription(String entryId) {
+        return customDescriptions.get(entryId);
+    }
+
+    public String getEntryPhotograph(String entryId) {
+        return entryPhotographs.get(entryId);
+    }
+
+    public long getDiscoveryTime(String entryId) {
+        return discoveryTimes.getOrDefault(entryId, 0L);
+    }
+
+    public long getDiscoveryGameTime(String entryId) {
+        return discoveryGameTimes.getOrDefault(entryId, 0L);
+    }
+
+    public void setCustomName(String entryId, String name) {
+        if (name == null || name.isEmpty()) {
+            customNames.remove(entryId);
+        } else {
+            customNames.put(entryId, name);
+        }
+        pendingEntryResync.add(entryId);
+        dirty = true;
+    }
+
+    public void setCustomDescription(String entryId, String description) {
+        if (description == null || description.isEmpty()) {
+            customDescriptions.remove(entryId);
+        } else {
+            customDescriptions.put(entryId, description);
+        }
+        pendingEntryResync.add(entryId);
+        dirty = true;
+    }
+
+    public void setEntryPhotograph(String entryId, String photograph) {
+        if (photograph == null || photograph.isEmpty()) {
+            entryPhotographs.remove(entryId);
+        } else {
+            entryPhotographs.put(entryId, photograph);
+        }
+        pendingEntryResync.add(entryId);
+        dirty = true;
+    }
+
+    public void setDiscoveryTime(String entryId, long time) {
+        discoveryTimes.put(entryId, time);
+        dirty = true;
+    }
+
+    public void setDiscoveryGameTime(String entryId, long gameTime) {
+        discoveryGameTimes.put(entryId, gameTime);
+        dirty = true;
     }
 
     public boolean revoke(ResourceLocation entryId) {
@@ -148,34 +231,6 @@ public class PlayerFieldGuideProgress {
 
     public Set<String> getUnlockedEntries() {
         return Collections.unmodifiableSet(unlockedEntries);
-    }
-
-    public void setCustomName(String entryId, String name) {
-        if (name == null || name.isEmpty()) {
-            customNames.remove(entryId);
-        } else {
-            customNames.put(entryId, name);
-        }
-        dirty = true;
-    }
-
-    public void setCustomDescription(String entryId, String desc) {
-        if (desc == null || desc.isEmpty()) {
-            customDescriptions.remove(entryId);
-        } else {
-            customDescriptions.put(entryId, desc);
-        }
-        dirty = true;
-    }
-
-    public void setPhotograph(String entryId, String nbtString) {
-        if (nbtString == null || nbtString.isEmpty()) {
-            entryPhotographs.remove(entryId);
-        } else {
-            entryPhotographs.put(entryId, nbtString);
-        }
-        dirty = true;
-        pendingEntryResync.add(entryId);
     }
 
     public void setJournalTitle(String title) {

@@ -43,6 +43,12 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> config.enableFieldGuideItem = newValue)
                 .build());
 
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.enable_tearing_out_pages"), config.enableTearingOutPages)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.fieldguide.enable_tearing_out_pages.tooltip"))
+                .setSaveConsumer(newValue -> config.enableTearingOutPages = newValue)
+                .build());
+
         general.addEntry(entryBuilder.startStrField(Component.translatable("option.fieldguide.default_screen"), config.defaultScreen)
                 .setDefaultValue("last_opened_screen")
                 .setTooltip(Component.translatable("option.fieldguide.default_screen.tooltip"))

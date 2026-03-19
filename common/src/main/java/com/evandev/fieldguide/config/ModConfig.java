@@ -33,6 +33,7 @@ public class ModConfig {
     public boolean unlockAllVariants = false;
     public boolean showToasts = true;
     public boolean enableFieldGuideItem = false;
+    public boolean enableTearingOutPages = true;
 
     public boolean showInventoryButton = true;
     public int inventoryButtonXOffset = 126;

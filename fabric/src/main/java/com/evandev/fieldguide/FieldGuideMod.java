@@ -4,6 +4,7 @@ import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.compat.exposure.ExposureFabricEventHandler;
 import com.evandev.fieldguide.api.VariantDef;
 import com.evandev.fieldguide.network.MarkSeenPacket;
+import com.evandev.fieldguide.network.RipOutPacket;
 import com.evandev.fieldguide.network.ScanUnlockPacket;
 import com.evandev.fieldguide.network.UpdateEntryDataPacket;
 import com.evandev.fieldguide.network.UpdateJournalPacket;
@@ -109,6 +110,11 @@ public class FieldGuideMod implements ModInitializer {
 
         ServerPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.UPDATE_JOURNAL_CHANNEL, (server, player, handler, buf, responseSender) -> {
             UpdateJournalPacket packet = new UpdateJournalPacket(buf);
+            server.execute(() -> packet.handleServer(player));
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.RIP_OUT_CHANNEL, (server, player, handler, buf, responseSender) -> {
+            RipOutPacket packet = new RipOutPacket(buf);
             server.execute(() -> packet.handleServer(player));
         });
 

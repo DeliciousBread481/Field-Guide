@@ -17,6 +17,7 @@ import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
 import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.network.RipOutPacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -166,6 +167,16 @@ public class FieldGuideEntryScreen extends BookScreen {
         setupDropWidget(unlocked);
         setupNavigationButtons();
         refreshExposureWidgets();
+
+        if (unlocked && ModConfig.get().enableTearingOutPages) {
+            this.addRenderableWidget(new PageTurnButton(this.bounds.right() - 13, this.bounds.top() + 54, 24, 24, 24, 144, 24, Constants.WIDGETS_TEXTURE, (btn) -> {
+                ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+                if (id != null) {
+                    Services.NETWORK.sendToServer(new RipOutPacket(id));
+                    this.onClose();
+                }
+            })).setTooltip(Tooltip.create(Component.translatable("gui.fieldguide.rip_out.tooltip")));
+        }
 
         if (this.entityVariants.size() > 1 && this.renderedEntity instanceof LivingEntity living) {
             this.overviewToggleButton = new ImageButton(this.leftPageBounds.left() + 10, this.leftPageBounds.top() + 10, 16, 16, 0, 0, 16, Constants.OVERVIEW_ICON, 16, 32, (btn) -> {

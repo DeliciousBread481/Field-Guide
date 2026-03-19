@@ -148,7 +148,7 @@ public class UpdateEntryDataPacket {
 
             CompoundTag tag = new CompoundTag();
             stack.save(tag);
-            progress.setPhotograph(entryId, tag.toString());
+            progress.setEntryPhotograph(entryId, tag.toString());
         }
     }
 
@@ -159,7 +159,7 @@ public class UpdateEntryDataPacket {
 
         @Override
         public void apply(String entryId, PlayerFieldGuideProgress progress, ServerPlayer player) {
-            progress.setPhotograph(entryId, null);
+            progress.setEntryPhotograph(entryId, null);
         }
     }
 }
