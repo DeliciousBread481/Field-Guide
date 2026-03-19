@@ -12,6 +12,7 @@ import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.gui.widget.*;
+import com.evandev.fieldguide.client.manager.ClientCategoryManager;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
@@ -291,24 +292,28 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private void loadSpawnBiomes() {
-        ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
-        EntryVisual visual = entryId != null ? ClientFieldGuideManager.getInstance().getEntryVisual(entryId) : null;
+        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
+        if (!(coreEntry instanceof EntityType<?>) && !(coreEntry instanceof Block)) return;
+
+        EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(entry);
 
         if (visual != null && visual.spawnBiomes != null) {
             spawnBiomes.addAll(visual.spawnBiomes);
         }
 
+        ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
         if (entryId != null) {
-            for (String removal : ClientFieldGuideManager.getInstance().getBiomeRemovals()) {
+            ClientCategoryManager categoryManager = ClientCategoryManager.getInstance();
+            for (String removal : categoryManager.getBiomeRemovals()) {
                 String[] parts = removal.split("\\|");
-                if (parts.length == 2 && parts[0].equals(entryId.toString())) {
+                if (parts.length == 2 && categoryManager.isBiomeMatch(entry, new ResourceLocation(parts[1]))) {
                     spawnBiomes.remove(new ResourceLocation(parts[1]));
                 }
             }
 
-            for (String addition : ClientFieldGuideManager.getInstance().getBiomeAdditions()) {
+            for (String addition : categoryManager.getBiomeAdditions()) {
                 String[] parts = addition.split("\\|");
-                if (parts.length == 2 && parts[0].equals(entryId.toString())) {
+                if (parts.length == 2 && categoryManager.isBiomeMatch(entry, new ResourceLocation(parts[1]))) {
                     ResourceLocation biomeId = new ResourceLocation(parts[1]);
 
                     if (Services.PLATFORM.isModLoaded("immersiveoverlays")) {
@@ -357,6 +362,27 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         if (unlocked && drops.isEmpty() && isCobblemon(entry)) {
             drops = FieldGuideCobblemonCompat.getCobblemonDrops(entry);
+        }
+
+        if (unlocked) {
+            List<ItemStack> additionalDrops = new ArrayList<>();
+            ClientCategoryManager categoryManager = ClientCategoryManager.getInstance();
+            for (String addition : categoryManager.getLootAdditions()) {
+                String[] parts = addition.split("\\|", 2);
+                if (parts.length == 2 && categoryManager.isLootMatch(entry, new ResourceLocation(parts[1]))) {
+                    ResourceLocation itemId = new ResourceLocation(parts[1]);
+                    ItemStack stack = new ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(itemId));
+                    if (!stack.isEmpty()) {
+                        stack.getOrCreateTag().putFloat("FieldGuideDropChance", 100.0f);
+                        additionalDrops.add(stack);
+                    }
+                }
+            }
+            if (!additionalDrops.isEmpty()) {
+                List<ItemStack> combined = new ArrayList<>(drops);
+                combined.addAll(additionalDrops);
+                drops = combined;
+            }
         }
 
         if (!drops.isEmpty()) {

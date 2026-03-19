@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.client;
 
+import com.evandev.fieldguide.api.AutoPopulateRegistry;
 import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.api.DatapackVariant;
 import com.evandev.fieldguide.client.data.EntryVisual;
@@ -171,8 +172,8 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         }
     }
 
-    public EntryVisual getEntryVisual(ResourceLocation entryId) {
-        return ClientVisualManager.getInstance().getEntryVisual(entryId);
+    public EntryVisual getEntryVisual(Object entry) {
+        return ClientVisualManager.getInstance().getEntryVisual(AutoPopulateRegistry.getEntryKey(entry));
     }
 
     public ResourceLocation getRedirect(ResourceLocation source) {

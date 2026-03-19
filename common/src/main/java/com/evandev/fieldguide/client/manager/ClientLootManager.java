@@ -1,7 +1,7 @@
 package com.evandev.fieldguide.client.manager;
 
+import com.evandev.fieldguide.api.AutoPopulateRegistry;
 import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -28,9 +28,11 @@ public class ClientLootManager {
         for (Map.Entry<ResourceLocation, List<ItemStack>> entry : lootCache.entrySet()) {
             ResourceLocation id = entry.getKey();
             List<ItemStack> drops = entry.getValue();
-            BuiltInRegistries.ENTITY_TYPE.getOptional(id).ifPresent(type -> dropCache.put(type, drops));
-            BuiltInRegistries.BLOCK.getOptional(id).ifPresent(block -> dropCache.put(block, drops));
-            BuiltInRegistries.ITEM.getOptional(id).ifPresent(item -> dropCache.put(item, drops));
+
+            String namespace = id.getNamespace();
+            if (namespace.equals("item") || namespace.equals("entity") || namespace.equals("block")) {
+                dropCache.put(id, drops);
+            }
         }
     }
 
@@ -41,10 +43,12 @@ public class ClientLootManager {
             if (composite.displayEntry() != null) uniqueComponents.add(composite.displayEntry());
             if (composite.components() != null) uniqueComponents.addAll(composite.components());
             for (Object comp : uniqueComponents) {
-                rawDrops.addAll(dropCache.getOrDefault(comp, Collections.emptyList()));
+                ResourceLocation id = AutoPopulateRegistry.getEntryId(comp, true);
+                rawDrops.addAll(dropCache.getOrDefault(id, Collections.emptyList()));
             }
         } else {
-            rawDrops.addAll(dropCache.getOrDefault(entry, Collections.emptyList()));
+            ResourceLocation id = AutoPopulateRegistry.getEntryId(entry, true);
+            rawDrops.addAll(dropCache.getOrDefault(id, Collections.emptyList()));
         }
 
         List<ItemStack> distinct = new ArrayList<>();

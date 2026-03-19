@@ -1,7 +1,7 @@
 package com.evandev.fieldguide.client.gui.util;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.api.AutoPopulateRegistry;
 import com.evandev.fieldguide.platform.Services;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
@@ -85,16 +85,16 @@ public class IconCacheManager {
     }
 
     public static Optional<ResourceLocation> getOrGenerateIcon(Object baseEntry, Object cacheKey, boolean isPage, Runnable renderAction) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(baseEntry);
-        if (id == null) return Optional.empty();
+        String entryKey = AutoPopulateRegistry.getEntryKey(baseEntry);
+        if (entryKey.isEmpty()) return Optional.empty();
 
         String variantSuffix = "";
         if (cacheKey instanceof String str && str.contains("#")) {
             variantSuffix = "_" + str.substring(str.indexOf('#') + 1).replace(":", "_").toLowerCase(Locale.ROOT);
         }
 
-        String fileName = (id.getPath() + variantSuffix + (isPage ? "_page" : "_grid") + ".png").toLowerCase(Locale.ROOT);
-        String key = (id.toString().replace(":", "_").replace("/", "_") + variantSuffix + (isPage ? "_page" : "_grid")).toLowerCase(Locale.ROOT);
+        String fileName = (entryKey.replace(":", "_").replace("/", "_") + variantSuffix + (isPage ? "_page" : "_grid") + ".png").toLowerCase(Locale.ROOT);
+        String key = (entryKey.replace(":", "_").replace("/", "_") + variantSuffix + (isPage ? "_page" : "_grid")).toLowerCase(Locale.ROOT);
 
         if (TEXTURE_CACHE.containsKey(key)) {
             return Optional.of(TEXTURE_CACHE.get(key));
@@ -106,6 +106,7 @@ public class IconCacheManager {
 
         CompletableFuture.supplyAsync(() -> {
             if (!Files.exists(CACHE_DIR)) init();
+            ResourceLocation id = AutoPopulateRegistry.getEntryId(baseEntry);
             Path cachedFilePath = CACHE_DIR.resolve(id.getNamespace()).resolve("textures/fieldguide/entries").resolve(fileName);
             File cachedFile = cachedFilePath.toFile();
 
@@ -125,6 +126,7 @@ public class IconCacheManager {
                 TEXTURE_CACHE.put(key, texLoc);
                 PENDING_GENERATIONS.remove(key);
             } else {
+                ResourceLocation id = AutoPopulateRegistry.getEntryId(baseEntry);
                 MAIN_THREAD_TASKS.addFirst(() -> generateAndSaveIcon(id.getNamespace(), fileName, key, renderAction));
             }
         }, Minecraft.getInstance());

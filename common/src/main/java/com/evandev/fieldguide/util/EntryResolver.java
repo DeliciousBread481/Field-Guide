@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.util;
 
+import com.evandev.fieldguide.api.AutoPopulateRegistry;
 import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.api.CompositeDefinition;
 import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
@@ -118,7 +119,7 @@ public class EntryResolver {
     }
 
     public static ResourceLocation getEntryId(Object obj) {
-        return EntryResolutionHelper.getEntryId(obj);
+        return AutoPopulateRegistry.getEntryId(obj, false);
     }
 
     public static List<Object> resolveCategoryEntries(Category category, List<CompositeDefinition> globalComposites, Map<ResourceLocation, ResourceLocation> redirects) {

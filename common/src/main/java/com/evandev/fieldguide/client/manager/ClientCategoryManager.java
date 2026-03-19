@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.client.manager;
 
+import com.evandev.fieldguide.api.AutoPopulateRegistry;
 import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.api.CategoryEntry;
 import com.evandev.fieldguide.client.progress.ProgressManager;
@@ -149,5 +150,31 @@ public class ClientCategoryManager {
 
     public List<String> getLootRemovals() {
         return lootRemovals;
+    }
+
+    public boolean isBiomeMatch(Object entry, ResourceLocation biomeId) {
+        String key = AutoPopulateRegistry.getEntryKey(entry);
+        String baseId = AutoPopulateRegistry.getEntryId(entry, false).toString();
+
+        for (String addition : biomeAdditions) {
+            String[] parts = addition.split("\\|", 2);
+            if (parts.length == 2 && (parts[0].equals(key) || parts[0].equals(baseId)) && parts[1].equals(biomeId.toString())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isLootMatch(Object entry, ResourceLocation itemId) {
+        String key = AutoPopulateRegistry.getEntryKey(entry);
+        String baseId = AutoPopulateRegistry.getEntryId(entry, false).toString();
+
+        for (String addition : lootAdditions) {
+            String[] parts = addition.split("\\|", 2);
+            if (parts.length == 2 && (parts[0].equals(key) || parts[0].equals(baseId)) && parts[1].equals(itemId.toString())) {
+                return true;
+            }
+        }
+        return false;
     }
 }

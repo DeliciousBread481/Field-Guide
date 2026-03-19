@@ -737,8 +737,9 @@ public class FieldGuideCategoryScreen extends BookScreen {
             List<Component> tooltip = new ArrayList<>();
             tooltip.add(name);
 
+            Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
             Entity dummy = getCachedEntity(entry);
-            if (dummy != null) {
+            if (dummy != null && (coreEntry instanceof EntityType<?>)) {
                 List<VariantDef> variants = FieldGuideVariantManager.getVariants(dummy);
                 if (variants.size() > 1) {
                     int unlockedCount = ModConfig.get().unlockAllVariants ? variants.size() : 0;

@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.client.gui.util;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.api.AutoPopulateRegistry;
 import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.api.VariantDef;
 import com.evandev.fieldguide.api.VariantProvider;
@@ -60,13 +61,14 @@ public class EntryRenderHelper {
     }
 
     private static Optional<ResourceLocation> getResourcePackOverride(Object baseEntry, Object cacheKey, boolean isPage) {
-        String key = cacheKey.toString() + (isPage ? "_page" : "_grid");
+        String entryKey = AutoPopulateRegistry.getEntryKey(baseEntry);
+        String key = entryKey + (cacheKey instanceof String str && str.contains("#") ? str.substring(str.indexOf("#")) : "") + (isPage ? "_page" : "_grid");
 
         if (OVERRIDE_CACHE.containsKey(key)) {
             return OVERRIDE_CACHE.get(key);
         }
 
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(baseEntry);
+        ResourceLocation id = AutoPopulateRegistry.getEntryId(baseEntry);
         if (id != null) {
             if (cacheKey instanceof String str && str.contains("#")) {
                 String variantId = str.substring(str.indexOf('#') + 1).replace(":", "_").toLowerCase(Locale.ROOT);
@@ -117,7 +119,7 @@ public class EntryRenderHelper {
             }
         }
 
-        ResourceLocation baseId = ClientFieldGuideManager.getEntryId(entity.getType());
+        ResourceLocation baseId = AutoPopulateRegistry.getEntryId(entity.getType());
         if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
             baseId = FieldGuideCobblemonCompat.getPokemonEntryId(entity);
         }
@@ -128,7 +130,7 @@ public class EntryRenderHelper {
         final VariantDef finalVariant = currentVariant;
         final ResourceLocation finalBaseId = baseId;
 
-        renderWithCache(baseId, cacheKey, guiGraphics, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, () -> {
+        renderWithCache(entity.getType(), cacheKey, guiGraphics, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, () -> {
 
             VariantDef tempOriginal = null;
             if (finalProvider != null && entity instanceof Mob mob) {
@@ -222,7 +224,7 @@ public class EntryRenderHelper {
 
         renderWithCache(block, block, guiGraphics, x, y, scaledSize, scaledSize, unlocked, isPage, bounceScale, () -> {
             setupFieldGuideBlockLighting();
-            ResourceLocation id = ClientFieldGuideManager.getEntryId(block);
+            ResourceLocation id = AutoPopulateRegistry.getEntryId(block);
             EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(id);
 
             float clampedScale = 100f * getVisualScale(visual, isPage);
@@ -291,7 +293,7 @@ public class EntryRenderHelper {
             ItemStack stack = new ItemStack(item);
             Lighting.setupForFlatItems();
 
-            ResourceLocation id = ClientFieldGuideManager.getEntryId(item);
+            ResourceLocation id = AutoPopulateRegistry.getEntryId(item);
             EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(id);
 
             float clampedScale = 100f * getVisualScale(visual, isPage);

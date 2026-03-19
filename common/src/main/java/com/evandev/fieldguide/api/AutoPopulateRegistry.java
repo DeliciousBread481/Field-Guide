@@ -127,6 +127,26 @@ public class AutoPopulateRegistry {
         return null;
     }
 
+    public static ResourceLocation getEntryId(Object obj, boolean prefixed) {
+        if (!prefixed) return getEntryId(obj);
+        ResourceLocation id = getEntryId(obj);
+        if (id == null) return null;
+
+        String prefix = "unknown";
+        Object coreEntry = obj instanceof CompositeFieldGuideEntry comp ? comp.displayEntry() : obj;
+
+        if (coreEntry instanceof Block) prefix = "block";
+        else if (coreEntry instanceof Item) prefix = "item";
+        else if (coreEntry instanceof EntityType<?>) prefix = "entity";
+
+        return new ResourceLocation(prefix, id.toString().replace(":", "/"));
+    }
+
+    public static String getEntryKey(Object obj) {
+        ResourceLocation id = getEntryId(obj, true);
+        return id != null ? id.toString() : "";
+    }
+
     public static List<Object> getAutoTrees(Predicate<ResourceLocation> namespaceFilter, ResourceLocation categoryId) {
         List<Object> results = new ArrayList<>();
 

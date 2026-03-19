@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.server;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.api.AutoPopulateRegistry;
 import com.evandev.fieldguide.server.loot.ParsedDrop;
 import com.evandev.fieldguide.server.loot.StaticLootParser;
 import com.evandev.fieldguide.util.EntryResolver;
@@ -58,7 +59,7 @@ public class LootTableHelper {
 
         applyConfigModifications(entry, formattedDrops);
         if (!formattedDrops.isEmpty()) {
-            ResourceLocation id = EntryResolver.getEntryId(entry);
+            ResourceLocation id = AutoPopulateRegistry.getEntryId(entry, true);
             if (id != null) {
                 lootMap.computeIfAbsent(id, k -> new ArrayList<>()).addAll(formattedDrops);
             }

@@ -26,8 +26,25 @@ public class ClientVisualManager {
         return INSTANCE;
     }
 
-    public EntryVisual getEntryVisual(ResourceLocation entryId) {
-        return entryVisuals.getOrDefault(entryId, new EntryVisual());
+    public EntryVisual getEntryVisual(String entryKey) {
+        if (entryKey == null || entryKey.isEmpty()) return new EntryVisual();
+
+        // 1. Try prefixed key (e.g. "entity:minecraft:chicken")
+        ResourceLocation prefixedId = new ResourceLocation(entryKey);
+        if (entryVisuals.containsKey(prefixedId)) {
+            return entryVisuals.get(prefixedId);
+        }
+
+        // 2. Try base ID (e.g. "minecraft:chicken")
+        if (entryKey.contains(":")) {
+            String baseIdStr = entryKey.substring(entryKey.indexOf(":") + 1);
+            ResourceLocation baseId = new ResourceLocation(baseIdStr);
+            if (entryVisuals.containsKey(baseId)) {
+                return entryVisuals.get(baseId);
+            }
+        }
+
+        return new EntryVisual();
     }
 
     public void onResourceManagerReload(ResourceManager resourceManager) {

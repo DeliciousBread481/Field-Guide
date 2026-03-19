@@ -9,6 +9,7 @@ import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.EntryResolver;
+import com.evandev.fieldguide.util.entry.EntryResolutionHelper;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -150,11 +151,14 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                 for (int j = index; j < endIndex; j++) {
                     Object obj = resolved.get(j);
                     if (obj instanceof EntityType<?> type) {
-                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, BuiltInRegistries.ENTITY_TYPE.getKey(type), BuiltInRegistries.ENTITY_TYPE.getKey(type), null, null, null, null));
+                        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, "animals", null, null, null));
                     } else if (obj instanceof Block block) {
-                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, BuiltInRegistries.BLOCK.getKey(block), BuiltInRegistries.BLOCK.getKey(block), null, null, null, null));
+                        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, "plants", null, null, null));
                     } else if (obj instanceof Item item) {
-                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, BuiltInRegistries.ITEM.getKey(item), BuiltInRegistries.ITEM.getKey(item), null, null, null, null));
+                        ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, "mod_items", null, null, null));
                     } else if (obj instanceof CompositeFieldGuideEntry composite) {
                         ResourceLocation id = composite.id();
                         Object displayEntry = composite.displayEntry();
@@ -165,18 +169,11 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                         List<ResourceLocation> compIds = new ArrayList<>();
                         if (components != null) {
                             for (Object c : components) {
-                                if (c instanceof EntityType<?> t) compIds.add(BuiltInRegistries.ENTITY_TYPE.getKey(t));
-                                else if (c instanceof Block b) compIds.add(BuiltInRegistries.BLOCK.getKey(b));
-                                else if (c instanceof Item i) compIds.add(BuiltInRegistries.ITEM.getKey(i));
+                                compIds.add(com.evandev.fieldguide.api.AutoPopulateRegistry.getEntryId(c, false));
                             }
                         }
 
-                        ResourceLocation displayId = null;
-                        if (displayEntry instanceof EntityType<?> t)
-                            displayId = BuiltInRegistries.ENTITY_TYPE.getKey(t);
-                        else if (displayEntry instanceof Block b) displayId = BuiltInRegistries.BLOCK.getKey(b);
-                        else if (displayEntry instanceof Item i) displayId = BuiltInRegistries.ITEM.getKey(i);
-
+                        ResourceLocation displayId = com.evandev.fieldguide.api.AutoPopulateRegistry.getEntryId(displayEntry, false);
                         chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.COMPOSITE, id, displayId, null, compIds, structureNbt, stackedBlocks));
                     }
                 }
@@ -189,8 +186,17 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
         int maxModifiersChunkSize = 500;
 
-        for (int i = 0; i < biomeAdditions.size(); i += maxModifiersChunkSize) {
-            List<String> chunk = biomeAdditions.subList(i, Math.min(i + maxModifiersChunkSize, biomeAdditions.size()));
+        List<String> prefixedBiomeAdditions = biomeAdditions.stream().map(s -> {
+            String[] parts = s.split("\\|", 2);
+            if (parts.length == 2 && !parts[0].contains(":")) {
+                Optional<Object> entry = EntryResolutionHelper.resolveSingleEntry(new ResourceLocation(parts[0]), null, null);
+                if (entry.isPresent()) return AutoPopulateRegistry.getEntryId(entry.get(), true) + "|" + parts[1];
+            }
+            return s;
+        }).toList();
+
+        for (int i = 0; i < prefixedBiomeAdditions.size(); i += maxModifiersChunkSize) {
+            List<String> chunk = prefixedBiomeAdditions.subList(i, Math.min(i + maxModifiersChunkSize, prefixedBiomeAdditions.size()));
             Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), chunk, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap(), false, false), player);
         }
 
@@ -199,8 +205,17 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), chunk, Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap(), false, false), player);
         }
 
-        for (int i = 0; i < lootAdditions.size(); i += maxModifiersChunkSize) {
-            List<String> chunk = lootAdditions.subList(i, Math.min(i + maxModifiersChunkSize, lootAdditions.size()));
+        List<String> prefixedLootAdditions = lootAdditions.stream().map(s -> {
+            String[] parts = s.split("\\|", 2);
+            if (parts.length == 2 && !parts[0].contains(":")) {
+                Optional<Object> entry = EntryResolutionHelper.resolveSingleEntry(new ResourceLocation(parts[0]), null, null);
+                if (entry.isPresent()) return AutoPopulateRegistry.getEntryId(entry.get(), true) + "|" + parts[1];
+            }
+            return s;
+        }).toList();
+
+        for (int i = 0; i < prefixedLootAdditions.size(); i += maxModifiersChunkSize) {
+            List<String> chunk = prefixedLootAdditions.subList(i, Math.min(i + maxModifiersChunkSize, prefixedLootAdditions.size()));
             Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), chunk, Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap(), false, false), player);
         }
 
@@ -262,17 +277,19 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
     private void resolveAllCategories() {
         resolvedCategoryEntries.clear();
-        Set<Object> allCompositeComponents = new HashSet<>();
+        Set<String> allCompositeComponents = new HashSet<>();
 
         for (Category cat : categories.values()) {
             List<Object> entries = EntryResolver.resolveCategoryEntries(cat, composites, redirects);
             for (Object entry : entries) {
                 if (entry instanceof CompositeFieldGuideEntry composite) {
                     if (composite.components() != null) {
-                        allCompositeComponents.addAll(composite.components());
+                        for (Object comp : composite.components()) {
+                            allCompositeComponents.add(com.evandev.fieldguide.api.AutoPopulateRegistry.getEntryKey(comp));
+                        }
                     }
                     if (composite.displayEntry() != null) {
-                        allCompositeComponents.add(composite.displayEntry());
+                        allCompositeComponents.add(com.evandev.fieldguide.api.AutoPopulateRegistry.getEntryKey(composite.displayEntry()));
                     }
                 }
             }
@@ -280,7 +297,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         }
 
         for (List<Object> entries : resolvedCategoryEntries.values()) {
-            entries.removeIf(entry -> !(entry instanceof CompositeFieldGuideEntry) && allCompositeComponents.contains(entry));
+            entries.removeIf(entry -> !(entry instanceof CompositeFieldGuideEntry) && allCompositeComponents.contains(com.evandev.fieldguide.api.AutoPopulateRegistry.getEntryKey(entry)));
         }
     }
 
