@@ -289,13 +289,7 @@ public class EntryRenderHelper {
 
         renderWithCache(item, item, guiGraphics, x, y, scaledSize, scaledSize, unlocked, isPage, bounceScale, () -> {
             ItemStack stack = new ItemStack(item);
-            boolean is3d = Minecraft.getInstance().getItemRenderer().getModel(stack, null, null, 0).isGui3d();
-
-            if (is3d) {
-                Lighting.setupFor3DItems();
-            } else {
-                Lighting.setupForFlatItems();
-            }
+            Lighting.setupForFlatItems();
 
             ResourceLocation id = ClientFieldGuideManager.getEntryId(item);
             EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(id);
@@ -303,12 +297,7 @@ public class EntryRenderHelper {
             float clampedScale = 100f * getVisualScale(visual, isPage);
 
             PoseStack pose = new PoseStack();
-            pose.scale(clampedScale, -clampedScale, is3d ? -clampedScale : 1.0f);
-
-            if (is3d) {
-                pose.mulPose(Axis.XP.rotationDegrees(30.0F));
-                pose.mulPose(Axis.YP.rotationDegrees(210.0F));
-            }
+            pose.scale(clampedScale, -clampedScale, 1.0f);
 
             MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
 
