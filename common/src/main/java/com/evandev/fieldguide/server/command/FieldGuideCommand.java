@@ -98,11 +98,16 @@ public class FieldGuideCommand {
                                                 .then(Commands.argument("variant", StringArgumentType.string())
                                                         .suggests((ctx, builder) -> {
                                                             ResourceLocation entryId = ResourceLocationArgument.getId(ctx, "entry");
-                                                            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(EntryResolver.getRawId(entryId));
                                                             List<String> variants = new ArrayList<>();
                                                             variants.add("all");
-                                                            if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
-                                                                variants.addAll(FieldGuideVariantManager.getVariantIds(type, ctx.getSource().getLevel()));
+
+                                                            if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
+                                                                variants.addAll(FieldGuideCobblemonCompat.getVariantIds(entryId));
+                                                            } else {
+                                                                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(EntryResolver.getRawId(entryId));
+                                                                if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
+                                                                    variants.addAll(FieldGuideVariantManager.getVariantIds(type, ctx.getSource().getLevel()));
+                                                                }
                                                             }
                                                             return SharedSuggestionProvider.suggest(variants, builder);
                                                         })
@@ -139,11 +144,16 @@ public class FieldGuideCommand {
                                                 .then(Commands.argument("variant", StringArgumentType.string())
                                                         .suggests((ctx, builder) -> {
                                                             ResourceLocation entryId = ResourceLocationArgument.getId(ctx, "entry");
-                                                            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(EntryResolver.getRawId(entryId));
                                                             List<String> variants = new ArrayList<>();
                                                             variants.add("all");
-                                                            if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
-                                                                variants.addAll(FieldGuideVariantManager.getVariantIds(type, ctx.getSource().getLevel()));
+
+                                                            if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
+                                                                variants.addAll(FieldGuideCobblemonCompat.getVariantIds(entryId));
+                                                            } else {
+                                                                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(EntryResolver.getRawId(entryId));
+                                                                if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
+                                                                    variants.addAll(FieldGuideVariantManager.getVariantIds(type, ctx.getSource().getLevel()));
+                                                                }
                                                             }
                                                             return SharedSuggestionProvider.suggest(variants, builder);
                                                         })
@@ -160,20 +170,36 @@ public class FieldGuideCommand {
         FieldGuideProgressManager manager = FieldGuideProgressManager.getInstance();
 
         if (variantId.equalsIgnoreCase("all")) {
-            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(EntryResolver.getRawId(entryId));
-            if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
-                List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, source.getLevel());
+            if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
+                List<String> variants = FieldGuideCobblemonCompat.getVariantIds(entryId);
                 if (!variants.isEmpty()) {
                     for (ServerPlayer player : targets) {
                         PlayerFieldGuideProgress progress = manager.getProgress(player);
                         if (progress != null) {
-                            for (VariantDef def : variants) {
-                                progress.unlock(player, entryId, def.id());
+                            for (String def : variants) {
+                                progress.unlock(player, entryId, def);
                             }
                         }
                     }
                     source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.variant.success", "all", entryId.toString()), true);
                     return targets.size();
+                }
+            } else {
+                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(EntryResolver.getRawId(entryId));
+                if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
+                    List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, source.getLevel());
+                    if (!variants.isEmpty()) {
+                        for (ServerPlayer player : targets) {
+                            PlayerFieldGuideProgress progress = manager.getProgress(player);
+                            if (progress != null) {
+                                for (VariantDef def : variants) {
+                                    progress.unlock(player, entryId, def.id());
+                                }
+                            }
+                        }
+                        source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.variant.success", "all", entryId.toString()), true);
+                        return targets.size();
+                    }
                 }
             }
         }
@@ -192,20 +218,36 @@ public class FieldGuideCommand {
         FieldGuideProgressManager manager = FieldGuideProgressManager.getInstance();
 
         if (variantId.equalsIgnoreCase("all")) {
-            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(EntryResolver.getRawId(entryId));
-            if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
-                List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, source.getLevel());
+            if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
+                List<String> variants = FieldGuideCobblemonCompat.getVariantIds(entryId);
                 if (!variants.isEmpty()) {
                     for (ServerPlayer player : targets) {
                         PlayerFieldGuideProgress progress = manager.getProgress(player);
                         if (progress != null) {
-                            for (VariantDef def : variants) {
-                                progress.revoke(entryId.toString() + "#" + def.id());
+                            for (String def : variants) {
+                                progress.revoke(entryId + "#" + def);
                             }
                         }
                     }
                     source.sendSuccess(() -> Component.translatable("commands.fieldguide.revoke.variant.success", "all", entryId.toString()), true);
                     return targets.size();
+                }
+            } else {
+                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(EntryResolver.getRawId(entryId));
+                if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
+                    List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, source.getLevel());
+                    if (!variants.isEmpty()) {
+                        for (ServerPlayer player : targets) {
+                            PlayerFieldGuideProgress progress = manager.getProgress(player);
+                            if (progress != null) {
+                                for (VariantDef def : variants) {
+                                    progress.revoke(entryId.toString() + "#" + def.id());
+                                }
+                            }
+                        }
+                        source.sendSuccess(() -> Component.translatable("commands.fieldguide.revoke.variant.success", "all", entryId.toString()), true);
+                        return targets.size();
+                    }
                 }
             }
         }
@@ -241,7 +283,7 @@ public class FieldGuideCommand {
         PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
         if (progress == null) return;
 
-        if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getNamespace().equals("fieldguide") && entryId.getPath().startsWith("cobblemon/")) {
+        if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
             for (String variantId : FieldGuideCobblemonCompat.getVariantIds(entryId)) {
                 progress.unlock(player, entryId, variantId);
             }
@@ -260,7 +302,7 @@ public class FieldGuideCommand {
         PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
         if (progress == null) return;
 
-        if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getNamespace().equals("fieldguide") && entryId.getPath().startsWith("cobblemon/")) {
+        if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
             for (String variantId : FieldGuideCobblemonCompat.getVariantIds(entryId)) {
                 progress.revoke(entryId + "#" + variantId);
             }

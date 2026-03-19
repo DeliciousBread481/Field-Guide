@@ -109,6 +109,17 @@ public class FieldGuideVariantManager {
         if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
             ResourceLocation id = FieldGuideCobblemonCompat.getPokemonEntryId(entity);
             cacheKey += ":" + id;
+
+            if (VARIANT_CACHE.containsKey(cacheKey)) {
+                return VARIANT_CACHE.get(cacheKey);
+            }
+
+            List<VariantDef> variants = FieldGuideCobblemonCompat.getVariantIds(id).stream()
+                    .map(name -> new VariantDef(name, name))
+                    .toList();
+
+            VARIANT_CACHE.put(cacheKey, variants);
+            return variants;
         }
 
         if (VARIANT_CACHE.containsKey(cacheKey)) {

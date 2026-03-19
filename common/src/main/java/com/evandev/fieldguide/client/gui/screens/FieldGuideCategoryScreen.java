@@ -4,6 +4,7 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.api.VariantDef;
+import com.evandev.fieldguide.api.VirtualFieldGuideEntry;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.data.EntryVisual;
@@ -793,7 +794,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
     private void renderEntryInGrid(GuiGraphics guiGraphics, Object entry, int x, int y, boolean unlocked) {
         Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
-        boolean isCobblemon = entry instanceof CompositeFieldGuideEntry comp && comp.id() != null && comp.id().getNamespace().equals("fieldguide") && comp.id().getPath().startsWith("cobblemon/");
+        boolean isCobblemon = entry instanceof VirtualFieldGuideEntry virt && virt.virtualType().equals("cobblemon");
 
         if (unlocked && Services.PLATFORM.isModLoaded("exposure") && ClientConfig.get().exposureShowPhotographsInGrid) {
             ItemStack existingPhoto = ProgressManager.getInstance().getPhotograph(entry);
@@ -811,14 +812,12 @@ public class FieldGuideCategoryScreen extends BookScreen {
             } else {
                 EntryRenderHelper.renderBlock(guiGraphics, block, x, y, 15.0F, unlocked, false, 1.0F);
             }
-        } else if (coreEntry instanceof EntityType<?> || isCobblemon) {
+        } else if (isCobblemon) {
+            EntryRenderHelper.renderCobblemon(guiGraphics, (VirtualFieldGuideEntry) entry, x, y, CELL_SIZE - 8, CELL_SIZE - 8, unlocked, false, 1.0F);
+        } else if (coreEntry instanceof EntityType<?>) {
             Entity entity = getCachedEntity(entry);
             if (entity != null) {
-                if (isCobblemon) {
-                    EntryRenderHelper.renderCobblemon(guiGraphics, (CompositeFieldGuideEntry) entry, x, y, CELL_SIZE - 8, CELL_SIZE - 8, unlocked, false, 1.0F);
-                } else {
-                    EntryRenderHelper.renderEntityNormalized(guiGraphics, entity, x, y, CELL_SIZE - 8, CELL_SIZE - 8, unlocked, false, 1.0F);
-                }
+                EntryRenderHelper.renderEntityNormalized(guiGraphics, entity, x, y, CELL_SIZE - 8, CELL_SIZE - 8, unlocked, false, 1.0F);
             }
         } else if (coreEntry instanceof Block block) {
             EntryRenderHelper.renderBlock(guiGraphics, block, x, y, 15.0F, unlocked, false, 1.0F);

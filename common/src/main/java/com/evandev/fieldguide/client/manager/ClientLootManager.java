@@ -30,7 +30,7 @@ public class ClientLootManager {
             List<ItemStack> drops = entry.getValue();
 
             String namespace = id.getNamespace();
-            if (namespace.equals("item") || namespace.equals("entity") || namespace.equals("block")) {
+            if (namespace.equals("item") || namespace.equals("entity") || namespace.equals("block") || namespace.equals("fieldguide") || namespace.equals("cobblemon")) {
                 dropCache.put(id, drops);
             }
         }

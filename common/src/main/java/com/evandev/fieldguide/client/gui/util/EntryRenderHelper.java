@@ -1,10 +1,7 @@
 package com.evandev.fieldguide.client.gui.util;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.api.AutoPopulateRegistry;
-import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
-import com.evandev.fieldguide.api.VariantDef;
-import com.evandev.fieldguide.api.VariantProvider;
+import com.evandev.fieldguide.api.*;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
@@ -147,7 +144,7 @@ public class EntryRenderHelper {
         });
     }
 
-    public static void renderCobblemon(GuiGraphics guiGraphics, CompositeFieldGuideEntry entry, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale) {
+    public static void renderCobblemon(GuiGraphics guiGraphics, VirtualFieldGuideEntry entry, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale) {
         String formName = FieldGuideCobblemonCompat.getFormForEntry(entry.id());
         Object cacheKey = formName.equals("standard") ? entry : entry.id().toString() + "#" + formName;
 

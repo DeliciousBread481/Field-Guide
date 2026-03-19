@@ -129,6 +129,7 @@ public class AutoPopulateRegistry {
         if (obj instanceof Block block) return BuiltInRegistries.BLOCK.getKey(block);
         if (obj instanceof Item item) return BuiltInRegistries.ITEM.getKey(item);
         if (obj instanceof CompositeFieldGuideEntry comp) return comp.id();
+        if (obj instanceof VirtualFieldGuideEntry virt) return virt.id();
         return null;
     }
 
@@ -136,6 +137,9 @@ public class AutoPopulateRegistry {
         if (!prefixed) return getEntryId(obj);
         ResourceLocation id = getEntryId(obj);
         if (id == null) return null;
+        if (obj instanceof VirtualFieldGuideEntry) {
+            return id;
+        }
 
         String prefix = "unknown";
         Object coreEntry = obj instanceof CompositeFieldGuideEntry comp ? comp.displayEntry() : obj;

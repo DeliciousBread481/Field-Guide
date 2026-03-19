@@ -132,7 +132,7 @@ public class EntryResolutionHelper {
 
     public static Optional<Object> resolveSingleEntry(ResourceLocation id, ResourceLocation categoryId, String strategyHint) {
         if (Services.PLATFORM.isModLoaded("cobblemon") && id.getNamespace().equals("fieldguide") && id.getPath().startsWith("cobblemon/")) {
-            return Optional.of(new CompositeFieldGuideEntry(id, null, new ArrayList<>(), null, null));
+            return Optional.of(new VirtualFieldGuideEntry(id, "cobblemon"));
         }
 
         ResourceLocation finalId = EntryResolver.getRawId(id);

@@ -46,13 +46,14 @@ public class ScanVerifier {
             Entity entity = level.getEntity(targetEntityId);
 
             if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
-
                 if (entity.isSpectator() || player.distanceToSqr(entity) > maxDistSq) {
                     return false;
                 }
 
                 ResourceLocation pokemonEntryId = FieldGuideCobblemonCompat.getPokemonEntryId(entity);
-                return pokemonEntryId.equals(entryId);
+                if (targetBelongsToEntry(pokemonEntryId, entryId)) return true;
+
+                return FieldGuideCobblemonCompat.getSpeciesName(pokemonEntryId).equals(FieldGuideCobblemonCompat.getSpeciesName(entryId));
             }
 
             if (!verifyEntityPresence(player, scannedTargetId, targetEntityId, level, maxDistSq, categoryId)) {

@@ -2,10 +2,7 @@ package com.evandev.fieldguide.client.gui.screens;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.FieldGuideLimits;
-import com.evandev.fieldguide.api.Category;
-import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
-import com.evandev.fieldguide.api.VariantDef;
-import com.evandev.fieldguide.api.VariantProvider;
+import com.evandev.fieldguide.api.*;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.data.EntryVisual;
@@ -20,7 +17,6 @@ import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.network.RipOutPacket;
 import com.evandev.fieldguide.platform.Services;
-import com.evandev.fieldguide.util.EntryResolver;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.ChatFormatting;
@@ -558,11 +554,12 @@ public class FieldGuideEntryScreen extends BookScreen {
                     EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 40.0F, unlocked, true, bounce);
                 }
             }
-        } else if (isCobblemon(entry)) {
+        } else if (entry instanceof VirtualFieldGuideEntry virt && virt.virtualType().equals("cobblemon")) {
             if (!hideEntity) {
-                EntryRenderHelper.renderCobblemon(guiGraphics, (CompositeFieldGuideEntry) entry, xPos, yPos, 112, 112, unlocked, true, bounce);
+                EntryRenderHelper.renderCobblemon(guiGraphics, virt, xPos, yPos, 112, 112, unlocked, true, bounce);
             }
-            if (unlocked && renderedEntity instanceof LivingEntity living) {
+            Entity dummy = FieldGuideCobblemonCompat.getDummyPokemon(virt.id(), Minecraft.getInstance().level);
+            if (unlocked && dummy instanceof LivingEntity living) {
                 renderAttributes(guiGraphics, living);
                 renderAlignment(guiGraphics, living, mouseX, mouseY);
             }

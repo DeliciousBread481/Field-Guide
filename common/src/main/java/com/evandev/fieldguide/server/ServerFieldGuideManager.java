@@ -204,6 +204,9 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
                         ResourceLocation displayId = AutoPopulateRegistry.getEntryId(displayEntry, true);
                         chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.COMPOSITE, id, displayId, null, compIds, structureNbt, stackedBlocks));
+                    } else if (obj instanceof VirtualFieldGuideEntry virtual) {
+                        ResourceLocation id = virtual.id();
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, null, null, null, null));
                     }
                 }
                 flattenedCategories.add(chunkCat);

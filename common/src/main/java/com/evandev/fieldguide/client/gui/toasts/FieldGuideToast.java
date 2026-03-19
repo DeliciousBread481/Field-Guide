@@ -1,13 +1,14 @@
 package com.evandev.fieldguide.client.gui.toasts;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.api.VariantDef;
 import com.evandev.fieldguide.api.VariantProvider;
+import com.evandev.fieldguide.api.VirtualFieldGuideEntry;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ClientConfig;
-import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
-import com.evandev.fieldguide.api.VariantDef;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
@@ -50,14 +51,11 @@ public class FieldGuideToast implements Toast {
         int iconY = 17;
         Object coreEntry = this.entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : this.entry;
 
-        boolean isCobblemon = this.entry instanceof CompositeFieldGuideEntry comp &&
-                comp.id() != null &&
-                comp.id().getNamespace().equals("fieldguide") &&
-                comp.id().getPath().startsWith("cobblemon/");
+        boolean isCobblemon = this.entry instanceof VirtualFieldGuideEntry virt && virt.virtualType().equals("cobblemon");
 
         if (!entityInitialized) {
             if (Services.PLATFORM.isModLoaded("cobblemon") && isCobblemon) {
-                cachedEntity = FieldGuideCobblemonCompat.getDummyPokemon(((CompositeFieldGuideEntry) this.entry).id(), Minecraft.getInstance().level);
+                cachedEntity = FieldGuideCobblemonCompat.getDummyPokemon(((VirtualFieldGuideEntry) this.entry).id(), Minecraft.getInstance().level);
             } else if (coreEntry instanceof EntityType<?> type) {
                 cachedEntity = type.create(Minecraft.getInstance().level);
 
@@ -84,7 +82,7 @@ public class FieldGuideToast implements Toast {
                 EntryRenderHelper.renderBlock(guiGraphics, block, iconX, iconY, 12.0F, true, false, 1.0F);
             }
         } else if (isCobblemon && cachedEntity instanceof LivingEntity) {
-            EntryRenderHelper.renderCobblemon(guiGraphics, (CompositeFieldGuideEntry) this.entry, iconX, iconY, 24, 24, true, false, 1.0F);
+            EntryRenderHelper.renderCobblemon(guiGraphics, (VirtualFieldGuideEntry) this.entry, iconX, iconY, 24, 24, true, false, 1.0F);
         } else if (coreEntry instanceof EntityType<?>) {
             if (cachedEntity != null) {
                 EntryRenderHelper.renderEntityNormalized(guiGraphics, cachedEntity, iconX, iconY, 24, 24, true, false, 1.0F);

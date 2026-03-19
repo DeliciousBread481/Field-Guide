@@ -81,8 +81,9 @@ public final class FieldGuideCobblemonCompat {
 
     private static String getDefaultForm(ResourceLocation id) {
         String path = id.getPath();
-        if (!path.startsWith("cobblemon/")) return "standard";
-        String speciesAndForm = path.substring("cobblemon/".length());
+        int idx = path.lastIndexOf("cobblemon/");
+        String speciesAndForm = idx != -1 ? path.substring(idx + "cobblemon/".length()) : path;
+
         int underscoreIndex = speciesAndForm.lastIndexOf('_');
         if (underscoreIndex != -1) {
             return speciesAndForm.substring(underscoreIndex + 1);
@@ -90,7 +91,7 @@ public final class FieldGuideCobblemonCompat {
         return "standard";
     }
 
-    private static String getSpeciesName(ResourceLocation id) {
+    public static String getSpeciesName(ResourceLocation id) {
         String path = id.getPath();
         if (!path.startsWith("cobblemon/")) return path;
         String speciesAndForm = path.substring("cobblemon/".length());
@@ -154,11 +155,8 @@ public final class FieldGuideCobblemonCompat {
     }
 
     public static List<String> getVariantIds(ResourceLocation entryId) {
-        String speciesName = entryId.getPath().substring("cobblemon/".length());
-        int underscore = speciesName.lastIndexOf('_');
-        if (underscore != -1) speciesName = speciesName.substring(0, underscore);
-
-        com.cobblemon.mod.common.pokemon.Species species = com.cobblemon.mod.common.api.pokemon.PokemonSpecies.INSTANCE.getByIdentifier(new ResourceLocation("cobblemon", speciesName));
+        String speciesName = getSpeciesName(entryId);
+        Species species = PokemonSpecies.INSTANCE.getByIdentifier(new ResourceLocation("cobblemon", speciesName));
         if (species != null) {
             return species.getForms().stream().map(FormData::getName).toList();
         }
@@ -298,7 +296,6 @@ public final class FieldGuideCobblemonCompat {
             }
 
             sortedEntries.sort(Map.Entry.comparingByValue());
-
             for (Map.Entry<CategoryEntry, Integer> sortedEntry : sortedEntries) {
                 cobblemonCategory.addEntry(sortedEntry.getKey());
             }
@@ -321,6 +318,8 @@ public final class FieldGuideCobblemonCompat {
         ResourceLocation id;
         if (entry instanceof CompositeFieldGuideEntry comp) {
             id = comp.id();
+        } else if (entry instanceof VirtualFieldGuideEntry virt) {
+            id = virt.id();
         } else {
             id = ClientFieldGuideManager.getEntryId(entry);
         }
