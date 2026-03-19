@@ -154,6 +154,10 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         ProgressManager.getInstance().exportToLang(type);
     }
 
+    public boolean isKillToUnlock(ResourceLocation entryId) {
+        return ProgressManager.getInstance().isKillToUnlock(entryId);
+    }
+
     public void updateCategoriesFromServer(List<Category> categories, Map<ResourceLocation, ResourceLocation> redirects, boolean clearCache, boolean resolveEntries) {
         ClientCategoryManager.getInstance().updateCategoriesFromServer(categories, redirects, clearCache, resolveEntries);
     }

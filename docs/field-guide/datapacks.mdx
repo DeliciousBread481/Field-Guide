@@ -65,7 +65,7 @@ The Field Guide automatically hides empty categories.
 * `animals`: All animals.
 * `monsters`: All monsters.
 * `plants`: All vanilla-like plants.
-* `auto_trees`: All dynamically generated tree structures (vanilla and modded).
+* `auto_trees`: Automatically generates tree composites for all saplings in a mod. It looks for `_leaves` and `_log` blocks that share the same base name as the sapling (e.g., `oak_sapling` -> `oak_leaves` and `oak_log`). It generates a simplified 8-block tall tree structure for display.
 * `mod:<mod_id>`: All entities from a specific mod.
 * `mod_plants:<mod_id>`: All plant-like blocks from a specific mod.
 * `mod_trees:<mod_id>`: All dynamically generated tree structures from a specific mod.
@@ -113,8 +113,8 @@ The default "Plants" category includes everything with the tag `fieldguide:plant
 
 Field Guide uses specific entity tags to handle default scanning and categorization behaviors. Apply these tags to your mod's entities where appropriate:
 
-* `fieldguide:bosses`: Entities with this tag are excluded from the `monsters` and `animals` auto-populate strategies, and are moved to a special `bosses` category.
-* `fieldguide:kill_to_unlock`: Entities with this tag can't be scanned with a spyglass: the player must kill them to unlock their entry (defaults to all bosses).
+* `fieldguide:bosses`: Entities with this tag are excluded from the `monsters` and `animals` auto-populate strategies, and are moved to a special `bosses` category. **Note: Bosses are also set to "Kill to Unlock" by default.**
+* `fieldguide:kill_to_unlock`: Entities with this tag can't be scanned with a spyglass or the naked eye: the player must kill them to unlock their entry. (Defaults to all bosses).
 
 #### Discovery Redirects
 

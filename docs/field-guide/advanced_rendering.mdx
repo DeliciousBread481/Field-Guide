@@ -1,0 +1,63 @@
+---
+title: Advanced Composite Rendering
+hide_meta: true
+---
+
+The `render` field in [Composite Entries](/project/field-guide/docs/field-guide/datapacks#composite-entries) allows for fine-grained control over how multi-block structures are displayed in the Field Guide UI.
+
+### Simple Stacking
+
+If you provide a list of block IDs without coordinates, they will be stacked vertically starting from (0,0,0).
+
+```json
+"render": [
+  "minecraft:dirt",
+  "minecraft:grass_block",
+  "minecraft:poppy"
+]
+```
+*Result: Dirt at (0,0,0), Grass at (0,1,0), Poppy at (0,2,0).*
+
+### Coordinate-Based Placement
+
+You can specify exact 3D coordinates for each block using the format `"X,Y,Z|block_id"`. This allows for wider or more complex structures.
+
+```json
+"render": [
+  "0,0,0|minecraft:oak_log",
+  "0,1,0|minecraft:oak_log",
+  "1,1,0|minecraft:oak_leaves",
+  "-1,1,0|minecraft:oak_leaves",
+  "0,1,1|minecraft:oak_leaves",
+  "0,1,-1|minecraft:oak_leaves"
+]
+```
+
+### Block States and Properties
+
+You can specify block states and properties for each block using the pipe separator.
+
+```json
+"render": [
+  "minecraft:furnace|lit=true,facing=north",
+  "0,1,0|minecraft:oak_fence|waterlogged=false"
+]
+```
+
+### Mixing Modes
+
+You can mix coordinate-based placement and simple stacking in the same list.
+* Blocks **without** coordinates will stack on top of the previous **stacked** block (or (0,0,0) if it's the first).
+* Blocks **with** coordinates do not affect the vertical stack counter for subsequent simple blocks.
+
+```json
+"render": [
+  "minecraft:dirt",           // (0,0,0)
+  "0,5,0|minecraft:glass",    // (0,5,0)
+  "minecraft:grass_block"      // (0,1,0) - stacks on dirt
+]
+```
+
+### Performance Considerations
+
+While there is no hard limit on the number of blocks in a `render` array, very large structures (>50 blocks) may cause minor frame drops when opening the entry page for the first time. For large structures, consider using `structure_nbt` instead.

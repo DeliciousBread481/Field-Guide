@@ -7,11 +7,13 @@ public class FieldGuideScanState {
     private static final FieldGuideScanState INSTANCE = new FieldGuideScanState();
 
     private Object scanningTarget = null;
+    private Object scanningEntry = null;
     private int scanTicks = 0;
     private int prevScanTicks = 0;
     private BlockPos scanningPos = null;
 
     private Object fadingTarget = null;
+    private Object fadingEntry = null;
     private int fadeTicks = 0;
     private BlockPos fadingPos = null;
 
@@ -36,6 +38,7 @@ public class FieldGuideScanState {
 
     public void resetScanTicks() {
         scanningTarget = null;
+        scanningEntry = null;
         scanningPos = null;
         scanTicks = 0;
         prevScanTicks = 0;
@@ -47,6 +50,14 @@ public class FieldGuideScanState {
 
     public void setScanningTarget(Object scanningTarget) {
         this.scanningTarget = scanningTarget;
+    }
+
+    public Object getScanningEntry() {
+        return scanningEntry;
+    }
+
+    public void setScanningEntry(Object scanningEntry) {
+        this.scanningEntry = scanningEntry;
     }
 
     public int getScanTicks() {
@@ -79,6 +90,14 @@ public class FieldGuideScanState {
 
     public void setFadingTarget(Object fadingTarget) {
         this.fadingTarget = fadingTarget;
+    }
+
+    public Object getFadingEntry() {
+        return fadingEntry;
+    }
+
+    public void setFadingEntry(Object fadingEntry) {
+        this.fadingEntry = fadingEntry;
     }
 
     public int getFadeTicks() {

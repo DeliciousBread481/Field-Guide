@@ -5,5 +5,7 @@
   "searching.mdx": "Searching",
   "kubejs.mdx": "KubeJS Integration",
   "datapacks.mdx": "Datapacks (Customizing Content)",
-  "resource_packs.mdx": "Resource Packs (Customizing Visuals)"
+  "advanced_rendering.mdx": "Advanced Composite Rendering",
+  "resource_packs.mdx": "Resource Packs (Customizing Visuals)",
+  "troubleshooting.mdx": "Troubleshooting"
 }

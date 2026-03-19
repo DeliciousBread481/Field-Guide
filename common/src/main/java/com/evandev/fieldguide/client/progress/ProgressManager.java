@@ -41,6 +41,7 @@ public class ProgressManager {
     private final Map<String, String> customDescriptions = new HashMap<>();
     private final Map<String, String> customNames = new HashMap<>();
     private final Map<String, String> entryPhotographs = new HashMap<>();
+    private final Set<String> killedOnly = new HashSet<>();
     private final List<JournalPage> journalPages = new ArrayList<>();
     private String lastUnlockedVariant = null;
 
@@ -70,6 +71,10 @@ public class ProgressManager {
         return lastUnlockedVariant;
     }
 
+    public boolean isKillToUnlock(ResourceLocation entryId) {
+        return killedOnly.contains(entryId.toString());
+    }
+
     public void applyServerUpdate(ProgressUpdatePacket packet) {
         if (packet.isReset()) {
             unlockedEntries.clear();
@@ -79,6 +84,7 @@ public class ProgressManager {
             customNames.clear();
             customDescriptions.clear();
             entryPhotographs.clear();
+            killedOnly.clear();
         }
 
         for (String id : packet.getRevoked()) {
@@ -121,6 +127,9 @@ public class ProgressManager {
         applyEntryMap(packet.getCustomNames(), customNames);
         applyEntryMap(packet.getCustomDescriptions(), customDescriptions);
         applyEntryMap(packet.getEntryPhotographs(), entryPhotographs);
+
+        killedOnly.clear();
+        killedOnly.addAll(packet.getKilledOnly());
 
         packet.getJournalTitle().ifPresent(title -> journalTitle = title);
         packet.getJournalPages().ifPresent(pages -> {

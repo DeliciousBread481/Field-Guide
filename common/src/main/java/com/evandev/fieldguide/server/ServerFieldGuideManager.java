@@ -52,6 +52,9 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     private List<String> lootAdditions = new ArrayList<>();
     private List<String> lootRemovals = new ArrayList<>();
 
+    private List<String> prefixedBiomeAdditions = new ArrayList<>();
+    private List<String> prefixedLootAdditions = new ArrayList<>();
+
     public static ServerFieldGuideManager getInstance() {
         return INSTANCE;
     }
@@ -86,10 +89,12 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
     public boolean isKillToUnlock(ResourceLocation entryId) {
         TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(Constants.MOD_ID, "kill_to_unlock"));
+        TagKey<EntityType<?>> bossesTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(Constants.MOD_ID, "bosses"));
+
         return BuiltInRegistries.ENTITY_TYPE.getOptional(entryId)
                 .flatMap(BuiltInRegistries.ENTITY_TYPE::getResourceKey)
                 .flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder)
-                .map(h -> h.is(killToUnlockTag))
+                .map(h -> h.is(killToUnlockTag) || h.is(bossesTag))
                 .orElse(false);
     }
 
@@ -119,6 +124,26 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
     public boolean isTargetInEntry(ResourceLocation targetId, ResourceLocation entryId) {
         return EntryResolver.isTargetInEntry(resolvedCategoryEntries, targetId, entryId);
+    }
+
+    private void calculatePrefixedLists() {
+        this.prefixedBiomeAdditions = biomeAdditions.stream().map(s -> {
+            String[] parts = s.split("\\|", 2);
+            if (parts.length == 2 && !parts[0].contains(":")) {
+                Optional<Object> entry = EntryResolutionHelper.resolveSingleEntry(new ResourceLocation(parts[0]), null, null);
+                if (entry.isPresent()) return AutoPopulateRegistry.getEntryId(entry.get(), true) + "|" + parts[1];
+            }
+            return s;
+        }).toList();
+
+        this.prefixedLootAdditions = lootAdditions.stream().map(s -> {
+            String[] parts = s.split("\\|", 2);
+            if (parts.length == 2 && !parts[0].contains(":")) {
+                Optional<Object> entry = EntryResolutionHelper.resolveSingleEntry(new ResourceLocation(parts[0]), null, null);
+                if (entry.isPresent()) return AutoPopulateRegistry.getEntryId(entry.get(), true) + "|" + parts[1];
+            }
+            return s;
+        }).toList();
     }
 
     public void syncToPlayer(ServerPlayer player) {
@@ -169,11 +194,11 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                         List<ResourceLocation> compIds = new ArrayList<>();
                         if (components != null) {
                             for (Object c : components) {
-                                compIds.add(com.evandev.fieldguide.api.AutoPopulateRegistry.getEntryId(c, false));
+                                compIds.add(AutoPopulateRegistry.getEntryId(c, false));
                             }
                         }
 
-                        ResourceLocation displayId = com.evandev.fieldguide.api.AutoPopulateRegistry.getEntryId(displayEntry, false);
+                        ResourceLocation displayId = AutoPopulateRegistry.getEntryId(displayEntry, false);
                         chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.COMPOSITE, id, displayId, null, compIds, structureNbt, stackedBlocks));
                     }
                 }
@@ -186,15 +211,6 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
         int maxModifiersChunkSize = 500;
 
-        List<String> prefixedBiomeAdditions = biomeAdditions.stream().map(s -> {
-            String[] parts = s.split("\\|", 2);
-            if (parts.length == 2 && !parts[0].contains(":")) {
-                Optional<Object> entry = EntryResolutionHelper.resolveSingleEntry(new ResourceLocation(parts[0]), null, null);
-                if (entry.isPresent()) return AutoPopulateRegistry.getEntryId(entry.get(), true) + "|" + parts[1];
-            }
-            return s;
-        }).toList();
-
         for (int i = 0; i < prefixedBiomeAdditions.size(); i += maxModifiersChunkSize) {
             List<String> chunk = prefixedBiomeAdditions.subList(i, Math.min(i + maxModifiersChunkSize, prefixedBiomeAdditions.size()));
             Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), chunk, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap(), false, false), player);
@@ -204,15 +220,6 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             List<String> chunk = biomeRemovals.subList(i, Math.min(i + maxModifiersChunkSize, biomeRemovals.size()));
             Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), chunk, Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap(), false, false), player);
         }
-
-        List<String> prefixedLootAdditions = lootAdditions.stream().map(s -> {
-            String[] parts = s.split("\\|", 2);
-            if (parts.length == 2 && !parts[0].contains(":")) {
-                Optional<Object> entry = EntryResolutionHelper.resolveSingleEntry(new ResourceLocation(parts[0]), null, null);
-                if (entry.isPresent()) return AutoPopulateRegistry.getEntryId(entry.get(), true) + "|" + parts[1];
-            }
-            return s;
-        }).toList();
 
         for (int i = 0; i < prefixedLootAdditions.size(); i += maxModifiersChunkSize) {
             List<String> chunk = prefixedLootAdditions.subList(i, Math.min(i + maxModifiersChunkSize, prefixedLootAdditions.size()));
@@ -285,11 +292,11 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                 if (entry instanceof CompositeFieldGuideEntry composite) {
                     if (composite.components() != null) {
                         for (Object comp : composite.components()) {
-                            allCompositeComponents.add(com.evandev.fieldguide.api.AutoPopulateRegistry.getEntryKey(comp));
+                            allCompositeComponents.add(AutoPopulateRegistry.getEntryKey(comp));
                         }
                     }
                     if (composite.displayEntry() != null) {
-                        allCompositeComponents.add(com.evandev.fieldguide.api.AutoPopulateRegistry.getEntryKey(composite.displayEntry()));
+                        allCompositeComponents.add(AutoPopulateRegistry.getEntryKey(composite.displayEntry()));
                     }
                 }
             }
@@ -297,7 +304,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         }
 
         for (List<Object> entries : resolvedCategoryEntries.values()) {
-            entries.removeIf(entry -> !(entry instanceof CompositeFieldGuideEntry) && allCompositeComponents.contains(com.evandev.fieldguide.api.AutoPopulateRegistry.getEntryKey(entry)));
+            entries.removeIf(entry -> !(entry instanceof CompositeFieldGuideEntry) && allCompositeComponents.contains(AutoPopulateRegistry.getEntryKey(entry)));
         }
     }
 
@@ -306,6 +313,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         this.serverLootCache = LootTableHelper.generateLootMap(server.overworld());
         expandBiomeTags(server);
         generateAutoBiomeAdditions(server);
+        calculatePrefixedLists();
     }
 
     public void reload(MinecraftServer server) {
@@ -317,6 +325,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         this.serverLootCache = LootTableHelper.generateLootMap(server.overworld());
         expandBiomeTags(server);
         generateAutoBiomeAdditions(server);
+        calculatePrefixedLists();
 
         syncToAll(server);
     }

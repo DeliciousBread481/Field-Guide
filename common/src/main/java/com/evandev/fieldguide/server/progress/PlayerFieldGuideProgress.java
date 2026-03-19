@@ -3,6 +3,7 @@ package com.evandev.fieldguide.server.progress;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.platform.Services;
+import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.google.gson.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -233,6 +234,10 @@ public class PlayerFieldGuideProgress {
                             .discoveryGameTimes(gameTimes)
                             .customNames(names)
                             .customDescriptions(descs)
+                            .killedOnly(ServerFieldGuideManager.getInstance().getAllEntryIds().stream()
+                                    .filter(id -> ServerFieldGuideManager.getInstance().isKillToUnlock(id))
+                                    .map(ResourceLocation::toString)
+                                    .toList())
                             .build(),
                     player
             );

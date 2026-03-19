@@ -54,6 +54,8 @@ public class StructureUtils {
         int defaultY = 0;
 
         for (String blockStr : stackedBlocks) {
+            if (blockStr == null || blockStr.isEmpty()) continue;
+
             String[] parts = blockStr.split("\\|");
             BlockPos pos = new BlockPos(0, defaultY, 0);
             String blockIdPart = parts[0];
@@ -63,24 +65,38 @@ public class StructureUtils {
             if (parts[0].contains(",")) {
                 String[] coords = parts[0].split(",");
                 if (coords.length == 3) {
-                    pos = new BlockPos(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]), Integer.parseInt(coords[2]));
-                }
-                blockIdPart = parts[1];
-                propIndex = 2;
-            }
-
-            ResourceLocation id = new ResourceLocation(blockIdPart);
-            Block block = BuiltInRegistries.BLOCK.get(id);
-            if (block != net.minecraft.world.level.block.Blocks.AIR) {
-                BlockState state = block.defaultBlockState();
-                if (parts.length > propIndex) {
-                    String[] props = parts[propIndex].split(",");
-                    for (String propStr : props) {
-                        String[] kv = propStr.split("=");
-                        if (kv.length == 2) state = setProperty(state, kv[0], kv[1]);
+                    try {
+                        pos = new BlockPos(Integer.parseInt(coords[0].trim()), Integer.parseInt(coords[1].trim()), Integer.parseInt(coords[2].trim()));
+                        if (parts.length > 1) {
+                            blockIdPart = parts[1];
+                            propIndex = 2;
+                        } else {
+                            Constants.LOG.error("Malformed stacked block (missing ID after coordinates): {}", blockStr);
+                            continue;
+                        }
+                    } catch (NumberFormatException e) {
+                        Constants.LOG.error("Malformed coordinates in stacked block: {}", blockStr);
+                        continue;
                     }
                 }
-                blocks.put(pos, state);
+            }
+
+            try {
+                ResourceLocation id = new ResourceLocation(blockIdPart);
+                Block block = BuiltInRegistries.BLOCK.get(id);
+                if (block != net.minecraft.world.level.block.Blocks.AIR) {
+                    BlockState state = block.defaultBlockState();
+                    if (parts.length > propIndex) {
+                        String[] props = parts[propIndex].split(",");
+                        for (String propStr : props) {
+                            String[] kv = propStr.split("=");
+                            if (kv.length == 2) state = setProperty(state, kv[0].trim(), kv[1].trim());
+                        }
+                    }
+                    blocks.put(pos, state);
+                }
+            } catch (Exception e) {
+                Constants.LOG.error("Failed to parse block in stacked block: {}", blockStr, e);
             }
 
             if (!parts[0].contains(",")) defaultY++;

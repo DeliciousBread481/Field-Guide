@@ -63,7 +63,7 @@ public class FieldGuideScanManager {
         }
     }
 
-    public void handleTargetAcquisition(Minecraft minecraft, Object foundTarget, double hitDistSq, BlockHitResult blockHit) {
+    public void handleTargetAcquisition(Minecraft minecraft, Object foundTarget, Object resolvedEntry, double hitDistSq, BlockHitResult blockHit) {
         FieldGuideScanState state = FieldGuideScanState.getInstance();
         if (foundTarget != null) {
             boolean usingSpyglass = minecraft.player != null && (minecraft.player.isScoping() ||
@@ -86,20 +86,29 @@ public class FieldGuideScanManager {
                 state.setOutOfRangeTarget(null);
                 state.setOutOfRangePos(null);
 
-                BlockPos posContext = (foundTarget instanceof Block) ? blockHit.getBlockPos() : ((Entity) foundTarget).blockPosition();
-                Object baseTarget = foundTarget;
-                if (foundTarget instanceof Entity entity) {
-                    if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
-                        baseTarget = FieldGuideCobblemonCompat.getPokemonEntryId(entity);
-                    } else {
-                        baseTarget = entity.getType();
+                Object targetKey = resolvedEntry;
+
+                if (targetKey == null) {
+                    BlockPos posContext = (foundTarget instanceof Block) ? blockHit.getBlockPos() : ((Entity) foundTarget).blockPosition();
+                    Object baseTarget = foundTarget;
+                    if (foundTarget instanceof Entity entity) {
+                        if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
+                            baseTarget = FieldGuideCobblemonCompat.getPokemonEntryId(entity);
+                        } else {
+                            baseTarget = entity.getType();
+                        }
                     }
+                    targetKey = FieldGuideRaytracer.getInstance().getContextAwareEntry(baseTarget, minecraft, posContext);
+                    if (targetKey == null) targetKey = baseTarget;
                 }
 
-                Object targetKey = FieldGuideRaytracer.getInstance().getContextAwareEntry(baseTarget, minecraft, posContext);
-
-                if (targetKey == null)
-                    targetKey = baseTarget;
+                ResourceLocation entryId = ClientFieldGuideManager.getEntryId(targetKey);
+                if (entryId != null && ClientFieldGuideManager.getInstance().isKillToUnlock(entryId)) {
+                    state.setOutOfRangeTarget(foundTarget);
+                    state.setOutOfRangePos(null);
+                    state.resetScanTicks();
+                    return;
+                }
 
                 boolean sameTarget = (state.getScanningTarget() instanceof Entity && foundTarget instanceof Entity)
                         ? state.getScanningTarget() == foundTarget
@@ -117,6 +126,7 @@ public class FieldGuideScanManager {
                 } else {
                     state.setPrevScanTicks(0);
                     state.setScanningTarget(foundTarget);
+                    state.setScanningEntry(targetKey);
                     state.setScanningPos((state.getScanningTarget() instanceof Block) ? blockHit.getBlockPos() : null);
 
                     if (ModConfig.get().playScanningSound) {
@@ -192,6 +202,7 @@ public class FieldGuideScanManager {
         }
 
         state.setFadingTarget(foundTarget);
+        state.setFadingEntry(targetKey);
         state.setFadingPos((foundTarget instanceof Block) ? state.getScanningPos() : null);
         state.setFadeTicks(FADE_DURATION);
 

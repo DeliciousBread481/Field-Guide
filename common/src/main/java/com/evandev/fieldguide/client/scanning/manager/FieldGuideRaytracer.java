@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.client.scanning.manager;
 
+import com.evandev.fieldguide.api.AutoPopulateRegistry;
 import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
@@ -67,6 +68,7 @@ public class FieldGuideRaytracer {
         }
 
         Object foundTarget = null;
+        Object entryForTarget = null;
         double entityDist = entityHit != null ? eyePos.distanceToSqr(entityHit.getLocation()) : Double.MAX_VALUE;
         double blockDist = blockHit.getType() != HitResult.Type.MISS ? eyePos.distanceToSqr(blockHit.getLocation()) : Double.MAX_VALUE;
         double hitDistSq = Math.min(entityDist, blockDist);
@@ -93,7 +95,22 @@ public class FieldGuideRaytracer {
                 }
             }
 
-            Object entryForTarget = getContextAwareEntry(actualTargetKey, minecraft, hitEntity.blockPosition());
+            entryForTarget = getContextAwareEntry(actualTargetKey, minecraft, hitEntity.blockPosition());
+
+            if (!(hitEntity instanceof ItemEntity)) {
+                List<Object> entries = ClientFieldGuideManager.getInstance().getEntriesForTarget(actualTargetKey);
+                for (Object e : entries) {
+                    ResourceLocation entryId = ClientFieldGuideManager.getEntryId(e);
+                    if (entryId != null && entryId.equals(originalId)) {
+                        String key = AutoPopulateRegistry.getEntryKey(e);
+                        if (key.startsWith("entity/")) {
+                            entryForTarget = e;
+                            break;
+                        }
+                    }
+                }
+            }
+
             Category cat = ClientFieldGuideManager.getInstance().getCategoryForEntry(entryForTarget);
             boolean isScannable = cat != null;
 
@@ -138,7 +155,7 @@ public class FieldGuideRaytracer {
                     }
                 }
 
-                Object entryForTarget = getContextAwareEntry(actualTargetKey, minecraft, blockHit.getBlockPos());
+                entryForTarget = getContextAwareEntry(actualTargetKey, minecraft, blockHit.getBlockPos());
                 Category cat = ClientFieldGuideManager.getInstance().getCategoryForEntry(entryForTarget);
                 if (entryForTarget != null && !ProgressManager.getInstance().isUnlocked(entryForTarget) && cat != null) {
                     foundTarget = block;
@@ -162,7 +179,7 @@ public class FieldGuideRaytracer {
                     }
                 }
 
-                Object entryForTarget = getContextAwareEntry(actualTargetKey, minecraft, firstBlockHit.getBlockPos());
+                entryForTarget = getContextAwareEntry(actualTargetKey, minecraft, firstBlockHit.getBlockPos());
                 Category cat = ClientFieldGuideManager.getInstance().getCategoryForEntry(entryForTarget);
                 if (entryForTarget != null && !ProgressManager.getInstance().isUnlocked(entryForTarget) && cat != null) {
                     foundTarget = block;
@@ -172,7 +189,7 @@ public class FieldGuideRaytracer {
             }
         }
 
-        FieldGuideScanManager.getInstance().handleTargetAcquisition(minecraft, foundTarget, hitDistSq, blockHit);
+        FieldGuideScanManager.getInstance().handleTargetAcquisition(minecraft, foundTarget, entryForTarget, hitDistSq, blockHit);
     }
 
     public Object getContextAwareEntry(Object target, Minecraft minecraft, BlockPos pos) {

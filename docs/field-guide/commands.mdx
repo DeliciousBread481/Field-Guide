@@ -32,6 +32,6 @@ If you've made any edits to entry names or descriptions in-game, you can export 
 * **Export Names:** `/fieldguide export names`
 * **Export Descriptions:** `/fieldguide export descriptions`
 * **Export All:** `/fieldguide export all`
-* **Export Feature:** `/fieldguide export feature <feature_id> [base_block_id]` (Generates a specific worldgen feature in the world and exports it as an NBT structure file).
+* **Export Feature:** `/fieldguide export feature <feature_id> [base_block_id]` (Clears a 32x32 area, generates a specific worldgen feature, and exports all non-air blocks as an NBT structure file. The `base_block_id` defaults to `minecraft:dirt` and is placed under the feature during generation).
 
 *The generated `.json` and `.nbt` files will be saved in a `fieldguide_exports` folder inside your Minecraft directory.*
