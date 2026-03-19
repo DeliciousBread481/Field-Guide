@@ -62,6 +62,15 @@ public class PlayerFieldGuideProgress {
             pendingRevokes.remove(id);
             newlyUnlocked = true;
             UnlockRewards.grant(player, entryId);
+            FieldGuideTriggers.ENTRY_UNLOCKED.trigger(player, entryId);
+
+            ResourceLocation categoryId = ServerFieldGuideManager.getInstance().getCategoryForEntryId(entryId);
+            if (categoryId != null) {
+                Set<ResourceLocation> categoryEntries = ServerFieldGuideManager.getInstance().getEntryIdsForCategory(categoryId);
+                if (!categoryEntries.isEmpty() && categoryEntries.stream().allMatch(e -> isUnlocked(e.toString()))) {
+                    FieldGuideTriggers.CATEGORY_COMPLETED.trigger(player, categoryId);
+                }
+            }
         }
 
         if (variantId != null && !variantId.isEmpty()) {

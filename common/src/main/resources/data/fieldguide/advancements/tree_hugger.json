@@ -1,0 +1,29 @@
+{
+  "parent": "fieldguide:first_discovery",
+  "display": {
+    "icon": {
+      "item": "minecraft:oak_sapling"
+    },
+    "title": {
+      "translate": "advancements.fieldguide.tree_hugger.title"
+    },
+    "description": {
+      "translate": "advancements.fieldguide.tree_hugger.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "complete": {
+      "trigger": "fieldguide:category_completed",
+      "conditions": {
+        "category": "fieldguide:plants"
+      }
+    }
+  },
+  "rewards": {
+    "experience": 100
+  }
+}

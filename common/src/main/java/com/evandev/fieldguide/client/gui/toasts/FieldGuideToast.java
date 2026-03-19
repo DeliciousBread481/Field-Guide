@@ -96,7 +96,7 @@ public class FieldGuideToast implements Toast {
         } else if (coreEntry instanceof Block block) {
             EntryRenderHelper.renderBlock(guiGraphics, block, iconX, iconY, 12.0F, true, false, 1.0F);
         } else if (coreEntry instanceof Item item) {
-            EntryRenderHelper.renderItem(guiGraphics, item, iconX, iconY, 12.0F, true, false, 1.0F);
+            EntryRenderHelper.renderItem(guiGraphics, item, iconX, iconY, 20.0F, true, false, 1.0F);
         } else {
             guiGraphics.blit(Constants.TOAST_ICON, 8, 8, 0, 0, 16, 16, 16, 16);
         }
