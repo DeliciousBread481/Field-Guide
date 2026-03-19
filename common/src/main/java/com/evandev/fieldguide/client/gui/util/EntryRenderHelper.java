@@ -12,6 +12,7 @@ import com.evandev.fieldguide.mixin.accessor.EntityAccessor;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import com.evandev.fieldguide.util.StructureUtils;
+import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -229,7 +230,7 @@ public class EntryRenderHelper {
             PoseStack pose = new PoseStack();
             pose.scale(clampedScale, -clampedScale, -clampedScale);
             pose.mulPose(Axis.XP.rotationDegrees(30.0F));
-            pose.mulPose(Axis.YP.rotationDegrees(45.0F));
+            pose.mulPose(Axis.YP.rotationDegrees(210.0F));
             pose.translate(-0.5, -0.5, -0.5);
 
             MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
@@ -291,9 +292,9 @@ public class EntryRenderHelper {
             boolean is3d = Minecraft.getInstance().getItemRenderer().getModel(stack, null, null, 0).isGui3d();
 
             if (is3d) {
-                com.mojang.blaze3d.platform.Lighting.setupFor3DItems();
+                Lighting.setupFor3DItems();
             } else {
-                com.mojang.blaze3d.platform.Lighting.setupForFlatItems();
+                Lighting.setupForFlatItems();
             }
 
             ResourceLocation id = ClientFieldGuideManager.getEntryId(item);
@@ -306,7 +307,7 @@ public class EntryRenderHelper {
 
             if (is3d) {
                 pose.mulPose(Axis.XP.rotationDegrees(30.0F));
-                pose.mulPose(Axis.YP.rotationDegrees(45.0F));
+                pose.mulPose(Axis.YP.rotationDegrees(210.0F));
             }
 
             MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
@@ -353,7 +354,7 @@ public class EntryRenderHelper {
             pose.scale(scale, -scale, -scale);
 
             pose.mulPose(Axis.XP.rotationDegrees(30.0F));
-            pose.mulPose(Axis.YP.rotationDegrees(45.0F));
+            pose.mulPose(Axis.YP.rotationDegrees(210.0F));
 
             float centerX = minX + width / 2.0f;
             float centerY = minY + height / 2.0f;
@@ -427,14 +428,14 @@ public class EntryRenderHelper {
     }
 
     private static void setupFieldGuideEntityLighting() {
-        Vector3f light0 = new Vector3f(0.4F, -1.0F, -1.0F).normalize();
-        Vector3f light1 = new Vector3f(-0.4F, -1.0F, -1.0F).normalize();
+        Vector3f light0 = new Vector3f(1.0F, -1.0F, -1.0F).normalize();
+        Vector3f light1 = new Vector3f(-1.0F, -1.0F, -1.0F).normalize();
         RenderSystem.setShaderLights(light0, light1);
     }
 
     private static void setupFieldGuideBlockLighting() {
-        Vector3f light0 = new Vector3f(0.4F, -1.0F, -1.0F).normalize();
-        Vector3f light1 = new Vector3f(-0.2F, -1.0F, -1.0F).normalize();
+        Vector3f light0 = new Vector3f(0.2F, -1.0F, 0.7F).normalize();
+        Vector3f light1 = new Vector3f(-0.2F, 0.0F, -0.7F).normalize();
         RenderSystem.setShaderLights(light0, light1);
     }
 
