@@ -464,8 +464,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             if (mouseX >= xPos - 50 && mouseX <= xPos + 50 && mouseY >= yPos - 50 && mouseY <= yPos + 50) {
                 if (ClientFieldGuideManager.isUnlocked(entry)) {
                     if (button == 0) {
-                        ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
-                        EntryVisual visual = entryId != null ? ClientFieldGuideManager.getInstance().getEntryVisual(entryId) : null;
+                        EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(entry);
 
                         if (visual != null && visual.customSound != null && this.minecraft != null) {
                             this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(visual.customSound), 1.0F, 1.0F));

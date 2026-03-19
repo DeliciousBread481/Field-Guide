@@ -29,7 +29,7 @@ public class ClientVisualManager {
     public EntryVisual getEntryVisual(String entryKey) {
         if (entryKey == null || entryKey.isEmpty()) return new EntryVisual();
 
-        // 1. Try prefixed key (e.g. "entity:minecraft:chicken")
+        // 1. Try prefixed key (e.g. "entity:minecraft/chicken")
         ResourceLocation prefixedId = new ResourceLocation(entryKey);
         if (entryVisuals.containsKey(prefixedId)) {
             return entryVisuals.get(prefixedId);
@@ -38,6 +38,14 @@ public class ClientVisualManager {
         // 2. Try base ID (e.g. "minecraft:chicken")
         if (entryKey.contains(":")) {
             String baseIdStr = entryKey.substring(entryKey.indexOf(":") + 1);
+            if (baseIdStr.contains("/")) {
+                String[] parts = baseIdStr.split("/", 2);
+                ResourceLocation baseId = new ResourceLocation(parts[0], parts[1]);
+                if (entryVisuals.containsKey(baseId)) {
+                    return entryVisuals.get(baseId);
+                }
+            }
+
             ResourceLocation baseId = new ResourceLocation(baseIdStr);
             if (entryVisuals.containsKey(baseId)) {
                 return entryVisuals.get(baseId);

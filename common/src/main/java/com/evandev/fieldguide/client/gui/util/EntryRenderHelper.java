@@ -138,7 +138,7 @@ public class EntryRenderHelper {
                 finalProvider.apply(mob, finalVariant);
             }
 
-            renderEntity(entity, finalBaseId, isPage, -30.0F);
+            renderEntity(entity, entity.getType(), isPage, -30.0F);
 
             if (finalProvider != null && entity instanceof Mob mob && tempOriginal != null) {
                 finalProvider.apply(mob, tempOriginal);
@@ -159,9 +159,9 @@ public class EntryRenderHelper {
         });
     }
 
-    private static void renderEntity(Entity entity, ResourceLocation id, boolean isPage, float yRotation) {
+    private static void renderEntity(Entity entity, Object entrySource, boolean isPage, float yRotation) {
         setupFieldGuideEntityLighting();
-        EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(id);
+        EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(entrySource);
 
         float visualScale = getVisualScale(visual, isPage);
         float yOff = getYOffset(visual, isPage);
@@ -213,7 +213,7 @@ public class EntryRenderHelper {
             Minecraft.getInstance().getEntityRenderDispatcher().render(entity, 0, 0, 0, 0.0F, 1.0F, pose, buffers, LightTexture.FULL_BRIGHT);
             Minecraft.getInstance().getEntityRenderDispatcher().render(entity, 0, 0, 0, 0.0F, 1.0F, pose, buffers, LightTexture.FULL_BRIGHT);
         } catch (Exception e) {
-            Constants.LOG.error("Failed to render entity in Field Guide: {}", id, e);
+            Constants.LOG.error("Failed to render entity in Field Guide: {}", entrySource, e);
         } finally {
             buffers.endBatch();
         }
@@ -224,8 +224,7 @@ public class EntryRenderHelper {
 
         renderWithCache(block, block, guiGraphics, x, y, scaledSize, scaledSize, unlocked, isPage, bounceScale, () -> {
             setupFieldGuideBlockLighting();
-            ResourceLocation id = AutoPopulateRegistry.getEntryId(block);
-            EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(id);
+            EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(block);
 
             float clampedScale = 100f * getVisualScale(visual, isPage);
 
@@ -293,8 +292,7 @@ public class EntryRenderHelper {
             ItemStack stack = new ItemStack(item);
             Lighting.setupForFlatItems();
 
-            ResourceLocation id = AutoPopulateRegistry.getEntryId(item);
-            EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(id);
+            EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(item);
 
             float clampedScale = 100f * getVisualScale(visual, isPage);
 
