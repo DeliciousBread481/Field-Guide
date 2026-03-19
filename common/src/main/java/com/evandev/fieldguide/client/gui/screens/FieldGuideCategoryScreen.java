@@ -822,7 +822,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
         } else if (coreEntry instanceof Block block) {
             EntryRenderHelper.renderBlock(guiGraphics, block, x, y, 15.0F, unlocked, false, 1.0F);
         } else if (coreEntry instanceof Item item) {
-            EntryRenderHelper.renderItem(guiGraphics, item, x, y, 15.0F, unlocked, false, 1.0F);
+            EntryRenderHelper.renderItem(guiGraphics, item, x, y, 20.0F, unlocked, false, 1.0F);
         }
     }
 }

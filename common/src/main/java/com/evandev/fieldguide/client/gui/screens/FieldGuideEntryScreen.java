@@ -538,7 +538,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
         } else if (renderEntry instanceof Item item) {
             if (!hideEntity) {
-                EntryRenderHelper.renderItem(guiGraphics, item, xPos, yPos, 40.0F, unlocked, true, bounce);
+                EntryRenderHelper.renderItem(guiGraphics, item, xPos, yPos, 60.0F, unlocked, true, bounce);
             }
         }
 
