@@ -2,11 +2,13 @@ package com.evandev.fieldguide.network;
 
 import com.evandev.fieldguide.server.ScanVerifier;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
+import com.evandev.fieldguide.server.progress.FieldGuideTriggers;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 
 public class ScanUnlockPacket {
     private final ResourceLocation entryId;
@@ -56,6 +58,13 @@ public class ScanUnlockPacket {
         if (manager.isKillToUnlock(entryId)) return;
 
         if (!ScanVerifier.verifyScan(player, entryId, scannedTargetId, targetBlockPos, targetEntityId)) return;
+
+        if (targetEntityId != 0) {
+            Entity entity = player.serverLevel().getEntity(targetEntityId);
+            if (entity != null) {
+                FieldGuideTriggers.SCAN_ENTITY.trigger(player, entity);
+            }
+        }
 
         progress.unlock(player, entryId, variantId);
     }

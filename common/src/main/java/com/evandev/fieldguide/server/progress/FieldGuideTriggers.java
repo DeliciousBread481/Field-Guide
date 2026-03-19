@@ -6,6 +6,8 @@ import com.google.gson.JsonObject;
 import net.minecraft.advancements.critereon.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.storage.loot.LootContext;
 import org.jetbrains.annotations.NotNull;
 
 public class FieldGuideTriggers {
@@ -15,7 +17,50 @@ public class FieldGuideTriggers {
     public static final CategoryCompletedTrigger CATEGORY_COMPLETED =
             CriteriaTriggersAccessor.callRegister(new CategoryCompletedTrigger());
 
+    public static final ScanEntityTrigger SCAN_ENTITY =
+            CriteriaTriggersAccessor.callRegister(new ScanEntityTrigger());
+
     public static void init() {
+    }
+
+    public static class ScanEntityTrigger extends SimpleCriterionTrigger<ScanEntityTrigger.Instance> {
+        private static final ResourceLocation ID = new ResourceLocation(Constants.MOD_ID, "scan_entity");
+
+        @Override
+        public @NotNull ResourceLocation getId() {
+            return ID;
+        }
+
+        @Override
+        protected @NotNull Instance createInstance(JsonObject json, @NotNull ContextAwarePredicate playerPredicate, @NotNull DeserializationContext context) {
+            ContextAwarePredicate entityPredicate = EntityPredicate.fromJson(json, "entity", context);
+            return new Instance(playerPredicate, entityPredicate);
+        }
+
+        public void trigger(ServerPlayer player, Entity entity) {
+            LootContext lootContext = EntityPredicate.createContext(player, entity);
+            this.trigger(player, instance -> instance.matches(lootContext));
+        }
+
+        public static class Instance extends AbstractCriterionTriggerInstance {
+            private final ContextAwarePredicate entityPredicate;
+
+            public Instance(ContextAwarePredicate playerPredicate, ContextAwarePredicate entityPredicate) {
+                super(ID, playerPredicate);
+                this.entityPredicate = entityPredicate;
+            }
+
+            @Override
+            public @NotNull JsonObject serializeToJson(@NotNull SerializationContext context) {
+                JsonObject json = super.serializeToJson(context);
+                json.add("entity", entityPredicate.toJson(context));
+                return json;
+            }
+
+            public boolean matches(LootContext lootContext) {
+                return this.entityPredicate.matches(lootContext);
+            }
+        }
     }
 
     public static class EntryUnlockedTrigger extends SimpleCriterionTrigger<EntryUnlockedTrigger.Instance> {

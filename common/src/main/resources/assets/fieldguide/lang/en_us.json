@@ -283,6 +283,8 @@
   "advancements.fieldguide.creeper_scan.description": "Stare at a Creeper through a Spyglass. Bold move",
   "advancements.fieldguide.enderman_scan.title": "Staring Contest",
   "advancements.fieldguide.enderman_scan.description": "Scan an Enderman. Try not to blink",
+  "advancements.fieldguide.gem_alert.title": "Gem Alert",
+  "advancements.fieldguide.gem_alert.description": "Scan a mob within 2 blocks of it",
 
   "fieldguide.journal.default": ""
 }
