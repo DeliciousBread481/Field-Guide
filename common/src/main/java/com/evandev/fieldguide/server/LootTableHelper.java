@@ -2,9 +2,11 @@ package com.evandev.fieldguide.server;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.AutoPopulateRegistry;
+import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.server.loot.ParsedDrop;
 import com.evandev.fieldguide.server.loot.StaticLootParser;
 import com.evandev.fieldguide.util.EntryResolver;
+import com.evandev.fieldguide.util.entry.EntryResolutionHelper;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
@@ -24,15 +26,20 @@ public class LootTableHelper {
 
     public static Map<ResourceLocation, List<ItemStack>> generateLootMap(ServerLevel level) {
         Map<ResourceLocation, List<ItemStack>> lootMap = new HashMap<>();
-        for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
-            ResourceLocation tableId = type.getDefaultLootTable();
-            processEntry(level, type, tableId, lootMap);
-        }
-        for (Block block : BuiltInRegistries.BLOCK) {
-            processEntry(level, block, block.getLootTable(), lootMap);
-        }
-        for (Item item : BuiltInRegistries.ITEM) {
-            processEntry(level, item, null, lootMap);
+        Set<ResourceLocation> allEntryIds = ServerFieldGuideManager.getInstance().getAllEntryIds();
+
+        for (ResourceLocation entryId : allEntryIds) {
+            EntryResolutionHelper.resolveSingleEntry(entryId, null, null).ifPresent(entry -> {
+                ResourceLocation tableId = null;
+                if (entry instanceof EntityType<?> type) tableId = type.getDefaultLootTable();
+                else if (entry instanceof Block block) tableId = block.getLootTable();
+                else if (entry instanceof CompositeFieldGuideEntry composite) {
+                    Object display = composite.displayEntry();
+                    if (display instanceof EntityType<?> type) tableId = type.getDefaultLootTable();
+                    else if (display instanceof Block block) tableId = block.getLootTable();
+                }
+                processEntry(level, entry, tableId, lootMap);
+            });
         }
         return lootMap;
     }
@@ -83,7 +90,9 @@ public class LootTableHelper {
             }
             return false;
         }
-        return entryId.toString().equals(targetStr);
+
+        ResourceLocation targetId = EntryResolver.getRawId(new ResourceLocation(targetStr));
+        return entryId.equals(targetId);
     }
 
     public static void applyConfigModifications(Object entry, List<ItemStack> distinctDrops) {
@@ -130,7 +139,7 @@ public class LootTableHelper {
                     } catch (Exception ignored) {
                     }
                 } else {
-                    Item i = BuiltInRegistries.ITEM.get(new ResourceLocation(target));
+                    Item i = BuiltInRegistries.ITEM.get(EntryResolver.getRawId(new ResourceLocation(target)));
                     if (i != Items.AIR) {
                         ItemStack s = new ItemStack(i);
                         s.getOrCreateTag().putFloat("FieldGuideDropChance", 100.0f);

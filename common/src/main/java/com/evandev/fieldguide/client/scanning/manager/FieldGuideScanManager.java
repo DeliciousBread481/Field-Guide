@@ -6,6 +6,7 @@ import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.network.ScanUnlockPacket;
 import com.evandev.fieldguide.platform.Services;
+import com.evandev.fieldguide.util.EntryResolver;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import com.evandev.fieldguide.util.ModTags;
 import net.minecraft.client.Minecraft;
@@ -158,11 +159,12 @@ public class FieldGuideScanManager {
         if (targetId != null) {
             ResourceLocation redirectId = ClientFieldGuideManager.getInstance().getRedirect(targetId);
             if (redirectId != null) {
-                Optional<EntityType<?>> entityType = BuiltInRegistries.ENTITY_TYPE.getOptional(redirectId);
+                ResourceLocation rawRedirectId = EntryResolver.getRawId(redirectId);
+                Optional<EntityType<?>> entityType = BuiltInRegistries.ENTITY_TYPE.getOptional(rawRedirectId);
                 if (entityType.isPresent()) {
                     targetKey = entityType.get();
                 } else {
-                    Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(redirectId);
+                    Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(rawRedirectId);
                     if (block.isPresent()) targetKey = block.get();
                 }
 

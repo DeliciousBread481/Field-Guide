@@ -4,6 +4,7 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.screens.BookScreen;
+import com.evandev.fieldguide.util.EntryResolver;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.Tooltip;
@@ -44,7 +45,7 @@ public class TabButton extends ImageButton {
         if (isSelected) iconX = iconX + 1;
 
         ResourceLocation icon = category.getIcon();
-        Item item = BuiltInRegistries.ITEM.get(icon);
+        Item item = BuiltInRegistries.ITEM.get(EntryResolver.getRawId(icon));
         if (item != BuiltInRegistries.ITEM.get(BuiltInRegistries.ITEM.getDefaultKey())) {
             guiGraphics.renderItem(new ItemStack(item), iconX, iconY);
         } else {

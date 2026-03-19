@@ -10,6 +10,7 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.*;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.platform.Services;
+import com.evandev.fieldguide.util.EntryResolver;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -272,7 +273,7 @@ public final class FieldGuideCobblemonCompat {
                                             float chance = dropJson.has("percentage") ? dropJson.get("percentage").getAsFloat() : 100f;
                                             int quantity = dropJson.has("quantity") ? dropJson.get("quantity").getAsInt() : 1;
 
-                                            Item item = BuiltInRegistries.ITEM.get(new ResourceLocation(itemStr));
+                                            Item item = BuiltInRegistries.ITEM.get(EntryResolver.getRawId(new ResourceLocation(itemStr)));
                                             if (item != Items.AIR) {
                                                 ItemStack stack = new ItemStack(item, quantity);
                                                 stack.getOrCreateTag().putFloat("FieldGuideDropChance", chance);

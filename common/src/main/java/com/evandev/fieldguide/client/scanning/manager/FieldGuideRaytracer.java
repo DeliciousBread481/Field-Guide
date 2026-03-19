@@ -8,6 +8,7 @@ import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.platform.Services;
+import com.evandev.fieldguide.util.EntryResolver;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -87,10 +88,11 @@ public class FieldGuideRaytracer {
             } else if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(hitEntity)) {
                 actualTargetKey = FieldGuideCobblemonCompat.getPokemonEntryId(hitEntity);
             } else if (redirectId != null) {
-                Optional<EntityType<?>> opt = BuiltInRegistries.ENTITY_TYPE.getOptional(redirectId);
+                ResourceLocation rawRedirectId = EntryResolver.getRawId(redirectId);
+                Optional<EntityType<?>> opt = BuiltInRegistries.ENTITY_TYPE.getOptional(rawRedirectId);
                 if (opt.isPresent()) actualTargetKey = opt.get();
                 else {
-                    Optional<Block> optBlock = BuiltInRegistries.BLOCK.getOptional(redirectId);
+                    Optional<Block> optBlock = BuiltInRegistries.BLOCK.getOptional(rawRedirectId);
                     if (optBlock.isPresent()) actualTargetKey = optBlock.get();
                 }
             }
@@ -147,10 +149,11 @@ public class FieldGuideRaytracer {
 
                 Object actualTargetKey = block;
                 if (redirectId != null) {
-                    Optional<Block> opt = BuiltInRegistries.BLOCK.getOptional(redirectId);
+                    ResourceLocation rawRedirectId = EntryResolver.getRawId(redirectId);
+                    Optional<Block> opt = BuiltInRegistries.BLOCK.getOptional(rawRedirectId);
                     if (opt.isPresent()) actualTargetKey = opt.get();
                     else {
-                        Optional<EntityType<?>> optEntity = BuiltInRegistries.ENTITY_TYPE.getOptional(redirectId);
+                        Optional<EntityType<?>> optEntity = BuiltInRegistries.ENTITY_TYPE.getOptional(rawRedirectId);
                         if (optEntity.isPresent()) actualTargetKey = optEntity.get();
                     }
                 }
@@ -171,10 +174,11 @@ public class FieldGuideRaytracer {
 
                 Object actualTargetKey = block;
                 if (redirectId != null) {
-                    Optional<Block> opt = BuiltInRegistries.BLOCK.getOptional(redirectId);
+                    ResourceLocation rawRedirectId = EntryResolver.getRawId(redirectId);
+                    Optional<Block> opt = BuiltInRegistries.BLOCK.getOptional(rawRedirectId);
                     if (opt.isPresent()) actualTargetKey = opt.get();
                     else {
-                        Optional<EntityType<?>> optEntity = BuiltInRegistries.ENTITY_TYPE.getOptional(redirectId);
+                        Optional<EntityType<?>> optEntity = BuiltInRegistries.ENTITY_TYPE.getOptional(rawRedirectId);
                         if (optEntity.isPresent()) actualTargetKey = optEntity.get();
                     }
                 }

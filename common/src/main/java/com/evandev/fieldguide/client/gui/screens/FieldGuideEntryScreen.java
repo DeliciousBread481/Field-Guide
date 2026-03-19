@@ -19,6 +19,7 @@ import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.network.RipOutPacket;
 import com.evandev.fieldguide.platform.Services;
+import com.evandev.fieldguide.util.EntryResolver;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.ChatFormatting;
@@ -384,7 +385,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             for (String addition : categoryManager.getLootAdditions()) {
                 String[] parts = addition.split("\\|", 2);
                 if (parts.length == 2 && categoryManager.isLootMatch(entry, new ResourceLocation(parts[1]))) {
-                    ResourceLocation itemId = new ResourceLocation(parts[1]);
+                    ResourceLocation itemId = EntryResolver.getRawId(new ResourceLocation(parts[1]));
                     ItemStack stack = new ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(itemId));
                     if (!stack.isEmpty()) {
                         stack.getOrCreateTag().putFloat("FieldGuideDropChance", 100.0f);

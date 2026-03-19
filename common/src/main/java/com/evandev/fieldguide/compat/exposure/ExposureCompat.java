@@ -1,9 +1,9 @@
 package com.evandev.fieldguide.compat.exposure;
 
-import com.evandev.fieldguide.api.VariantProvider;
-import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.api.VariantDef;
+import com.evandev.fieldguide.api.VariantProvider;
+import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
@@ -45,7 +45,7 @@ public class ExposureCompat {
             for (EntityInFrame entityInFrame : frame.entitiesInFrame()) {
                 ResourceLocation entityId = entityInFrame.id();
                 if (entityId != null) {
-                    BuiltInRegistries.ENTITY_TYPE.getOptional(entityId).ifPresent(type -> hitTargets.put(type, null));
+                    BuiltInRegistries.ENTITY_TYPE.getOptional(EntryResolver.getRawId(entityId)).ifPresent(type -> hitTargets.put(type, null));
                 }
             }
         }

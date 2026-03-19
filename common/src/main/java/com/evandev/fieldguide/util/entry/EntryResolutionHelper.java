@@ -2,6 +2,7 @@ package com.evandev.fieldguide.util.entry;
 
 import com.evandev.fieldguide.api.*;
 import com.evandev.fieldguide.platform.Services;
+import com.evandev.fieldguide.util.EntryResolver;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
@@ -96,18 +97,19 @@ public class EntryResolutionHelper {
     }
 
     public static Optional<Object> resolveSingleEntryWithHint(ResourceLocation id, ResourceLocation categoryId, Object hint) {
+        ResourceLocation rawId = EntryResolver.getRawId(id);
         if (hint instanceof EntityType<?>) {
-            return BuiltInRegistries.ENTITY_TYPE.getOptional(id)
+            return BuiltInRegistries.ENTITY_TYPE.getOptional(rawId)
                     .filter(t -> EntryValidator.isValidEntity(t, categoryId))
                     .map(Object.class::cast)
                     .or(() -> resolveSingleEntry(id, categoryId, "animals"));
         } else if (hint instanceof Item) {
-            return BuiltInRegistries.ITEM.getOptional(id)
+            return BuiltInRegistries.ITEM.getOptional(rawId)
                     .filter(i -> EntryValidator.isValidItem(i, categoryId))
                     .map(Object.class::cast)
                     .or(() -> resolveSingleEntry(id, categoryId, "mod_items"));
         } else if (hint instanceof Block) {
-            return BuiltInRegistries.BLOCK.getOptional(id)
+            return BuiltInRegistries.BLOCK.getOptional(rawId)
                     .filter(b -> EntryValidator.isValidBlock(b, categoryId))
                     .map(Object.class::cast)
                     .or(() -> resolveSingleEntry(id, categoryId, "plants"));
@@ -133,26 +135,25 @@ public class EntryResolutionHelper {
             return Optional.of(new CompositeFieldGuideEntry(id, null, new ArrayList<>(), null, null));
         }
 
-        ResourceLocation finalId;
+        ResourceLocation finalId = EntryResolver.getRawId(id);
         String namespace = id.getNamespace();
-        if (namespace.equals("item") || namespace.equals("entity") || namespace.equals("block")) {
-            finalId = new ResourceLocation(id.getPath().replace("/", ":"));
-        } else {
-            finalId = id;
-        }
 
-        if (namespace.equals("item")) {
-            return BuiltInRegistries.ITEM.getOptional(finalId)
-                    .filter(i -> EntryValidator.isValidItem(i, categoryId))
-                    .map(Object.class::cast);
-        } else if (namespace.equals("entity")) {
-            return BuiltInRegistries.ENTITY_TYPE.getOptional(finalId)
-                    .filter(t -> EntryValidator.isValidEntity(t, categoryId))
-                    .map(Object.class::cast);
-        } else if (namespace.equals("block")) {
-            return BuiltInRegistries.BLOCK.getOptional(finalId)
-                    .filter(b -> EntryValidator.isValidBlock(b, categoryId))
-                    .map(Object.class::cast);
+        switch (namespace) {
+            case "item" -> {
+                return BuiltInRegistries.ITEM.getOptional(finalId)
+                        .filter(i -> EntryValidator.isValidItem(i, categoryId))
+                        .map(Object.class::cast);
+            }
+            case "entity" -> {
+                return BuiltInRegistries.ENTITY_TYPE.getOptional(finalId)
+                        .filter(t -> EntryValidator.isValidEntity(t, categoryId))
+                        .map(Object.class::cast);
+            }
+            case "block" -> {
+                return BuiltInRegistries.BLOCK.getOptional(finalId)
+                        .filter(b -> EntryValidator.isValidBlock(b, categoryId))
+                        .map(Object.class::cast);
+            }
         }
 
         String effectiveStrategy = getEffectiveStrategy(categoryId, strategyHint);
