@@ -55,6 +55,8 @@ public class SyncCategoriesPacket {
                     eb.readNullable(FriendlyByteBuf::readResourceLocation),
                     eb.readNullable(FriendlyByteBuf::readResourceLocation),
                     eb.readNullable(FriendlyByteBuf::readUtf),
+                    eb.readNullable(FriendlyByteBuf::readUtf),
+                    eb.readNullable(FriendlyByteBuf::readResourceLocation),
                     eb.readNullable(nb -> nb.readList(FriendlyByteBuf::readResourceLocation)),
                     eb.readNullable(FriendlyByteBuf::readResourceLocation),
                     eb.readNullable(nb -> nb.readList(FriendlyByteBuf::readUtf))
@@ -85,6 +87,8 @@ public class SyncCategoriesPacket {
                 eb.writeNullable(entry.id(), FriendlyByteBuf::writeResourceLocation);
                 eb.writeNullable(entry.displayId(), FriendlyByteBuf::writeResourceLocation);
                 eb.writeNullable(entry.strategy(), FriendlyByteBuf::writeUtf);
+                eb.writeNullable(entry.virtualType(), FriendlyByteBuf::writeUtf);
+                eb.writeNullable(entry.icon(), FriendlyByteBuf::writeResourceLocation);
                 eb.writeNullable(entry.components(), (nb, comps) -> nb.writeCollection(comps, FriendlyByteBuf::writeResourceLocation));
                 eb.writeNullable(entry.structureNbt(), FriendlyByteBuf::writeResourceLocation);
                 eb.writeNullable(entry.stackedBlocks(), (nb, blocks) -> nb.writeCollection(blocks, FriendlyByteBuf::writeUtf));

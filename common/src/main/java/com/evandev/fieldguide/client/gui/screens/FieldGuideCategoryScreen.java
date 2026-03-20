@@ -795,6 +795,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
     private void renderEntryInGrid(GuiGraphics guiGraphics, Object entry, int x, int y, boolean unlocked) {
         Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
         boolean isCobblemon = entry instanceof VirtualFieldGuideEntry virt && virt.virtualType().equals("cobblemon");
+        boolean isTutorial = entry instanceof VirtualFieldGuideEntry virt && virt.virtualType().equals("tutorial");
 
         if (unlocked && Services.PLATFORM.isModLoaded("exposure") && ClientConfig.get().exposureShowPhotographsInGrid) {
             ItemStack existingPhoto = ProgressManager.getInstance().getPhotograph(entry);
@@ -814,6 +815,8 @@ public class FieldGuideCategoryScreen extends BookScreen {
             }
         } else if (isCobblemon) {
             EntryRenderHelper.renderCobblemon(guiGraphics, (VirtualFieldGuideEntry) entry, x, y, CELL_SIZE - 8, CELL_SIZE - 8, unlocked, false, 1.0F);
+        } else if (isTutorial) {
+            EntryRenderHelper.renderTutorial(guiGraphics, (VirtualFieldGuideEntry) entry, x, y, CELL_SIZE - 8, CELL_SIZE - 8, unlocked, false, 1.0F);
         } else if (coreEntry instanceof EntityType<?>) {
             Entity entity = getCachedEntity(entry);
             if (entity != null) {

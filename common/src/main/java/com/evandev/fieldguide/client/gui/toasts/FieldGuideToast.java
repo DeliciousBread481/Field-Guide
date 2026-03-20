@@ -52,6 +52,7 @@ public class FieldGuideToast implements Toast {
         Object coreEntry = this.entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : this.entry;
 
         boolean isCobblemon = this.entry instanceof VirtualFieldGuideEntry virt && virt.virtualType().equals("cobblemon");
+        boolean isTutorial = this.entry instanceof VirtualFieldGuideEntry virt && virt.virtualType().equals("tutorial");
 
         if (!entityInitialized) {
             if (Services.PLATFORM.isModLoaded("cobblemon") && isCobblemon) {
@@ -83,6 +84,8 @@ public class FieldGuideToast implements Toast {
             }
         } else if (isCobblemon && cachedEntity instanceof LivingEntity) {
             EntryRenderHelper.renderCobblemon(guiGraphics, (VirtualFieldGuideEntry) this.entry, iconX, iconY, 24, 24, true, false, 1.0F);
+        } else if (isTutorial) {
+            EntryRenderHelper.renderTutorial(guiGraphics, (VirtualFieldGuideEntry) this.entry, iconX, iconY, 24, 24, true, false, 1.0F);
         } else if (coreEntry instanceof EntityType<?>) {
             if (cachedEntity != null) {
                 EntryRenderHelper.renderEntityNormalized(guiGraphics, cachedEntity, iconX, iconY, 24, 24, true, false, 1.0F);

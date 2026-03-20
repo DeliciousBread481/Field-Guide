@@ -5,14 +5,14 @@ hide_meta: true
 
 You can add new categories, reorganize existing ones, or add modded entities to the Field Guide using standard Minecraft **Datapacks**.
 
-### Defining Categories
+## Defining Categories
 
 Category files are JSON files located at:
 `data/<namespace>/fieldguide/categories/<filename>.json`
 
 The filename becomes the ID of the category (e.g., `wetlands.json` becomes `<namespace>:wetlands`).
 
-#### JSON Structure
+### JSON Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -21,7 +21,7 @@ The filename becomes the ID of the category (e.g., `wetlands.json` becomes `<nam
 | `replace` | Boolean | (Optional) If true, clears existing entries in this category before adding new ones. |
 | `contents` | Array | A list of entry objects. |
 
-#### Removing Default Categories
+### Removing Default Categories
 
 To remove a category provided by the mod (or another datapack), create a file with the **same ID** and use `"replace": true` with an empty contents list.
 The Field Guide automatically hides empty categories.
@@ -38,7 +38,7 @@ The Field Guide automatically hides empty categories.
 
 ```
 
-#### Content Types
+### Content Types
 
 1. **Manual Entry:** Adds a specific Entity, Block, or Item.
 
@@ -72,7 +72,46 @@ The Field Guide automatically hides empty categories.
 * `mod_items:<mod_id>`: All items from a specific mod.
 * `tag:<tag_id>`: All entities, blocks and items with a specific tag (e.g., `tag:minecraft:raiders` or `tag:minecraft:logs`).
 
-#### Content grouping
+3. **Virtual Entry:** Adds an entry that doesn't correspond to a single Entity, Block, or Item (e.g., custom modded species or tutorial pages).
+
+```json
+{
+  "type": "virtual_entry",
+  "id": "my_mod:my_custom_entry",
+  "virtual_type": "tutorial",
+  "icon": "fieldguide:textures/gui/scanning.png"
+}
+```
+
+* `id`: The unique identifier for this virtual entry.
+* `virtual_type`: A string identifier for the type of virtual entry.
+    * `cobblemon`: Handled by the Cobblemon compatibility layer.
+    * `tutorial`: Used for custom guide pages. These entries use the following translation keys for their content:
+        * **Name Key:** `fieldguide.name.<namespace>.<path>`
+        * **Description Key:** `fieldguide.<namespace>.<path>.description`
+* `icon` *(Optional)*: A standard Resource Location for a texture (e.g., `"fieldguide:textures/gui/scanning.png"`).
+
+**Example: A "How to Scan" Guide Page**
+
+1. Define the entry in a category (`data/my_mod/fieldguide/categories/guides.json`):
+```json
+{
+  "type": "virtual_entry",
+  "id": "my_mod:scanning_guide",
+  "virtual_type": "tutorial",
+  "icon": "fieldguide:textures/gui/scanning.png"
+}
+```
+
+2. Add the content to your language file (`assets/my_mod/lang/en_us.json`):
+```json
+{
+  "fieldguide.name.my_mod.scanning_guide": "Guide: Scanning",
+  "fieldguide.my_mod.scanning_guide.description": "To scan a mob, look at it through a Spyglass!"
+}
+```
+
+### Content Grouping
 
 By default entries in the list appear in the order they were defined in `content: []`. However, if you want similar entries to be grouped together, a list of ['search queries'](/project/field-guide/docs/field-guide/searching) can be provided in `group_by`.
 
@@ -94,11 +133,11 @@ Entries matched by the first query will show up first on the list, followed by e
 
 ---
 
-### For Mod Developers & Pack Makers
+## For Mod Developers & Pack Makers
 
 If you are a mod developer, you can ensure your mod plays nicely with Field Guide by providing your own built-in datapack data. Here are some tips and advanced entry types to help you integrate seamlessly.
 
-#### Plant blocks
+### Plant Blocks
 
 The default "Plants" category includes everything with the tag `fieldguide:plants`. To make sure your modded plant blocks show up, either apply this tag or one of the following:
 
@@ -109,14 +148,14 @@ The default "Plants" category includes everything with the tag `fieldguide:plant
 * `minecraft:tall_flowers`
 * `minecraft:leaves`
 
-#### Special Entity Tags
+### Special Entity Tags
 
 Field Guide uses specific entity tags to handle default scanning and categorization behaviors. Apply these tags to your mod's entities where appropriate:
 
 * `fieldguide:bosses`: Entities with this tag are excluded from the `monsters` and `animals` auto-populate strategies, and are moved to a special `bosses` category. **Note: Bosses are also set to "Kill to Unlock" by default.**
 * `fieldguide:kill_to_unlock`: Entities with this tag can't be scanned with a spyglass or the naked eye: the player must kill them to unlock their entry. (Defaults to all bosses).
 
-#### Discovery Redirects
+### Discovery Redirects
 
 Sometimes you may want scanning one entity to unlock the entry for a different one. This is useful for entities that have multiple variations or distinct parts (like multi-part bosses) where scanning any part should unlock the main entry.
 
@@ -141,7 +180,7 @@ You can define these redirects by creating a JSON file at:
 
 ```
 
-#### Composite Entries
+### Composite Entries
 
 A **Composite Entry** is a powerful feature that allows you to group multiple entities or blocks into a single book page, or render custom scenes using NBT structures.
 

@@ -289,7 +289,7 @@ public final class FieldGuideCobblemonCompat {
                         }
 
                         sortedEntries.add(new AbstractMap.SimpleEntry<>(
-                                new VirtualFieldGuideEntry(entryId, "cobblemon"),
+                                new VirtualFieldGuideEntry(entryId, "cobblemon", null),
                                 pokedexNumber
                         ));
                     }

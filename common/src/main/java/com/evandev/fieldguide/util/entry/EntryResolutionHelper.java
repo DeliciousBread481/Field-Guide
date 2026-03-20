@@ -42,6 +42,9 @@ public class EntryResolutionHelper {
                     foundEntries.add(new CompositeFieldGuideEntry(entry.id(), displayEntry, components, entry.structureNbt(), entry.stackedBlocks()));
                     addedKeys.add(AutoPopulateRegistry.getEntryKey(displayEntry));
                 });
+            } else if (entry.categoryType() == CategoryEntry.CategoryType.VIRTUAL && entry.id() != null) {
+                foundEntries.add(new VirtualFieldGuideEntry(entry.id(), entry.virtualType(), entry.icon()));
+                addedKeys.add(entry.id().toString());
             } else if (entry.categoryType() == CategoryEntry.CategoryType.AUTO_POPULATE) {
                 for (Object obj : AutoPopulateRegistry.getEntries(entry.strategy(), categoryId)) {
                     String key = AutoPopulateRegistry.getEntryKey(obj);
@@ -132,7 +135,7 @@ public class EntryResolutionHelper {
 
     public static Optional<Object> resolveSingleEntry(ResourceLocation id, ResourceLocation categoryId, String strategyHint) {
         if (Services.PLATFORM.isModLoaded("cobblemon") && id.getNamespace().equals("fieldguide") && id.getPath().startsWith("cobblemon/")) {
-            return Optional.of(new VirtualFieldGuideEntry(id, "cobblemon"));
+            return Optional.of(new VirtualFieldGuideEntry(id, "cobblemon", null));
         }
 
         ResourceLocation finalId = EntryResolver.getRawId(id);

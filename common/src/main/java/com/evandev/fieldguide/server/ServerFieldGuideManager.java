@@ -177,13 +177,13 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                     Object obj = resolved.get(j);
                     if (obj instanceof EntityType<?> type) {
                         ResourceLocation id = AutoPopulateRegistry.getEntryId(type, true);
-                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, "animals", null, null, null));
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, "animals", null, null, null, null, null));
                     } else if (obj instanceof Block block) {
                         ResourceLocation id = AutoPopulateRegistry.getEntryId(block, true);
-                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, "plants", null, null, null));
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, "plants", null, null, null, null, null));
                     } else if (obj instanceof Item item) {
                         ResourceLocation id = AutoPopulateRegistry.getEntryId(item, true);
-                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, "mod_items", null, null, null));
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, "mod_items", null, null, null, null, null));
                     } else if (obj instanceof CompositeFieldGuideEntry composite) {
                         ResourceLocation id = composite.id();
                         Object displayEntry = composite.displayEntry();
@@ -199,10 +199,10 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                         }
 
                         ResourceLocation displayId = AutoPopulateRegistry.getEntryId(displayEntry, true);
-                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.COMPOSITE, id, displayId, null, compIds, structureNbt, stackedBlocks));
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.COMPOSITE, id, displayId, null, null, null, compIds, structureNbt, stackedBlocks));
                     } else if (obj instanceof VirtualFieldGuideEntry virtual) {
                         ResourceLocation id = virtual.id();
-                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, null, null, null, null));
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.VIRTUAL, id, null, null, virtual.virtualType(), virtual.icon(), null, null, null));
                     }
                 }
                 flattenedCategories.add(chunkCat);
@@ -401,14 +401,20 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                             JsonObject obj = el.getAsJsonObject();
                             String typeStr = GsonHelper.getAsString(obj, "type");
 
-                            switch (typeStr) {
+                        switch (typeStr) {
                                 case "entry" -> {
                                     ResourceLocation id = new ResourceLocation(GsonHelper.getAsString(obj, "id"));
-                                    category.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, null, null, null, null));
+                                    category.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, null, null, null, null, null, null));
+                                }
+                                case "virtual_entry" -> {
+                                    ResourceLocation id = new ResourceLocation(GsonHelper.getAsString(obj, "id"));
+                                    String virtualType = GsonHelper.getAsString(obj, "virtual_type");
+                                    ResourceLocation icon = obj.has("icon") ? new ResourceLocation(GsonHelper.getAsString(obj, "icon")) : null;
+                                    category.addEntry(new CategoryEntry(CategoryEntry.CategoryType.VIRTUAL, id, null, null, virtualType, icon, null, null, null));
                                 }
                                 case "auto_populate" -> {
                                     String strategy = GsonHelper.getAsString(obj, "strategy");
-                                    category.addEntry(new CategoryEntry(CategoryEntry.CategoryType.AUTO_POPULATE, null, null, strategy, null, null, null));
+                                    category.addEntry(new CategoryEntry(CategoryEntry.CategoryType.AUTO_POPULATE, null, null, strategy, null, null, null, null, null));
                                 }
                             }
                         }

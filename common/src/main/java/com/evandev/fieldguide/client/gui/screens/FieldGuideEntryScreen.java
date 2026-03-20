@@ -563,6 +563,10 @@ public class FieldGuideEntryScreen extends BookScreen {
                 renderAttributes(guiGraphics, living);
                 renderAlignment(guiGraphics, living, mouseX, mouseY);
             }
+        } else if (entry instanceof VirtualFieldGuideEntry virt && virt.virtualType().equals("tutorial")) {
+            if (!hideEntity) {
+                EntryRenderHelper.renderTutorial(guiGraphics, virt, xPos, yPos, 112, 112, unlocked, true, bounce);
+            }
         } else if (renderEntry instanceof EntityType && renderedEntity != null) {
             boolean variantUnlocked = unlocked;
             if (unlocked && !entityVariants.isEmpty() && !ServerConfig.get().unlockAllVariants) {

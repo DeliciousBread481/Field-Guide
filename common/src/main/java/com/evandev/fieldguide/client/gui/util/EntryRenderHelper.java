@@ -126,7 +126,6 @@ public class EntryRenderHelper {
 
         final VariantProvider<Mob> finalProvider = provider;
         final VariantDef finalVariant = currentVariant;
-        final ResourceLocation finalBaseId = baseId;
 
         renderWithCache(entity.getType(), cacheKey, guiGraphics, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, () -> {
 
@@ -155,6 +154,13 @@ public class EntryRenderHelper {
                 renderEntity(dummy, id, isPage, -30.0F);
             }
         });
+    }
+
+    public static void renderTutorial(GuiGraphics guiGraphics, VirtualFieldGuideEntry entry, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale) {
+        ResourceLocation texture = entry.icon();
+        if (texture == null) texture = Constants.DEFAULT_ICON;
+
+        drawCachedTexture(guiGraphics, texture, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale);
     }
 
     private static void renderEntity(Entity entity, Object entrySource, boolean isPage, float yRotation) {
