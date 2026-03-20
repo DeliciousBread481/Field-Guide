@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.server.progress;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.api.EntryUnlockData;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
@@ -51,6 +52,42 @@ public class PlayerFieldGuideProgress {
         return list.subList(Math.min(index, list.size()), Math.min(index + length, list.size()));
     }
 
+    public void checkDefaultUnlocks(ServerPlayer player) {
+        for (ResourceLocation entryId : ServerFieldGuideManager.getInstance().getAllEntryIds()) {
+            EntryUnlockData unlockData = ServerFieldGuideManager.getInstance().getUnlockData(entryId);
+            if (unlockData.unlockedByDefault() && canUnlock(entryId)) {
+                unlock(player, entryId, null);
+            }
+        }
+    }
+
+    public boolean canUnlock(ResourceLocation entryId) {
+       EntryUnlockData unlockData = ServerFieldGuideManager.getInstance().getUnlockData(entryId);
+        for (ResourceLocation prereq : unlockData.prerequisites()) {
+            if (!isUnlocked(prereq)) return false;
+        }
+        return true;
+    }
+
+    public void tryUnlock(ServerPlayer player, ResourceLocation entryId, String variantId, EntryUnlockData.UnlockTrigger trigger) {
+        if (!ServerFieldGuideManager.getInstance().hasEntry(entryId)) return;
+
+        if (isUnlocked(entryId)) {
+             // Even if already unlocked, we might want to unlock a specific variant
+             if (variantId != null && !variantId.isEmpty()) {
+                 unlock(player, entryId, variantId);
+             }
+             return;
+        }
+
+        if (!canUnlock(entryId)) return;
+
+        com.evandev.fieldguide.api.EntryUnlockData unlockData = ServerFieldGuideManager.getInstance().getUnlockData(entryId);
+        if (unlockData.triggers().isEmpty() || unlockData.triggers().contains(trigger)) {
+            unlock(player, entryId, variantId);
+        }
+    }
+
     public void unlock(ServerPlayer player, ResourceLocation entryId, String variantId) {
         String id = entryId.toString();
         boolean newlyUnlocked = false;
@@ -84,6 +121,7 @@ public class PlayerFieldGuideProgress {
 
         if (newlyUnlocked) {
             dirty = true;
+            checkDefaultUnlocks(player);
         }
     }
 
@@ -307,7 +345,7 @@ public class PlayerFieldGuideProgress {
                             .customNames(names)
                             .customDescriptions(descs)
                             .killedOnly(ServerFieldGuideManager.getInstance().getAllEntryIds().stream()
-                                    .filter(id -> ServerFieldGuideManager.getInstance().isKillToUnlock(id))
+                                    .filter(id -> ServerFieldGuideManager.getInstance().getUnlockData(id).triggers().contains(EntryUnlockData.UnlockTrigger.KILL))
                                     .map(ResourceLocation::toString)
                                     .toList())
                             .build(),

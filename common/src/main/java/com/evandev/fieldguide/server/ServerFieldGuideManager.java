@@ -43,22 +43,39 @@ import java.util.*;
 public class ServerFieldGuideManager extends SimplePreparableReloadListener<ServerFieldGuideManager.ReloadData> {
     private static final ServerFieldGuideManager INSTANCE = new ServerFieldGuideManager();
     private final Map<ResourceLocation, List<Object>> resolvedCategoryEntries = new HashMap<>();
+    private final Map<ResourceLocation, EntryUnlockData> entryUnlockDataMap = new HashMap<>();
     private Map<ResourceLocation, Category> categories = new LinkedHashMap<>();
     private List<CompositeDefinition> composites = new ArrayList<>();
     private Map<ResourceLocation, List<ItemStack>> serverLootCache = new HashMap<>();
     private Map<ResourceLocation, ResourceLocation> redirects = new HashMap<>();
     private Map<ResourceLocation, List<DatapackVariant>> variants = new HashMap<>();
-
     private List<String> biomeAdditions = new ArrayList<>();
     private List<String> biomeRemovals = new ArrayList<>();
     private List<String> lootAdditions = new ArrayList<>();
     private List<String> lootRemovals = new ArrayList<>();
-
     private List<String> prefixedBiomeAdditions = new ArrayList<>();
     private List<String> prefixedLootAdditions = new ArrayList<>();
 
     public static ServerFieldGuideManager getInstance() {
         return INSTANCE;
+    }
+
+    public EntryUnlockData getUnlockData(ResourceLocation entryId) {
+        if (entryUnlockDataMap.containsKey(entryId)) {
+            return entryUnlockDataMap.get(entryId);
+        }
+
+        // Default logic for auto-populated entries
+        if (isKillToUnlock(entryId)) {
+            return new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.KILL));
+        }
+
+        // For items, default to OBTAIN
+        if (BuiltInRegistries.ITEM.containsKey(EntryResolver.getRawId(entryId))) {
+            return new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.OBTAIN));
+        }
+
+        return EntryUnlockData.DEFAULT;
     }
 
     public Map<ResourceLocation, Category> getCategories() {
@@ -177,13 +194,17 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                     Object obj = resolved.get(j);
                     if (obj instanceof EntityType<?> type) {
                         ResourceLocation id = AutoPopulateRegistry.getEntryId(type, true);
-                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, "animals", null, null, null, null, null));
+                        EntryUnlockData unlockData = EntryUnlockData.DEFAULT;
+                        if (isKillToUnlock(id)) {
+                            unlockData = new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.KILL));
+                        }
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, "animals", null, null, null, null, null, unlockData));
                     } else if (obj instanceof Block block) {
                         ResourceLocation id = AutoPopulateRegistry.getEntryId(block, true);
-                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, "plants", null, null, null, null, null));
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, "plants", null, null, null, null, null, EntryUnlockData.DEFAULT));
                     } else if (obj instanceof Item item) {
                         ResourceLocation id = AutoPopulateRegistry.getEntryId(item, true);
-                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, "mod_items", null, null, null, null, null));
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, "mod_items", null, null, null, null, null, new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.OBTAIN))));
                     } else if (obj instanceof CompositeFieldGuideEntry composite) {
                         ResourceLocation id = composite.id();
                         Object displayEntry = composite.displayEntry();
@@ -199,10 +220,10 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                         }
 
                         ResourceLocation displayId = AutoPopulateRegistry.getEntryId(displayEntry, true);
-                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.COMPOSITE, id, displayId, null, null, null, compIds, structureNbt, stackedBlocks));
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.COMPOSITE, id, displayId, null, null, null, compIds, structureNbt, stackedBlocks, EntryUnlockData.DEFAULT));
                     } else if (obj instanceof VirtualFieldGuideEntry virtual) {
                         ResourceLocation id = virtual.id();
-                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.VIRTUAL, id, null, null, virtual.virtualType(), virtual.icon(), null, null, null));
+                        chunkCat.addEntry(new CategoryEntry(CategoryEntry.CategoryType.VIRTUAL, id, null, null, virtual.virtualType(), virtual.icon(), null, null, null, EntryUnlockData.DEFAULT));
                     }
                 }
                 flattenedCategories.add(chunkCat);
@@ -400,21 +421,24 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                         for (JsonElement el : contents) {
                             JsonObject obj = el.getAsJsonObject();
                             String typeStr = GsonHelper.getAsString(obj, "type");
+                            EntryUnlockData unlockData = parseUnlockData(obj);
 
-                        switch (typeStr) {
+                            switch (typeStr) {
                                 case "entry" -> {
                                     ResourceLocation id = new ResourceLocation(GsonHelper.getAsString(obj, "id"));
-                                    category.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, null, null, null, null, null, null));
+                                    category.addEntry(new CategoryEntry(CategoryEntry.CategoryType.ENTRY, id, id, null, null, null, null, null, null, unlockData));
+                                    data.entryUnlockData.put(id, unlockData);
                                 }
                                 case "virtual_entry" -> {
                                     ResourceLocation id = new ResourceLocation(GsonHelper.getAsString(obj, "id"));
                                     String virtualType = GsonHelper.getAsString(obj, "virtual_type");
                                     ResourceLocation icon = obj.has("icon") ? new ResourceLocation(GsonHelper.getAsString(obj, "icon")) : null;
-                                    category.addEntry(new CategoryEntry(CategoryEntry.CategoryType.VIRTUAL, id, null, null, virtualType, icon, null, null, null));
+                                    category.addEntry(new CategoryEntry(CategoryEntry.CategoryType.VIRTUAL, id, null, null, virtualType, icon, null, null, null, unlockData));
+                                    data.entryUnlockData.put(id, unlockData);
                                 }
                                 case "auto_populate" -> {
                                     String strategy = GsonHelper.getAsString(obj, "strategy");
-                                    category.addEntry(new CategoryEntry(CategoryEntry.CategoryType.AUTO_POPULATE, null, null, strategy, null, null, null, null, null));
+                                    category.addEntry(new CategoryEntry(CategoryEntry.CategoryType.AUTO_POPULATE, null, null, strategy, null, null, null, null, null, unlockData));
                                 }
                             }
                         }
@@ -424,6 +448,33 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                 }
             }
         }
+    }
+
+    private EntryUnlockData parseUnlockData(JsonObject obj) {
+        if (!obj.has("unlock")) return EntryUnlockData.DEFAULT;
+        JsonObject unlock = obj.getAsJsonObject("unlock");
+
+        boolean unlockedByDefault = GsonHelper.getAsBoolean(unlock, "unlocked_by_default", false);
+        List<ResourceLocation> prerequisites = new ArrayList<>();
+        if (unlock.has("prerequisites")) {
+            for (JsonElement e : unlock.getAsJsonArray("prerequisites")) {
+                prerequisites.add(new ResourceLocation(e.getAsString()));
+            }
+        }
+
+        List<EntryUnlockData.UnlockTrigger> triggers = new ArrayList<>();
+        if (unlock.has("triggers")) {
+            for (JsonElement e : unlock.getAsJsonArray("triggers")) {
+                String triggerStr = e.getAsString().toUpperCase();
+                try {
+                    triggers.add(EntryUnlockData.UnlockTrigger.valueOf(triggerStr));
+                } catch (IllegalArgumentException ex) {
+                    Constants.LOG.error("Unknown unlock trigger: {}", triggerStr);
+                }
+            }
+        }
+
+        return new EntryUnlockData(unlockedByDefault, prerequisites, triggers);
     }
 
     private void loadComposites(ResourceManager resourceManager, ReloadData data) {
@@ -671,6 +722,8 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         this.lootRemovals = data.lootRemovals;
         this.redirects = data.redirects;
         this.variants = data.variants;
+        this.entryUnlockDataMap.clear();
+        this.entryUnlockDataMap.putAll(data.entryUnlockData);
     }
 
     public static class ReloadData {
@@ -682,5 +735,6 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         public List<String> lootRemovals = new ArrayList<>();
         public Map<ResourceLocation, ResourceLocation> redirects = new HashMap<>();
         public Map<ResourceLocation, List<DatapackVariant>> variants = new HashMap<>();
+        public Map<ResourceLocation, EntryUnlockData> entryUnlockData = new HashMap<>();
     }
 }

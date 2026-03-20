@@ -1,0 +1,119 @@
+---
+title: Advanced Datapack Features
+hide_meta: true
+---
+
+## Discovery Redirects
+
+Sometimes you may want scanning one entity to unlock the entry for a different one. This is useful for entities that have multiple variations or distinct parts (like multi-part bosses) where scanning any part should unlock the main entry.
+
+The redirected block/entity will automatically be removed from categories and will no longer appear as its own entry.
+
+You can define these redirects by creating a JSON file at:
+`data/<namespace>/fieldguide/redirects/<filename>.json`
+
+```json
+{
+  "entries": [
+    {
+      "source": "farmersdelight:budding_tomatoes",
+      "target": "farmersdelight:tomatoes"
+    }
+  ]
+}
+```
+
+---
+
+## Composite Entries
+
+A **Composite Entry** is a powerful feature that allows you to group multiple entities or blocks into a single book page, or render custom scenes using NBT structures.
+
+The individual components will automatically be removed from all categories.
+
+You can define composites by creating a JSON file at:
+`data/<namespace>/fieldguide/composites/<filename>.json`
+
+```json
+{
+    "values": [
+        {
+            "id": "minecraft:mangrove_propagule",
+            "structure_nbt": "fieldguide:mangrove",
+            "components": [
+                "minecraft:mangrove_log",
+                "minecraft:mangrove_leaves",
+                "minecraft:mangrove_roots",
+                "minecraft:muddy_mangrove_roots"
+            ]
+        }
+    ]
+}
+```
+
+* `id`: The unique identifier for this custom entry.
+* `display_id`: The primary entity or block ID to represent this entry in the UI.
+* `components`: An array of entity/block IDs that make up this composite entry.
+* `structure_nbt`: Provide the resource location of an NBT structure file to render.
+* `render`: An alternative to `structure_nbt` for simpler structures. Provide an array of block IDs to render.
+
+---
+
+## Variants
+
+You can manually define variants for entities using NBT. This is useful for mods that use custom variant systems that Field Guide can't automatically detect.
+
+`data/<namespace>/fieldguide/variants/<filename>.json`
+
+```json
+{
+  "entries": [
+    {
+      "id": "minecraft:wolf",
+      "replace": false,
+      "variants": [
+        {
+          "id": "pale",
+          "nbt": "{variant: \"minecraft:pale\"}"
+        }
+      ]
+    }
+  ]
+}
+```
+
+---
+
+## Biome & Loot Modifiers
+
+Field Guide uses datapacks to modify which biomes and loot drops appear on an entry's page.
+
+* **Biome Modifiers:** `data/<namespace>/fieldguide/biome_modifiers/<filename>.json`
+* **Loot Modifiers:** `data/<namespace>/fieldguide/loot_modifiers/<filename>.json`
+
+**Example:**
+```json
+{
+  "additions": [
+    {
+      "entry": "minecraft:cow",
+      "value": "minecraft:milk_bucket"
+    }
+  ]
+}
+```
+
+---
+
+## Blacklisting Entries
+
+**Global Blacklists:**
+Add an ID to the `fieldguide:blacklisted` tag.
+
+* **Entities:** `data/fieldguide/tags/entity_type/blacklisted.json`
+* **Blocks:** `data/fieldguide/tags/block/blacklisted.json`
+* **Items:** `data/fieldguide/tags/item/blacklisted.json`
+
+**Per-Category Blacklists:**
+Create a tag formatted as `fieldguide:blacklisted/<category_namespace>/<category_path>`.
+(e.g., `data/fieldguide/tags/entity_type/blacklisted/fieldguide/monsters.json`)

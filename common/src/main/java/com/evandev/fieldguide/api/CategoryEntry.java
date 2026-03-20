@@ -9,6 +9,7 @@ public record CategoryEntry(CategoryType categoryType, ResourceLocation id, Reso
                             ResourceLocation icon,
                             List<ResourceLocation> components,
                             ResourceLocation structureNbt,
-                            List<String> stackedBlocks) {
+                            List<String> stackedBlocks,
+                            EntryUnlockData unlockData) {
     public enum CategoryType {ENTRY, AUTO_POPULATE, COMPOSITE, VIRTUAL}
 }

@@ -55,7 +55,6 @@ public class ScanUnlockPacket {
         if (progress == null) return;
 
         if (!manager.isValidEntry(entryId)) return;
-        if (manager.isKillToUnlock(entryId)) return;
 
         if (!ScanVerifier.verifyScan(player, entryId, scannedTargetId, targetBlockPos, targetEntityId)) return;
 
@@ -67,6 +66,6 @@ public class ScanUnlockPacket {
             }
         }
 
-        progress.unlock(player, entryId, variantId);
+        progress.tryUnlock(player, entryId, variantId, com.evandev.fieldguide.api.EntryUnlockData.UnlockTrigger.SCAN);
     }
 }

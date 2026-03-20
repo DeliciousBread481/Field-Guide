@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.mixin;
 
+import com.evandev.fieldguide.api.EntryUnlockData;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
 import com.evandev.fieldguide.util.EntryResolver;
@@ -26,11 +27,9 @@ public abstract class InventoryMixin {
     private void onAddItem(int slot, ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
         if (!stack.isEmpty() && player instanceof ServerPlayer serverPlayer) {
             ResourceLocation itemId = EntryResolver.getEntryId(stack.getItem());
-            if (FieldGuideProgressManager.getInstance().isValidEntry(itemId)) {
-                PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(serverPlayer);
-                if (progress != null) {
-                    progress.unlock(serverPlayer, itemId, null);
-                }
+            PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(serverPlayer);
+            if (progress != null) {
+                progress.tryUnlock(serverPlayer, itemId, null, EntryUnlockData.UnlockTrigger.OBTAIN);
             }
         }
     }
@@ -39,11 +38,9 @@ public abstract class InventoryMixin {
     private void onSetItem(int slot, ItemStack stack, CallbackInfo ci) {
         if (!stack.isEmpty() && player instanceof ServerPlayer serverPlayer) {
             ResourceLocation itemId = EntryResolver.getEntryId(stack.getItem());
-            if (FieldGuideProgressManager.getInstance().isValidEntry(itemId)) {
-                PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(serverPlayer);
-                if (progress != null) {
-                    progress.unlock(serverPlayer, itemId, null);
-                }
+            PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(serverPlayer);
+            if (progress != null) {
+                progress.tryUnlock(serverPlayer, itemId, null, EntryUnlockData.UnlockTrigger.OBTAIN);
             }
         }
     }

@@ -1,0 +1,42 @@
+---
+title: Entry Unlocking
+hide_meta: true
+---
+
+By default, most entries are unlocked by scanning them with a Spyglass. Bosses and certain entities are set to "Kill to Unlock" (requiring the player to kill them).
+
+You can customize how an entry is unlocked by adding an `unlock` object to its definition in a category.
+
+```json
+{
+  "type": "entry",
+  "id": "minecraft:cow",
+  "unlock": {
+    "unlocked_by_default": false,
+    "prerequisites": ["minecraft:pig"],
+    "triggers": ["kill", "scan", "obtain"]
+  }
+}
+```
+
+### JSON Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `unlocked_by_default` | Boolean | (Optional) If true, the entry is unlocked automatically as soon as its prerequisites are met. |
+| `prerequisites` | Array | (Optional) A list of entry IDs that must be unlocked before this one can be. |
+| `triggers` | Array | (Optional) A list of event types that can trigger the unlock. If empty or omitted, any supported event will trigger it. |
+
+### Available Triggers
+* `kill`: Killing the entity.
+* `scan`: Scanning the entity/block with a Spyglass (or taking a photograph if Exposure is installed).
+* `obtain`: Obtaining the item in your inventory.
+
+**Note:** For auto-populated entries, default unlocking rules still apply (e.g., entities in the `fieldguide:kill_to_unlock` tag still require a kill) unless overridden by an explicit entry definition with an `unlock` object.
+
+### Special Entity Tags
+
+Field Guide uses specific entity tags to handle default scanning and categorization behaviors. Apply these tags to your mod's entities where appropriate:
+
+* `fieldguide:bosses`: Entities with this tag are excluded from the `monsters` and `animals` auto-populate strategies, and are moved to a special `bosses` category.
+* `fieldguide:kill_to_unlock`: Entities with this tag can't be scanned with a spyglass or the naked eye: the player must kill them to unlock their entry. (Defaults to all bosses). This can be overridden per-entry using the `unlock` object.

@@ -1,5 +1,6 @@
 package com.evandev.fieldguide;
 
+import com.evandev.fieldguide.api.EntryUnlockData;
 import com.evandev.fieldguide.api.VariantDef;
 import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.compat.exposure.ExposureForgeEventHandler;
@@ -14,12 +15,8 @@ import com.evandev.fieldguide.server.progress.FieldGuideTriggers;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
 import com.evandev.fieldguide.util.EntryResolver;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tags.TagKey;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
@@ -205,28 +202,20 @@ public class FieldGuideMod {
                 FieldGuideTriggers.SCAN_AND_KILL.trigger(player, event.getEntity());
             }
 
-            TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(Constants.MOD_ID, "kill_to_unlock"));
-
-            var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(event.getEntity().getType());
-            if (key.isPresent()) {
-                var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
-                if (holder.isPresent() && holder.get().is(killToUnlockTag)) {
-                    ResourceLocation entityId = EntryResolver.getEntryId(event.getEntity().getType());
-                    PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
-                    if (progress != null) {
-                        String variantId = null;
-                        if (event.getEntity() instanceof Mob mob) {
-                            VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(mob);
-                            if (provider != null) {
-                                VariantDef current = provider.getCurrent(mob);
-                                if (current != null) {
-                                    variantId = current.id();
-                                }
-                            }
+            ResourceLocation entityId = EntryResolver.getEntryId(event.getEntity().getType());
+            PlayerFieldGuideProgress progress = manager.getProgress(player);
+            if (progress != null) {
+                String variantId = null;
+                if (event.getEntity() instanceof Mob mob) {
+                    VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(mob);
+                    if (provider != null) {
+                        VariantDef current = provider.getCurrent(mob);
+                        if (current != null) {
+                            variantId = current.id();
                         }
-                        progress.unlock(player, entityId, variantId);
                     }
                 }
+                progress.tryUnlock(player, entityId, variantId, EntryUnlockData.UnlockTrigger.KILL);
             }
         }
     }
@@ -235,11 +224,9 @@ public class FieldGuideMod {
     public void onItemPickup(EntityItemPickupEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             ResourceLocation itemId = EntryResolver.getEntryId(event.getItem().getItem().getItem());
-            if (FieldGuideProgressManager.getInstance().isValidEntry(itemId)) {
-                PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
-                if (progress != null) {
-                    progress.unlock(player, itemId, null);
-                }
+            PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
+            if (progress != null) {
+                progress.tryUnlock(player, itemId, null, EntryUnlockData.UnlockTrigger.OBTAIN);
             }
         }
     }

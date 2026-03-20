@@ -3,6 +3,7 @@ package com.evandev.fieldguide.network;
 import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.api.CategoryEntry;
 import com.evandev.fieldguide.api.DatapackVariant;
+import com.evandev.fieldguide.api.EntryUnlockData;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
@@ -59,7 +60,12 @@ public class SyncCategoriesPacket {
                     eb.readNullable(FriendlyByteBuf::readResourceLocation),
                     eb.readNullable(nb -> nb.readList(FriendlyByteBuf::readResourceLocation)),
                     eb.readNullable(FriendlyByteBuf::readResourceLocation),
-                    eb.readNullable(nb -> nb.readList(FriendlyByteBuf::readUtf))
+                    eb.readNullable(nb -> nb.readList(FriendlyByteBuf::readUtf)),
+                    new EntryUnlockData(
+                            eb.readBoolean(),
+                            eb.readList(FriendlyByteBuf::readResourceLocation),
+                            eb.readList(nb -> nb.readEnum(EntryUnlockData.UnlockTrigger.class))
+                    )
             ));
             entries.forEach(cat::addEntry);
             return cat;
@@ -92,6 +98,11 @@ public class SyncCategoriesPacket {
                 eb.writeNullable(entry.components(), (nb, comps) -> nb.writeCollection(comps, FriendlyByteBuf::writeResourceLocation));
                 eb.writeNullable(entry.structureNbt(), FriendlyByteBuf::writeResourceLocation);
                 eb.writeNullable(entry.stackedBlocks(), (nb, blocks) -> nb.writeCollection(blocks, FriendlyByteBuf::writeUtf));
+
+                EntryUnlockData unlockData = entry.unlockData() != null ? entry.unlockData() : EntryUnlockData.DEFAULT;
+                eb.writeBoolean(unlockData.unlockedByDefault());
+                eb.writeCollection(unlockData.prerequisites(), FriendlyByteBuf::writeResourceLocation);
+                eb.writeCollection(unlockData.triggers(), FriendlyByteBuf::writeEnum);
             });
         });
 

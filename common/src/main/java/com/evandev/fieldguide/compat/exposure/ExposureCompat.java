@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.compat.exposure;
 
 import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.api.EntryUnlockData;
 import com.evandev.fieldguide.api.VariantDef;
 import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.config.ServerConfig;
@@ -166,7 +167,7 @@ public class ExposureCompat {
 
             ResourceLocation id = EntryResolver.getEntryId(bestMatch);
             if (id != null) {
-                progress.unlock(serverPlayer, id, variantId);
+                progress.tryUnlock(serverPlayer, id, variantId, EntryUnlockData.UnlockTrigger.SCAN);
             }
         }
     }
