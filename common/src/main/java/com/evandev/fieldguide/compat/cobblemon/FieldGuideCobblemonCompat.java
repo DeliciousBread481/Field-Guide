@@ -7,17 +7,23 @@ import com.cobblemon.mod.common.pokemon.FormData;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 import com.cobblemon.mod.common.pokemon.Species;
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.api.*;
+import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.api.VariantDef;
+import com.evandev.fieldguide.api.VariantProvider;
+import com.evandev.fieldguide.api.VirtualFieldGuideEntry;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.EntryResolver;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -38,6 +44,7 @@ public final class FieldGuideCobblemonCompat {
     private static final Map<String, LivingEntity> VARIANT_DUMMY_CACHE = new HashMap<>();
     private static final Map<ResourceLocation, String> FORM_CACHE = new HashMap<>();
     private static final Map<ResourceLocation, List<ItemStack>> COBBLEMON_DROPS_CACHE = new HashMap<>();
+    private static final List<Object> AUTO_POPULATE_CACHE = new ArrayList<>();
 
     static {
         FieldGuideVariantManager.registerProvider(PokemonEntity.class, new VariantProvider<>() {
@@ -236,8 +243,6 @@ public final class FieldGuideCobblemonCompat {
         return BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
     }
 
-    private static final List<Object> AUTO_POPULATE_CACHE = new ArrayList<>();
-
     public static void populateCache(ResourceManager resourceManager) {
         AUTO_POPULATE_CACHE.clear();
         COBBLEMON_DROPS_CACHE.clear();
@@ -301,6 +306,14 @@ public final class FieldGuideCobblemonCompat {
 
     public static List<Object> getAutoPopulateEntries() {
         return AUTO_POPULATE_CACHE;
+    }
+
+    public static void playPokemonCry(Entity entity) {
+        if (entity instanceof PokemonEntity pokemonEntity) {
+            String speciesName = pokemonEntity.getPokemon().getSpecies().getResourceIdentifier().getPath();
+            ResourceLocation cryId = new ResourceLocation(MOD_ID, "pokemon." + speciesName + ".cry");
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(cryId), 1.0F, 1.0F));
+        }
     }
 
     public static boolean isPokemon(Entity entity) {
