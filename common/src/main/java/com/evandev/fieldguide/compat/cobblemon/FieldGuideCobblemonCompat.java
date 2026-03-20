@@ -236,70 +236,71 @@ public final class FieldGuideCobblemonCompat {
         return BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
     }
 
-    public static void injectCategory(Map<ResourceLocation, Category> categories, ResourceManager resourceManager) {
-        ResourceLocation cobblemonCatId = new ResourceLocation(Constants.MOD_ID, "cobblemon");
-        Category cobblemonCategory = categories.computeIfAbsent(cobblemonCatId, Category::new);
+    private static final List<Object> AUTO_POPULATE_CACHE = new ArrayList<>();
 
-        if (cobblemonCategory.getEntries().isEmpty()) {
-            cobblemonCategory.setIcon(new ResourceLocation(Constants.MOD_ID, "textures/gui/icons/pokeball.png"));
-            cobblemonCategory.setSortIndex(100);
+    public static void populateCache(ResourceManager resourceManager) {
+        AUTO_POPULATE_CACHE.clear();
+        COBBLEMON_DROPS_CACHE.clear();
 
-            Map<ResourceLocation, List<Resource>> speciesFiles = resourceManager.listResourceStacks(
-                    "species", id -> id.getNamespace().equals(MOD_ID) && id.getPath().endsWith(".json")
-            );
+        Map<ResourceLocation, List<Resource>> speciesFiles = resourceManager.listResourceStacks(
+                "species", id -> id.getNamespace().equals(MOD_ID) && id.getPath().endsWith(".json")
+        );
 
-            List<Map.Entry<CategoryEntry, Integer>> sortedEntries = new ArrayList<>();
+        List<Map.Entry<VirtualFieldGuideEntry, Integer>> sortedEntries = new ArrayList<>();
 
-            for (Map.Entry<ResourceLocation, List<Resource>> entry : speciesFiles.entrySet()) {
-                for (Resource resource : entry.getValue()) {
-                    try (Reader reader = resource.openAsReader()) {
-                        JsonObject json = GsonHelper.parse(reader);
+        for (Map.Entry<ResourceLocation, List<Resource>> entry : speciesFiles.entrySet()) {
+            for (Resource resource : entry.getValue()) {
+                try (Reader reader = resource.openAsReader()) {
+                    JsonObject json = GsonHelper.parse(reader);
 
-                        if (json.has("name")) {
-                            String speciesName = json.get("name").getAsString().toLowerCase(Locale.ROOT);
-                            ResourceLocation entryId = new ResourceLocation("fieldguide", "cobblemon/" + speciesName + "_standard");
-                            int pokedexNumber = json.has("nationalPokedexNumber") ? json.get("nationalPokedexNumber").getAsInt() : Integer.MAX_VALUE;
+                    if (json.has("name")) {
+                        String speciesName = json.get("name").getAsString().toLowerCase(Locale.ROOT);
+                        ResourceLocation entryId = new ResourceLocation("fieldguide", "cobblemon/" + speciesName + "_standard");
+                        int pokedexNumber = json.has("nationalPokedexNumber") ? json.get("nationalPokedexNumber").getAsInt() : Integer.MAX_VALUE;
 
-                            if (json.has("drops")) {
-                                JsonObject dropsObj = json.getAsJsonObject("drops");
-                                if (dropsObj.has("entries")) {
-                                    List<ItemStack> drops = new ArrayList<>();
-                                    for (JsonElement dropElem : dropsObj.getAsJsonArray("entries")) {
-                                        JsonObject dropJson = dropElem.getAsJsonObject();
-                                        if (dropJson.has("item")) {
-                                            String itemStr = dropJson.get("item").getAsString();
-                                            float chance = dropJson.has("percentage") ? dropJson.get("percentage").getAsFloat() : 100f;
-                                            int quantity = dropJson.has("quantity") ? dropJson.get("quantity").getAsInt() : 1;
+                        if (json.has("drops")) {
+                            JsonObject dropsObj = json.getAsJsonObject("drops");
+                            if (dropsObj.has("entries")) {
+                                List<ItemStack> drops = new ArrayList<>();
+                                for (JsonElement dropElem : dropsObj.getAsJsonArray("entries")) {
+                                    JsonObject dropJson = dropElem.getAsJsonObject();
+                                    if (dropJson.has("item")) {
+                                        String itemStr = dropJson.get("item").getAsString();
+                                        float chance = dropJson.has("percentage") ? dropJson.get("percentage").getAsFloat() : 100f;
+                                        int quantity = dropJson.has("quantity") ? dropJson.get("quantity").getAsInt() : 1;
 
-                                            Item item = BuiltInRegistries.ITEM.get(EntryResolver.getRawId(new ResourceLocation(itemStr)));
-                                            if (item != Items.AIR) {
-                                                ItemStack stack = new ItemStack(item, quantity);
-                                                stack.getOrCreateTag().putFloat("FieldGuideDropChance", chance);
-                                                drops.add(stack);
-                                            }
+                                        Item item = BuiltInRegistries.ITEM.get(EntryResolver.getRawId(new ResourceLocation(itemStr)));
+                                        if (item != Items.AIR) {
+                                            ItemStack stack = new ItemStack(item, quantity);
+                                            stack.getOrCreateTag().putFloat("FieldGuideDropChance", chance);
+                                            drops.add(stack);
                                         }
                                     }
-                                    if (!drops.isEmpty()) {
-                                        COBBLEMON_DROPS_CACHE.put(entryId, drops);
-                                    }
+                                }
+                                if (!drops.isEmpty()) {
+                                    COBBLEMON_DROPS_CACHE.put(entryId, drops);
                                 }
                             }
-
-                            sortedEntries.add(new AbstractMap.SimpleEntry<>(
-                                    new CategoryEntry(CategoryEntry.CategoryType.ENTRY, entryId, entryId, null, null, null, null),
-                                    pokedexNumber
-                            ));
                         }
-                    } catch (Exception ignored) {
+
+                        sortedEntries.add(new AbstractMap.SimpleEntry<>(
+                                new VirtualFieldGuideEntry(entryId, "cobblemon"),
+                                pokedexNumber
+                        ));
                     }
+                } catch (Exception ignored) {
                 }
             }
-
-            sortedEntries.sort(Map.Entry.comparingByValue());
-            for (Map.Entry<CategoryEntry, Integer> sortedEntry : sortedEntries) {
-                cobblemonCategory.addEntry(sortedEntry.getKey());
-            }
         }
+
+        sortedEntries.sort(Map.Entry.comparingByValue());
+        for (Map.Entry<VirtualFieldGuideEntry, Integer> sortedEntry : sortedEntries) {
+            AUTO_POPULATE_CACHE.add(sortedEntry.getKey());
+        }
+    }
+
+    public static List<Object> getAutoPopulateEntries() {
+        return AUTO_POPULATE_CACHE;
     }
 
     public static boolean isPokemon(Entity entity) {

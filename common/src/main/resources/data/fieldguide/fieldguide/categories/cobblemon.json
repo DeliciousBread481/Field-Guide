@@ -1,0 +1,10 @@
+{
+  "sort_index": 100,
+  "icon": "fieldguide:textures/gui/icons/pokeball.png",
+  "contents": [
+    {
+      "type": "auto_populate",
+      "strategy": "cobblemon"
+    }
+  ]
+}

@@ -344,7 +344,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         loadVariants(resourceManager, data);
 
         if (Services.PLATFORM.isModLoaded("cobblemon")) {
-            FieldGuideCobblemonCompat.injectCategory(data.categories, resourceManager);
+            FieldGuideCobblemonCompat.populateCache(resourceManager);
         }
 
         return data;

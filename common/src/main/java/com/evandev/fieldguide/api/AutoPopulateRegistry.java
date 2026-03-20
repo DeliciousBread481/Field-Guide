@@ -1,6 +1,8 @@
 package com.evandev.fieldguide.api;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
+import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.ModTags;
 import com.evandev.fieldguide.util.entry.EntryValidator;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -90,6 +92,13 @@ public class AutoPopulateRegistry {
 
         register("monsters", (params, categoryId) -> getEntityStrategy("monsters", categoryId));
         register("animals", (params, categoryId) -> getEntityStrategy("animals", categoryId));
+
+        register("cobblemon", (params, categoryId) -> {
+            if (Services.PLATFORM.isModLoaded("cobblemon")) {
+                return FieldGuideCobblemonCompat.getAutoPopulateEntries();
+            }
+            return Collections.emptyList();
+        });
     }
 
     private static List<Object> getEntityStrategy(String strategy, ResourceLocation categoryId) {
