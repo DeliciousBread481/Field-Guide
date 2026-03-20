@@ -11,6 +11,11 @@
     - Pages contain all the information about an entry, including custom names, descriptions, Exposure photographs, and
       unlocked variants.
 - Added new Field Guide advancement tab and related advancements.
+- Added support for virtual entries.
+    - These are used to define entries without any related item, block, or entity, like for tutorial entries as an
+      example.
+- Added increased functionality for entry unlocking criteria.
+    - This includes killing, obtaining, scanning, and prerequisite entries.
 
 ### Changed
 
@@ -18,6 +23,7 @@
 - Outdated Exposure versions will now intentionally trigger a crash. Please update Exposure!
 - Improved server join speeds.
 - Moved vanilla spyglass-related advancements to the Field Guide advancement tab.
+- Pressing B when hovering over an item will now open its entry in the Field Guide (if it exists).
 
 ### Fixed
 
