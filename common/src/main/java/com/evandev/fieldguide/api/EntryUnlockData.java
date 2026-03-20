@@ -8,9 +8,10 @@ import java.util.List;
 public record EntryUnlockData(
         boolean unlockedByDefault,
         List<ResourceLocation> prerequisites,
-        List<UnlockTrigger> triggers
+        List<UnlockTrigger> triggers,
+        List<ResourceLocation> triggerOn
 ) {
-    public static final EntryUnlockData DEFAULT = new EntryUnlockData(false, Collections.emptyList(), Collections.emptyList());
+    public static final EntryUnlockData DEFAULT = new EntryUnlockData(false, Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
 
     public enum UnlockTrigger {
         KILL,

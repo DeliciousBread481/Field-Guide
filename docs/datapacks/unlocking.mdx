@@ -26,6 +26,7 @@ You can customize how an entry is unlocked by adding an `unlock` object to its d
 | `unlocked_by_default` | Boolean | (Optional) If true, the entry is unlocked automatically as soon as its prerequisites are met. |
 | `prerequisites` | Array | (Optional) A list of entry IDs that must be unlocked before this one can be. |
 | `triggers` | Array | (Optional) A list of event types that can trigger the unlock. If empty or omitted, any supported event will trigger it. |
+| `trigger_on` | Array / String | (Optional) A list of external resource IDs (e.g. `minecraft:warden`, `minecraft:nether_star`) that trigger this entry's unlock. If omitted, the entry's own ID is used as the trigger target. |
 
 ### Available Triggers
 * `kill`: Killing the entity.
@@ -40,3 +41,38 @@ Field Guide uses specific entity tags to handle default scanning and categorizat
 
 * `fieldguide:bosses`: Entities with this tag are excluded from the `monsters` and `animals` auto-populate strategies, and are moved to a special `bosses` category.
 * `fieldguide:kill_to_unlock`: Entities with this tag can't be scanned with a spyglass or the naked eye: the player must kill them to unlock their entry. (Defaults to all bosses). This can be overridden per-entry using the `unlock` object.
+
+---
+
+### Advanced Unlocking
+
+You can use the `trigger_on` field to unlock an entry based on an external action. This is particularly useful for **Virtual Entries** or entries that represent concepts rather than specific objects.
+
+**Example: Unlocking a "Combat Master" virtual entry when killing a Warden:**
+
+```json
+{
+  "type": "virtual_entry",
+  "id": "my_mod:combat_mastery",
+  "virtual_type": "tutorial",
+  "unlock": {
+    "triggers": ["kill"],
+    "trigger_on": "minecraft:warden"
+  }
+}
+```
+
+**Example: Unlocking an entry when obtaining a specific item:**
+
+```json
+{
+  "type": "virtual_entry",
+  "id": "my_mod:nether_expert",
+  "virtual_type": "lore",
+  "unlock": {
+    "triggers": ["obtain"],
+    "trigger_on": "minecraft:nether_star"
+  }
+}
+```
+

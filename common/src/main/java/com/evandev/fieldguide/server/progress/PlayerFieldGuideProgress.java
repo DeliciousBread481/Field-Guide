@@ -62,27 +62,36 @@ public class PlayerFieldGuideProgress {
     }
 
     public boolean canUnlock(ResourceLocation entryId) {
-       EntryUnlockData unlockData = ServerFieldGuideManager.getInstance().getUnlockData(entryId);
+        EntryUnlockData unlockData = ServerFieldGuideManager.getInstance().getUnlockData(entryId);
         for (ResourceLocation prereq : unlockData.prerequisites()) {
             if (!isUnlocked(prereq)) return false;
         }
         return true;
     }
 
-    public void tryUnlock(ServerPlayer player, ResourceLocation entryId, String variantId, EntryUnlockData.UnlockTrigger trigger) {
+    public void tryUnlock(ServerPlayer player, ResourceLocation triggeredId, String variantId, EntryUnlockData.UnlockTrigger trigger) {
+        // unlock the thing that was triggered directly
+        tryUnlockDirect(player, triggeredId, variantId, trigger);
+
+        // unlock other entries that have this triggeredId as 'triggerOn'
+        for (ResourceLocation entryId : ServerFieldGuideManager.getInstance().getEntriesTriggeredBy(triggeredId)) {
+            tryUnlockDirect(player, entryId, null, trigger);
+        }
+    }
+
+    private void tryUnlockDirect(ServerPlayer player, ResourceLocation entryId, String variantId, EntryUnlockData.UnlockTrigger trigger) {
         if (!ServerFieldGuideManager.getInstance().hasEntry(entryId)) return;
 
         if (isUnlocked(entryId)) {
-             // Even if already unlocked, we might want to unlock a specific variant
-             if (variantId != null && !variantId.isEmpty()) {
-                 unlock(player, entryId, variantId, true);
-             }
-             return;
+            if (variantId != null && !variantId.isEmpty()) {
+                unlock(player, entryId, variantId, true);
+            }
+            return;
         }
 
         if (!canUnlock(entryId)) return;
 
-        com.evandev.fieldguide.api.EntryUnlockData unlockData = ServerFieldGuideManager.getInstance().getUnlockData(entryId);
+        EntryUnlockData unlockData = ServerFieldGuideManager.getInstance().getUnlockData(entryId);
         if (unlockData.triggers().isEmpty() || unlockData.triggers().contains(trigger)) {
             unlock(player, entryId, variantId, true);
         }

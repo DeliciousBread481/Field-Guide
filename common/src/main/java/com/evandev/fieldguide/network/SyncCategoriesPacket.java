@@ -64,7 +64,8 @@ public class SyncCategoriesPacket {
                     new EntryUnlockData(
                             eb.readBoolean(),
                             eb.readList(FriendlyByteBuf::readResourceLocation),
-                            eb.readList(nb -> nb.readEnum(EntryUnlockData.UnlockTrigger.class))
+                            eb.readList(nb -> nb.readEnum(EntryUnlockData.UnlockTrigger.class)),
+                            eb.readList(FriendlyByteBuf::readResourceLocation)
                     )
             ));
             entries.forEach(cat::addEntry);
@@ -103,6 +104,7 @@ public class SyncCategoriesPacket {
                 eb.writeBoolean(unlockData.unlockedByDefault());
                 eb.writeCollection(unlockData.prerequisites(), FriendlyByteBuf::writeResourceLocation);
                 eb.writeCollection(unlockData.triggers(), FriendlyByteBuf::writeEnum);
+                eb.writeCollection(unlockData.triggerOn(), FriendlyByteBuf::writeResourceLocation);
             });
         });
 

@@ -7,7 +7,7 @@
 - Added descriptions for trees (@proxillus).
 - Added KubeJS integration.
 - Added an option to enable a physical Field Guide item.
-- Pages can now be ripped out from the Field Guide to give to your friends in Multiplayer, or stored.
+- Pages can now be copied from the Field Guide to give to your friends in Multiplayer, or stored.
     - Pages contain all the information about an entry, including custom names, descriptions, Exposure photographs, and
       unlocked variants.
 - Added new Field Guide advancement tab and related advancements.
