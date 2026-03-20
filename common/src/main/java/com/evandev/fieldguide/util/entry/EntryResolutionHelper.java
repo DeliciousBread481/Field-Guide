@@ -140,19 +140,13 @@ public class EntryResolutionHelper {
 
         switch (namespace) {
             case "item" -> {
-                return BuiltInRegistries.ITEM.getOptional(finalId)
-                        .filter(i -> EntryValidator.isValidItem(i, categoryId))
-                        .map(Object.class::cast);
+                return lookupItem(finalId, categoryId);
             }
             case "entity" -> {
-                return BuiltInRegistries.ENTITY_TYPE.getOptional(finalId)
-                        .filter(t -> EntryValidator.isValidEntity(t, categoryId))
-                        .map(Object.class::cast);
+                return lookupEntity(finalId, categoryId);
             }
             case "block" -> {
-                return BuiltInRegistries.BLOCK.getOptional(finalId)
-                        .filter(b -> EntryValidator.isValidBlock(b, categoryId))
-                        .map(Object.class::cast);
+                return lookupBlock(finalId, categoryId);
             }
         }
 
@@ -163,27 +157,39 @@ public class EntryResolutionHelper {
         boolean preferBlock = effectiveStrategy != null && (effectiveStrategy.equals("plants") || effectiveStrategy.equals("trees") || effectiveStrategy.startsWith("mod_plants") || effectiveStrategy.startsWith("mod_blocks"));
 
         if (preferEntity) {
-            Optional<Object> entity = BuiltInRegistries.ENTITY_TYPE.getOptional(finalId).filter(t -> EntryValidator.isValidEntity(t, categoryId)).map(Object.class::cast);
+            Optional<Object> entity = lookupEntity(finalId, categoryId);
             if (entity.isPresent()) return entity;
         }
         if (preferBlock) {
-            Optional<Object> block = BuiltInRegistries.BLOCK.getOptional(finalId).filter(b -> EntryValidator.isValidBlock(b, categoryId)).map(Object.class::cast);
+            Optional<Object> block = lookupBlock(finalId, categoryId);
             if (block.isPresent()) return block;
         }
         if (preferItem) {
-            Optional<Object> item = BuiltInRegistries.ITEM.getOptional(finalId).filter(i -> EntryValidator.isValidItem(i, categoryId)).map(Object.class::cast);
+            Optional<Object> item = lookupItem(finalId, categoryId);
             if (item.isPresent()) return item;
         }
 
-        return BuiltInRegistries.BLOCK.getOptional(finalId)
+        return lookupBlock(finalId, categoryId)
+                .or(() -> lookupItem(finalId, categoryId))
+                .or(() -> lookupEntity(finalId, categoryId));
+    }
+
+    private static Optional<Object> lookupEntity(ResourceLocation id, ResourceLocation categoryId) {
+        return BuiltInRegistries.ENTITY_TYPE.getOptional(id)
+                .filter(t -> EntryValidator.isValidEntity(t, categoryId))
+                .map(Object.class::cast);
+    }
+
+    private static Optional<Object> lookupBlock(ResourceLocation id, ResourceLocation categoryId) {
+        return BuiltInRegistries.BLOCK.getOptional(id)
                 .filter(b -> EntryValidator.isValidBlock(b, categoryId))
-                .map(Object.class::cast)
-                .or(() -> BuiltInRegistries.ITEM.getOptional(finalId)
-                        .filter(i -> EntryValidator.isValidItem(i, categoryId))
-                        .map(Object.class::cast))
-                .or(() -> BuiltInRegistries.ENTITY_TYPE.getOptional(finalId)
-                        .filter(t -> EntryValidator.isValidEntity(t, categoryId))
-                        .map(Object.class::cast));
+                .map(Object.class::cast);
+    }
+
+    private static Optional<Object> lookupItem(ResourceLocation id, ResourceLocation categoryId) {
+        return BuiltInRegistries.ITEM.getOptional(id)
+                .filter(i -> EntryValidator.isValidItem(i, categoryId))
+                .map(Object.class::cast);
     }
 
     private static @Nullable String getEffectiveStrategy(ResourceLocation categoryId, String strategyHint) {

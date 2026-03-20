@@ -19,6 +19,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.BlockHitResult;
 
@@ -41,8 +42,7 @@ public class FieldGuideScanManager {
 
         FieldGuideScanState state = FieldGuideScanState.getInstance();
 
-        boolean hasSpyglass = minecraft.player.isScoping() || (minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(ModTags.Items.SPYGLASSES));
-
+        boolean hasSpyglass = isUsingSpyglass(minecraft.player);
         boolean canScan = (hasSpyglass && ServerConfig.get().enableSpyglassScanning) || ServerConfig.get().enableNakedEyeScanning;
         boolean isScanningActive = canScan && !ServerConfig.get().disableScanning;
 
@@ -65,79 +65,13 @@ public class FieldGuideScanManager {
         }
     }
 
+    private boolean isUsingSpyglass(Player player) {
+        return player.isScoping() || (player.isUsingItem() && player.getUseItem().is(ModTags.Items.SPYGLASSES));
+    }
+
     public void handleTargetAcquisition(Minecraft minecraft, Object foundTarget, Object resolvedEntry, double hitDistSq, BlockHitResult blockHit) {
         FieldGuideScanState state = FieldGuideScanState.getInstance();
-        if (foundTarget != null) {
-            boolean usingSpyglass = minecraft.player != null && (minecraft.player.isScoping() ||
-                    (minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(ModTags.Items.SPYGLASSES)));
-
-            double activeScanDist = 0;
-            if (usingSpyglass && ServerConfig.get().enableSpyglassScanning) {
-                activeScanDist = ServerConfig.get().spyglassScanDistance;
-            } else if (ServerConfig.get().enableNakedEyeScanning) {
-                activeScanDist = ServerConfig.get().nakedEyeScanDistance;
-            }
-
-            boolean outOfRange = hitDistSq > (activeScanDist * activeScanDist);
-
-            if (outOfRange) {
-                state.setOutOfRangeTarget(foundTarget);
-                state.setOutOfRangePos((foundTarget instanceof Block) ? blockHit.getBlockPos() : null);
-                state.resetScanTicks();
-            } else {
-                state.setOutOfRangeTarget(null);
-                state.setOutOfRangePos(null);
-
-                Object targetKey = resolvedEntry;
-
-                if (targetKey == null) {
-                    BlockPos posContext = (foundTarget instanceof Block) ? blockHit.getBlockPos() : ((Entity) foundTarget).blockPosition();
-                    Object baseTarget = foundTarget;
-                    if (foundTarget instanceof Entity entity) {
-                        if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
-                            baseTarget = FieldGuideCobblemonCompat.getPokemonEntryId(entity);
-                        } else {
-                            baseTarget = entity.getType();
-                        }
-                    }
-                    targetKey = FieldGuideRaytracer.getInstance().getContextAwareEntry(baseTarget, minecraft, posContext);
-                    if (targetKey == null) targetKey = baseTarget;
-                }
-
-                ResourceLocation entryId = ClientFieldGuideManager.getEntryId(targetKey);
-                if (entryId != null && ClientFieldGuideManager.getInstance().isKillToUnlock(entryId)) {
-                    state.setOutOfRangeTarget(foundTarget);
-                    state.setOutOfRangePos(null);
-                    state.resetScanTicks();
-                    return;
-                }
-
-                boolean sameTarget = (state.getScanningTarget() instanceof Entity && foundTarget instanceof Entity)
-                        ? state.getScanningTarget() == foundTarget
-                        : Objects.equals(state.getScanningTarget(), foundTarget);
-
-                if (sameTarget) {
-                    state.setPrevScanTicks(state.getScanTicks());
-                    state.setScanTicks(state.getScanTicks() + 1);
-
-                    if (foundTarget instanceof Block) state.setScanningPos(blockHit.getBlockPos());
-
-                    if (state.getScanTicks() >= (int) (ServerConfig.get().scanSpeed * 20)) {
-                        completeScan(minecraft, targetKey, foundTarget);
-                    }
-                } else {
-                    state.setPrevScanTicks(0);
-                    state.setScanningTarget(foundTarget);
-                    state.setScanningEntry(targetKey);
-                    state.setScanningPos((state.getScanningTarget() instanceof Block) ? blockHit.getBlockPos() : null);
-
-                    if (ClientConfig.get().playScanningSound) {
-                        Objects.requireNonNull(minecraft.player).playSound(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 0.5F, 1.0F);
-                    }
-                    state.setScanTicks(0);
-                }
-            }
-        } else {
+        if (foundTarget == null) {
             state.setOutOfRangeTarget(null);
             state.setOutOfRangePos(null);
             if (state.getScanTicks() > 0) {
@@ -147,6 +81,67 @@ public class FieldGuideScanManager {
             } else {
                 state.resetScanTicks();
             }
+            return;
+        }
+
+        double activeScanDist = (minecraft.player != null && isUsingSpyglass(minecraft.player) && ServerConfig.get().enableSpyglassScanning)
+                ? ServerConfig.get().spyglassScanDistance
+                : (ServerConfig.get().enableNakedEyeScanning ? ServerConfig.get().nakedEyeScanDistance : 0);
+
+        if (hitDistSq > (activeScanDist * activeScanDist)) {
+            state.setOutOfRangeTarget(foundTarget);
+            state.setOutOfRangePos((foundTarget instanceof Block) ? blockHit.getBlockPos() : null);
+            state.resetScanTicks();
+            return;
+        }
+
+        state.setOutOfRangeTarget(null);
+        state.setOutOfRangePos(null);
+
+        Object targetKey = resolvedEntry;
+        if (targetKey == null) {
+            BlockPos posContext = (foundTarget instanceof Block) ? blockHit.getBlockPos() : ((Entity) foundTarget).blockPosition();
+            Object baseTarget = foundTarget;
+            if (foundTarget instanceof Entity entity) {
+                baseTarget = (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity))
+                        ? FieldGuideCobblemonCompat.getPokemonEntryId(entity)
+                        : entity.getType();
+            }
+            targetKey = FieldGuideRaytracer.getInstance().getContextAwareEntry(baseTarget, minecraft, posContext);
+            if (targetKey == null) targetKey = baseTarget;
+        }
+
+        ResourceLocation entryId = ClientFieldGuideManager.getEntryId(targetKey);
+        if (entryId != null && ClientFieldGuideManager.getInstance().isKillToUnlock(entryId)) {
+            state.setOutOfRangeTarget(foundTarget);
+            state.setOutOfRangePos(null);
+            state.resetScanTicks();
+            return;
+        }
+
+        boolean sameTarget = (state.getScanningTarget() instanceof Entity && foundTarget instanceof Entity)
+                ? state.getScanningTarget() == foundTarget
+                : Objects.equals(state.getScanningTarget(), foundTarget);
+
+        if (sameTarget) {
+            state.setPrevScanTicks(state.getScanTicks());
+            state.setScanTicks(state.getScanTicks() + 1);
+
+            if (foundTarget instanceof Block) state.setScanningPos(blockHit.getBlockPos());
+
+            if (state.getScanTicks() >= (int) (ServerConfig.get().scanSpeed * 20)) {
+                completeScan(minecraft, targetKey, foundTarget);
+            }
+        } else {
+            state.setPrevScanTicks(0);
+            state.setScanningTarget(foundTarget);
+            state.setScanningEntry(targetKey);
+            state.setScanningPos((state.getScanningTarget() instanceof Block) ? blockHit.getBlockPos() : null);
+
+            if (ClientConfig.get().playScanningSound) {
+                Objects.requireNonNull(minecraft.player).playSound(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 0.5F, 1.0F);
+            }
+            state.setScanTicks(0);
         }
 
         if (state.getScanningTarget() instanceof Entity ent && (ent.isRemoved() || !ent.isAlive())) {
