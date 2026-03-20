@@ -35,14 +35,14 @@ public class FieldGuideKubeJSPlugin extends KubeJSPlugin {
         public void unlock(ServerPlayer player, String entryId) {
             PlayerFieldGuideProgress progress = getProgress(player);
             if (progress != null) {
-                progress.unlock(player, new ResourceLocation(entryId), null);
+                progress.unlock(player, new ResourceLocation(entryId), null, true);
             }
         }
 
         public void unlock(ServerPlayer player, String entryId, String variantId) {
             PlayerFieldGuideProgress progress = getProgress(player);
             if (progress != null) {
-                progress.unlock(player, new ResourceLocation(entryId), variantId);
+                progress.unlock(player, new ResourceLocation(entryId), variantId, true);
             }
         }
 

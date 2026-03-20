@@ -177,7 +177,7 @@ public class FieldGuideCommand {
                         PlayerFieldGuideProgress progress = manager.getProgress(player);
                         if (progress != null) {
                             for (String def : variants) {
-                                progress.unlock(player, entryId, def);
+                                progress.unlock(player, entryId, def, true);
                             }
                         }
                     }
@@ -193,7 +193,7 @@ public class FieldGuideCommand {
                             PlayerFieldGuideProgress progress = manager.getProgress(player);
                             if (progress != null) {
                                 for (VariantDef def : variants) {
-                                    progress.unlock(player, entryId, def.id());
+                                    progress.unlock(player, entryId, def.id(), true);
                                 }
                             }
                         }
@@ -207,7 +207,7 @@ public class FieldGuideCommand {
         for (ServerPlayer player : targets) {
             PlayerFieldGuideProgress progress = manager.getProgress(player);
             if (progress != null) {
-                progress.unlock(player, entryId, variantId);
+                progress.unlock(player, entryId, variantId, true);
             }
         }
         source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.variant.success", variantId, entryId.toString()), true);
@@ -270,7 +270,7 @@ public class FieldGuideCommand {
             PlayerFieldGuideProgress progress = manager.getProgress(player);
             if (progress != null) {
                 for (ResourceLocation entryId : allEntries) {
-                    progress.unlock(player, entryId, null);
+                    progress.unlock(player, entryId, null, true);
                     unlockVariants(player, entryId, source.getLevel());
                 }
             }
@@ -285,14 +285,14 @@ public class FieldGuideCommand {
 
         if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
             for (String variantId : FieldGuideCobblemonCompat.getVariantIds(entryId)) {
-                progress.unlock(player, entryId, variantId);
+                progress.unlock(player, entryId, variantId, true);
             }
         } else {
             EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(EntryResolver.getRawId(entryId));
             if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
                 List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, level);
                 for (VariantDef variant : variants) {
-                    progress.unlock(player, entryId, variant.id());
+                    progress.unlock(player, entryId, variant.id(), true);
                 }
             }
         }
@@ -329,7 +329,7 @@ public class FieldGuideCommand {
             PlayerFieldGuideProgress progress = manager.getProgress(player);
             if (progress != null) {
                 for (ResourceLocation entryId : entryIds) {
-                    progress.unlock(player, entryId, null);
+                    progress.unlock(player, entryId, null, true);
                     unlockVariants(player, entryId, source.getLevel());
                 }
             }
@@ -450,7 +450,7 @@ public class FieldGuideCommand {
         for (ServerPlayer player : targets) {
             PlayerFieldGuideProgress progress = manager.getProgress(player);
             if (progress != null) {
-                progress.unlock(player, entryId, null);
+                progress.unlock(player, entryId, null, true);
                 unlockVariants(player, entryId, source.getLevel());
             }
         }

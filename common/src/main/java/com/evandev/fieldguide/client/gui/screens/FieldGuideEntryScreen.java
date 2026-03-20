@@ -15,7 +15,7 @@ import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.config.ServerConfig;
-import com.evandev.fieldguide.network.RipOutPacket;
+import com.evandev.fieldguide.network.CopyPagePacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -28,12 +28,15 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 
@@ -166,14 +169,23 @@ public class FieldGuideEntryScreen extends BookScreen {
         setupNavigationButtons();
         refreshExposureWidgets();
 
-        if (unlocked && ServerConfig.get().enableTearingOutPages) {
-            this.addRenderableWidget(new PageTurnButton(this.bounds.right() - 13, this.bounds.top() + 54, 24, 24, 24, 144, 24, Constants.WIDGETS_TEXTURE, (btn) -> {
-                ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-                if (id != null) {
-                    Services.NETWORK.sendToServer(new RipOutPacket(id));
-                    this.onClose();
+        if (unlocked && ServerConfig.get().enableCopyingPages) {
+            boolean hasPaper = this.minecraft != null && this.minecraft.player != null && (this.minecraft.player.isCreative() || this.minecraft.player.getInventory().contains(Items.PAPER.getDefaultInstance()));
+            boolean canCopy = hasPaper || (this.minecraft != null && this.minecraft.player != null && this.minecraft.player.isCreative());
+
+            int u = canCopy ? 0 : 24;
+            int v = 192;
+            int vDiff = canCopy ? 24 : 0;
+
+            this.addRenderableWidget(new PageTurnButton(this.bounds.right() - 13, this.bounds.top() + 54, 24, 24, u, v, vDiff, Constants.WIDGETS_TEXTURE, (btn) -> {
+                if (canCopy) {
+                    ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+                    if (id != null) {
+                        Services.NETWORK.sendToServer(new CopyPagePacket(id));
+                        this.onClose();
+                    }
                 }
-            })).setTooltip(Tooltip.create(Component.translatable("gui.fieldguide.rip_out.tooltip")));
+            }).setPlaySound(canCopy)).setTooltip(createCopyTooltip(canCopy));
         }
 
         if (this.entityVariants.size() > 1 && this.renderedEntity instanceof LivingEntity living) {
@@ -405,7 +417,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     private void setupNavigationButtons() {
         this.addRenderableWidget(new PageTurnButton(this.bounds.right() - 13, this.bounds.top() + 26, 24, 24, 24, 144, 24, Constants.WIDGETS_TEXTURE, b -> {
             if (this.minecraft != null) this.minecraft.setScreen(parent);
-        }));
+        })).setTooltip(Tooltip.create(Component.translatable("gui.fieldguide.back")));
 
         List<Object> entries = parent.getCurrentEntries();
 
@@ -654,5 +666,13 @@ public class FieldGuideEntryScreen extends BookScreen {
             guiGraphics.drawString(this.font, armor, xPos + iconSize + iconSpacing, yPos + 1, ClientConfig.get().getTextColorInt(), false);
         }
         guiGraphics.pose().popPose();
+    }
+
+    private Tooltip createCopyTooltip(boolean canCopy) {
+        MutableComponent tooltip = Component.translatable("gui.fieldguide.copy.tooltip");
+        if (!canCopy) {
+            tooltip.append(CommonComponents.NEW_LINE).append(Component.translatable("gui.fieldguide.copy.requires_paper").withStyle(ChatFormatting.RED));
+        }
+        return Tooltip.create(tooltip);
     }
 }

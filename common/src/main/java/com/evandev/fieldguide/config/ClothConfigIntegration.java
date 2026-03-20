@@ -45,10 +45,10 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> serverConfig.enableFieldGuideItem = newValue)
                 .build());
 
-        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.enable_tearing_out_pages"), serverConfig.enableTearingOutPages)
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.enable_copying_pages"), serverConfig.enableCopyingPages)
                 .setDefaultValue(true)
-                .setTooltip(Component.translatable("option.fieldguide.enable_tearing_out_pages.tooltip"))
-                .setSaveConsumer(newValue -> serverConfig.enableTearingOutPages = newValue)
+                .setTooltip(Component.translatable("option.fieldguide.enable_copying_pages.tooltip"))
+                .setSaveConsumer(newValue -> serverConfig.enableCopyingPages = newValue)
                 .build());
 
         general.addEntry(entryBuilder.startStrField(Component.translatable("option.fieldguide.default_screen"), clientConfig.defaultScreen)

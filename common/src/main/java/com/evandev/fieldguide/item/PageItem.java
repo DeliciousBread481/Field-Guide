@@ -41,13 +41,13 @@ public class PageItem extends Item {
 
                 if (progress != null) {
                     // Unlock base entry
-                    progress.unlock(serverPlayer, entryId, null);
+                    progress.unlock(serverPlayer, entryId, null, false);
 
                     // Unlock variants
                     if (tag.contains("Variants")) {
                         ListTag variants = tag.getList("Variants", Tag.TAG_STRING);
                         for (int i = 0; i < variants.size(); i++) {
-                            progress.unlock(serverPlayer, entryId, variants.getString(i));
+                            progress.unlock(serverPlayer, entryId, variants.getString(i), false);
                         }
                     }
 

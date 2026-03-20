@@ -16,10 +16,10 @@ import java.util.Objects;
 
 class UnlockRewards {
 
-    static void grant(ServerPlayer player, ResourceLocation entryId) {
+    static void grant(ServerPlayer player, ResourceLocation entryId, boolean grantXp) {
         try {
             ServerConfig config = ServerConfig.get();
-            if (config.grantXpOnScan && config.xpAmountOnScan > 0) {
+            if (grantXp && config.grantXpOnScan && config.xpAmountOnScan > 0) {
                 player.giveExperiencePoints(config.xpAmountOnScan);
             }
 

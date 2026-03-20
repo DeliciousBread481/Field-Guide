@@ -129,7 +129,7 @@ public class FieldGuideMod {
         context.setPacketHandled(true);
     }
 
-    public static void handleRipOut(RipOutPacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
+    public static void handleRipOut(CopyPagePacket packet, Supplier<NetworkEvent.Context> contextSupplier) {
         NetworkEvent.Context context = contextSupplier.get();
         context.enqueueWork(() -> {
             ServerPlayer player = context.getSender();

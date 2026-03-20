@@ -56,7 +56,7 @@ public class PlayerFieldGuideProgress {
         for (ResourceLocation entryId : ServerFieldGuideManager.getInstance().getAllEntryIds()) {
             EntryUnlockData unlockData = ServerFieldGuideManager.getInstance().getUnlockData(entryId);
             if (unlockData.unlockedByDefault() && canUnlock(entryId)) {
-                unlock(player, entryId, null);
+                unlock(player, entryId, null, false);
             }
         }
     }
@@ -75,7 +75,7 @@ public class PlayerFieldGuideProgress {
         if (isUnlocked(entryId)) {
              // Even if already unlocked, we might want to unlock a specific variant
              if (variantId != null && !variantId.isEmpty()) {
-                 unlock(player, entryId, variantId);
+                 unlock(player, entryId, variantId, true);
              }
              return;
         }
@@ -84,11 +84,11 @@ public class PlayerFieldGuideProgress {
 
         com.evandev.fieldguide.api.EntryUnlockData unlockData = ServerFieldGuideManager.getInstance().getUnlockData(entryId);
         if (unlockData.triggers().isEmpty() || unlockData.triggers().contains(trigger)) {
-            unlock(player, entryId, variantId);
+            unlock(player, entryId, variantId, true);
         }
     }
 
-    public void unlock(ServerPlayer player, ResourceLocation entryId, String variantId) {
+    public void unlock(ServerPlayer player, ResourceLocation entryId, String variantId, boolean grantXp) {
         String id = entryId.toString();
         boolean newlyUnlocked = false;
 
@@ -98,7 +98,7 @@ public class PlayerFieldGuideProgress {
             pendingUnlocks.add(id);
             pendingRevokes.remove(id);
             newlyUnlocked = true;
-            UnlockRewards.grant(player, entryId);
+            UnlockRewards.grant(player, entryId, grantXp);
             FieldGuideTriggers.ENTRY_UNLOCKED.trigger(player, entryId);
 
             ResourceLocation categoryId = ServerFieldGuideManager.getInstance().getCategoryForEntryId(entryId);

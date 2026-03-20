@@ -9,6 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 
 public class PageTurnButton extends ImageButton {
+    private boolean playSound = true;
 
     public PageTurnButton(int x, int y, int width, int height, int xTexStart, int yTexStart, int yDiffTex, ResourceLocation resourceLocation, Button.OnPress onPress) {
         super(x, y, width, height, xTexStart, yTexStart, yDiffTex, resourceLocation, onPress);
@@ -18,8 +19,15 @@ public class PageTurnButton extends ImageButton {
         super(x, y, width, height, xTexStart, yTexStart, yDiffTex, resourceLocation, textureWidth, textureHeight, onPress, CommonComponents.EMPTY);
     }
 
+    public PageTurnButton setPlaySound(boolean playSound) {
+        this.playSound = playSound;
+        return this;
+    }
+
     @Override
     public void playDownSound(SoundManager handler) {
-        handler.play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F));
+        if (playSound) {
+            handler.play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F));
+        }
     }
 }

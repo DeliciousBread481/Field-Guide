@@ -37,8 +37,8 @@ public class FabricNetworkHelper implements INetworkHelper {
         } else if (packet instanceof UpdateJournalPacket journalPacket) {
             journalPacket.encode(buf);
             ClientPlayNetworking.send(UPDATE_JOURNAL_CHANNEL, buf);
-        } else if (packet instanceof RipOutPacket ripOutPacket) {
-            ripOutPacket.encode(buf);
+        } else if (packet instanceof CopyPagePacket copyPagePacket) {
+            copyPagePacket.encode(buf);
             ClientPlayNetworking.send(RIP_OUT_CHANNEL, buf);
         }
     }

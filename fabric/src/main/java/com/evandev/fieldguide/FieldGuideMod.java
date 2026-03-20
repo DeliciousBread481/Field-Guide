@@ -107,7 +107,7 @@ public class FieldGuideMod implements ModInitializer {
         });
 
         ServerPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.RIP_OUT_CHANNEL, (server, player, handler, buf, responseSender) -> {
-            RipOutPacket packet = new RipOutPacket(buf);
+            CopyPagePacket packet = new CopyPagePacket(buf);
             server.execute(() -> packet.handleServer(player));
         });
 

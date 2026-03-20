@@ -91,8 +91,6 @@ public class ModConfig {
             if (json.has("unlockAllVariants")) server.unlockAllVariants = json.get("unlockAllVariants").getAsBoolean();
             if (json.has("enableFieldGuideItem"))
                 server.enableFieldGuideItem = json.get("enableFieldGuideItem").getAsBoolean();
-            if (json.has("enableTearingOutPages"))
-                server.enableTearingOutPages = json.get("enableTearingOutPages").getAsBoolean();
             if (json.has("hideTabsUntilUnlocked"))
                 server.hideTabsUntilUnlocked = json.get("hideTabsUntilUnlocked").getAsBoolean();
             if (json.has("enableSpyglassScanning"))
