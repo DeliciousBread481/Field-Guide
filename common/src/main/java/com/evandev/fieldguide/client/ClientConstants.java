@@ -22,12 +22,13 @@ public class ClientConstants {
     );
 
     public static final WidgetSprites OVERVIEW_SPRITES = new WidgetSprites(
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/overview"),
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/overview_highlighted")
+            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/overview_icon"),
+            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/overview_icon_highlighted")
     );
+
     public static final WidgetSprites CLOSE_SPRITES = new WidgetSprites(
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/close"),
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/close_highlighted")
+            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/close_icon"),
+            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/close_icon_highlighted")
     );
 
     public static final WidgetSprites COPY_SPRITES = new WidgetSprites(

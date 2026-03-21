@@ -25,7 +25,7 @@ public class Constants {
     public static final ResourceLocation TOAST_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/toast.png");
     public static final ResourceLocation JOURNAL_TITLE_PAGE_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/page_journal_title.png");
     public static final ResourceLocation JOURNAL_PAGE_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/page_journal.png");
-    public static final ResourceLocation VARIANT_WIDGET_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/variant_selector.png");
+    public static final ResourceLocation VARIANT_WIDGET_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/variant_overview_bg.png");
 
     // Sounds
     public static final ResourceLocation ITEM_PICKUP_SOUND = ResourceLocation.fromNamespaceAndPath("minecraft", "entity.item.pickup");
@@ -40,8 +40,6 @@ public class Constants {
     public static final ResourceLocation TOAST_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/book_icon.png");
     public static final ResourceLocation ATTRIBUTES_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes.png");
     public static final ResourceLocation SCANNING_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/scanning.png");
-    public static final ResourceLocation OVERVIEW_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/overview_icon.png");
-    public static final ResourceLocation CLOSE_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/close.png");
 
     // Mob Type Icons
     public static final ResourceLocation HOSTILE_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/hostile.png");

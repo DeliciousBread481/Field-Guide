@@ -1,8 +1,10 @@
 package com.evandev.fieldguide.network;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.api.EntryUnlockData;
 import com.evandev.fieldguide.server.ScanVerifier;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
+import com.evandev.fieldguide.server.progress.FieldGuideTriggers;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -10,6 +12,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.NotNull;
 
 public class ScanUnlockPacket implements CustomPacketPayload {
@@ -69,20 +72,24 @@ public class ScanUnlockPacket implements CustomPacketPayload {
         PlayerFieldGuideProgress progress = manager.getProgress(player);
         if (progress == null) return;
 
-        if (!manager.isValidEntry(entryId)) return;
-        if (manager.isKillToUnlock(entryId)) return;
-        if (progress.isUnlocked(entryId) && (variantId.isEmpty() || progress.isUnlocked(entryId.toString() + "#" + variantId)))
+        if (!manager.isValidEntry(entryId)) {
+            Constants.LOG.warn("Scan failed: entryId {} is not valid on the server.", entryId);
             return;
-        if (!ScanVerifier.verifyScan(player, entryId, scannedTargetId, targetBlockPos, targetEntityId)) return;
+        }
+
+        if (!ScanVerifier.verifyScan(player, entryId, scannedTargetId, targetBlockPos, targetEntityId)) {
+            Constants.LOG.warn("Scan failed: ScanVerifier rejected the scan for entryId {}.", entryId);
+            return;
+        }
 
         if (targetEntityId != 0) {
-            net.minecraft.world.entity.Entity entity = player.serverLevel().getEntity(targetEntityId);
+            Entity entity = player.serverLevel().getEntity(targetEntityId);
             if (entity != null) {
-                com.evandev.fieldguide.server.progress.FieldGuideTriggers.SCAN_ENTITY.get().trigger(player, entity);
+                FieldGuideTriggers.SCAN_ENTITY.get().trigger(player, entity);
                 manager.recordScan(player, targetEntityId);
             }
         }
 
-        progress.tryUnlock(player, entryId, variantId, com.evandev.fieldguide.api.EntryUnlockData.UnlockTrigger.SCAN);
+        progress.tryUnlock(player, entryId, variantId, EntryUnlockData.UnlockTrigger.SCAN);
     }
 }

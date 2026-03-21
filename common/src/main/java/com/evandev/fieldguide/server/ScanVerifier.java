@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.server;
 
+import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.platform.Services;
@@ -66,7 +67,12 @@ public class ScanVerifier {
             return false;
         }
 
-        return targetBelongsToEntry(scannedTargetId, entryId);
+        boolean belongs = targetBelongsToEntry(scannedTargetId, entryId);
+        if (!belongs) {
+            Constants.LOG.warn("verifyScan failed: targetBelongsToEntry returned false. scannedTargetId: {}, entryId: {}", scannedTargetId, entryId);
+        }
+
+        return belongs;
     }
 
     private static boolean verifyEntityPresence(ServerPlayer player, ResourceLocation scannedTargetId,
@@ -90,16 +96,34 @@ public class ScanVerifier {
 
     private static boolean verifyBlockPresence(ServerPlayer player, ResourceLocation scannedTargetId,
                                                BlockPos blockPos, ServerLevel level, double maxDistSq, ResourceLocation categoryId) {
-        if (!level.isLoaded(blockPos)) return false;
+        if (!level.isLoaded(blockPos)) {
+            Constants.LOG.warn("verifyBlockPresence failed: Block at {} is not loaded.", blockPos);
+            return false;
+        }
 
         double distSq = player.distanceToSqr(blockPos.getX() + 0.5, blockPos.getY() + 0.5, blockPos.getZ() + 0.5);
-        if (distSq > maxDistSq) return false;
+        if (distSq > (maxDistSq + 16.0D)) {
+            Constants.LOG.warn("verifyBlockPresence failed: Distance too far. Client max allowed: {}, Server calculated: {}", maxDistSq, distSq);
+            return false;
+        }
 
         Block block = level.getBlockState(blockPos).getBlock();
-        if (!EntryResolver.isValidBlock(block, categoryId)) return false;
+        if (!EntryResolver.isValidBlock(block, categoryId)) {
+            Constants.LOG.warn("verifyBlockPresence failed: Block {} is blacklisted or invalid for category {}.", block, categoryId);
+            return false;
+        }
 
         ResourceLocation actualBlockId = EntryResolver.getEntryId(block, true);
-        return actualBlockId.equals(scannedTargetId);
+        ResourceLocation rawBlockId = EntryResolver.getEntryId(block, false);
+
+        boolean idMatches = actualBlockId.equals(scannedTargetId)
+                || rawBlockId.equals(scannedTargetId);
+
+        if (!idMatches) {
+            Constants.LOG.warn("verifyBlockPresence failed: Block ID mismatch. Server block: {}, Client scanned target: {}", actualBlockId, scannedTargetId);
+        }
+
+        return idMatches;
     }
 
     private static boolean targetBelongsToEntry(ResourceLocation scannedTargetId, ResourceLocation entryId) {

@@ -72,7 +72,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         }
 
         // For items, default to OBTAIN
-        if (BuiltInRegistries.ITEM.containsKey(EntryResolver.getRawId(entryId))) {
+        if ("item".equals(entryId.getNamespace()) && BuiltInRegistries.ITEM.containsKey(EntryResolver.getRawId(entryId))) {
             return new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.OBTAIN), Collections.emptyList());
         }
 
