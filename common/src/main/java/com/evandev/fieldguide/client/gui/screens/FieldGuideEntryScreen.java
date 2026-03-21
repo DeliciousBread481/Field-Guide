@@ -3,7 +3,10 @@ package com.evandev.fieldguide.client.gui.screens;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.FieldGuideLimits;
 import com.evandev.fieldguide.ModDataComponents;
-import com.evandev.fieldguide.api.*;
+import com.evandev.fieldguide.api.Category;
+import com.evandev.fieldguide.api.GuideEntry;
+import com.evandev.fieldguide.api.variant.VariantDef;
+import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.client.ClientConstants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
@@ -17,9 +20,10 @@ import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.config.ServerConfig;
+import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.network.CopyPagePacket;
 import com.evandev.fieldguide.platform.Services;
-import com.evandev.fieldguide.util.FieldGuideVariantManager;
+import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -240,7 +244,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     private void setupEntityPreview() {
         if (this.minecraft == null || this.minecraft.level == null) return;
 
-        Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
+        Object renderEntry = EntryResolver.resolveCoreEntry(entry);
 
         if (isCobblemon(entry)) {
             ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
@@ -325,7 +329,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private void loadSpawnBiomes() {
-        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
+        Object coreEntry = EntryResolver.resolveCoreEntry(entry);
         if (!(coreEntry instanceof EntityType<?>) && !(coreEntry instanceof Block)) return;
 
         EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(entry);
@@ -465,7 +469,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         if (super.mouseClicked(mouseX, mouseY, button)) return true;
 
-        Object clickEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
+        Object clickEntry = EntryResolver.resolveCoreEntry(entry);
 
         if ((button == 0 || button == 1) && (renderedEntity != null || clickEntry instanceof Block || clickEntry instanceof Item)) {
             int xPos = leftPageBounds.left() + leftPageBounds.width() / 2;
@@ -568,28 +572,28 @@ public class FieldGuideEntryScreen extends BookScreen {
         int yPos = leftPageBounds.y_center() - 15;
 
         boolean hideEntity = Services.PLATFORM.isModLoaded("exposure") && ClientExposureCompat.hasPhotograph(entry);
-        Object renderEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
+        Object renderEntry = EntryResolver.resolveCoreEntry(entry);
 
-        if (entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() instanceof Block block) {
+        if (entry instanceof GuideEntry ge && ge.isStructure() && renderEntry instanceof Block block) {
             if (!hideEntity) {
-                if (composite.structureNbt() != null || (composite.stackedBlocks() != null && !composite.stackedBlocks().isEmpty())) {
-                    EntryRenderHelper.renderStructure(guiGraphics, composite, xPos, yPos, 112, unlocked, true, bounce);
+                if (ge.structureData() != null && (ge.structureData().structureNbt() != null || (ge.structureData().stackedBlocks() != null && !ge.structureData().stackedBlocks().isEmpty()))) {
+                    EntryRenderHelper.renderStructure(guiGraphics, ge, xPos, yPos, 112, unlocked, true, bounce);
                 } else {
                     EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 40.0F, unlocked, true, bounce);
                 }
             }
-        } else if (entry instanceof VirtualFieldGuideEntry virt && virt.virtualType().equals("cobblemon")) {
+        } else if (entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && ge.virtualData().virtualType().equals("cobblemon")) {
             if (!hideEntity) {
-                EntryRenderHelper.renderCobblemon(guiGraphics, virt, xPos, yPos, 112, 112, unlocked, true, bounce);
+                EntryRenderHelper.renderCobblemon(guiGraphics, ge, xPos, yPos, 112, 112, unlocked, true, bounce);
             }
-            Entity dummy = FieldGuideCobblemonCompat.getDummyPokemon(virt.id(), Minecraft.getInstance().level);
+            Entity dummy = FieldGuideCobblemonCompat.getDummyPokemon(ge.id(), Minecraft.getInstance().level);
             if (unlocked && dummy instanceof LivingEntity living) {
                 renderAttributes(guiGraphics, living);
                 renderAlignment(guiGraphics, living, mouseX, mouseY);
             }
-        } else if (entry instanceof VirtualFieldGuideEntry virt && virt.virtualType().equals("tutorial")) {
+        } else if (entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && ge.virtualData().virtualType().equals("tutorial")) {
             if (!hideEntity) {
-                EntryRenderHelper.renderTutorial(guiGraphics, virt, xPos, yPos, 112, 112, unlocked, true, bounce);
+                EntryRenderHelper.renderTutorial(guiGraphics, ge, xPos, yPos, 112, 112, unlocked, true, bounce);
             }
         } else if (renderEntry instanceof EntityType && renderedEntity != null) {
             boolean variantUnlocked = unlocked;

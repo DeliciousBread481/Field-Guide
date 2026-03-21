@@ -1,15 +1,15 @@
 package com.evandev.fieldguide.client.gui.widget;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.api.VariantDef;
-import com.evandev.fieldguide.api.VariantProvider;
+import com.evandev.fieldguide.api.variant.VariantDef;
+import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.client.ClientConstants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.platform.Services;
-import com.evandev.fieldguide.util.FieldGuideVariantManager;
+import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;

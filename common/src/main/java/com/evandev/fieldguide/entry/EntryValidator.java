@@ -1,10 +1,10 @@
-package com.evandev.fieldguide.util.entry;
+package com.evandev.fieldguide.entry;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.compat.reliableremover.ReliableRemoverCompat;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.platform.Services;
-import com.evandev.fieldguide.util.ModTags;
+import com.evandev.fieldguide.ModTags;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;

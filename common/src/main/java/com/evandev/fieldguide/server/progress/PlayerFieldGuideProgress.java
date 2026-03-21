@@ -5,7 +5,7 @@ import com.evandev.fieldguide.api.EntryUnlockData;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
-import com.evandev.fieldguide.util.EntryResolver;
+import com.evandev.fieldguide.entry.EntryResolver;
 import com.google.gson.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;

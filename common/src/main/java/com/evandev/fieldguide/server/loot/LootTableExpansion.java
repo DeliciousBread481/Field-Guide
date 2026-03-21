@@ -1,4 +1,4 @@
-package com.evandev.fieldguide.util;
+package com.evandev.fieldguide.server.loot;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.mixin.accessor.*;

@@ -1,11 +1,8 @@
-package com.evandev.fieldguide.util;
+package com.evandev.fieldguide.entry;
 
 import com.evandev.fieldguide.api.AutoPopulateRegistry;
-import com.evandev.fieldguide.api.Category;
-import com.evandev.fieldguide.api.CompositeDefinition;
-import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
-import com.evandev.fieldguide.util.entry.EntryResolutionHelper;
-import com.evandev.fieldguide.util.entry.EntryValidator;
+import com.evandev.fieldguide.api.GuideEntry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
@@ -55,10 +52,12 @@ public class EntryResolver {
         List<Object> entries = getEntriesForTarget(resolvedEntries, target);
         if (entries.isEmpty()) return null;
 
+        ResourceLocation rawTargetId = target instanceof ResourceLocation loc ? getRawId(loc) : getEntryId(target, false);
+
         for (Object entry : entries) {
             if (entry.equals(target)) return entry;
-            if (entry instanceof CompositeFieldGuideEntry composite) {
-                if (composite.displayEntry() != null && composite.displayEntry().equals(target)) {
+            if (entry instanceof GuideEntry guideEntry && guideEntry.isComposite()) {
+                if (guideEntry.displayId() != null && guideEntry.displayId().equals(rawTargetId)) {
                     return entry;
                 }
             }
@@ -69,13 +68,16 @@ public class EntryResolver {
 
     public static List<Object> getEntriesForTarget(Map<ResourceLocation, List<Object>> resolvedEntries, Object target) {
         List<Object> matches = new ArrayList<>();
+        ResourceLocation prefixedTargetId = target instanceof ResourceLocation loc ? loc : getEntryId(target, true);
+        ResourceLocation rawTargetId = target instanceof ResourceLocation loc ? getRawId(loc) : getEntryId(target, false);
+
         for (List<Object> entries : resolvedEntries.values()) {
             for (Object entry : entries) {
-                if (entry.equals(target) || (target instanceof ResourceLocation loc && loc.equals(getEntryId(entry)))) {
+                if (entry.equals(target) || prefixedTargetId.equals(getEntryId(entry, true))) {
                     matches.add(entry);
-                } else if (entry instanceof CompositeFieldGuideEntry composite) {
-                    if ((composite.displayEntry() != null && composite.displayEntry().equals(target)) ||
-                            (composite.components() != null && composite.components().contains(target))) {
+                } else if (entry instanceof GuideEntry guideEntry && guideEntry.isComposite()) {
+                    if ((guideEntry.displayId() != null && guideEntry.displayId().equals(rawTargetId)) ||
+                            (guideEntry.childEntries() != null && guideEntry.childEntries().contains(rawTargetId))) {
                         matches.add(entry);
                     }
                 }
@@ -85,20 +87,19 @@ public class EntryResolver {
     }
 
     public static boolean isTargetInEntry(Map<ResourceLocation, List<Object>> resolvedEntries, ResourceLocation targetId, ResourceLocation entryId) {
+        ResourceLocation rawTargetId = getRawId(targetId);
+
         for (List<Object> entries : resolvedEntries.values()) {
             for (Object entry : entries) {
-                ResourceLocation id = getEntryId(entry);
+                ResourceLocation id = getEntryId(entry, true);
                 if (!entryId.equals(id)) continue;
 
-                if (targetId.equals(id)) return true;
+                if (targetId.equals(id) || rawTargetId.equals(id)) return true;
 
-                if (entry instanceof CompositeFieldGuideEntry composite) {
-                    ResourceLocation displayId = composite.displayEntry() != null ? getEntryId(composite.displayEntry()) : null;
-                    if (targetId.equals(displayId)) return true;
-                    if (composite.components() != null) {
-                        for (Object comp : composite.components()) {
-                            if (targetId.equals(getEntryId(comp))) return true;
-                        }
+                if (entry instanceof GuideEntry guideEntry && guideEntry.isComposite()) {
+                    if (rawTargetId.equals(guideEntry.displayId())) return true;
+                    if (guideEntry.childEntries() != null && guideEntry.childEntries().contains(rawTargetId)) {
+                        return true;
                     }
                 }
             }
@@ -135,7 +136,14 @@ public class EntryResolver {
         return id;
     }
 
-    public static List<Object> resolveCategoryEntries(Category category, List<CompositeDefinition> globalComposites, Map<ResourceLocation, ResourceLocation> redirects) {
-        return EntryResolutionHelper.resolveCategoryEntries(category, globalComposites, redirects);
+    public static Object resolveCoreEntry(Object entry) {
+        if (entry instanceof GuideEntry ge && ge.displayId() != null) {
+            return BuiltInRegistries.BLOCK.getOptional(ge.displayId())
+                    .map(Object.class::cast)
+                    .or(() -> BuiltInRegistries.ITEM.getOptional(ge.displayId()))
+                    .or(() -> BuiltInRegistries.ENTITY_TYPE.getOptional(ge.displayId()))
+                    .orElse(entry);
+        }
+        return entry;
     }
 }

@@ -1,9 +1,9 @@
-package com.evandev.fieldguide.util;
+package com.evandev.fieldguide.variant;
 
-import com.evandev.fieldguide.api.DatapackVariant;
-import com.evandev.fieldguide.api.VariantDef;
-import com.evandev.fieldguide.api.VariantProvider;
-import com.evandev.fieldguide.platform.Services;
+
+import com.evandev.fieldguide.api.variant.DatapackVariant;
+import com.evandev.fieldguide.api.variant.VariantDef;
+import com.evandev.fieldguide.api.variant.VariantProvider;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
@@ -32,7 +32,7 @@ public class FieldGuideVariantManager {
     private static final Map<ResourceLocation, List<DatapackVariant>> DATAPACK_VARIANTS = new HashMap<>();
 
     static {
-        registerProvider(Sheep.class, new VariantProvider<Sheep>() {
+        registerProvider(Sheep.class, new VariantProvider<>() {
             @Override
             public List<VariantDef> getVariants(Sheep entity) {
                 return Arrays.stream(DyeColor.values())
@@ -157,7 +157,7 @@ public class FieldGuideVariantManager {
     private static VariantProvider<Mob> getDatapackProvider(ResourceLocation entityId) {
         List<DatapackVariant> variants = DATAPACK_VARIANTS.get(entityId);
         if (variants == null) return null;
-        return new VariantProvider<Mob>() {
+        return new VariantProvider<>() {
             @Override
             public List<VariantDef> getVariants(Mob entity) {
                 return variants.stream()
@@ -190,7 +190,7 @@ public class FieldGuideVariantManager {
     }
 
     private static VariantProvider<Mob> getVillagerProvider() {
-        return new VariantProvider<Mob>() {
+        return new VariantProvider<>() {
             @Override
             public List<VariantDef> getVariants(Mob entity) {
                 return BuiltInRegistries.VILLAGER_TYPE.entrySet().stream()
@@ -247,7 +247,7 @@ public class FieldGuideVariantManager {
             try {
                 Object current = finalGetter.invoke(mob);
                 if (current instanceof Enum<?> currentEnum) {
-                    return new VariantProvider<Mob>() {
+                    return new VariantProvider<>() {
                         @Override
                         public List<VariantDef> getVariants(Mob entity) {
                             return Arrays.stream(currentEnum.getDeclaringClass().getEnumConstants())

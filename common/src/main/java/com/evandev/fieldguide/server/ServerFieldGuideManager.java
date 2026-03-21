@@ -2,16 +2,18 @@ package com.evandev.fieldguide.server;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.*;
+import com.evandev.fieldguide.api.variant.DatapackVariant;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.config.ServerConfig;
+import com.evandev.fieldguide.entry.EntryResolutionHelper;
+import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncConfigPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
 import com.evandev.fieldguide.platform.Services;
-import com.evandev.fieldguide.util.EntryResolver;
-import com.evandev.fieldguide.util.entry.EntryResolutionHelper;
+import com.evandev.fieldguide.server.loot.LootTableHelper;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -34,7 +36,6 @@ import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Reader;
@@ -45,7 +46,10 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     private final Map<ResourceLocation, List<Object>> resolvedCategoryEntries = new HashMap<>();
     private final Map<ResourceLocation, EntryUnlockData> entryUnlockDataMap = new HashMap<>();
     private final Map<ResourceLocation, Set<ResourceLocation>> triggerOnMap = new HashMap<>();
+
     private Map<ResourceLocation, Category> categories = new LinkedHashMap<>();
+    private Map<ResourceLocation, GuideEntry> allEntries = new HashMap<>();
+
     private List<CompositeDefinition> composites = new ArrayList<>();
     private Map<ResourceLocation, List<ItemStack>> serverLootCache = new HashMap<>();
     private Map<ResourceLocation, ResourceLocation> redirects = new HashMap<>();
@@ -70,12 +74,10 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             return entryUnlockDataMap.get(entryId);
         }
 
-        // Default logic for auto-populated entries
         if (isKillToUnlock(entryId)) {
             return new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.KILL), Collections.emptyList());
         }
 
-        // For items, default to OBTAIN
         if ("item".equals(entryId.getNamespace()) && BuiltInRegistries.ITEM.containsKey(EntryResolver.getRawId(entryId))) {
             return new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.OBTAIN), Collections.emptyList());
         }
@@ -174,6 +176,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         Services.NETWORK.sendToPlayer(new SyncConfigPacket(ServerConfig.get()), player);
 
         List<Category> flattenedCategories = new ArrayList<>();
+        List<GuideEntry> flattenedEntries = new ArrayList<>();
         int maxEntriesPerChunk = 100;
 
         for (Category rawCat : categories.values()) {
@@ -201,39 +204,30 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                 int endIndex = Math.min(index + maxEntriesPerChunk, resolved.size());
                 for (int j = index; j < endIndex; j++) {
                     Object obj = resolved.get(j);
-                    if (obj instanceof EntityType<?> type) {
-                        ResourceLocation id = AutoPopulateRegistry.getEntryId(type, true);
+                    ResourceLocation id = AutoPopulateRegistry.getEntryId(obj, true);
+
+                    if (obj instanceof GuideEntry ge) {
+                        chunkCat.addEntryId(ge.id());
+                        if (!flattenedEntries.contains(ge)) flattenedEntries.add(ge);
+                        continue;
+                    }
+
+                    // Fallback to synthesize missing explicit GuideEntry wrappers for standard objects
+                    GuideEntry existing = allEntries.get(id);
+                    if (existing != null) {
+                        chunkCat.addEntryId(id);
+                        if (!flattenedEntries.contains(existing)) flattenedEntries.add(existing);
+                    } else {
                         EntryUnlockData unlockData = EntryUnlockData.DEFAULT;
                         if (isKillToUnlock(id)) {
                             unlockData = new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.KILL), Collections.emptyList());
-                        }
-                        chunkCat.addEntry(new CategoryEntry(CategoryType.Type.ENTRY, id, id, "animals", null, null, null, null, null, unlockData));
-                    } else if (obj instanceof Block block) {
-                        ResourceLocation id = AutoPopulateRegistry.getEntryId(block, true);
-                        chunkCat.addEntry(new CategoryEntry(CategoryType.Type.ENTRY, id, id, "plants", null, null, null, null, null, EntryUnlockData.DEFAULT));
-                    } else if (obj instanceof Item item) {
-                        ResourceLocation id = AutoPopulateRegistry.getEntryId(item, true);
-                        chunkCat.addEntry(new CategoryEntry(CategoryType.Type.ENTRY, id, id, "mod_items", null, null, null, null, null, new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.OBTAIN), Collections.emptyList())));
-                    } else if (obj instanceof CompositeFieldGuideEntry composite) {
-                        ResourceLocation id = composite.id();
-                        Object displayEntry = composite.displayEntry();
-                        List<Object> components = composite.components();
-                        ResourceLocation structureNbt = composite.structureNbt();
-                        List<String> stackedBlocks = composite.stackedBlocks();
-
-                        List<ResourceLocation> compIds = new ArrayList<>();
-                        if (components != null) {
-                            for (Object c : components) {
-                                compIds.add(AutoPopulateRegistry.getEntryId(c, true));
-                            }
+                        } else if (obj instanceof Item) {
+                            unlockData = new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.OBTAIN), Collections.emptyList());
                         }
 
-                        ResourceLocation displayId = AutoPopulateRegistry.getEntryId(displayEntry, true);
-                        chunkCat.addEntry(new CategoryEntry(CategoryType.Type.COMPOSITE, id, displayId, null, null, null, compIds, structureNbt, stackedBlocks, EntryUnlockData.DEFAULT));
-                    } else if (obj instanceof VirtualFieldGuideEntry(
-                            ResourceLocation id, String virtualType, ResourceLocation icon
-                    )) {
-                        chunkCat.addEntry(new CategoryEntry(CategoryType.Type.VIRTUAL, id, null, null, virtualType, icon, null, null, null, EntryUnlockData.DEFAULT));
+                        GuideEntry synthesized = new GuideEntry(id, id, null, EntryKind.NORMAL, false, false, null, null, null, null, unlockData);
+                        chunkCat.addEntryId(id);
+                        if (!flattenedEntries.contains(synthesized)) flattenedEntries.add(synthesized);
                     }
                 }
                 flattenedCategories.add(chunkCat);
@@ -241,12 +235,12 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             }
         }
 
-        Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), variants, true, false), player);
+        Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), variants, true, false), player);
 
-        sendChunked(player, prefixedBiomeAdditions, (chunk) -> new SyncCategoriesPacket(Collections.emptyList(), chunk, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap(), false, false));
-        sendChunked(player, biomeRemovals, (chunk) -> new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), chunk, Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap(), false, false));
-        sendChunked(player, prefixedLootAdditions, (chunk) -> new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), chunk, Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap(), false, false));
-        sendChunked(player, lootRemovals, (chunk) -> new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), chunk, Collections.emptyMap(), Collections.emptyMap(), false, false));
+        sendChunked(player, prefixedBiomeAdditions, (chunk) -> new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), chunk, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap(), false, false));
+        sendChunked(player, biomeRemovals, (chunk) -> new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), chunk, Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap(), false, false));
+        sendChunked(player, prefixedLootAdditions, (chunk) -> new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), chunk, Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap(), false, false));
+        sendChunked(player, lootRemovals, (chunk) -> new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), chunk, Collections.emptyMap(), Collections.emptyMap(), false, false));
 
         if (!redirects.isEmpty()) {
             int maxModifiersChunkSize = 500;
@@ -256,23 +250,29 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                 redChunk.put(entry.getKey(), entry.getValue());
                 count++;
                 if (count >= maxModifiersChunkSize) {
-                    Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), redChunk, Collections.emptyMap(), false, false), player);
+                    Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), redChunk, Collections.emptyMap(), false, false), player);
                     redChunk = new HashMap<>();
                     count = 0;
                 }
             }
             if (!redChunk.isEmpty()) {
-                Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), redChunk, Collections.emptyMap(), false, false), player);
+                Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), redChunk, Collections.emptyMap(), false, false), player);
             }
         }
 
         if (flattenedCategories.isEmpty()) {
-            Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap(), false, true), player);
+            Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap(), false, true), player);
         } else {
             for (int i = 0; i < flattenedCategories.size(); i++) {
-                List<Category> chunk = Collections.singletonList(flattenedCategories.get(i));
+                List<Category> catChunk = Collections.singletonList(flattenedCategories.get(i));
+                List<GuideEntry> entryChunk = new ArrayList<>();
+                for (ResourceLocation entryId : flattenedCategories.get(i).getEntryIds()) {
+                    GuideEntry entry = flattenedEntries.stream().filter(e -> e.id().equals(entryId)).findFirst().orElse(null);
+                    if (entry != null) entryChunk.add(entry);
+                }
+
                 boolean isLast = (i == flattenedCategories.size() - 1);
-                Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(chunk, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap(), false, isLast), player);
+                Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(catChunk, entryChunk, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap(), false, isLast), player);
             }
         }
 
@@ -313,16 +313,13 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         Set<String> allCompositeComponents = new HashSet<>();
 
         for (Category cat : categories.values()) {
-            List<Object> entries = EntryResolver.resolveCategoryEntries(cat, composites, redirects);
+            List<Object> entries = EntryResolutionHelper.resolveCategoryEntries(cat, allEntries, composites, redirects);
             for (Object entry : entries) {
-                if (entry instanceof CompositeFieldGuideEntry composite) {
-                    if (composite.components() != null) {
-                        for (Object comp : composite.components()) {
-                            allCompositeComponents.add(AutoPopulateRegistry.getEntryKey(comp));
+                if (entry instanceof GuideEntry ge && ge.isComposite()) {
+                    if (ge.childEntries() != null) {
+                        for (ResourceLocation comp : ge.childEntries()) {
+                            allCompositeComponents.add(comp.toString());
                         }
-                    }
-                    if (composite.displayEntry() != null) {
-                        allCompositeComponents.add(AutoPopulateRegistry.getEntryKey(composite.displayEntry()));
                     }
                 }
             }
@@ -330,7 +327,10 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         }
 
         for (List<Object> entries : resolvedCategoryEntries.values()) {
-            entries.removeIf(entry -> !(entry instanceof CompositeFieldGuideEntry) && allCompositeComponents.contains(AutoPopulateRegistry.getEntryKey(entry)));
+            entries.removeIf(entry -> {
+                if (entry instanceof GuideEntry ge && ge.isComposite()) return false;
+                return allCompositeComponents.contains(AutoPopulateRegistry.getEntryKey(entry));
+            });
         }
     }
 
@@ -405,7 +405,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                     Category category = data.categories.computeIfAbsent(categoryId, Category::new);
 
                     if (GsonHelper.getAsBoolean(json, "replace", false)) {
-                        category.getEntries().clear();
+                        category.getEntryIds().clear();
                     }
 
                     if (json.has("sort_index")) {
@@ -436,19 +436,27 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                             switch (typeStr) {
                                 case "entry" -> {
                                     ResourceLocation id = ResourceLocation.parse(GsonHelper.getAsString(obj, "id"));
-                                    category.addEntry(new CategoryEntry(CategoryType.Type.ENTRY, id, id, null, null, null, null, null, null, unlockData));
+                                    GuideEntry ge = new GuideEntry(id, id, null, EntryKind.NORMAL, false, false, null, null, null, null, unlockData);
+                                    data.allEntries.put(id, ge);
+                                    category.addEntryId(id);
                                     data.entryUnlockData.put(id, unlockData);
                                 }
                                 case "virtual_entry" -> {
                                     ResourceLocation id = ResourceLocation.parse(GsonHelper.getAsString(obj, "id"));
                                     String virtualType = GsonHelper.getAsString(obj, "virtual_type");
                                     ResourceLocation icon = obj.has("icon") ? ResourceLocation.parse(GsonHelper.getAsString(obj, "icon")) : null;
-                                    category.addEntry(new CategoryEntry(CategoryType.Type.VIRTUAL, id, null, null, virtualType, icon, null, null, null, unlockData));
+                                    GuideEntry ge = new GuideEntry(id, null, icon, EntryKind.NORMAL, true, false, null, null, null, new VirtualData(virtualType), unlockData);
+                                    data.allEntries.put(id, ge);
+                                    category.addEntryId(id);
                                     data.entryUnlockData.put(id, unlockData);
                                 }
                                 case "auto_populate" -> {
                                     String strategy = GsonHelper.getAsString(obj, "strategy");
-                                    category.addEntry(new CategoryEntry(CategoryType.Type.AUTO_POPULATE, null, null, strategy, null, null, null, null, null, unlockData));
+                                    String safeStrategyName = strategy.replace(":", "_");
+                                    ResourceLocation id = ResourceLocation.fromNamespaceAndPath(categoryId.getNamespace(), categoryId.getPath() + "_auto_" + safeStrategyName);
+                                    GuideEntry ge = new GuideEntry(id, null, null, EntryKind.NORMAL, false, true, strategy, null, null, null, unlockData);
+                                    data.allEntries.put(id, ge);
+                                    category.addEntryId(id);
                                 }
                             }
                         }
@@ -737,6 +745,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     protected void apply(@NotNull ReloadData data, @NotNull ResourceManager resourceManager, @NotNull ProfilerFiller profiler) {
         ModConfig.load();
         this.categories = data.categories;
+        this.allEntries = data.allEntries;
         this.composites = data.composites;
         this.biomeAdditions = data.biomeAdditions;
         this.biomeRemovals = data.biomeRemovals;
@@ -758,6 +767,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
     public static class ReloadData {
         public Map<ResourceLocation, Category> categories = new LinkedHashMap<>();
+        public Map<ResourceLocation, GuideEntry> allEntries = new HashMap<>();
         public List<CompositeDefinition> composites = new ArrayList<>();
         public List<String> biomeAdditions = new ArrayList<>();
         public List<String> biomeRemovals = new ArrayList<>();

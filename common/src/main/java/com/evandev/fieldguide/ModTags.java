@@ -1,6 +1,5 @@
-package com.evandev.fieldguide.util;
+package com.evandev.fieldguide;
 
-import com.evandev.fieldguide.Constants;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;

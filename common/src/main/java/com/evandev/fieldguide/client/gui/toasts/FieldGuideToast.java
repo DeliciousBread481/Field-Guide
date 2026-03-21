@@ -1,16 +1,16 @@
 package com.evandev.fieldguide.client.gui.toasts;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
-import com.evandev.fieldguide.api.VariantDef;
-import com.evandev.fieldguide.api.VariantProvider;
-import com.evandev.fieldguide.api.VirtualFieldGuideEntry;
+import com.evandev.fieldguide.api.GuideEntry;
+import com.evandev.fieldguide.api.variant.VariantDef;
+import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.platform.Services;
-import com.evandev.fieldguide.util.FieldGuideVariantManager;
+import com.evandev.fieldguide.entry.EntryResolver;
+import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.toasts.Toast;
@@ -49,14 +49,14 @@ public class FieldGuideToast implements Toast {
 
         int iconX = 16;
         int iconY = 17;
-        Object coreEntry = this.entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : this.entry;
+        Object coreEntry = EntryResolver.resolveCoreEntry(this.entry);
 
-        boolean isCobblemon = this.entry instanceof VirtualFieldGuideEntry virt && virt.virtualType().equals("cobblemon");
-        boolean isTutorial = this.entry instanceof VirtualFieldGuideEntry virt && virt.virtualType().equals("tutorial");
+        boolean isCobblemon = this.entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "cobblemon".equals(ge.virtualData().virtualType());
+        boolean isTutorial = this.entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "tutorial".equals(ge.virtualData().virtualType());
 
         if (!entityInitialized) {
             if (Services.PLATFORM.isModLoaded("cobblemon") && isCobblemon) {
-                cachedEntity = FieldGuideCobblemonCompat.getDummyPokemon(((VirtualFieldGuideEntry) this.entry).id(), Minecraft.getInstance().level);
+                cachedEntity = FieldGuideCobblemonCompat.getDummyPokemon(((GuideEntry) this.entry).id(), Minecraft.getInstance().level);
             } else if (coreEntry instanceof EntityType<?> type) {
                 cachedEntity = type.create(Minecraft.getInstance().level);
 
@@ -76,16 +76,12 @@ public class FieldGuideToast implements Toast {
             entityInitialized = true;
         }
 
-        if (this.entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() instanceof Block block) {
-            if (composite.structureNbt() != null || (composite.stackedBlocks() != null && !composite.stackedBlocks().isEmpty())) {
-                EntryRenderHelper.renderStructure(guiGraphics, composite, iconX, iconY, 24, true, false, 1.0F);
-            } else {
-                EntryRenderHelper.renderBlock(guiGraphics, block, iconX, iconY, 12.0F, true, false, 1.0F);
-            }
+        if (this.entry instanceof GuideEntry ge && ge.isStructure() && coreEntry instanceof Block block) {
+            EntryRenderHelper.renderStructure(guiGraphics, ge, iconX, iconY, 24, true, false, 1.0F);
         } else if (isCobblemon && cachedEntity instanceof LivingEntity) {
-            EntryRenderHelper.renderCobblemon(guiGraphics, (VirtualFieldGuideEntry) this.entry, iconX, iconY, 24, 24, true, false, 1.0F);
+            EntryRenderHelper.renderCobblemon(guiGraphics, (GuideEntry) this.entry, iconX, iconY, 24, 24, true, false, 1.0F);
         } else if (isTutorial) {
-            EntryRenderHelper.renderTutorial(guiGraphics, (VirtualFieldGuideEntry) this.entry, iconX, iconY, 24, 24, true, false, 1.0F);
+            EntryRenderHelper.renderTutorial(guiGraphics, (GuideEntry) this.entry, iconX, iconY, 24, 24, true, false, 1.0F);
         } else if (coreEntry instanceof EntityType<?>) {
             if (cachedEntity != null) {
                 EntryRenderHelper.renderEntityNormalized(guiGraphics, cachedEntity, iconX, iconY, 24, 24, true, false, 1.0F);

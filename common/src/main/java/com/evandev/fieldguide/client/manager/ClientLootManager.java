@@ -2,7 +2,8 @@ package com.evandev.fieldguide.client.manager;
 
 import com.evandev.fieldguide.ModDataComponents;
 import com.evandev.fieldguide.api.AutoPopulateRegistry;
-import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.api.GuideEntry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
@@ -30,12 +31,20 @@ public class ClientLootManager {
 
     public List<ItemStack> getDrops(Object entry) {
         List<ItemStack> rawDrops = new ArrayList<>();
-
-        if (entry instanceof CompositeFieldGuideEntry composite) {
+        if (entry instanceof GuideEntry ge && ge.isComposite()) {
             Set<Object> uniqueComponents = new HashSet<>();
-            if (composite.displayEntry() != null) uniqueComponents.add(composite.displayEntry());
-            if (composite.components() != null) uniqueComponents.addAll(composite.components());
-
+            if (ge.displayId() != null) {
+                BuiltInRegistries.BLOCK.getOptional(ge.displayId()).ifPresent(uniqueComponents::add);
+                BuiltInRegistries.ITEM.getOptional(ge.displayId()).ifPresent(uniqueComponents::add);
+                BuiltInRegistries.ENTITY_TYPE.getOptional(ge.displayId()).ifPresent(uniqueComponents::add);
+            }
+            if (ge.childEntries() != null) {
+                for (ResourceLocation compId : ge.childEntries()) {
+                    BuiltInRegistries.BLOCK.getOptional(compId).ifPresent(uniqueComponents::add);
+                    BuiltInRegistries.ITEM.getOptional(compId).ifPresent(uniqueComponents::add);
+                    BuiltInRegistries.ENTITY_TYPE.getOptional(compId).ifPresent(uniqueComponents::add);
+                }
+            }
             for (Object comp : uniqueComponents) {
                 ResourceLocation id = AutoPopulateRegistry.getEntryId(comp, true);
                 rawDrops.addAll(dropCache.getOrDefault(id, Collections.emptyList()));
@@ -47,18 +56,10 @@ public class ClientLootManager {
 
         List<ItemStack> distinct = new ArrayList<>();
         for (ItemStack stack : rawDrops) {
-            boolean isDuplicate = false;
-            for (ItemStack existing : distinct) {
-                if (isSameLootItem(existing, stack)) {
-                    isDuplicate = true;
-                    break;
-                }
-            }
-            if (!isDuplicate) {
+            if (distinct.stream().noneMatch(s -> isSameLootItem(s, stack))) {
                 distinct.add(stack);
             }
         }
-
         return distinct;
     }
 

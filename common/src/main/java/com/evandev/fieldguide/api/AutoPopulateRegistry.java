@@ -1,10 +1,10 @@
 package com.evandev.fieldguide.api;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.ModTags;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
+import com.evandev.fieldguide.entry.EntryValidator;
 import com.evandev.fieldguide.platform.Services;
-import com.evandev.fieldguide.util.ModTags;
-import com.evandev.fieldguide.util.entry.EntryValidator;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -32,12 +32,11 @@ public class AutoPopulateRegistry {
                 .map(Object.class::cast)
                 .toList());
 
-        // Legacy alias to prevent breaking existing datapacks
         register("mod", (modId, categoryId) -> getEntries("mod_entities:" + modId, categoryId));
 
         register("mod_items", (modId, categoryId) -> BuiltInRegistries.ITEM.stream()
                 .filter(i -> BuiltInRegistries.ITEM.getKey(i).getNamespace().equals(modId))
-                .filter(i -> !(i instanceof BlockItem)) // Prevents trees, dirt, slabs, etc. from showing up
+                .filter(i -> !(i instanceof BlockItem))
                 .filter(i -> EntryValidator.isValidItem(i, categoryId))
                 .sorted(Comparator.comparing(i -> BuiltInRegistries.ITEM.getKey(i).toString()))
                 .map(Object.class::cast)
@@ -60,21 +59,18 @@ public class AutoPopulateRegistry {
             try {
                 ResourceLocation tagLocation = ResourceLocation.parse(tagPath);
 
-                // Blocks first (highest priority)
                 TagKey<Block> blockTagKey = TagKey.create(Registries.BLOCK, tagLocation);
                 BuiltInRegistries.BLOCK.forEach(block -> BuiltInRegistries.BLOCK.getResourceKey(block)
                         .flatMap(BuiltInRegistries.BLOCK::getHolder)
                         .filter(h -> h.is(blockTagKey) && EntryValidator.isValidBlock(block, categoryId))
                         .ifPresent(h -> results.put(BuiltInRegistries.BLOCK.getKey(block), block)));
 
-                // Items second
                 TagKey<Item> itemTagKey = TagKey.create(Registries.ITEM, tagLocation);
                 BuiltInRegistries.ITEM.forEach(item -> BuiltInRegistries.ITEM.getResourceKey(item)
                         .flatMap(BuiltInRegistries.ITEM::getHolder)
                         .filter(h -> h.is(itemTagKey) && EntryValidator.isValidItem(item, categoryId))
                         .ifPresent(h -> results.putIfAbsent(BuiltInRegistries.ITEM.getKey(item), item)));
 
-                // Entities last
                 TagKey<EntityType<?>> entityTagKey = TagKey.create(Registries.ENTITY_TYPE, tagLocation);
                 BuiltInRegistries.ENTITY_TYPE.forEach(type -> BuiltInRegistries.ENTITY_TYPE.getResourceKey(type)
                         .flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder)
@@ -137,8 +133,7 @@ public class AutoPopulateRegistry {
         if (obj instanceof EntityType<?> type) return BuiltInRegistries.ENTITY_TYPE.getKey(type);
         if (obj instanceof Block block) return BuiltInRegistries.BLOCK.getKey(block);
         if (obj instanceof Item item) return BuiltInRegistries.ITEM.getKey(item);
-        if (obj instanceof CompositeFieldGuideEntry comp) return comp.id();
-        if (obj instanceof VirtualFieldGuideEntry virt) return virt.id();
+        if (obj instanceof GuideEntry ge) return ge.id();
         return null;
     }
 
@@ -146,16 +141,21 @@ public class AutoPopulateRegistry {
         if (!prefixed) return getEntryId(obj);
         ResourceLocation id = getEntryId(obj);
         if (id == null) return null;
-        if (obj instanceof VirtualFieldGuideEntry) {
+        if (obj instanceof GuideEntry ge && ge.isVirtual()) {
             return id;
         }
 
         String prefix = "unknown";
-        Object coreEntry = obj instanceof CompositeFieldGuideEntry comp ? comp.displayEntry() : obj;
+        Object coreEntry = obj instanceof GuideEntry ge && ge.displayId() != null
+                ? ge.displayId()
+                : obj;
 
-        if (coreEntry instanceof Block) prefix = "block";
-        else if (coreEntry instanceof Item) prefix = "item";
-        else if (coreEntry instanceof EntityType<?>) prefix = "entity";
+        if (coreEntry instanceof Block || (coreEntry instanceof ResourceLocation loc && BuiltInRegistries.BLOCK.containsKey(loc)))
+            prefix = "block";
+        else if (coreEntry instanceof Item || (coreEntry instanceof ResourceLocation loc && BuiltInRegistries.ITEM.containsKey(loc)))
+            prefix = "item";
+        else if (coreEntry instanceof EntityType<?> || (coreEntry instanceof ResourceLocation loc && BuiltInRegistries.ENTITY_TYPE.containsKey(loc)))
+            prefix = "entity";
 
         return ResourceLocation.fromNamespaceAndPath(prefix, id.toString().replace(":", "/"));
     }
@@ -201,14 +201,24 @@ public class AutoPopulateRegistry {
                         "0,3,0|" + leavesId
                 );
 
-                List<Object> components = Arrays.asList(block, leaves, log);
+                List<ResourceLocation> components = Arrays.asList(
+                        BuiltInRegistries.BLOCK.getKey(block),
+                        BuiltInRegistries.BLOCK.getKey(leaves),
+                        BuiltInRegistries.BLOCK.getKey(log)
+                );
 
-                results.add(new CompositeFieldGuideEntry(
+                results.add(new GuideEntry(
                         ResourceLocation.fromNamespaceAndPath(id.getNamespace(), baseName + "_tree"),
-                        block,
-                        components,
+                        id, // display sapling block
                         null,
-                        treeStructure
+                        EntryKind.STRUCTURE,
+                        false,
+                        false,
+                        null,
+                        components,
+                        new StructureData(null, treeStructure),
+                        null,
+                        EntryUnlockData.DEFAULT
                 ));
             }
         }

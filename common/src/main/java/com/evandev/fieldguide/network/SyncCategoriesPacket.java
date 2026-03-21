@@ -1,9 +1,12 @@
 package com.evandev.fieldguide.network;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.api.*;
+import com.evandev.fieldguide.api.Category;
+import com.evandev.fieldguide.api.GuideEntry;
+import com.evandev.fieldguide.api.variant.DatapackVariant;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -23,6 +26,7 @@ public class SyncCategoriesPacket implements CustomPacketPayload {
     );
 
     private final List<Category> categories;
+    private final List<GuideEntry> entries;
     private final List<String> biomeAdditions;
     private final List<String> biomeRemovals;
     private final List<String> lootAdditions;
@@ -34,6 +38,7 @@ public class SyncCategoriesPacket implements CustomPacketPayload {
 
     public SyncCategoriesPacket(
             List<Category> categories,
+            List<GuideEntry> entries,
             List<String> biomeAdditions,
             List<String> biomeRemovals,
             List<String> lootAdditions,
@@ -44,6 +49,7 @@ public class SyncCategoriesPacket implements CustomPacketPayload {
             boolean resolveEntries
     ) {
         this.categories = categories;
+        this.entries = entries;
         this.biomeAdditions = biomeAdditions;
         this.biomeRemovals = biomeRemovals;
         this.lootAdditions = lootAdditions;
@@ -55,32 +61,8 @@ public class SyncCategoriesPacket implements CustomPacketPayload {
     }
 
     public SyncCategoriesPacket(RegistryFriendlyByteBuf buf) {
-        this.categories = buf.readList(b -> {
-            ResourceLocation id = b.readResourceLocation();
-            Category cat = new Category(id);
-            cat.setSortIndex(b.readInt());
-            b.readOptional(FriendlyByteBuf::readResourceLocation).ifPresent(cat::setIcon);
-            cat.setGroupByQueries(b.readList(FriendlyByteBuf::readUtf));
-
-            List<CategoryEntry> entries = b.readList(eb -> {
-                CategoryType.Type type = eb.readEnum(CategoryType.Type.class);
-                ResourceLocation entryId = eb.readNullable(FriendlyByteBuf::readResourceLocation);
-                ResourceLocation displayId = eb.readNullable(FriendlyByteBuf::readResourceLocation);
-                String strategy = eb.readNullable(FriendlyByteBuf::readUtf);
-                String virtualType = eb.readNullable(FriendlyByteBuf::readUtf);
-                ResourceLocation icon = eb.readNullable(FriendlyByteBuf::readResourceLocation);
-                List<ResourceLocation> components = eb.readNullable(nb -> nb.readList(FriendlyByteBuf::readResourceLocation));
-                ResourceLocation structureNbt = eb.readNullable(FriendlyByteBuf::readResourceLocation);
-                List<String> stackedBlocks = eb.readNullable(nb -> nb.readList(FriendlyByteBuf::readUtf));
-                EntryUnlockData unlockData = EntryUnlockData.STREAM_CODEC.decode((RegistryFriendlyByteBuf) eb);
-
-                return new CategoryEntry(type, entryId, displayId, strategy, virtualType, icon, components, structureNbt, stackedBlocks, unlockData);
-            });
-
-            entries.forEach(cat::addEntry);
-            return cat;
-        });
-
+        this.categories = Category.STREAM_CODEC.apply(ByteBufCodecs.list()).decode(buf);
+        this.entries = GuideEntry.STREAM_CODEC.apply(ByteBufCodecs.list()).decode(buf);
         this.biomeAdditions = buf.readList(FriendlyByteBuf::readUtf);
         this.biomeRemovals = buf.readList(FriendlyByteBuf::readUtf);
         this.lootAdditions = buf.readList(FriendlyByteBuf::readUtf);
@@ -97,25 +79,8 @@ public class SyncCategoriesPacket implements CustomPacketPayload {
     }
 
     public void encode(RegistryFriendlyByteBuf buf) {
-        buf.writeCollection(categories, (b, cat) -> {
-            b.writeResourceLocation(cat.getId());
-            b.writeInt(cat.getSortIndex());
-            b.writeNullable(cat.getIcon(), FriendlyByteBuf::writeResourceLocation);
-            b.writeCollection(cat.getGroupByQueries() != null ? cat.getGroupByQueries() : List.of(), FriendlyByteBuf::writeUtf);
-
-            b.writeCollection(cat.getEntries() != null ? cat.getEntries() : List.of(), (eb, entry) -> {
-                eb.writeEnum(entry.type());
-                eb.writeNullable(entry.id(), FriendlyByteBuf::writeResourceLocation);
-                eb.writeNullable(entry.displayId(), FriendlyByteBuf::writeResourceLocation);
-                eb.writeNullable(entry.strategy(), FriendlyByteBuf::writeUtf);
-                eb.writeNullable(entry.virtualType(), FriendlyByteBuf::writeUtf);
-                eb.writeNullable(entry.icon(), FriendlyByteBuf::writeResourceLocation);
-                eb.writeNullable(entry.components(), (nb, comps) -> nb.writeCollection(comps, FriendlyByteBuf::writeResourceLocation));
-                eb.writeNullable(entry.structureNbt(), FriendlyByteBuf::writeResourceLocation);
-                eb.writeNullable(entry.stackedBlocks(), (nb, blocks) -> nb.writeCollection(blocks, FriendlyByteBuf::writeUtf));
-                EntryUnlockData.STREAM_CODEC.encode((RegistryFriendlyByteBuf) eb, entry.unlockData() != null ? entry.unlockData() : EntryUnlockData.DEFAULT);
-            });
-        });
+        Category.STREAM_CODEC.apply(ByteBufCodecs.list()).encode(buf, categories);
+        GuideEntry.STREAM_CODEC.apply(ByteBufCodecs.list()).encode(buf, entries);
 
         buf.writeCollection(biomeAdditions, FriendlyByteBuf::writeUtf);
         buf.writeCollection(biomeRemovals, FriendlyByteBuf::writeUtf);
@@ -132,6 +97,10 @@ public class SyncCategoriesPacket implements CustomPacketPayload {
 
     public List<Category> getCategories() {
         return categories;
+    }
+
+    public List<GuideEntry> getEntries() {
+        return entries;
     }
 
     public List<String> getBiomeAdditions() {

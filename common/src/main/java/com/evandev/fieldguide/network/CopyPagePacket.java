@@ -2,10 +2,10 @@ package com.evandev.fieldguide.network;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.ModDataComponents;
+import com.evandev.fieldguide.entry.EntryResolutionHelper;
 import com.evandev.fieldguide.item.ModItems;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
-import com.evandev.fieldguide.util.entry.EntryResolutionHelper;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;

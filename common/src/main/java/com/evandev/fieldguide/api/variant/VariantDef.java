@@ -1,10 +1,10 @@
-package com.evandev.fieldguide.api;
+package com.evandev.fieldguide.api.variant;
 
 import net.minecraft.network.chat.Component;
 
 public record VariantDef(String id, Object value) {
     public VariantDef(String id, String translationKey) {
-        this(id, (Object) Component.translatable(translationKey));
+        this(id, Component.translatable(translationKey));
     }
 
     public Component getName() {

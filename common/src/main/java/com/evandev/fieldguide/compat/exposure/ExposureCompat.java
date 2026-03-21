@@ -1,15 +1,15 @@
 package com.evandev.fieldguide.compat.exposure;
 
-import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.api.EntryUnlockData;
-import com.evandev.fieldguide.api.VariantDef;
-import com.evandev.fieldguide.api.VariantProvider;
+import com.evandev.fieldguide.api.GuideEntry;
+import com.evandev.fieldguide.api.variant.VariantDef;
+import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
-import com.evandev.fieldguide.util.EntryResolver;
-import com.evandev.fieldguide.util.FieldGuideVariantManager;
+import com.evandev.fieldguide.entry.EntryResolver;
+import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import io.github.mortuusars.exposure.world.camera.frame.EntityInFrame;
 import io.github.mortuusars.exposure.world.camera.frame.Frame;
 import io.github.mortuusars.exposure.world.item.PhotographItem;
@@ -17,18 +17,21 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.boss.EnderDragonPart;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.*;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class ExposureCompat {
 
@@ -137,15 +140,24 @@ public class ExposureCompat {
                 int maxScore = -1;
 
                 for (Object entry : possibleEntries) {
-                    if (entry instanceof CompositeFieldGuideEntry composite) {
+                    if (entry instanceof GuideEntry composite && composite.isComposite()) {
                         int score = 0;
-                        if (composite.components() != null) {
-                            for (Object comp : composite.components()) {
-                                if (hitTargets.containsKey(comp)) score++;
+                        if (composite.childEntries() != null) {
+                            for (ResourceLocation compId : composite.childEntries()) {
+                                Optional<Block> blockOpt = BuiltInRegistries.BLOCK.getOptional(compId);
+                                if (blockOpt.isPresent() && hitTargets.containsKey(blockOpt.get())) score++;
+
+                                Optional<EntityType<?>> entityOpt = BuiltInRegistries.ENTITY_TYPE.getOptional(compId);
+                                if (entityOpt.isPresent() && hitTargets.containsKey(entityOpt.get())) score++;
                             }
                         }
-                        if (composite.displayEntry() != null && hitTargets.containsKey(composite.displayEntry())) {
-                            score += 2;
+
+                        if (composite.displayId() != null) {
+                            Optional<Block> blockOpt = BuiltInRegistries.BLOCK.getOptional(composite.displayId());
+                            if (blockOpt.isPresent() && hitTargets.containsKey(blockOpt.get())) score += 2;
+
+                            Optional<EntityType<?>> entityOpt = BuiltInRegistries.ENTITY_TYPE.getOptional(composite.displayId());
+                            if (entityOpt.isPresent() && hitTargets.containsKey(entityOpt.get())) score += 2;
                         }
 
                         if (score > maxScore) {
@@ -157,9 +169,14 @@ public class ExposureCompat {
 
                 if (maxScore == 0) {
                     for (Object entry : possibleEntries) {
-                        if (entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() != null && composite.displayEntry().equals(target)) {
-                            bestMatch = entry;
-                            break;
+                        if (entry instanceof GuideEntry composite && composite.displayId() != null) {
+                            if (hitTargets.keySet().stream().anyMatch(k ->
+                                    (k instanceof Block b && composite.displayId().equals(BuiltInRegistries.BLOCK.getKey(b))) ||
+                                            (k instanceof EntityType e && composite.displayId().equals(BuiltInRegistries.ENTITY_TYPE.getKey(e)))
+                            )) {
+                                bestMatch = entry;
+                                break;
+                            }
                         }
                     }
                 }

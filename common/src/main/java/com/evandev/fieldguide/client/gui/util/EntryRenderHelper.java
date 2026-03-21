@@ -1,7 +1,10 @@
 package com.evandev.fieldguide.client.gui.util;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.api.*;
+import com.evandev.fieldguide.api.AutoPopulateRegistry;
+import com.evandev.fieldguide.api.GuideEntry;
+import com.evandev.fieldguide.api.variant.VariantDef;
+import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
@@ -9,8 +12,8 @@ import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.mixin.accessor.EntityAccessor;
 import com.evandev.fieldguide.platform.Services;
-import com.evandev.fieldguide.util.FieldGuideVariantManager;
-import com.evandev.fieldguide.util.StructureUtils;
+import com.evandev.fieldguide.variant.FieldGuideVariantManager;
+import com.evandev.fieldguide.server.structure.StructureUtils;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -143,7 +146,7 @@ public class EntryRenderHelper {
         });
     }
 
-    public static void renderCobblemon(GuiGraphics guiGraphics, VirtualFieldGuideEntry entry, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale) {
+    public static void renderCobblemon(GuiGraphics guiGraphics, GuideEntry entry, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale) {
         String formName = FieldGuideCobblemonCompat.getFormForEntry(entry.id());
         Object cacheKey = formName.equals("standard") ? entry : entry.id().toString() + "#" + formName;
 
@@ -156,7 +159,7 @@ public class EntryRenderHelper {
         });
     }
 
-    public static void renderTutorial(GuiGraphics guiGraphics, VirtualFieldGuideEntry entry, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale) {
+    public static void renderTutorial(GuiGraphics guiGraphics, GuideEntry entry, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale) {
         ResourceLocation texture = entry.icon();
         if (texture == null) texture = Constants.DEFAULT_ICON;
 
@@ -315,14 +318,14 @@ public class EntryRenderHelper {
         });
     }
 
-    public static void renderStructure(GuiGraphics guiGraphics, CompositeFieldGuideEntry composite, int x, int y, int size, boolean unlocked, boolean isPage, float bounceScale) {
+    public static void renderStructure(GuiGraphics guiGraphics, GuideEntry composite, int x, int y, int size, boolean unlocked, boolean isPage, float bounceScale) {
         renderWithCache(composite, composite, guiGraphics, x, y, size, size, unlocked, isPage, bounceScale, () -> {
             setupFieldGuideBlockLighting();
             PoseStack pose = new PoseStack();
 
             Map<BlockPos, BlockState> blocks = StructureUtils.getStructureBlocks(composite);
-            if (blocks.isEmpty() && composite.stackedBlocks() != null && !composite.stackedBlocks().isEmpty()) {
-                blocks = StructureUtils.getStackedBlocks(composite.stackedBlocks());
+            if (blocks.isEmpty() && composite.structureData() != null && composite.structureData().stackedBlocks() != null && !composite.structureData().stackedBlocks().isEmpty()) {
+                blocks = StructureUtils.getStackedBlocks(composite.structureData().stackedBlocks());
             }
             if (blocks.isEmpty()) return;
 

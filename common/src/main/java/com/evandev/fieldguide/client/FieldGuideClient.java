@@ -5,7 +5,7 @@ import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.client.gui.screens.BookScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideCategoryScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
-import com.evandev.fieldguide.client.scanning.FieldGuideScanner;
+import com.evandev.fieldguide.client.scan.FieldGuideScanner;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.mixin.accessor.MobAccessor;

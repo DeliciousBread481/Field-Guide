@@ -1,7 +1,7 @@
-package com.evandev.fieldguide.client.scanning;
+package com.evandev.fieldguide.client.scan;
 
-import com.evandev.fieldguide.client.scanning.manager.FieldGuideScanManager;
-import com.evandev.fieldguide.client.scanning.manager.FieldGuideScanState;
+import com.evandev.fieldguide.client.scan.manager.FieldGuideScanManager;
+import com.evandev.fieldguide.client.scan.manager.FieldGuideScanState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;

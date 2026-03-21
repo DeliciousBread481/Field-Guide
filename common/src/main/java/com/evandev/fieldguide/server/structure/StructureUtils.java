@@ -1,7 +1,7 @@
-package com.evandev.fieldguide.util;
+package com.evandev.fieldguide.server.structure;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.api.GuideEntry;
 import com.evandev.fieldguide.mixin.accessor.StructureTemplateAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -21,11 +21,11 @@ import java.util.List;
 import java.util.Map;
 
 public class StructureUtils {
-    public static Map<BlockPos, BlockState> getStructureBlocks(CompositeFieldGuideEntry entry) {
+    public static Map<BlockPos, BlockState> getStructureBlocks(GuideEntry entry) {
         Map<BlockPos, BlockState> blocks = new HashMap<>();
 
-        if (entry.structureNbt() != null) {
-            ResourceLocation nbtLocation = entry.structureNbt();
+        if (entry.structureData() != null && entry.structureData().structureNbt() != null) {
+            ResourceLocation nbtLocation = entry.structureData().structureNbt();
             ResourceLocation path = ResourceLocation.fromNamespaceAndPath(nbtLocation.getNamespace(), "structure/" + nbtLocation.getPath() + ".nbt");
 
             try {

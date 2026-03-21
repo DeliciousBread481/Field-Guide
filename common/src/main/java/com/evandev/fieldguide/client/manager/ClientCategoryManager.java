@@ -1,11 +1,12 @@
 package com.evandev.fieldguide.client.manager;
 
+import com.evandev.fieldguide.api.AutoPopulateRegistry;
 import com.evandev.fieldguide.api.Category;
-import com.evandev.fieldguide.api.CategoryEntry;
+import com.evandev.fieldguide.api.GuideEntry;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.client.search.SearchManager;
-import com.evandev.fieldguide.api.AutoPopulateRegistry;
-import com.evandev.fieldguide.util.EntryResolver;
+import com.evandev.fieldguide.entry.EntryResolver;
+import com.evandev.fieldguide.entry.EntryResolutionHelper;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.*;
@@ -15,6 +16,7 @@ public class ClientCategoryManager {
     private static final ClientCategoryManager INSTANCE = new ClientCategoryManager();
 
     private final Map<ResourceLocation, Category> syncedCategories = new LinkedHashMap<>();
+    private final Map<ResourceLocation, GuideEntry> syncedEntries = new HashMap<>();
     private final Map<ResourceLocation, List<Object>> resolvedCategoryEntries = new HashMap<>();
     private final Map<ResourceLocation, ResourceLocation> redirects = new HashMap<>();
     private final List<String> biomeAdditions = new ArrayList<>();
@@ -30,20 +32,25 @@ public class ClientCategoryManager {
         return INSTANCE;
     }
 
-    public void updateCategoriesFromServer(List<Category> categories, Map<ResourceLocation, ResourceLocation> redirects, boolean clearCache, boolean resolveEntries) {
+    public void updateCategoriesFromServer(List<Category> categories, List<GuideEntry> entries, Map<ResourceLocation, ResourceLocation> redirects, boolean clearCache, boolean resolveEntries) {
         if (clearCache) {
             this.redirects.clear();
             this.syncedCategories.clear();
+            this.syncedEntries.clear();
         }
 
         this.redirects.putAll(redirects);
 
+        for (GuideEntry entry : entries) {
+            this.syncedEntries.put(entry.id(), entry);
+        }
+
         for (Category cat : categories) {
             if (this.syncedCategories.containsKey(cat.getId())) {
                 Category existing = this.syncedCategories.get(cat.getId());
-                if (cat.getEntries() != null) {
-                    for (CategoryEntry entry : cat.getEntries()) {
-                        existing.addEntry(entry);
+                if (cat.getEntryIds() != null) {
+                    for (ResourceLocation entryId : cat.getEntryIds()) {
+                        existing.addEntryId(entryId);
                     }
                 }
                 if (cat.getGroupByQueries() != null && !cat.getGroupByQueries().isEmpty()) {
@@ -81,7 +88,7 @@ public class ClientCategoryManager {
     public void resolveAllEntries() {
         resolvedCategoryEntries.clear();
         syncedCategories.values().forEach(category -> {
-            List<Object> entries = EntryResolver.resolveCategoryEntries(category, Collections.emptyList(), this.redirects);
+            List<Object> entries = EntryResolutionHelper.resolveCategoryEntries(category, syncedEntries, Collections.emptyList(), this.redirects);
             List<Object> groupedEntries = SearchManager.groupByQueries(entries, category.getGroupByQueries());
 
             resolvedCategoryEntries.put(category.getId(), groupedEntries);
@@ -90,6 +97,16 @@ public class ClientCategoryManager {
 
     public Map<ResourceLocation, Category> getCategories() {
         return syncedCategories;
+    }
+
+    public GuideEntry getGuideEntry(ResourceLocation id) {
+        return syncedEntries.get(id);
+    }
+
+    public GuideEntry getGuideEntryForTarget(Object target) {
+        if (target instanceof GuideEntry ge) return ge;
+        ResourceLocation targetId = AutoPopulateRegistry.getEntryId(target, true);
+        return syncedEntries.get(targetId);
     }
 
     public List<Object> getValidEntries() {
@@ -153,10 +170,8 @@ public class ClientCategoryManager {
     }
 
     public boolean isBiomeMatch(Object entry, ResourceLocation biomeId) {
-        ResourceLocation entryId = AutoPopulateRegistry.getEntryId(entry, true);
-        String key = entryId != null ? entryId.toString() : "";
-        ResourceLocation baseIdLoc = AutoPopulateRegistry.getEntryId(entry, false);
-        String baseId = baseIdLoc != null ? baseIdLoc.toString() : "";
+        String key = AutoPopulateRegistry.getEntryKey(entry);
+        String baseId = Objects.requireNonNull(AutoPopulateRegistry.getEntryId(entry, false)).toString();
 
         for (String addition : biomeAdditions) {
             String[] parts = addition.split("\\|", 2);
@@ -168,10 +183,8 @@ public class ClientCategoryManager {
     }
 
     public boolean isLootMatch(Object entry, ResourceLocation itemId) {
-        ResourceLocation entryId = AutoPopulateRegistry.getEntryId(entry, true);
-        String key = entryId != null ? entryId.toString() : "";
-        ResourceLocation baseIdLoc = AutoPopulateRegistry.getEntryId(entry, false);
-        String baseId = baseIdLoc != null ? baseIdLoc.toString() : "";
+        String key = AutoPopulateRegistry.getEntryKey(entry);
+        String baseId = Objects.requireNonNull(AutoPopulateRegistry.getEntryId(entry, false)).toString();
 
         for (String addition : lootAdditions) {
             String[] parts = addition.split("\\|", 2);

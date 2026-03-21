@@ -2,7 +2,7 @@ package com.evandev.fieldguide.network;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.EntryUnlockData;
-import com.evandev.fieldguide.server.ScanVerifier;
+import com.evandev.fieldguide.server.scan.ScanVerifier;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.FieldGuideTriggers;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;

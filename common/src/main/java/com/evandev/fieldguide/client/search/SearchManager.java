@@ -1,8 +1,7 @@
 package com.evandev.fieldguide.client.search;
 
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
-import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
-import com.evandev.fieldguide.util.EntryResolver;
+import com.evandev.fieldguide.entry.EntryResolver;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -75,7 +74,7 @@ public class SearchManager {
         if (tagQuery.isEmpty()) return results;
 
         for (Object entry : entries) {
-            Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
+            Object coreEntry = EntryResolver.resolveCoreEntry(entry);
 
             if (coreEntry instanceof EntityType<?> type) {
                 var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type);

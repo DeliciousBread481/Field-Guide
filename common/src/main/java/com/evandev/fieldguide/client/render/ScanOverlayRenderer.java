@@ -1,13 +1,13 @@
 package com.evandev.fieldguide.client.render;
 
+import com.evandev.fieldguide.ModTags;
+import com.evandev.fieldguide.api.GuideEntry;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.ModRenderTypes;
-import com.evandev.fieldguide.client.scanning.FieldGuideScanner;
+import com.evandev.fieldguide.client.scan.FieldGuideScanner;
 import com.evandev.fieldguide.compat.etf.EtfCompat;
 import com.evandev.fieldguide.config.ClientConfig;
-import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.platform.Services;
-import com.evandev.fieldguide.util.ModTags;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -21,6 +21,8 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -126,7 +128,7 @@ public class ScanOverlayRenderer {
         } else {
             blocksToRender.add(targetBlock);
 
-            if (entry instanceof CompositeFieldGuideEntry composite) {
+            if (entry instanceof GuideEntry composite && composite.isComposite()) {
                 Queue<BlockPos> queue = new PriorityQueue<>(Comparator.comparingDouble(p -> p.distSqr(targetBlock)));
                 queue.add(targetBlock);
                 int maxBlocks = 400;
@@ -145,9 +147,16 @@ public class ScanOverlayRenderer {
                                 int vDist = Math.abs(neighbor.getY() - targetBlock.getY());
                                 if (hDist > 6 || vDist > 32) continue;
 
+                                boolean isHorizontal = dx != 0 || dz != 0;
+                                ResourceLocation neighborId = BuiltInRegistries.BLOCK.getKey(mc.level.getBlockState(neighbor).getBlock());
+
+                                if (isHorizontal && (composite.childEntries() == null || !composite.childEntries().contains(neighborId)))
+                                    continue;
+
+
                                 if (!blocksToRender.contains(neighbor)) {
-                                    Block neighborBlock = mc.level.getBlockState(neighbor).getBlock();
-                                    if (composite.components().contains(neighborBlock) || composite.displayEntry() == neighborBlock) {
+                                    if ((composite.childEntries() != null && composite.childEntries().contains(neighborId)) ||
+                                            (composite.displayId() != null && composite.displayId().equals(neighborId))) {
                                         blocksToRender.add(neighbor);
                                         queue.add(neighbor);
                                     }
