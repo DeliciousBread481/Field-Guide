@@ -28,11 +28,7 @@ public class ClientLootManager {
         for (Map.Entry<ResourceLocation, List<ItemStack>> entry : lootCache.entrySet()) {
             ResourceLocation id = entry.getKey();
             List<ItemStack> drops = entry.getValue();
-
-            String namespace = id.getNamespace();
-            if (namespace.equals("item") || namespace.equals("entity") || namespace.equals("block") || namespace.equals("fieldguide") || namespace.equals("cobblemon")) {
-                dropCache.put(id, drops);
-            }
+            dropCache.put(id, drops);
         }
     }
 
@@ -43,11 +39,11 @@ public class ClientLootManager {
             if (composite.displayEntry() != null) uniqueComponents.add(composite.displayEntry());
             if (composite.components() != null) uniqueComponents.addAll(composite.components());
             for (Object comp : uniqueComponents) {
-                ResourceLocation id = AutoPopulateRegistry.getEntryId(comp, true);
+                ResourceLocation id = AutoPopulateRegistry.getEntryId(comp, false);
                 rawDrops.addAll(dropCache.getOrDefault(id, Collections.emptyList()));
             }
         } else {
-            ResourceLocation id = AutoPopulateRegistry.getEntryId(entry, true);
+            ResourceLocation id = AutoPopulateRegistry.getEntryId(entry, false);
             rawDrops.addAll(dropCache.getOrDefault(id, Collections.emptyList()));
         }
 
