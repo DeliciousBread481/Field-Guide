@@ -1,6 +1,6 @@
 package com.evandev.fieldguide.mixin;
 
-import com.evandev.fieldguide.util.LootTableExpansion;
+import com.evandev.fieldguide.server.loot.LootTableExpansion;
 import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.LootTable;
 import org.spongepowered.asm.mixin.Mixin;

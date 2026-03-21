@@ -2,9 +2,8 @@ package com.evandev.fieldguide.client.gui.screens;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.Category;
-import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
-import com.evandev.fieldguide.api.VariantDef;
-import com.evandev.fieldguide.api.VirtualFieldGuideEntry;
+import com.evandev.fieldguide.api.GuideEntry;
+import com.evandev.fieldguide.api.variant.VariantDef;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.data.EntryVisual;
@@ -18,7 +17,8 @@ import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.platform.Services;
-import com.evandev.fieldguide.util.FieldGuideVariantManager;
+import com.evandev.fieldguide.entry.EntryResolver;
+import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -367,8 +367,8 @@ public class FieldGuideCategoryScreen extends BookScreen {
         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F));
 
         EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(entry);
-        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
-        boolean isCobblemon = entry instanceof CompositeFieldGuideEntry comp && comp.id() != null && comp.id().getNamespace().equals("fieldguide") && comp.id().getPath().startsWith("cobblemon/");
+        Object coreEntry = EntryResolver.resolveCoreEntry(entry);
+        boolean isCobblemon = entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "cobblemon".equals(ge.virtualData().virtualType());
 
         if (coreEntry instanceof EntityType<?> || isCobblemon) {
             Entity entity = getCachedEntity(entry);
@@ -482,7 +482,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
                         for (Object entry : currentEntries) {
                             List<ItemStack> drops = ClientFieldGuideManager.getInstance().getDrops(entry);
 
-                            if (drops.isEmpty() && entry instanceof CompositeFieldGuideEntry comp && comp.id() != null && comp.id().getNamespace().equals("fieldguide") && comp.id().getPath().startsWith("cobblemon/")) {
+                            if (drops.isEmpty() && entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "cobblemon".equals(ge.virtualData().virtualType())) {
                                 drops = FieldGuideCobblemonCompat.getCobblemonDrops(entry);
                             }
 
@@ -708,10 +708,10 @@ public class FieldGuideCategoryScreen extends BookScreen {
         if (this.minecraft == null || this.minecraft.level == null) return null;
 
         Entity entity = null;
-        if (entry instanceof CompositeFieldGuideEntry && id.getNamespace().equals("fieldguide") && id.getPath().startsWith("cobblemon/")) {
+        if (entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "cobblemon".equals(ge.virtualData().virtualType())) {
             entity = FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
         } else {
-            Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
+            Object coreEntry = EntryResolver.resolveCoreEntry(entry);
             if (coreEntry instanceof EntityType<?> type) {
                 try {
                     entity = type.create(this.minecraft.level);
@@ -738,7 +738,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
             List<Component> tooltip = new ArrayList<>();
             tooltip.add(name);
 
-            Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
+            Object coreEntry = EntryResolver.resolveCoreEntry(entry);
             Entity dummy = getCachedEntity(entry);
             if (dummy != null && (coreEntry instanceof EntityType<?>)) {
                 List<VariantDef> variants = FieldGuideVariantManager.getVariants(dummy);
@@ -793,9 +793,9 @@ public class FieldGuideCategoryScreen extends BookScreen {
     }
 
     private void renderEntryInGrid(GuiGraphics guiGraphics, Object entry, int x, int y, boolean unlocked) {
-        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
-        boolean isCobblemon = entry instanceof VirtualFieldGuideEntry virt && virt.virtualType().equals("cobblemon");
-        boolean isTutorial = entry instanceof VirtualFieldGuideEntry virt && virt.virtualType().equals("tutorial");
+        Object coreEntry = EntryResolver.resolveCoreEntry(entry);
+        boolean isCobblemon = entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "cobblemon".equals(ge.virtualData().virtualType());
+        boolean isTutorial = entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "tutorial".equals(ge.virtualData().virtualType());
 
         if (unlocked && Services.PLATFORM.isModLoaded("exposure") && ClientConfig.get().exposureShowPhotographsInGrid) {
             ItemStack existingPhoto = ProgressManager.getInstance().getPhotograph(entry);
@@ -807,16 +807,12 @@ public class FieldGuideCategoryScreen extends BookScreen {
             }
         }
 
-        if (entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() instanceof Block block) {
-            if (composite.structureNbt() != null || (composite.stackedBlocks() != null && !composite.stackedBlocks().isEmpty())) {
-                EntryRenderHelper.renderStructure(guiGraphics, composite, x, y, CELL_SIZE - 4, unlocked, false, 1.0F);
-            } else {
-                EntryRenderHelper.renderBlock(guiGraphics, block, x, y, 15.0F, unlocked, false, 1.0F);
-            }
+        if (entry instanceof GuideEntry ge && ge.isStructure() && coreEntry instanceof Block block) {
+            EntryRenderHelper.renderStructure(guiGraphics, ge, x, y, CELL_SIZE - 4, unlocked, false, 1.0F);
         } else if (isCobblemon) {
-            EntryRenderHelper.renderCobblemon(guiGraphics, (VirtualFieldGuideEntry) entry, x, y, CELL_SIZE - 8, CELL_SIZE - 8, unlocked, false, 1.0F);
+            EntryRenderHelper.renderCobblemon(guiGraphics, (GuideEntry) entry, x, y, CELL_SIZE - 8, CELL_SIZE - 8, unlocked, false, 1.0F);
         } else if (isTutorial) {
-            EntryRenderHelper.renderTutorial(guiGraphics, (VirtualFieldGuideEntry) entry, x, y, CELL_SIZE - 8, CELL_SIZE - 8, unlocked, false, 1.0F);
+            EntryRenderHelper.renderTutorial(guiGraphics, (GuideEntry) entry, x, y, CELL_SIZE - 8, CELL_SIZE - 8, unlocked, false, 1.0F);
         } else if (coreEntry instanceof EntityType<?>) {
             Entity entity = getCachedEntity(entry);
             if (entity != null) {

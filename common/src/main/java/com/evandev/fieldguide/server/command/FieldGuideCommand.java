@@ -2,15 +2,15 @@ package com.evandev.fieldguide.server.command;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.Category;
-import com.evandev.fieldguide.api.VariantDef;
+import com.evandev.fieldguide.api.variant.VariantDef;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
-import com.evandev.fieldguide.util.EntryResolver;
-import com.evandev.fieldguide.util.FieldGuideVariantManager;
+import com.evandev.fieldguide.entry.EntryResolver;
+import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.commands.CommandSourceStack;

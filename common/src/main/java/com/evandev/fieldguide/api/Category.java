@@ -8,7 +8,7 @@ import java.util.List;
 
 public class Category {
     private final ResourceLocation id;
-    private final List<CategoryEntry> entries = new ArrayList<>();
+    private final List<ResourceLocation> entryIds = new ArrayList<>();
     private List<String> groupByQueries = new ArrayList<>();
     private int sortIndex = 0;
     private ResourceLocation icon = Constants.DEFAULT_ICON;
@@ -29,12 +29,12 @@ public class Category {
         this.sortIndex = sortIndex;
     }
 
-    public List<CategoryEntry> getEntries() {
-        return entries;
+    public List<ResourceLocation> getEntryIds() {
+        return entryIds;
     }
 
-    public void addEntry(CategoryEntry entry) {
-        this.entries.add(entry);
+    public void addEntryId(ResourceLocation entryId) {
+        this.entryIds.add(entryId);
     }
 
     public ResourceLocation getIcon() {

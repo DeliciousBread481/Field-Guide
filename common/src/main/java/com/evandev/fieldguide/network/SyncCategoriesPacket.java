@@ -1,9 +1,7 @@
 package com.evandev.fieldguide.network;
 
-import com.evandev.fieldguide.api.Category;
-import com.evandev.fieldguide.api.CategoryEntry;
-import com.evandev.fieldguide.api.DatapackVariant;
-import com.evandev.fieldguide.api.EntryUnlockData;
+import com.evandev.fieldguide.api.*;
+import com.evandev.fieldguide.api.variant.DatapackVariant;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
@@ -12,6 +10,7 @@ import java.util.Map;
 
 public class SyncCategoriesPacket {
     private final List<Category> categories;
+    private final List<GuideEntry> entries;
     private final List<String> biomeAdditions;
     private final List<String> biomeRemovals;
     private final List<String> lootAdditions;
@@ -23,6 +22,7 @@ public class SyncCategoriesPacket {
 
     public SyncCategoriesPacket(
             List<Category> categories,
+            List<GuideEntry> entries,
             List<String> biomeAdditions,
             List<String> biomeRemovals,
             List<String> lootAdditions,
@@ -33,6 +33,7 @@ public class SyncCategoriesPacket {
             boolean resolveEntries
     ) {
         this.categories = categories;
+        this.entries = entries;
         this.biomeAdditions = biomeAdditions;
         this.biomeRemovals = biomeRemovals;
         this.lootAdditions = lootAdditions;
@@ -50,27 +51,31 @@ public class SyncCategoriesPacket {
             cat.setSortIndex(b.readInt());
             b.readOptional(FriendlyByteBuf::readResourceLocation).ifPresent(cat::setIcon);
             cat.setGroupByQueries(b.readList(FriendlyByteBuf::readUtf));
-
-            List<CategoryEntry> entries = b.readList(eb -> new CategoryEntry(
-                    eb.readEnum(CategoryEntry.CategoryType.class),
-                    eb.readNullable(FriendlyByteBuf::readResourceLocation),
-                    eb.readNullable(FriendlyByteBuf::readResourceLocation),
-                    eb.readNullable(FriendlyByteBuf::readUtf),
-                    eb.readNullable(FriendlyByteBuf::readUtf),
-                    eb.readNullable(FriendlyByteBuf::readResourceLocation),
-                    eb.readNullable(nb -> nb.readList(FriendlyByteBuf::readResourceLocation)),
-                    eb.readNullable(FriendlyByteBuf::readResourceLocation),
-                    eb.readNullable(nb -> nb.readList(FriendlyByteBuf::readUtf)),
-                    new EntryUnlockData(
-                            eb.readBoolean(),
-                            eb.readList(FriendlyByteBuf::readResourceLocation),
-                            eb.readList(nb -> nb.readEnum(EntryUnlockData.UnlockTrigger.class)),
-                            eb.readList(FriendlyByteBuf::readResourceLocation)
-                    )
-            ));
-            entries.forEach(cat::addEntry);
+            b.readList(FriendlyByteBuf::readResourceLocation).forEach(cat::addEntryId);
             return cat;
         });
+
+        this.entries = buf.readList(eb -> new GuideEntry(
+                eb.readResourceLocation(),
+                eb.readNullable(FriendlyByteBuf::readResourceLocation),
+                eb.readNullable(FriendlyByteBuf::readResourceLocation),
+                eb.readEnum(EntryKind.class),
+                eb.readBoolean(),
+                eb.readBoolean(),
+                eb.readNullable(FriendlyByteBuf::readUtf),
+                eb.readNullable(nb -> nb.readList(FriendlyByteBuf::readResourceLocation)),
+                eb.readNullable(nb -> new StructureData(
+                        nb.readNullable(FriendlyByteBuf::readResourceLocation),
+                        nb.readList(FriendlyByteBuf::readUtf)
+                )),
+                eb.readNullable(nb -> new VirtualData(nb.readUtf())),
+                new EntryUnlockData(
+                        eb.readBoolean(),
+                        eb.readList(FriendlyByteBuf::readResourceLocation),
+                        eb.readList(nb -> nb.readEnum(EntryUnlockData.UnlockTrigger.class)),
+                        eb.readList(FriendlyByteBuf::readResourceLocation)
+                )
+        ));
 
         this.biomeAdditions = buf.readList(FriendlyByteBuf::readUtf);
         this.biomeRemovals = buf.readList(FriendlyByteBuf::readUtf);
@@ -88,24 +93,39 @@ public class SyncCategoriesPacket {
             b.writeInt(cat.getSortIndex());
             b.writeNullable(cat.getIcon(), FriendlyByteBuf::writeResourceLocation);
             b.writeCollection(cat.getGroupByQueries() != null ? cat.getGroupByQueries() : List.of(), FriendlyByteBuf::writeUtf);
+            b.writeCollection(cat.getEntryIds() != null ? cat.getEntryIds() : List.of(), FriendlyByteBuf::writeResourceLocation);
+        });
 
-            b.writeCollection(cat.getEntries() != null ? cat.getEntries() : List.of(), (eb, entry) -> {
-                eb.writeEnum(entry.categoryType());
-                eb.writeNullable(entry.id(), FriendlyByteBuf::writeResourceLocation);
-                eb.writeNullable(entry.displayId(), FriendlyByteBuf::writeResourceLocation);
-                eb.writeNullable(entry.strategy(), FriendlyByteBuf::writeUtf);
-                eb.writeNullable(entry.virtualType(), FriendlyByteBuf::writeUtf);
-                eb.writeNullable(entry.icon(), FriendlyByteBuf::writeResourceLocation);
-                eb.writeNullable(entry.components(), (nb, comps) -> nb.writeCollection(comps, FriendlyByteBuf::writeResourceLocation));
-                eb.writeNullable(entry.structureNbt(), FriendlyByteBuf::writeResourceLocation);
-                eb.writeNullable(entry.stackedBlocks(), (nb, blocks) -> nb.writeCollection(blocks, FriendlyByteBuf::writeUtf));
+        buf.writeCollection(entries, (eb, entry) -> {
+            eb.writeResourceLocation(entry.id());
+            eb.writeNullable(entry.displayId(), FriendlyByteBuf::writeResourceLocation);
+            eb.writeNullable(entry.icon(), FriendlyByteBuf::writeResourceLocation);
+            eb.writeEnum(entry.kind());
+            eb.writeBoolean(entry.virtual());
+            eb.writeBoolean(entry.autoPopulate());
+            eb.writeNullable(entry.strategy(), FriendlyByteBuf::writeUtf);
 
-                EntryUnlockData unlockData = entry.unlockData() != null ? entry.unlockData() : EntryUnlockData.DEFAULT;
-                eb.writeBoolean(unlockData.unlockedByDefault());
-                eb.writeCollection(unlockData.prerequisites(), FriendlyByteBuf::writeResourceLocation);
-                eb.writeCollection(unlockData.triggers(), FriendlyByteBuf::writeEnum);
-                eb.writeCollection(unlockData.triggerOn(), FriendlyByteBuf::writeResourceLocation);
+            eb.writeNullable(entry.childEntries(), (nb, comps) -> {
+                if (comps != null) {
+                    java.util.List<ResourceLocation> safeComps = comps.stream().filter(java.util.Objects::nonNull).toList();
+                    nb.writeCollection(safeComps, FriendlyByteBuf::writeResourceLocation);
+                }
             });
+
+            eb.writeNullable(entry.structureData(), (nb, data) -> {
+                nb.writeNullable(data.structureNbt(), FriendlyByteBuf::writeResourceLocation);
+                nb.writeCollection(data.stackedBlocks() != null ? data.stackedBlocks() : List.of(), FriendlyByteBuf::writeUtf);
+            });
+
+            eb.writeNullable(entry.virtualData(), (nb, data) -> {
+                nb.writeUtf(data.virtualType() != null ? data.virtualType() : "unknown");
+            });
+
+            EntryUnlockData unlockData = entry.unlockData() != null ? entry.unlockData() : EntryUnlockData.DEFAULT;
+            eb.writeBoolean(unlockData.unlockedByDefault());
+            eb.writeCollection(unlockData.prerequisites(), FriendlyByteBuf::writeResourceLocation);
+            eb.writeCollection(unlockData.triggers(), FriendlyByteBuf::writeEnum);
+            eb.writeCollection(unlockData.triggerOn(), FriendlyByteBuf::writeResourceLocation);
         });
 
         buf.writeCollection(biomeAdditions, FriendlyByteBuf::writeUtf);
@@ -123,6 +143,10 @@ public class SyncCategoriesPacket {
 
     public List<Category> getCategories() {
         return categories;
+    }
+
+    public List<GuideEntry> getEntries() {
+        return entries;
     }
 
     public List<String> getBiomeAdditions() {

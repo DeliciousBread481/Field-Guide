@@ -3,7 +3,7 @@ package com.evandev.fieldguide.network;
 import com.evandev.fieldguide.item.ModItems;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
-import com.evandev.fieldguide.util.entry.EntryResolutionHelper;
+import com.evandev.fieldguide.entry.EntryResolutionHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;

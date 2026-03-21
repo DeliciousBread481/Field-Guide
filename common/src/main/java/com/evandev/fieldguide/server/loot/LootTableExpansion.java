@@ -1,4 +1,4 @@
-package com.evandev.fieldguide.util;
+package com.evandev.fieldguide.server.loot;
 
 import net.minecraft.world.level.storage.loot.LootPool;
 

@@ -4,7 +4,7 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.screens.BookScreen;
-import com.evandev.fieldguide.util.EntryResolver;
+import com.evandev.fieldguide.entry.EntryResolver;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.Tooltip;

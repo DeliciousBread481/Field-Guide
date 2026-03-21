@@ -1,4 +1,4 @@
-package com.evandev.fieldguide.api;
+package com.evandev.fieldguide.api.variant;
 
 import net.minecraft.world.entity.Mob;
 

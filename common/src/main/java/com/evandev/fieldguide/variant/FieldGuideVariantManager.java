@@ -1,8 +1,8 @@
-package com.evandev.fieldguide.util;
+package com.evandev.fieldguide.variant;
 
-import com.evandev.fieldguide.api.DatapackVariant;
-import com.evandev.fieldguide.api.VariantDef;
-import com.evandev.fieldguide.api.VariantProvider;
+import com.evandev.fieldguide.api.variant.DatapackVariant;
+import com.evandev.fieldguide.api.variant.VariantDef;
+import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.platform.Services;
 import net.minecraft.core.registries.BuiltInRegistries;

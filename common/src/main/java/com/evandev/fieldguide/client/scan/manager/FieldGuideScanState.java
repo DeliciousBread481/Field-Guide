@@ -1,4 +1,4 @@
-package com.evandev.fieldguide.client.scanning.manager;
+package com.evandev.fieldguide.client.scan.manager;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;

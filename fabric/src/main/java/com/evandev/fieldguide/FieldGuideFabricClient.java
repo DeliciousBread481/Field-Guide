@@ -63,6 +63,7 @@ public class FieldGuideFabricClient implements ClientModInitializer {
 
                 manager.updateCategoriesFromServer(
                         packet.getCategories(),
+                        packet.getEntries(),
                         packet.getRedirects(),
                         packet.shouldClearCache(),
                         packet.shouldResolveEntries()

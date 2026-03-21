@@ -1,8 +1,8 @@
 package com.evandev.fieldguide.client.manager;
 
-import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.api.GuideEntry;
 import com.evandev.fieldguide.client.progress.ProgressManager;
-import com.evandev.fieldguide.util.EntryResolver;
+import com.evandev.fieldguide.entry.EntryResolver;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -38,7 +38,7 @@ public class ClientTextManager {
         String overrideKey = "fieldguide." + id.getNamespace() + "." + id.getPath() + ".description";
         if (I18n.exists(overrideKey)) return I18n.get(overrideKey);
 
-        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
+        Object coreEntry = EntryResolver.resolveCoreEntry(entry);
 
         // Entity Descriptions
         if (coreEntry instanceof EntityType) {
@@ -63,25 +63,6 @@ public class ClientTextManager {
         return I18n.exists(fallbackKey) ? I18n.get(fallbackKey) : I18n.get("fieldguide.description.missing");
     }
 
-    public void setCustomDescription(Object entry, String desc) {
-        ProgressManager.getInstance().setCustomDescription(entry, desc);
-    }
-
-    public void setCustomName(Object entry, String name) {
-        ProgressManager.getInstance().setCustomName(entry, name);
-    }
-
-    public Component getEntryName(Object entry) {
-        String custom = ProgressManager.getInstance().getCustomName(entry);
-        if (custom != null) return Component.literal(custom);
-
-        return getDefaultNameComponent(entry);
-    }
-
-    public String getDefaultName(Object entry) {
-        return getDefaultNameComponent(entry).getString();
-    }
-
     public Component getDefaultNameComponent(Object entry) {
         ResourceLocation id = EntryResolver.getEntryId(entry, false);
         if (id != null) {
@@ -102,9 +83,9 @@ public class ClientTextManager {
             }
         }
 
-        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
+        Object coreEntry = EntryResolver.resolveCoreEntry(entry);
 
-        if (entry instanceof CompositeFieldGuideEntry && id != null && id.getPath().endsWith("_tree")) {
+        if (entry instanceof GuideEntry ge && ge.isStructure() && id != null && id.getPath().endsWith("_tree")) {
             if (coreEntry instanceof Block block) {
                 String saplingName = block.getName().getString();
                 return Component.literal(saplingName.replace("Sapling", "Tree"));
@@ -116,6 +97,25 @@ public class ClientTextManager {
         if (coreEntry instanceof Item item) return item.getDescription();
 
         return Component.translatable("fieldguide.unknown");
+    }
+
+    public void setCustomDescription(Object entry, String desc) {
+        ProgressManager.getInstance().setCustomDescription(entry, desc);
+    }
+
+    public void setCustomName(Object entry, String name) {
+        ProgressManager.getInstance().setCustomName(entry, name);
+    }
+
+    public Component getEntryName(Object entry) {
+        String custom = ProgressManager.getInstance().getCustomName(entry);
+        if (custom != null) return Component.literal(custom);
+
+        return getDefaultNameComponent(entry);
+    }
+
+    public String getDefaultName(Object entry) {
+        return getDefaultNameComponent(entry).getString();
     }
 
     public String getJournalTitle() {

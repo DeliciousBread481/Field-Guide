@@ -37,6 +37,7 @@ public class FieldGuideForgeClient {
     public static void handleSyncCategories(SyncCategoriesPacket packet) {
         ClientFieldGuideManager.getInstance().updateCategoriesFromServer(
                 packet.getCategories(),
+                packet.getEntries(),
                 packet.getRedirects(),
                 packet.shouldClearCache(),
                 packet.shouldResolveEntries()

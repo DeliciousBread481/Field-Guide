@@ -4,7 +4,6 @@ import com.evandev.fieldguide.compat.reliableremover.ReliableRemoverCompat;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.mixin.accessor.*;
 import com.evandev.fieldguide.platform.Services;
-import com.evandev.fieldguide.util.LootTableExpansion;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;

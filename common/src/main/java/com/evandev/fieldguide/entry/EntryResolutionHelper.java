@@ -1,8 +1,8 @@
-package com.evandev.fieldguide.util.entry;
+package com.evandev.fieldguide.entry;
 
+import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.*;
 import com.evandev.fieldguide.platform.Services;
-import com.evandev.fieldguide.util.EntryResolver;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
@@ -14,38 +14,16 @@ import java.util.*;
 
 public class EntryResolutionHelper {
 
-    public static List<Object> resolveCategoryEntries(Category category, List<CompositeDefinition> globalComposites, Map<ResourceLocation, ResourceLocation> redirects) {
+    public static List<Object> resolveCategoryEntries(Category category, Map<ResourceLocation, GuideEntry> allEntries, List<CompositeDefinition> globalComposites, Map<ResourceLocation, ResourceLocation> redirects) {
         Set<Object> foundEntries = new LinkedHashSet<>();
         Set<String> addedKeys = new HashSet<>();
         ResourceLocation categoryId = category.getId();
 
-        for (CategoryEntry entry : category.getEntries()) {
-            if (entry.categoryType() == CategoryEntry.CategoryType.ENTRY && entry.id() != null) {
-                resolveSingleEntry(entry.id(), categoryId, entry.strategy()).ifPresent(e -> {
-                    String key = AutoPopulateRegistry.getEntryKey(e);
-                    if (entry.stackedBlocks() != null && !entry.stackedBlocks().isEmpty()) {
-                        foundEntries.add(new CompositeFieldGuideEntry(entry.id(), e, new ArrayList<>(), null, entry.stackedBlocks()));
-                    } else {
-                        foundEntries.add(e);
-                    }
-                    addedKeys.add(key);
-                });
-            } else if (entry.categoryType() == CategoryEntry.CategoryType.COMPOSITE && entry.id() != null) {
-                ResourceLocation displayLoc = entry.displayId() != null ? entry.displayId() : entry.id();
-                resolveSingleEntry(displayLoc, categoryId, entry.strategy()).ifPresent(displayEntry -> {
-                    List<Object> components = new ArrayList<>();
-                    if (entry.components() != null) {
-                        for (ResourceLocation compId : entry.components()) {
-                            resolveSingleEntry(compId, categoryId, entry.strategy()).ifPresent(components::add);
-                        }
-                    }
-                    foundEntries.add(new CompositeFieldGuideEntry(entry.id(), displayEntry, components, entry.structureNbt(), entry.stackedBlocks()));
-                    addedKeys.add(AutoPopulateRegistry.getEntryKey(displayEntry));
-                });
-            } else if (entry.categoryType() == CategoryEntry.CategoryType.VIRTUAL && entry.id() != null) {
-                foundEntries.add(new VirtualFieldGuideEntry(entry.id(), entry.virtualType(), entry.icon()));
-                addedKeys.add(entry.id().toString());
-            } else if (entry.categoryType() == CategoryEntry.CategoryType.AUTO_POPULATE) {
+        for (ResourceLocation entryId : category.getEntryIds()) {
+            GuideEntry entry = allEntries.get(entryId);
+            if (entry == null) continue;
+
+            if (entry.isAutoPopulate()) {
                 for (Object obj : AutoPopulateRegistry.getEntries(entry.strategy(), categoryId)) {
                     String key = AutoPopulateRegistry.getEntryKey(obj);
                     if (!key.isEmpty() && !addedKeys.contains(key)) {
@@ -53,6 +31,15 @@ public class EntryResolutionHelper {
                         addedKeys.add(key);
                     }
                 }
+            } else if (entry.isVirtual()) {
+                foundEntries.add(entry);
+                addedKeys.add(entry.id().toString());
+            } else {
+                ResourceLocation targetId = entry.displayId() != null ? entry.displayId() : entry.id();
+                resolveSingleEntry(targetId, categoryId, entry.strategy()).ifPresent(e -> {
+                    foundEntries.add(entry.isComposite() || entry.isStructure() ? entry : e);
+                    addedKeys.add(AutoPopulateRegistry.getEntryKey(e));
+                });
             }
         }
 
@@ -62,8 +49,8 @@ public class EntryResolutionHelper {
 
             for (Object raw : foundEntries) {
                 ResourceLocation baseId = getEntryId(raw);
-                if (raw instanceof CompositeFieldGuideEntry autoComposite) {
-                    baseId = getEntryId(autoComposite.displayEntry());
+                if (raw instanceof GuideEntry ge) {
+                    baseId = ge.displayId() != null ? ge.displayId() : ge.id();
                 }
 
                 CompositeDefinition matchingDef = findCompositeFor(baseId, globalComposites);
@@ -120,22 +107,27 @@ public class EntryResolutionHelper {
         return resolveSingleEntry(id, categoryId, null);
     }
 
-    public static Optional<CompositeFieldGuideEntry> resolveCompositeDefinition(CompositeDefinition def, ResourceLocation categoryId, Object hint) {
+    public static Optional<GuideEntry> resolveCompositeDefinition(CompositeDefinition def, ResourceLocation categoryId, Object hint) {
         ResourceLocation displayLoc = def.displayId() != null ? def.displayId() : def.id();
         return resolveSingleEntryWithHint(displayLoc, categoryId, hint).map(displayEntry -> {
-            List<Object> components = new ArrayList<>();
+            List<ResourceLocation> components = new ArrayList<>();
             if (def.components() != null) {
                 for (ResourceLocation compId : def.components()) {
-                    resolveSingleEntryWithHint(compId, categoryId, hint).ifPresent(components::add);
+                    resolveSingleEntryWithHint(compId, categoryId, hint).ifPresent(resolved -> components.add(compId));
                 }
             }
-            return new CompositeFieldGuideEntry(def.id(), displayEntry, components, def.structureNbt(), def.stackedBlocks());
+
+            boolean hasStructure = def.structureNbt() != null || (def.stackedBlocks() != null && !def.stackedBlocks().isEmpty());
+            StructureData structureData = hasStructure ? new StructureData(def.structureNbt(), def.stackedBlocks()) : null;
+            EntryKind kind = hasStructure ? EntryKind.STRUCTURE : EntryKind.NORMAL;
+
+            return new GuideEntry(def.id(), displayLoc, null, kind, false, false, null, components, structureData, null, EntryUnlockData.DEFAULT);
         });
     }
 
     public static Optional<Object> resolveSingleEntry(ResourceLocation id, ResourceLocation categoryId, String strategyHint) {
-        if (Services.PLATFORM.isModLoaded("cobblemon") && id.getNamespace().equals("fieldguide") && id.getPath().startsWith("cobblemon/")) {
-            return Optional.of(new VirtualFieldGuideEntry(id, "cobblemon", null));
+        if (Services.PLATFORM.isModLoaded("cobblemon") && id.getNamespace().equals(Constants.MOD_ID) && id.getPath().startsWith("cobblemon/")) {
+            return Optional.of(new GuideEntry(id, null, null, EntryKind.NORMAL, true, false, null, null, null, new VirtualData("cobblemon"), EntryUnlockData.DEFAULT));
         }
 
         ResourceLocation finalId = EntryResolver.getRawId(id);
@@ -209,6 +201,7 @@ public class EntryResolutionHelper {
     }
 
     public static ResourceLocation getEntryId(Object obj) {
+        if (obj instanceof GuideEntry ge) return ge.id();
         return AutoPopulateRegistry.getEntryId(obj);
     }
 }

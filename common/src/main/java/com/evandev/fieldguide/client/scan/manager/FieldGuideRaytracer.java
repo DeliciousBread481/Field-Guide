@@ -1,15 +1,15 @@
-package com.evandev.fieldguide.client.scanning.manager;
+package com.evandev.fieldguide.client.scan.manager;
 
 import com.evandev.fieldguide.api.AutoPopulateRegistry;
 import com.evandev.fieldguide.api.Category;
-import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.api.GuideEntry;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.platform.Services;
-import com.evandev.fieldguide.util.EntryResolver;
-import com.evandev.fieldguide.util.FieldGuideVariantManager;
+import com.evandev.fieldguide.entry.EntryResolver;
+import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -225,15 +225,15 @@ public class FieldGuideRaytracer {
                 for (int dz = -radius; dz <= radius; dz++) {
                     BlockPos pos = hitPos.offset(dx, dy, dz);
                     BlockState state = minecraft.level.getBlockState(pos);
-                    Block block = state.getBlock();
+                    ResourceLocation blockId = BuiltInRegistries.BLOCK.getKey(state.getBlock());
 
-                    if (block.equals(actualTargetKey)) continue;
+                    if (state.getBlock().equals(actualTargetKey)) continue;
 
                     for (Object entry : possibleEntries) {
-                        if (entry instanceof CompositeFieldGuideEntry composite) {
-                            if (composite.components() != null && composite.components().contains(block)) {
+                        if (entry instanceof GuideEntry composite && composite.isComposite()) {
+                            if (composite.childEntries() != null && composite.childEntries().contains(blockId)) {
                                 scoreMap.put(entry, scoreMap.getOrDefault(entry, 0) + 1);
-                            } else if (composite.displayEntry() != null && composite.displayEntry().equals(block)) {
+                            } else if (composite.displayId() != null && composite.displayId().equals(blockId)) {
                                 scoreMap.put(entry, scoreMap.getOrDefault(entry, 0) + 2);
                             }
                         }
@@ -249,6 +249,9 @@ public class FieldGuideRaytracer {
             }
         }
 
+        ResourceLocation targetId = actualTargetKey instanceof Block b ? BuiltInRegistries.BLOCK.getKey(b) :
+                actualTargetKey instanceof EntityType t ? BuiltInRegistries.ENTITY_TYPE.getKey(t) : null;
+
         if (maxScore == 0) {
             for (Object entry : possibleEntries) {
                 if (entry.equals(actualTargetKey)) return entry;
@@ -256,7 +259,7 @@ public class FieldGuideRaytracer {
                 ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
                 if (Objects.equals(entryId, actualTargetKey)) return entry;
 
-                if (entry instanceof CompositeFieldGuideEntry composite && composite.displayEntry() != null && composite.displayEntry().equals(actualTargetKey)) {
+                if (entry instanceof GuideEntry composite && composite.displayId() != null && composite.displayId().equals(targetId)) {
                     return entry;
                 }
             }

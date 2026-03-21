@@ -12,7 +12,7 @@ import com.evandev.fieldguide.network.UpdateEntryDataPacket;
 import com.evandev.fieldguide.network.UpdateJournalPacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
-import com.evandev.fieldguide.util.EntryResolver;
+import com.evandev.fieldguide.entry.EntryResolver;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;

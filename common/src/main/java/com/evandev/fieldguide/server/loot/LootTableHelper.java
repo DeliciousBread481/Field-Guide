@@ -1,11 +1,10 @@
-package com.evandev.fieldguide.server;
+package com.evandev.fieldguide.server.loot;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.AutoPopulateRegistry;
-import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
-import com.evandev.fieldguide.server.loot.ParsedDrop;
-import com.evandev.fieldguide.server.loot.StaticLootParser;
-import com.evandev.fieldguide.util.EntryResolver;
+import com.evandev.fieldguide.api.GuideEntry;
+import com.evandev.fieldguide.server.ServerFieldGuideManager;
+import com.evandev.fieldguide.entry.EntryResolver;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
@@ -23,6 +22,12 @@ import java.util.*;
 
 public class LootTableHelper {
 
+    private static void resolveAndAdd(ResourceLocation id, Set<Object> uniqueEntries) {
+        BuiltInRegistries.BLOCK.getOptional(id).ifPresent(uniqueEntries::add);
+        BuiltInRegistries.ITEM.getOptional(id).ifPresent(uniqueEntries::add);
+        BuiltInRegistries.ENTITY_TYPE.getOptional(id).ifPresent(uniqueEntries::add);
+    }
+
     public static Map<ResourceLocation, List<ItemStack>> generateLootMap(ServerLevel level) {
         Map<ResourceLocation, List<ItemStack>> lootMap = new HashMap<>();
         Set<Object> uniqueEntries = new HashSet<>();
@@ -33,9 +38,13 @@ public class LootTableHelper {
             for (Object entry : categoryEntries) {
                 uniqueEntries.add(entry);
 
-                if (entry instanceof CompositeFieldGuideEntry composite) {
-                    if (composite.displayEntry() != null) uniqueEntries.add(composite.displayEntry());
-                    if (composite.components() != null) uniqueEntries.addAll(composite.components());
+                if (entry instanceof GuideEntry ge) {
+                    if (ge.displayId() != null) resolveAndAdd(ge.displayId(), uniqueEntries);
+                    if (ge.childEntries() != null) {
+                        for (ResourceLocation childId : ge.childEntries()) {
+                            resolveAndAdd(childId, uniqueEntries);
+                        }
+                    }
                 }
             }
         }
@@ -114,7 +123,7 @@ public class LootTableHelper {
     }
 
     private static boolean matchesTarget(Object entry, String targetStr) {
-        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
+        Object coreEntry = EntryResolver.resolveCoreEntry(entry);
         ResourceLocation entryId = EntryResolver.getRawId(EntryResolver.getEntryId(coreEntry));
 
         if (entryId == null) return false;

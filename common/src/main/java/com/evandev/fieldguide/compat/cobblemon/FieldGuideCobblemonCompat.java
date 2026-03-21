@@ -7,14 +7,14 @@ import com.cobblemon.mod.common.pokemon.FormData;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 import com.cobblemon.mod.common.pokemon.Species;
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
-import com.evandev.fieldguide.api.VariantDef;
-import com.evandev.fieldguide.api.VariantProvider;
-import com.evandev.fieldguide.api.VirtualFieldGuideEntry;
+import com.evandev.fieldguide.api.EntryKind;
+import com.evandev.fieldguide.api.GuideEntry;
+import com.evandev.fieldguide.api.variant.VariantDef;
+import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.platform.Services;
-import com.evandev.fieldguide.util.EntryResolver;
-import com.evandev.fieldguide.util.FieldGuideVariantManager;
+import com.evandev.fieldguide.entry.EntryResolver;
+import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
@@ -251,7 +251,7 @@ public final class FieldGuideCobblemonCompat {
                 "species", id -> id.getNamespace().equals(MOD_ID) && id.getPath().endsWith(".json")
         );
 
-        List<Map.Entry<VirtualFieldGuideEntry, Integer>> sortedEntries = new ArrayList<>();
+        List<Map.Entry<GuideEntry, Integer>> sortedEntries = new ArrayList<>();
 
         for (Map.Entry<ResourceLocation, List<Resource>> entry : speciesFiles.entrySet()) {
             for (Resource resource : entry.getValue()) {
@@ -289,7 +289,7 @@ public final class FieldGuideCobblemonCompat {
                         }
 
                         sortedEntries.add(new AbstractMap.SimpleEntry<>(
-                                new VirtualFieldGuideEntry(entryId, "cobblemon", null),
+                                new GuideEntry(entryId, null, null, EntryKind.NORMAL, true, false, null, null, null, new com.evandev.fieldguide.api.VirtualData("cobblemon"), com.evandev.fieldguide.api.EntryUnlockData.DEFAULT),
                                 pokedexNumber
                         ));
                     }
@@ -299,9 +299,26 @@ public final class FieldGuideCobblemonCompat {
         }
 
         sortedEntries.sort(Map.Entry.comparingByValue());
-        for (Map.Entry<VirtualFieldGuideEntry, Integer> sortedEntry : sortedEntries) {
+        for (Map.Entry<GuideEntry, Integer> sortedEntry : sortedEntries) {
             AUTO_POPULATE_CACHE.add(sortedEntry.getKey());
         }
+    }
+
+    public static List<ItemStack> getCobblemonDrops(Object entry) {
+        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        if (id == null) return List.of();
+
+        if (COBBLEMON_DROPS_CACHE.containsKey(id)) {
+            return COBBLEMON_DROPS_CACHE.get(id);
+        }
+
+        String speciesName = getSpeciesName(id);
+        ResourceLocation standardId = new ResourceLocation(Constants.MOD_ID, "cobblemon/" + speciesName + "_standard");
+        if (COBBLEMON_DROPS_CACHE.containsKey(standardId)) {
+            return COBBLEMON_DROPS_CACHE.get(standardId);
+        }
+
+        return List.of();
     }
 
     public static List<Object> getAutoPopulateEntries() {
@@ -328,27 +345,4 @@ public final class FieldGuideCobblemonCompat {
         return MOD_ID.equals(id.getNamespace());
     }
 
-    public static List<ItemStack> getCobblemonDrops(Object entry) {
-        ResourceLocation id;
-        if (entry instanceof CompositeFieldGuideEntry comp) {
-            id = comp.id();
-        } else if (entry instanceof VirtualFieldGuideEntry virt) {
-            id = virt.id();
-        } else {
-            id = ClientFieldGuideManager.getEntryId(entry);
-        }
-        if (id == null) return List.of();
-
-        if (COBBLEMON_DROPS_CACHE.containsKey(id)) {
-            return COBBLEMON_DROPS_CACHE.get(id);
-        }
-
-        String speciesName = getSpeciesName(id);
-        ResourceLocation standardId = new ResourceLocation("fieldguide", "cobblemon/" + speciesName + "_standard");
-        if (COBBLEMON_DROPS_CACHE.containsKey(standardId)) {
-            return COBBLEMON_DROPS_CACHE.get(standardId);
-        }
-
-        return List.of();
-    }
 }

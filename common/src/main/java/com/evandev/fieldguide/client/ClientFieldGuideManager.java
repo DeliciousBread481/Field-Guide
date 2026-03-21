@@ -2,7 +2,8 @@ package com.evandev.fieldguide.client;
 
 import com.evandev.fieldguide.api.AutoPopulateRegistry;
 import com.evandev.fieldguide.api.Category;
-import com.evandev.fieldguide.api.DatapackVariant;
+import com.evandev.fieldguide.api.variant.DatapackVariant;
+import com.evandev.fieldguide.api.GuideEntry;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.data.JournalPage;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
@@ -12,13 +13,13 @@ import com.evandev.fieldguide.client.manager.ClientLootManager;
 import com.evandev.fieldguide.client.manager.ClientTextManager;
 import com.evandev.fieldguide.client.manager.ClientVisualManager;
 import com.evandev.fieldguide.client.progress.ProgressManager;
-import com.evandev.fieldguide.client.scanning.FieldGuideScanner;
+import com.evandev.fieldguide.client.scan.FieldGuideScanner;
 import com.evandev.fieldguide.client.search.SearchManager;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
-import com.evandev.fieldguide.util.EntryResolver;
-import com.evandev.fieldguide.util.FieldGuideVariantManager;
+import com.evandev.fieldguide.entry.EntryResolver;
+import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -159,8 +160,8 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         return ProgressManager.getInstance().isKillToUnlock(entryId);
     }
 
-    public void updateCategoriesFromServer(List<Category> categories, Map<ResourceLocation, ResourceLocation> redirects, boolean clearCache, boolean resolveEntries) {
-        ClientCategoryManager.getInstance().updateCategoriesFromServer(categories, redirects, clearCache, resolveEntries);
+    public void updateCategoriesFromServer(List<Category> categories, List<GuideEntry> entries, Map<ResourceLocation, ResourceLocation> redirects, boolean clearCache, boolean resolveEntries) {
+        ClientCategoryManager.getInstance().updateCategoriesFromServer(categories, entries, redirects, clearCache, resolveEntries);
     }
 
     public void updateModifiers(List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals, boolean clearCache) {
@@ -252,4 +253,3 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         ProgressManager.getInstance().applyServerUpdate(packet);
     }
 }
-

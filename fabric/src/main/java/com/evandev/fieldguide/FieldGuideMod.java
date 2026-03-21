@@ -1,8 +1,8 @@
 package com.evandev.fieldguide;
 
 import com.evandev.fieldguide.api.EntryUnlockData;
-import com.evandev.fieldguide.api.VariantDef;
-import com.evandev.fieldguide.api.VariantProvider;
+import com.evandev.fieldguide.api.variant.VariantDef;
+import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.compat.exposure.ExposureFabricEventHandler;
 import com.evandev.fieldguide.network.*;
 import com.evandev.fieldguide.platform.FabricNetworkHelper;
@@ -12,8 +12,8 @@ import com.evandev.fieldguide.server.command.FieldGuideCommand;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.FieldGuideTriggers;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
-import com.evandev.fieldguide.util.EntryResolver;
-import com.evandev.fieldguide.util.FieldGuideVariantManager;
+import com.evandev.fieldguide.entry.EntryResolver;
+import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityCombatEvents;

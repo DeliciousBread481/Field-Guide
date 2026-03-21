@@ -1,8 +1,8 @@
 package com.evandev.fieldguide;
 
 import com.evandev.fieldguide.api.EntryUnlockData;
-import com.evandev.fieldguide.api.VariantDef;
-import com.evandev.fieldguide.api.VariantProvider;
+import com.evandev.fieldguide.api.variant.VariantDef;
+import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.compat.exposure.ExposureForgeEventHandler;
 import com.evandev.fieldguide.network.*;
 import com.evandev.fieldguide.platform.ForgeNetworkHelper;
@@ -13,8 +13,8 @@ import com.evandev.fieldguide.server.command.FieldGuideCommand;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.FieldGuideTriggers;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
-import com.evandev.fieldguide.util.EntryResolver;
-import com.evandev.fieldguide.util.FieldGuideVariantManager;
+import com.evandev.fieldguide.entry.EntryResolver;
+import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Mob;
