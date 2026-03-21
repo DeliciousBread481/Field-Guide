@@ -33,6 +33,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -185,7 +186,10 @@ public class FieldGuideEntryScreen extends BookScreen {
                         this.onClose();
                     }
                 }
-            }).setPlaySound(canCopy)).setTooltip(createCopyTooltip(canCopy));
+            })
+                    .setPlaySound(canCopy)
+                    .setCustomSound(SoundEvents.VILLAGER_WORK_CARTOGRAPHER))
+                    .setTooltip(createCopyTooltip(canCopy));
         }
 
         if (this.entityVariants.size() > 1 && this.renderedEntity instanceof LivingEntity living) {
