@@ -2,7 +2,8 @@
   "parent": "fieldguide:first_discovery",
   "display": {
     "icon": {
-      "item": "minecraft:diamond_sword"
+      "count": 1,
+      "id": "minecraft:diamond_sword"
     },
     "title": {
       "translate": "advancements.fieldguide.quick_review.title"

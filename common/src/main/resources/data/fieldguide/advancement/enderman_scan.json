@@ -2,7 +2,8 @@
   "parent": "fieldguide:first_discovery",
   "display": {
     "icon": {
-      "item": "minecraft:ender_pearl"
+      "count": 1,
+      "id": "minecraft:ender_pearl"
     },
     "title": {
       "translate": "advancements.fieldguide.enderman_scan.title"

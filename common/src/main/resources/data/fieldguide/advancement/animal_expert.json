@@ -2,7 +2,8 @@
   "parent": "fieldguide:first_discovery",
   "display": {
     "icon": {
-      "item": "minecraft:pig_spawn_egg"
+      "count": 1,
+      "id": "minecraft:pig_spawn_egg"
     },
     "title": {
       "translate": "advancements.fieldguide.animal_expert.title"

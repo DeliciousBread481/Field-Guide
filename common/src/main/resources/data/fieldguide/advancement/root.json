@@ -1,7 +1,8 @@
 {
   "display": {
     "icon": {
-      "item": "minecraft:spyglass"
+      "count": 1,
+      "id": "minecraft:spyglass"
     },
     "title": {
       "translate": "advancements.fieldguide.root.title"

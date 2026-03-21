@@ -2,13 +2,14 @@
   "parent": "fieldguide:first_discovery",
   "display": {
     "icon": {
-      "item": "minecraft:flint_and_steel"
+      "count": 1,
+      "id": "minecraft:diamond"
     },
     "title": {
-      "translate": "advancements.fieldguide.let_him_cook.title"
+      "translate": "advancements.fieldguide.gem_alert.title"
     },
     "description": {
-      "translate": "advancements.fieldguide.let_him_cook.description"
+      "translate": "advancements.fieldguide.gem_alert.description"
     },
     "frame": "task",
     "show_toast": true,
@@ -20,8 +21,10 @@
       "trigger": "fieldguide:scan_entity",
       "conditions": {
         "entity": {
-          "flags": {
-            "is_on_fire": true
+          "distance": {
+            "absolute": {
+              "max": 2.0
+            }
           }
         }
       }
