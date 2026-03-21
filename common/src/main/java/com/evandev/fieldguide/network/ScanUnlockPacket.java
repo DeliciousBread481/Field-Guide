@@ -1,5 +1,7 @@
 package com.evandev.fieldguide.network;
 
+import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.api.EntryUnlockData;
 import com.evandev.fieldguide.server.ScanVerifier;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.FieldGuideTriggers;
@@ -54,9 +56,15 @@ public class ScanUnlockPacket {
         PlayerFieldGuideProgress progress = manager.getProgress(player);
         if (progress == null) return;
 
-        if (!manager.isValidEntry(entryId)) return;
+        if (!manager.isValidEntry(entryId)) {
+            Constants.LOG.warn("Scan failed: entryId {} is not valid on the server.", entryId);
+            return;
+        }
 
-        if (!ScanVerifier.verifyScan(player, entryId, scannedTargetId, targetBlockPos, targetEntityId)) return;
+        if (!ScanVerifier.verifyScan(player, entryId, scannedTargetId, targetBlockPos, targetEntityId)) {
+            Constants.LOG.warn("Scan failed: ScanVerifier rejected the scan for entryId {}.", entryId);
+            return;
+        }
 
         if (targetEntityId != 0) {
             Entity entity = player.serverLevel().getEntity(targetEntityId);
@@ -66,6 +74,6 @@ public class ScanUnlockPacket {
             }
         }
 
-        progress.tryUnlock(player, entryId, variantId, com.evandev.fieldguide.api.EntryUnlockData.UnlockTrigger.SCAN);
+        progress.tryUnlock(player, entryId, variantId, EntryUnlockData.UnlockTrigger.SCAN);
     }
 }
