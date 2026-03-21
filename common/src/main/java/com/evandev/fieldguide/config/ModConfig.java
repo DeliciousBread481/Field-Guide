@@ -4,169 +4,105 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.platform.Services;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.minecraft.resources.ResourceLocation;
+import com.google.gson.JsonObject;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Files;
 
 public class ModConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final File CONFIG_FILE = Services.PLATFORM.getConfigDirectory().resolve("fieldguide.json").toFile();
-
-    private static ModConfig INSTANCE;
-
-    public boolean showPauseMenuButton = true;
-    public int pauseButtonXOffset = 0;
-    public int pauseButtonYOffset = 0;
-
-    public boolean disableScanning = false;
-    public boolean disableLootDisplay = false;
-    public boolean disableBiomeDisplay = false;
-    public boolean disableEditingDescriptions = false;
-    public boolean disableEditingNames = false;
-    public boolean keepSilhouetteWhenUnlocked = false;
-
-    public boolean showInventoryButton = true;
-    public int inventoryButtonXOffset = 126;
-    public int inventoryButtonYOffset = 61;
-
-    public String defaultScreen = "last_opened_screen";
-    public boolean hideTabsUntilUnlocked = false;
-
-    public boolean enableSpyglassScanning = true;
-    public double spyglassScanDistance = 64.0D;
-
-    public boolean enableNakedEyeScanning = false;
-    public double nakedEyeScanDistance = 10.0D;
-
-    public boolean showUndiscoveredNames = false;
-    public boolean hideUndiscoveredFromSearch = false;
-
-    public double scanSpeed = 1.0D;
-    public int scanIconYOffset = 2;
-    public int scanIconXOffset = 30;
-    public boolean showScanIcon = true;
-    public boolean playScanningSound = true;
-    public boolean grantXpOnScan = true;
-    public int xpAmountOnScan = 5;
-
-    public boolean enableReliableRemover = true;
-
-    public String scanOverlayColor = "#F9EED0";
-    public double scanOverlayAlpha = 0.5D;
-
-    public String textColor = "#8A5E3B";
-    public String textTitleColor = "#704623";
-    public String textMutedColor = "#C7A875";
-    public String textNewColor = "#63B40C";
-    public String textCursorColor = "#0xFF704623";
-    public String pageNumberColor = "#C7A875";
-
-    public String listSilhouetteColor = "#DDC69B";
-    public double listSilhouetteAlpha = 1.0D;
-    public String listUnlockedSilhouetteColor = "#DDC69B";
-    public double listUnlockedSilhouetteAlpha = 1.0D;
-
-    public String detailsSilhouetteColor = "#DDC69B";
-    public double detailsSilhouetteAlpha = 1.0D;
-    public String detailsUnlockedSilhouetteColor = "#DDC69B";
-    public double detailsUnlockedSilhouetteAlpha = 1.0D;
-    public boolean useRealWorldDate = false;
-
-    public boolean exposureAddPhotographButton = true;
-    public boolean exposureUnlockViaPhotograph = true;
-    public boolean exposureShowPhotographsInGrid = true;
-
-    public List<String> globalScanCommands = new ArrayList<>();
-    public Map<String, List<String>> categoryScanCommands = new HashMap<>();
-    public Map<String, List<String>> entryScanCommands = new HashMap<>();
-
-    public static ModConfig get() {
-        if (INSTANCE == null) {
-            load();
-        }
-        return INSTANCE;
-    }
+    private static final File OLD_CONFIG_FILE = Services.PLATFORM.getConfigDirectory().resolve("fieldguide.json").toFile();
 
     public static void load() {
-        if (CONFIG_FILE.exists()) {
-            try (FileReader reader = new FileReader(CONFIG_FILE)) {
-                INSTANCE = GSON.fromJson(reader, ModConfig.class);
-                if (INSTANCE.categoryScanCommands == null) INSTANCE.categoryScanCommands = new HashMap<>();
-                if (INSTANCE.entryScanCommands == null) INSTANCE.entryScanCommands = new HashMap<>();
-                if (INSTANCE.globalScanCommands == null) INSTANCE.globalScanCommands = new ArrayList<>();
-            } catch (Exception e) {
-                Constants.LOG.error("Failed to load fieldguide.json", e);
-                INSTANCE = new ModConfig();
-            }
-        } else {
-            INSTANCE = new ModConfig();
-            save();
+        if (OLD_CONFIG_FILE.exists()) {
+            migrate();
+        }
+        ClientConfig.load();
+        ServerConfig.load();
+    }
+
+    private static void migrate() {
+        Constants.LOG.info("Migrating old fieldguide.json to new split configuration...");
+        try (FileReader reader = new FileReader(OLD_CONFIG_FILE)) {
+            JsonObject json = GSON.fromJson(reader, JsonObject.class);
+
+            ClientConfig client = ClientConfig.get();
+            ServerConfig server = ServerConfig.get();
+
+            // Client settings
+            if (json.has("showPauseMenuButton")) client.showPauseMenuButton = json.get("showPauseMenuButton").getAsBoolean();
+            if (json.has("pauseButtonXOffset")) client.pauseButtonXOffset = json.get("pauseButtonXOffset").getAsInt();
+            if (json.has("pauseButtonYOffset")) client.pauseButtonYOffset = json.get("pauseButtonYOffset").getAsInt();
+            if (json.has("showInventoryButton")) client.showInventoryButton = json.get("showInventoryButton").getAsBoolean();
+            if (json.has("inventoryButtonXOffset")) client.inventoryButtonXOffset = json.get("inventoryButtonXOffset").getAsInt();
+            if (json.has("inventoryButtonYOffset")) client.inventoryButtonYOffset = json.get("inventoryButtonYOffset").getAsInt();
+            if (json.has("defaultScreen")) client.defaultScreen = json.get("defaultScreen").getAsString();
+            if (json.has("scanIconYOffset")) client.scanIconYOffset = json.get("scanIconYOffset").getAsInt();
+            if (json.has("scanIconXOffset")) client.scanIconXOffset = json.get("scanIconXOffset").getAsInt();
+            if (json.has("showScanIcon")) client.showScanIcon = json.get("showScanIcon").getAsBoolean();
+            if (json.has("playScanningSound")) client.playScanningSound = json.get("playScanningSound").getAsBoolean();
+            if (json.has("scanOverlayColor")) client.scanOverlayColor = json.get("scanOverlayColor").getAsString();
+            if (json.has("scanOverlayAlpha")) client.scanOverlayAlpha = json.get("scanOverlayAlpha").getAsDouble();
+            if (json.has("textColor")) client.textColor = json.get("textColor").getAsString();
+            if (json.has("textTitleColor")) client.textTitleColor = json.get("textTitleColor").getAsString();
+            if (json.has("textMutedColor")) client.textMutedColor = json.get("textMutedColor").getAsString();
+            if (json.has("textNewColor")) client.textNewColor = json.get("textNewColor").getAsString();
+            if (json.has("textCursorColor")) client.textCursorColor = json.get("textCursorColor").getAsString();
+            if (json.has("pageNumberColor")) client.pageNumberColor = json.get("pageNumberColor").getAsString();
+            if (json.has("listSilhouetteColor")) client.listSilhouetteColor = json.get("listSilhouetteColor").getAsString();
+            if (json.has("listSilhouetteAlpha")) client.listSilhouetteAlpha = json.get("listSilhouetteAlpha").getAsDouble();
+            if (json.has("listUnlockedSilhouetteColor")) client.listUnlockedSilhouetteColor = json.get("listUnlockedSilhouetteColor").getAsString();
+            if (json.has("listUnlockedSilhouetteAlpha")) client.listUnlockedSilhouetteAlpha = json.get("listUnlockedSilhouetteAlpha").getAsDouble();
+            if (json.has("detailsSilhouetteColor")) client.detailsSilhouetteColor = json.get("detailsSilhouetteColor").getAsString();
+            if (json.has("detailsSilhouetteAlpha")) client.detailsSilhouetteAlpha = json.get("detailsSilhouetteAlpha").getAsDouble();
+            if (json.has("detailsUnlockedSilhouetteColor")) client.detailsUnlockedSilhouetteColor = json.get("detailsUnlockedSilhouetteColor").getAsString();
+            if (json.has("detailsUnlockedSilhouetteAlpha")) client.detailsUnlockedSilhouetteAlpha = json.get("detailsUnlockedSilhouetteAlpha").getAsDouble();
+            if (json.has("useRealWorldDate")) client.useRealWorldDate = json.get("useRealWorldDate").getAsBoolean();
+            if (json.has("showToasts")) client.showToasts = json.get("showToasts").getAsBoolean();
+            if (json.has("exposureAddPhotographButton")) client.exposureAddPhotographButton = json.get("exposureAddPhotographButton").getAsBoolean();
+            if (json.has("exposureShowPhotographsInGrid")) client.exposureShowPhotographsInGrid = json.get("exposureShowPhotographsInGrid").getAsBoolean();
+
+            // Server settings
+            if (json.has("disableScanning")) server.disableScanning = json.get("disableScanning").getAsBoolean();
+            if (json.has("disableLootDisplay")) server.disableLootDisplay = json.get("disableLootDisplay").getAsBoolean();
+            if (json.has("disableBiomeDisplay")) server.disableBiomeDisplay = json.get("disableBiomeDisplay").getAsBoolean();
+            if (json.has("disableEditingDescriptions")) server.disableEditingDescriptions = json.get("disableEditingDescriptions").getAsBoolean();
+            if (json.has("disableEditingNames")) server.disableEditingNames = json.get("disableEditingNames").getAsBoolean();
+            if (json.has("keepSilhouetteWhenUnlocked")) server.keepSilhouetteWhenUnlocked = json.get("keepSilhouetteWhenUnlocked").getAsBoolean();
+            if (json.has("unlockAllVariants")) server.unlockAllVariants = json.get("unlockAllVariants").getAsBoolean();
+            if (json.has("enableFieldGuideItem")) server.enableFieldGuideItem = json.get("enableFieldGuideItem").getAsBoolean();
+            if (json.has("enableCopyingPages")) server.enableCopyingPages = json.get("enableCopyingPages").getAsBoolean();
+            if (json.has("hideTabsUntilUnlocked")) server.hideTabsUntilUnlocked = json.get("hideTabsUntilUnlocked").getAsBoolean();
+            if (json.has("enableSpyglassScanning")) server.enableSpyglassScanning = json.get("enableSpyglassScanning").getAsBoolean();
+            if (json.has("spyglassScanDistance")) server.spyglassScanDistance = json.get("spyglassScanDistance").getAsDouble();
+            if (json.has("enableNakedEyeScanning")) server.enableNakedEyeScanning = json.get("enableNakedEyeScanning").getAsBoolean();
+            if (json.has("nakedEyeScanDistance")) server.nakedEyeScanDistance = json.get("nakedEyeScanDistance").getAsDouble();
+            if (json.has("showUndiscoveredNames")) server.showUndiscoveredNames = json.get("showUndiscoveredNames").getAsBoolean();
+            if (json.has("hideUndiscoveredFromSearch")) server.hideUndiscoveredFromSearch = json.get("hideUndiscoveredFromSearch").getAsBoolean();
+            if (json.has("scanSpeed")) server.scanSpeed = json.get("scanSpeed").getAsDouble();
+            if (json.has("grantXpOnScan")) server.grantXpOnScan = json.get("grantXpOnScan").getAsBoolean();
+            if (json.has("xpAmountOnScan")) server.xpAmountOnScan = json.get("xpAmountOnScan").getAsInt();
+            if (json.has("enableReliableRemover")) server.enableReliableRemover = json.get("enableReliableRemover").getAsBoolean();
+            if (json.has("exposureUnlockViaPhotograph")) server.exposureUnlockViaPhotograph = json.get("exposureUnlockViaPhotograph").getAsBoolean();
+
+            if (json.has("globalScanCommands")) server.globalScanCommands = GSON.fromJson(json.get("globalScanCommands"), Constants.LIST_STRING_TYPE);
+            if (json.has("categoryScanCommands")) server.categoryScanCommands = GSON.fromJson(json.get("categoryScanCommands"), Constants.MAP_STRING_LIST_STRING_TYPE);
+            if (json.has("entryScanCommands")) server.entryScanCommands = GSON.fromJson(json.get("entryScanCommands"), Constants.MAP_STRING_LIST_STRING_TYPE);
+
+            ClientConfig.save();
+            ServerConfig.save();
+
+            reader.close();
+            Files.move(OLD_CONFIG_FILE.toPath(), OLD_CONFIG_FILE.toPath().resolveSibling("fieldguide.json.old"));
+            Constants.LOG.info("Migration successful.");
+        } catch (Exception e) {
+            Constants.LOG.error("Failed to migrate fieldguide.json", e);
         }
     }
 
     public static void save() {
-        try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
-            GSON.toJson(INSTANCE, writer);
-        } catch (IOException e) {
-            Constants.LOG.error("Failed to save fieldguide.json", e);
-        }
-    }
-
-    public int getScanOverlayColorInt() {
-        return parseColor(scanOverlayColor, 0xF9EED0);
-    }
-
-    public int getTextColorInt() {
-        return parseColor(textColor, 0x8A5E3B);
-    }
-
-    public int getTextTitleColorInt() {
-        return parseColor(textTitleColor, 0x704623);
-    }
-
-    public int getTextMutedColorInt() {
-        return parseColor(textMutedColor, 0xC7A875);
-    }
-
-    public int getTextNewColorInt() {
-        return parseColor(textNewColor, 0x63B40C);
-    }
-
-    public int getTextCursorColorInt() {
-        return parseColor(textCursorColor, 0xFF704623);
-    }
-
-    public int getPageNumberColorInt() {
-        return parseColor(pageNumberColor, 0xC7A875);
-    }
-
-    public int getListSilhouetteColorInt() {
-        return parseColor(listSilhouetteColor, 0xDDC69B);
-    }
-    public int getListUnlockedSilhouetteColorInt() {
-        return parseColor(listUnlockedSilhouetteColor, 0xDDC69B);
-    }
-
-    public int getDetailsSilhouetteColorInt() {
-        return parseColor(detailsSilhouetteColor, 0xDDC69B);
-    }
-    public int getDetailsUnlockedSilhouetteColorInt() {
-        return parseColor(detailsUnlockedSilhouetteColor, 0xDDC69B);
-    }
-
-    private int parseColor(String colorStr, int fallback) {
-        try {
-            String hex = colorStr.startsWith("#") ? colorStr.substring(1) : colorStr;
-            return Integer.parseInt(hex, 16);
-        } catch (Exception e) {
-            return fallback;
-        }
+        ClientConfig.save();
+        ServerConfig.save();
     }
 }

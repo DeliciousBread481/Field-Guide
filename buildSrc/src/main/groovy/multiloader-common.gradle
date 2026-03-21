@@ -80,6 +80,8 @@ repositories {
         url = "https://maven.shedaniel.me/"
     }
 
+    maven { url = "https://maven.impactdev.net/repository/development/" }
+
     exclusiveContent {
         forRepository {
             maven {

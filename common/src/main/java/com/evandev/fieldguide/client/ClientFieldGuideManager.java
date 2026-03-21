@@ -1,53 +1,38 @@
 package com.evandev.fieldguide.client;
 
-import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.api.AutoPopulateRegistry;
+import com.evandev.fieldguide.api.Category;
+import com.evandev.fieldguide.api.DatapackVariant;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.data.JournalPage;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
+import com.evandev.fieldguide.client.gui.util.IconCacheManager;
+import com.evandev.fieldguide.client.manager.ClientCategoryManager;
+import com.evandev.fieldguide.client.manager.ClientLootManager;
+import com.evandev.fieldguide.client.manager.ClientTextManager;
+import com.evandev.fieldguide.client.manager.ClientVisualManager;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.client.scanning.FieldGuideScanner;
 import com.evandev.fieldguide.client.search.SearchManager;
 import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.data.Category;
-import com.evandev.fieldguide.data.CategoryEntry;
-import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.util.EntryResolver;
-import com.google.gson.JsonObject;
+import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.language.I18n;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
-import net.minecraft.util.GsonHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
-import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.Reader;
-import java.util.*;
-import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Map;
 
 public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     private static final ClientFieldGuideManager INSTANCE = new ClientFieldGuideManager();
-
-    private final Map<ResourceLocation, Category> syncedCategories = new LinkedHashMap<>();
-    private final Map<ResourceLocation, List<Object>> resolvedCategoryEntries = new HashMap<>();
-    private final Map<ResourceLocation, EntryVisual> entryVisuals = new HashMap<>();
-    private final Map<Object, List<ItemStack>> dropCache = new HashMap<>();
-    private final Map<ResourceLocation, ResourceLocation> redirects = new HashMap<>();
-    private final List<String> biomeAdditions = new ArrayList<>();
-    private final List<String> biomeRemovals = new ArrayList<>();
-    private final List<String> lootAdditions = new ArrayList<>();
-    private final List<String> lootRemovals = new ArrayList<>();
-    private boolean needsResolution = false;
 
     private ClientFieldGuideManager() {
     }
@@ -57,10 +42,10 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public static void clearCache() {
-        INSTANCE.dropCache.clear();
-        INSTANCE.resolvedCategoryEntries.clear();
+        ClientLootManager.getInstance().getDropCache().clear();
+        ClientCategoryManager.getInstance().getResolvedCategoryEntries().clear();
         EntryRenderHelper.clearCache();
-        INSTANCE.resolveAllEntries();
+        ClientCategoryManager.getInstance().resolveAllEntries();
     }
 
     public static ResourceLocation getEntryId(Object entry) {
@@ -68,11 +53,18 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public static boolean hideFromSearch(Object entry) {
-        return ModConfig.get().hideUndiscoveredFromSearch && !isUnlocked(entry);
+        return ServerConfig.get().hideUndiscoveredFromSearch && !isUnlocked(entry);
     }
 
     public static boolean isUnlocked(Object entry) {
         return ProgressManager.getInstance().isUnlocked(entry);
+    }
+
+    public static boolean isVariantUnlocked(Object entry, String variantId) {
+        ResourceLocation id = getEntryId(entry);
+        if (id == null) return false;
+        String fullId = id + "#" + variantId;
+        return ProgressManager.getInstance().getUnlockedEntries().contains(fullId);
     }
 
     public static boolean isNew(Object entry) {
@@ -84,147 +76,71 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public static String getEntryDescription(Object entry) {
-        ResourceLocation id = getEntryId(entry);
-        if (id == null) return "";
-        String custom = ProgressManager.getInstance().getCustomDescription(entry);
-        if (custom != null) return custom;
-
-        String overrideKey = "fieldguide." + id.getNamespace() + "." + id.getPath() + ".description";
-
-        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
-        String fallbackKey = (coreEntry instanceof EntityType) ? "entity." + id.getNamespace() + "." + id.getPath() + ".description" : "lore." + id.getNamespace() + "." + id.getPath();
-        return I18n.exists(overrideKey) ? I18n.get(overrideKey) : (I18n.exists(fallbackKey) ? I18n.get(fallbackKey) : I18n.get("fieldguide.description.missing"));
+        return ClientTextManager.getInstance().getEntryDescription(entry);
     }
 
     public static void setCustomDescription(Object entry, String desc) {
-        ProgressManager.getInstance().setCustomDescription(entry, desc);
+        ClientTextManager.getInstance().setCustomDescription(entry, desc);
     }
 
     public static void setCustomName(Object entry, String name) {
-        ProgressManager.getInstance().setCustomName(entry, name);
+        ClientTextManager.getInstance().setCustomName(entry, name);
     }
 
     public static Component getEntryName(Object entry) {
-        String custom = ProgressManager.getInstance().getCustomName(entry);
-        if (custom != null) return Component.literal(custom);
-
-        return getDefaultNameComponent(entry);
+        return ClientTextManager.getInstance().getEntryName(entry);
     }
 
     public static String getDefaultName(Object entry) {
-        return getDefaultNameComponent(entry).getString();
+        return ClientTextManager.getInstance().getDefaultName(entry);
     }
 
-    private static Component getDefaultNameComponent(Object entry) {
-        ResourceLocation id = getEntryId(entry);
-        if (id != null) {
-            String overrideKey = "fieldguide.name." + id.getNamespace() + "." + id.getPath();
-            if (I18n.exists(overrideKey)) {
-                return Component.translatable(overrideKey);
-            }
-        }
-
-        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
-
-        if (entry instanceof CompositeFieldGuideEntry && id != null && id.getPath().endsWith("_tree")) {
-            if (coreEntry instanceof Block block) {
-                String saplingName = block.getName().getString();
-                return Component.literal(saplingName.replace("Sapling", "Tree"));
-            }
-        }
-
-        if (coreEntry instanceof EntityType<?> type) return type.getDescription();
-        if (coreEntry instanceof Block block) return block.getName();
-
-        return Component.translatable("fieldguide.unknown");
+    public static Component getDefaultNameComponent(Object entry) {
+        return ClientTextManager.getInstance().getDefaultNameComponent(entry);
     }
 
     public static Map<ResourceLocation, Category> getCategories() {
-        return INSTANCE.syncedCategories;
+        return ClientCategoryManager.getInstance().getCategories();
     }
 
     public static List<Object> getValidEntries() {
-        return INSTANCE.resolvedCategoryEntries.values().stream().flatMap(List::stream).distinct().collect(Collectors.toList());
+        return ClientCategoryManager.getInstance().getValidEntries();
+    }
+
+    public String getLastUnlockedVariant() {
+        return ProgressManager.getInstance().getLastUnlockedVariant();
     }
 
     public List<String> getBiomeAdditions() {
-        return biomeAdditions;
+        return ClientCategoryManager.getInstance().getBiomeAdditions();
     }
 
     public List<String> getBiomeRemovals() {
-        return biomeRemovals;
+        return ClientCategoryManager.getInstance().getBiomeRemovals();
     }
 
     public List<String> getLootAdditions() {
-        return lootAdditions;
+        return ClientCategoryManager.getInstance().getLootAdditions();
     }
 
     public List<String> getLootRemovals() {
-        return lootRemovals;
-    }
-
-    public void updateModifiers(List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals, boolean clearCache) {
-        if (clearCache) {
-            this.biomeAdditions.clear();
-            this.biomeRemovals.clear();
-            this.lootAdditions.clear();
-            this.lootRemovals.clear();
-        }
-
-        if (!biomeAdditions.isEmpty()) this.biomeAdditions.addAll(biomeAdditions);
-        if (!biomeRemovals.isEmpty()) this.biomeRemovals.addAll(biomeRemovals);
-        if (!lootAdditions.isEmpty()) this.lootAdditions.addAll(lootAdditions);
-        if (!lootRemovals.isEmpty()) this.lootRemovals.addAll(lootRemovals);
-    }
-
-    public void updateCategoriesFromServer(List<Category> categories, Map<ResourceLocation, ResourceLocation> redirects, boolean clearCache, boolean resolveEntries) {
-        if (clearCache) {
-            this.redirects.clear();
-            this.syncedCategories.clear();
-        }
-
-        this.redirects.putAll(redirects);
-
-        for (Category cat : categories) {
-            if (this.syncedCategories.containsKey(cat.getId())) {
-                Category existing = this.syncedCategories.get(cat.getId());
-                if (cat.getEntries() != null) {
-                    for (CategoryEntry entry : cat.getEntries()) {
-                        existing.addEntry(entry);
-                    }
-                }
-                if (cat.getGroupByQueries() != null && !cat.getGroupByQueries().isEmpty()) {
-                    existing.setGroupByQueries(cat.getGroupByQueries());
-                }
-            } else {
-                this.syncedCategories.put(cat.getId(), cat);
-            }
-        }
-
-        if (resolveEntries) {
-            List<Category> sorted = new ArrayList<>(this.syncedCategories.values());
-            sorted.sort(Comparator.comparingInt(Category::getSortIndex).thenComparing(Category::getId));
-            this.syncedCategories.clear();
-            for (Category cat : sorted) this.syncedCategories.put(cat.getId(), cat);
-
-            this.needsResolution = true;
-        }
+        return ClientCategoryManager.getInstance().getLootRemovals();
     }
 
     public Object getEntryForTarget(Object target) {
-        return EntryResolver.getEntryForTarget(resolvedCategoryEntries, target);
+        return ClientCategoryManager.getInstance().getEntryForTarget(target);
     }
 
     public List<Object> getEntriesForTarget(Object target) {
-        return EntryResolver.getEntriesForTarget(resolvedCategoryEntries, target);
+        return ClientCategoryManager.getInstance().getEntriesForTarget(target);
     }
 
     public String getJournalTitle() {
-        return ProgressManager.getInstance().getJournalTitle();
+        return ClientTextManager.getInstance().getJournalTitle();
     }
 
     public void setJournalTitle(String title) {
-        ProgressManager.getInstance().setJournalTitle(title);
+        ClientTextManager.getInstance().setJournalTitle(title);
     }
 
     public void saveJournal() {
@@ -239,98 +155,53 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         ProgressManager.getInstance().exportToLang(type);
     }
 
-    public void updateLootCache(Map<ResourceLocation, List<ItemStack>> lootCache, boolean clearCache) {
-        if (clearCache) {
-            this.dropCache.clear();
-        }
+    public boolean isKillToUnlock(ResourceLocation entryId) {
+        return ProgressManager.getInstance().isKillToUnlock(entryId);
+    }
 
-        for (Map.Entry<ResourceLocation, List<ItemStack>> entry : lootCache.entrySet()) {
-            ResourceLocation id = entry.getKey();
-            List<ItemStack> drops = entry.getValue();
-            BuiltInRegistries.ENTITY_TYPE.getOptional(id).ifPresent(type -> dropCache.put(type, drops));
-            BuiltInRegistries.BLOCK.getOptional(id).ifPresent(block -> dropCache.put(block, drops));
+    public void updateCategoriesFromServer(List<Category> categories, Map<ResourceLocation, ResourceLocation> redirects, boolean clearCache, boolean resolveEntries) {
+        ClientCategoryManager.getInstance().updateCategoriesFromServer(categories, redirects, clearCache, resolveEntries);
+    }
+
+    public void updateModifiers(List<String> biomeAdditions, List<String> biomeRemovals, List<String> lootAdditions, List<String> lootRemovals, boolean clearCache) {
+        ClientCategoryManager.getInstance().updateModifiers(biomeAdditions, biomeRemovals, lootAdditions, lootRemovals, clearCache);
+    }
+
+    public void updateLootCache(Map<ResourceLocation, List<ItemStack>> lootCache, boolean clearCache) {
+        ClientLootManager.getInstance().updateLootCache(lootCache, clearCache);
+    }
+
+    public void updateVariants(Map<ResourceLocation, List<DatapackVariant>> variants) {
+        if (variants != null && !variants.isEmpty()) {
+            FieldGuideVariantManager.setDatapackVariants(variants);
         }
     }
 
-    public EntryVisual getEntryVisual(ResourceLocation entryId) {
-        return entryVisuals.getOrDefault(entryId, new EntryVisual());
+    public EntryVisual getEntryVisual(Object entry) {
+        return ClientVisualManager.getInstance().getEntryVisual(AutoPopulateRegistry.getEntryKey(entry));
     }
 
     public ResourceLocation getRedirect(ResourceLocation source) {
-        return redirects.get(source);
+        return ClientCategoryManager.getInstance().getRedirect(source);
     }
 
     @Override
     public void onResourceManagerReload(@NotNull ResourceManager resourceManager) {
         ModConfig.load();
-        entryVisuals.clear();
-        EntryRenderHelper.clearCache();
-
-        loadVisuals(resourceManager, (derivedId, json) -> {
-            ResourceLocation targetId = json.has("id") ? ResourceLocation.parse(GsonHelper.getAsString(json, "id")) : derivedId;
-            EntryVisual visual = new EntryVisual();
-            if (json.has("custom_sound"))
-                visual.customSound = ResourceLocation.parse(GsonHelper.getAsString(json, "custom_sound"));
-            if (json.has("alignment_icon"))
-                visual.alignmentIcon = ResourceLocation.parse(GsonHelper.getAsString(json, "alignment_icon"));
-            if (json.has("scale")) visual.scale = GsonHelper.getAsFloat(json, "scale");
-            if (json.has("y_offset")) visual.yOffset = GsonHelper.getAsFloat(json, "y_offset");
-            if (json.has("x_offset")) visual.xOffset = GsonHelper.getAsFloat(json, "x_offset");
-            if (json.has("grid_scale")) visual.gridScale = GsonHelper.getAsFloat(json, "grid_scale");
-            if (json.has("grid_y_offset")) visual.gridYOffset = GsonHelper.getAsFloat(json, "grid_y_offset");
-            if (json.has("grid_x_offset")) visual.gridXOffset = GsonHelper.getAsFloat(json, "grid_x_offset");
-            if (json.has("page_scale")) visual.pageScale = GsonHelper.getAsFloat(json, "page_scale");
-            if (json.has("page_y_offset")) visual.pageYOffset = GsonHelper.getAsFloat(json, "page_y_offset");
-            if (json.has("page_x_offset")) visual.pageXOffset = GsonHelper.getAsFloat(json, "page_x_offset");
-            if (json.has("spawn_biomes")) {
-                visual.spawnBiomes = new ArrayList<>();
-                GsonHelper.getAsJsonArray(json, "spawn_biomes").forEach(el -> visual.spawnBiomes.add(ResourceLocation.parse(el.getAsString())));
-            }
-            entryVisuals.put(targetId, visual);
-        });
-
-        this.needsResolution = true;
-    }
-
-    private void loadVisuals(ResourceManager mgr, BiConsumer<ResourceLocation, JsonObject> processor) {
-        mgr.listResourceStacks("fieldguide/entries", id -> id.getPath().endsWith(".json")).forEach((fileId, resources) -> {
-            String path = fileId.getPath();
-            String idPath = path.substring(("fieldguide/entries" + "/").length(), path.length() - ".json".length());
-            ResourceLocation targetId = ResourceLocation.fromNamespaceAndPath(fileId.getNamespace(), idPath);
-            resources.forEach(resource -> {
-                try (Reader reader = resource.openAsReader()) {
-                    processor.accept(targetId, GsonHelper.parse(reader));
-                } catch (Exception e) {
-                    Constants.LOG.error("Error loading entry visuals: {}", fileId, e);
-                }
-            });
-        });
+        ClientVisualManager.getInstance().onResourceManagerReload(resourceManager);
+        ClientCategoryManager.getInstance().setNeedsResolution(true);
     }
 
     private void resolveAllEntries() {
-        resolvedCategoryEntries.clear();
-        ModConfig config = ModConfig.get();
-
-        syncedCategories.values().forEach(category -> {
-            List<Object> entries = EntryResolver.resolveCategoryEntries(category, Collections.emptyList(), this.redirects);
-
-            // Group entries
-            List<Object> groupedEntries = SearchManager.groupByQueries(entries, category.getGroupByQueries());
-
-            resolvedCategoryEntries.put(category.getId(), groupedEntries);
-        });
+        ClientCategoryManager.getInstance().resolveAllEntries();
     }
 
     public List<Object> getEntriesForCategory(Category category) {
-        return resolvedCategoryEntries.getOrDefault(category.getId(), Collections.emptyList());
+        return ClientCategoryManager.getInstance().getEntriesForCategory(category);
     }
 
     public List<Object> getRecentEntries(Category category, int limit) {
-        return getEntriesForCategory(category).stream()
-                .filter(ProgressManager.getInstance()::isUnlocked)
-                .sorted((a, b) -> Long.compare(ProgressManager.getInstance().getDiscoveryTime(b), ProgressManager.getInstance().getDiscoveryTime(a)))
-                .limit(limit)
-                .collect(Collectors.toList());
+        return ClientCategoryManager.getInstance().getRecentEntries(category, limit);
     }
 
     public boolean isValidEntity(EntityType<?> type, ResourceLocation categoryId) {
@@ -338,7 +209,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public Category getCategoryForEntry(Object entry) {
-        return resolvedCategoryEntries.entrySet().stream().filter(e -> e.getValue().contains(entry)).map(e -> syncedCategories.get(e.getKey())).findFirst().orElse(null);
+        return ClientCategoryManager.getInstance().getCategoryForEntry(entry);
     }
 
     public List<Object> searchEntries(String query) {
@@ -346,60 +217,16 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public List<ItemStack> getDrops(Object entry) {
-        List<ItemStack> rawDrops = new ArrayList<>();
-        if (entry instanceof CompositeFieldGuideEntry composite) {
-            Set<Object> uniqueComponents = new HashSet<>();
-            if (composite.displayEntry() != null) uniqueComponents.add(composite.displayEntry());
-            if (composite.components() != null) uniqueComponents.addAll(composite.components());
-            for (Object comp : uniqueComponents) {
-                rawDrops.addAll(dropCache.getOrDefault(comp, Collections.emptyList()));
-            }
-        } else {
-            rawDrops.addAll(dropCache.getOrDefault(entry, Collections.emptyList()));
-        }
-
-        List<ItemStack> distinct = new ArrayList<>();
-        for (ItemStack stack : rawDrops) {
-            if (distinct.stream().noneMatch(s -> isSameLootItem(s, stack))) {
-                distinct.add(stack);
-            }
-        }
-        return distinct;
-    }
-
-    private boolean isSameLootItem(ItemStack a, ItemStack b) {
-        if (!ItemStack.isSameItem(a, b)) return false;
-
-        ItemStack aCopy = a.copy();
-        ItemStack bCopy = b.copy();
-
-        removeFieldGuideTags(aCopy);
-        removeFieldGuideTags(bCopy);
-
-        return ItemStack.isSameItemSameComponents(aCopy, bCopy);
-    }
-
-    private void removeFieldGuideTags(ItemStack stack) {
-        CustomData customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-        if (!customData.isEmpty()) {
-            CompoundTag tag = customData.copyTag();
-            tag.remove("FieldGuideDropChance");
-            tag.remove("FieldGuideMin");
-            tag.remove("FieldGuideMax");
-            if (tag.isEmpty()) {
-                stack.remove(DataComponents.CUSTOM_DATA);
-            } else {
-                stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
-            }
-        }
+        return ClientLootManager.getInstance().getDrops(entry);
     }
 
     public void onClientTick(Minecraft minecraft) {
         FieldGuideScanner.getInstance().onClientTick(minecraft);
+        IconCacheManager.tick();
 
-        if (this.needsResolution && minecraft.level != null) {
+        if (ClientCategoryManager.getInstance().isNeedsResolution() && minecraft.level != null) {
             resolveAllEntries();
-            this.needsResolution = false;
+            ClientCategoryManager.getInstance().setNeedsResolution(false);
         }
     }
 
@@ -416,11 +243,13 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public void onWorldUnload() {
-        this.dropCache.clear();
+        ClientLootManager.getInstance().getDropCache().clear();
         ProgressManager.getInstance().onWorldUnload();
+        ServerConfig.resetSyncedConfig();
     }
 
     public void applyServerUpdate(ProgressUpdatePacket packet) {
         ProgressManager.getInstance().applyServerUpdate(packet);
     }
 }
+

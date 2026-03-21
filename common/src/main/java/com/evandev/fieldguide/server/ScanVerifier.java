@@ -1,28 +1,29 @@
 package com.evandev.fieldguide.server;
 
-import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.EntryResolver;
 import com.evandev.fieldguide.util.ModTags;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
 public class ScanVerifier {
 
     public static boolean verifyScan(ServerPlayer player, ResourceLocation entryId,
                                      ResourceLocation scannedTargetId, BlockPos targetBlockPos, int targetEntityId) {
-        ModConfig config = ModConfig.get();
+        ServerConfig config = ServerConfig.get();
 
         if (config.disableScanning) return false;
 
         boolean hasSpyglass = player.isScoping() ||
-                player.isHolding(s -> s.is(ModTags.Items.SPYGLASSES)) ||
-                Services.PLATFORM.hasSpyglass(player);
+                player.isHolding(s -> s.is(ModTags.Items.SPYGLASSES));
 
         double activeScanDist;
         if (hasSpyglass && config.enableSpyglassScanning) {
@@ -33,22 +34,35 @@ public class ScanVerifier {
             return false;
         }
 
-        ResourceLocation categoryId = ServerFieldGuideManager.getInstance().getCategoryForEntryId(entryId);
-
         double maxDistSq = activeScanDist * activeScanDist;
         ServerLevel level = player.serverLevel();
 
+        ResourceLocation categoryId = ServerFieldGuideManager.getInstance().getCategoryForEntryId(entryId);
+        if (categoryId == null) {
+            return false;
+        }
+
         if (targetEntityId != 0) {
-            if (!verifyEntityPresence(player, scannedTargetId, targetEntityId, level, maxDistSq, categoryId))
+            Entity entity = level.getEntity(targetEntityId);
+
+            if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
+                if (entity.isSpectator() || player.distanceToSqr(entity) > maxDistSq) {
+                    return false;
+                }
+
+                ResourceLocation pokemonEntryId = FieldGuideCobblemonCompat.getPokemonEntryId(entity);
+                if (targetBelongsToEntry(pokemonEntryId, entryId)) return true;
+
+                return FieldGuideCobblemonCompat.getSpeciesName(pokemonEntryId).equals(FieldGuideCobblemonCompat.getSpeciesName(entryId));
+            }
+
+            if (!verifyEntityPresence(player, scannedTargetId, targetEntityId, level, maxDistSq, categoryId)) {
                 return false;
+            }
         } else if (targetBlockPos != null) {
             if (!verifyBlockPresence(player, scannedTargetId, targetBlockPos, level, maxDistSq, categoryId))
                 return false;
         } else {
-            return false;
-        }
-
-        if (ServerFieldGuideManager.getInstance().getCategoryForEntryId(entryId) == null) {
             return false;
         }
 
@@ -60,9 +74,17 @@ public class ScanVerifier {
         Entity entity = level.getEntity(entityId);
         if (entity == null || entity.isSpectator()) return false;
         if (player.distanceToSqr(entity) > maxDistSq) return false;
+
+        if (entity instanceof ItemEntity itemEntity) {
+            Item item = itemEntity.getItem().getItem();
+            if (!EntryResolver.isValidItem(item, categoryId)) return false;
+            ResourceLocation actualItemId = EntryResolver.getEntryId(item, true);
+            return actualItemId.equals(scannedTargetId);
+        }
+
         if (!EntryResolver.isValidEntity(entity.getType(), categoryId)) return false;
 
-        ResourceLocation actualTypeId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+        ResourceLocation actualTypeId = EntryResolver.getEntryId(entity.getType(), true);
         return actualTypeId.equals(scannedTargetId);
     }
 
@@ -76,7 +98,7 @@ public class ScanVerifier {
         Block block = level.getBlockState(blockPos).getBlock();
         if (!EntryResolver.isValidBlock(block, categoryId)) return false;
 
-        ResourceLocation actualBlockId = BuiltInRegistries.BLOCK.getKey(block);
+        ResourceLocation actualBlockId = EntryResolver.getEntryId(block, true);
         return actualBlockId.equals(scannedTargetId);
     }
 

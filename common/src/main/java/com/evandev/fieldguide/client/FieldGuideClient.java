@@ -1,13 +1,15 @@
 package com.evandev.fieldguide.client;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.client.gui.screens.BookScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideCategoryScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.client.scanning.FieldGuideScanner;
-import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.data.Category;
+import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
+import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.mixin.accessor.MobAccessor;
+import com.evandev.fieldguide.platform.Services;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.KeyMapping;
@@ -42,6 +44,11 @@ public class FieldGuideClient {
     }
 
     public static void playMobCry(Entity entity) {
+        if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
+            FieldGuideCobblemonCompat.playPokemonCry(entity);
+            return;
+        }
+
         if (entity instanceof Mob mob) {
             SoundEvent sound = ((MobAccessor) mob).fieldguide$callGetAmbientSound();
             if (sound != null) {
@@ -50,37 +57,49 @@ public class FieldGuideClient {
         }
     }
 
-    public static void onClientTick(Minecraft minecraft) {
+    public static void onClientTick() {
         if (OPEN_GUIDE_KEY.consumeClick()) {
-            if (minecraft.screen == null && minecraft.player != null) {
-                Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F, 1.0F));
-                ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
-                long lastTime = manager.getLastUnlockTime();
-                Object lastEntry = manager.getLastUnlockedEntry();
+            openGuide();
+        }
+    }
 
-                boolean isRecent = (System.currentTimeMillis() - lastTime) < AUTO_OPEN_THRESHOLD_MS;
-                if (isRecent && lastEntry != null) {
-                    Category targetCategory = manager.getCategoryForEntry(lastEntry);
-                    if (targetCategory != null) {
-                        int page = FieldGuideCategoryScreen.getPageForEntry(targetCategory, lastEntry);
-                        FieldGuideCategoryScreen mainScreen = new FieldGuideCategoryScreen(targetCategory, page);
-                        minecraft.setScreen(new FieldGuideEntryScreen(mainScreen, lastEntry));
-                        return;
+    public static void openGuide() {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.screen == null && minecraft.player != null) {
+            minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F, 1.0F));
+            ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
+            long lastTime = manager.getLastUnlockTime();
+            Object lastEntry = manager.getLastUnlockedEntry();
+            String lastVariant = manager.getLastUnlockedVariant();
+
+            boolean isRecent = (System.currentTimeMillis() - lastTime) < AUTO_OPEN_THRESHOLD_MS;
+            if (isRecent && lastEntry != null) {
+                Category targetCategory = manager.getCategoryForEntry(lastEntry);
+                if (targetCategory != null) {
+                    int page = FieldGuideCategoryScreen.getPageForEntry(targetCategory, lastEntry);
+                    FieldGuideCategoryScreen mainScreen = new FieldGuideCategoryScreen(targetCategory, page);
+                    FieldGuideEntryScreen entryScreen = new FieldGuideEntryScreen(mainScreen, lastEntry);
+
+                    if (lastVariant != null) {
+                        entryScreen.setInitialVariant(lastVariant);
                     }
-                }
 
-                String defaultMode = ModConfig.get().defaultScreen;
-                if ("last_opened_screen".equals(defaultMode) && BookScreen.lastOpenedScreen != null) {
-                    minecraft.setScreen(BookScreen.lastOpenedScreen);
-                } else {
-                    minecraft.setScreen(new FieldGuideCategoryScreen());
+                    minecraft.setScreen(entryScreen);
+                    return;
                 }
+            }
+
+            String defaultMode = ClientConfig.get().defaultScreen;
+            if ("last_opened_screen".equals(defaultMode) && BookScreen.lastOpenedScreen != null) {
+                minecraft.setScreen(BookScreen.lastOpenedScreen);
+            } else {
+                minecraft.setScreen(new FieldGuideCategoryScreen());
             }
         }
     }
 
     public static void renderScanningIcon(GuiGraphics guiGraphics, float partialTick) {
-        ModConfig config = ModConfig.get();
+        ClientConfig config = ClientConfig.get();
         if (!config.showScanIcon) return;
 
         FieldGuideScanner scanner = FieldGuideScanner.getInstance();

@@ -5,18 +5,19 @@ import com.evandev.fieldguide.FieldGuideLimits;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.data.JournalPage;
 import com.evandev.fieldguide.client.gui.toasts.FieldGuideToast;
+import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.network.MarkSeenPacket;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.network.UpdateEntryDataPacket;
 import com.evandev.fieldguide.network.UpdateJournalPacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
+import com.evandev.fieldguide.util.EntryResolver;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -42,7 +43,9 @@ public class ProgressManager {
     private final Map<String, String> customDescriptions = new HashMap<>();
     private final Map<String, String> customNames = new HashMap<>();
     private final Map<String, String> entryPhotographs = new HashMap<>();
+    private final Set<String> killedOnly = new HashSet<>();
     private final List<JournalPage> journalPages = new ArrayList<>();
+    private String lastUnlockedVariant = null;
 
     private String journalTitle = "My Field Guide";
 
@@ -66,6 +69,14 @@ public class ProgressManager {
         });
     }
 
+    public String getLastUnlockedVariant() {
+        return lastUnlockedVariant;
+    }
+
+    public boolean isKillToUnlock(ResourceLocation entryId) {
+        return killedOnly.contains(entryId.toString());
+    }
+
     public void applyServerUpdate(ProgressUpdatePacket packet) {
         if (packet.isReset()) {
             unlockedEntries.clear();
@@ -75,6 +86,7 @@ public class ProgressManager {
             customNames.clear();
             customDescriptions.clear();
             entryPhotographs.clear();
+            killedOnly.clear();
         }
 
         for (String id : packet.getRevoked()) {
@@ -85,13 +97,28 @@ public class ProgressManager {
             entryPhotographs.remove(id);
         }
 
+        Map<String, String> toastsToShow = new HashMap<>();
+
         for (String id : packet.getUnlocked()) {
             if (unlockedEntries.add(id) && !packet.isSilent()) {
-                Object entry = resolveEntryFromId(id);
-                if (entry != null) {
-                    this.lastUnlockTime = System.currentTimeMillis();
-                    this.lastUnlockedEntry = entry;
-                    Minecraft.getInstance().getToasts().addToast(new FieldGuideToast(entry));
+                boolean isVariant = id.contains("#");
+                String baseIdStr = isVariant ? id.split("#")[0] : id;
+                String variantId = isVariant ? id.split("#")[1] : null;
+
+                if (isVariant || !toastsToShow.containsKey(baseIdStr)) {
+                    toastsToShow.put(baseIdStr, variantId);
+                }
+            }
+        }
+
+        for (Map.Entry<String, String> entryToToast : toastsToShow.entrySet()) {
+            Object entry = resolveEntryFromId(entryToToast.getKey());
+            if (entry != null) {
+                this.lastUnlockTime = System.currentTimeMillis();
+                this.lastUnlockedEntry = entry;
+                this.lastUnlockedVariant = entryToToast.getValue();
+                if (ClientConfig.get().showToasts) {
+                    Minecraft.getInstance().getToasts().addToast(new FieldGuideToast(entry, entryToToast.getValue()));
                 }
             }
         }
@@ -102,6 +129,9 @@ public class ProgressManager {
         applyEntryMap(packet.getCustomNames(), customNames);
         applyEntryMap(packet.getCustomDescriptions(), customDescriptions);
         applyEntryMap(packet.getEntryPhotographs(), entryPhotographs);
+
+        killedOnly.clear();
+        killedOnly.addAll(packet.getKilledOnly());
 
         packet.getJournalTitle().ifPresent(title -> journalTitle = title);
         packet.getJournalPages().ifPresent(pages -> {
@@ -125,12 +155,19 @@ public class ProgressManager {
 
     public boolean isUnlocked(Object entry) {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-        return id != null && unlockedEntries.contains(id.toString());
+        if (id == null) return false;
+        if (unlockedEntries.contains(id.toString())) return true;
+        return unlockedEntries.contains(EntryResolver.getRawId(id).toString());
     }
 
     public boolean isNew(Object entry) {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-        return id != null && unlockedEntries.contains(id.toString()) && !seenEntries.contains(id.toString());
+        if (id == null) return false;
+        String idStr = id.toString();
+        String rawIdStr = EntryResolver.getRawId(id).toString();
+        boolean unlocked = unlockedEntries.contains(idStr) || unlockedEntries.contains(rawIdStr);
+        boolean seen = seenEntries.contains(idStr) || seenEntries.contains(rawIdStr);
+        return unlocked && !seen;
     }
 
     public long getLastUnlockTime() {
@@ -190,32 +227,42 @@ public class ProgressManager {
     }
 
     public ItemStack getPhotograph(Object entry) {
+        return getPhotograph(entry, null);
+    }
+
+    public ItemStack getPhotograph(Object entry, String variantId) {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-        if (id != null && entryPhotographs.containsKey(id.toString())) {
-            try {
-                CompoundTag tag = TagParser.parseTag(entryPhotographs.get(id.toString()));
-                if (Minecraft.getInstance().level != null) {
-                    HolderLookup.Provider registries = Minecraft.getInstance().level.registryAccess();
-                    return ItemStack.parseOptional(registries, tag);
+        if (id != null) {
+            String key = id.toString();
+            if (variantId != null && !variantId.isEmpty()) {
+                key += "#" + variantId;
+            }
+            if (entryPhotographs.containsKey(key)) {
+                try {
+                    CompoundTag tag = TagParser.parseTag(entryPhotographs.get(key));
+                    return ItemStack.parseOptional(Minecraft.getInstance().level.registryAccess(), tag);
+                } catch (Exception e) {
+                    return ItemStack.EMPTY;
                 }
-            } catch (Exception e) {
-                return ItemStack.EMPTY;
             }
         }
         return ItemStack.EMPTY;
     }
 
-    public void setPhotograph(Object entry, int slot, ItemStack stack) {
+    public void setPhotograph(Object entry, int slot, ItemStack stack, String variantId) {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
         if (id != null) {
+            String key = id.toString();
+            if (variantId != null && !variantId.isEmpty()) {
+                key += "#" + variantId;
+            }
             if (slot < 0 || stack == null || stack.isEmpty()) {
-                entryPhotographs.remove(id.toString());
-                Services.NETWORK.sendToServer(UpdateEntryDataPacket.removePhotograph(id));
-            } else if (Minecraft.getInstance().level != null) {
-                HolderLookup.Provider registries = Minecraft.getInstance().level.registryAccess();
-                Tag tag = stack.saveOptional(registries);
-                entryPhotographs.put(id.toString(), tag.toString());
-                Services.NETWORK.sendToServer(UpdateEntryDataPacket.setPhotograph(id, slot));
+                entryPhotographs.remove(key);
+                Services.NETWORK.sendToServer(UpdateEntryDataPacket.removePhotograph(id, variantId));
+            } else {
+                Tag tag = stack.save(Minecraft.getInstance().level.registryAccess());
+                entryPhotographs.put(key, tag.toString());
+                Services.NETWORK.sendToServer(UpdateEntryDataPacket.setPhotograph(id, slot, variantId));
             }
         }
     }
@@ -261,6 +308,9 @@ public class ProgressManager {
         entryPhotographs.clear();
         journalPages.clear();
         journalTitle = "My Field Guide";
+        lastUnlockTime = 0;
+        lastUnlockedEntry = null;
+        lastUnlockedVariant = null;
     }
 
     public void onWorldUnload() {
@@ -273,6 +323,13 @@ public class ProgressManager {
         entryPhotographs.clear();
         journalPages.clear();
         journalTitle = "My Field Guide";
+        lastUnlockTime = 0;
+        lastUnlockedEntry = null;
+        lastUnlockedVariant = null;
+    }
+
+    public Set<String> getUnlockedEntries() {
+        return Collections.unmodifiableSet(unlockedEntries);
     }
 
     public void exportToLang(String type) {

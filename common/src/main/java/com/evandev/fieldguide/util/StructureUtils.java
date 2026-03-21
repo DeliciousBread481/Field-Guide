@@ -1,7 +1,7 @@
 package com.evandev.fieldguide.util;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.mixin.accessor.StructureTemplateAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -11,6 +11,7 @@ import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
@@ -72,7 +73,7 @@ public class StructureUtils {
 
             ResourceLocation id = ResourceLocation.parse(blockIdPart);
             Block block = BuiltInRegistries.BLOCK.get(id);
-            if (block != net.minecraft.world.level.block.Blocks.AIR) {
+            if (block != Blocks.AIR) {
                 BlockState state = block.defaultBlockState();
                 if (parts.length > propIndex) {
                     String[] props = parts[propIndex].split(",");

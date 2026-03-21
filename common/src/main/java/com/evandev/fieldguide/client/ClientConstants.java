@@ -20,4 +20,20 @@ public class ClientConstants {
             ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/tab_down"),
             ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/tab_down_highlighted")
     );
+
+    public static final WidgetSprites OVERVIEW_SPRITES = new WidgetSprites(
+            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/overview"),
+            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/overview_highlighted")
+    );
+    public static final WidgetSprites CLOSE_SPRITES = new WidgetSprites(
+            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/close"),
+            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/close_highlighted")
+    );
+
+    public static final WidgetSprites COPY_SPRITES = new WidgetSprites(
+            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/copy_button"),
+            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/copy_button_disabled"),
+            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/copy_button_highlighted"),
+            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/copy_button_disabled")
+    );
 }

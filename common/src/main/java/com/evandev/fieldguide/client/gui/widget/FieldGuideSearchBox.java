@@ -1,6 +1,6 @@
 package com.evandev.fieldguide.client.gui.widget;
 
-import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.config.ClientConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -44,7 +44,7 @@ public class FieldGuideSearchBox extends EditBox {
         super.renderWidget(guiGraphics, mouseX, mouseY, partialTick);
 
         if (this.getValue().isEmpty()) {
-            guiGraphics.drawString(Minecraft.getInstance().font, Component.translatable("gui.fieldguide.search"), this.getX() + 4, this.getY() + 6, ModConfig.get().getTextMutedColorInt(), false);
+            guiGraphics.drawString(Minecraft.getInstance().font, Component.translatable("gui.fieldguide.search"), this.getX() + 4, this.getY() + 6, ClientConfig.get().getTextMutedColorInt(), false);
         }
 
         guiGraphics.renderOutline(this.getX() - 1, this.getY() - 1, this.width + 2, this.height + 2, borderColor);

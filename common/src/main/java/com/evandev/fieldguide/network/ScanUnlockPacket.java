@@ -10,6 +10,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import org.jetbrains.annotations.NotNull;
 
 public class ScanUnlockPacket implements CustomPacketPayload {
 
@@ -21,17 +22,20 @@ public class ScanUnlockPacket implements CustomPacketPayload {
     );
 
     private final ResourceLocation entryId;
+    private final String variantId;
     private final ResourceLocation scannedTargetId;
     private final BlockPos targetBlockPos;
     private final int targetEntityId;
 
     public ScanUnlockPacket(
             ResourceLocation entryId,
+            String variantId,
             ResourceLocation scannedTargetId,
             BlockPos targetBlockPos,
             int targetEntityId
     ) {
         this.entryId = entryId;
+        this.variantId = variantId != null ? variantId : "";
         this.scannedTargetId = scannedTargetId;
         this.targetBlockPos = targetBlockPos;
         this.targetEntityId = targetEntityId;
@@ -39,18 +43,20 @@ public class ScanUnlockPacket implements CustomPacketPayload {
 
     public ScanUnlockPacket(FriendlyByteBuf buf) {
         this.entryId = buf.readResourceLocation();
+        this.variantId = buf.readUtf();
         this.scannedTargetId = buf.readResourceLocation();
         this.targetBlockPos = buf.readNullable(b -> b.readBlockPos());
         this.targetEntityId = buf.readVarInt();
     }
 
     @Override
-    public Type<? extends CustomPacketPayload> type() {
+    public @NotNull Type<? extends CustomPacketPayload> type() {
         return TYPE;
     }
 
     public void encode(FriendlyByteBuf buf) {
         buf.writeResourceLocation(entryId);
+        buf.writeUtf(variantId);
         buf.writeResourceLocation(scannedTargetId);
         buf.writeNullable(targetBlockPos, (b, pos) -> b.writeBlockPos(pos));
         buf.writeVarInt(targetEntityId);
@@ -65,9 +71,18 @@ public class ScanUnlockPacket implements CustomPacketPayload {
 
         if (!manager.isValidEntry(entryId)) return;
         if (manager.isKillToUnlock(entryId)) return;
-        if (progress.isUnlocked(entryId)) return;
+        if (progress.isUnlocked(entryId) && (variantId.isEmpty() || progress.isUnlocked(entryId.toString() + "#" + variantId)))
+            return;
         if (!ScanVerifier.verifyScan(player, entryId, scannedTargetId, targetBlockPos, targetEntityId)) return;
 
-        progress.unlock(player, entryId);
+        if (targetEntityId != 0) {
+            net.minecraft.world.entity.Entity entity = player.serverLevel().getEntity(targetEntityId);
+            if (entity != null) {
+                com.evandev.fieldguide.server.progress.FieldGuideTriggers.SCAN_ENTITY.get().trigger(player, entity);
+                manager.recordScan(player, targetEntityId);
+            }
+        }
+
+        progress.tryUnlock(player, entryId, variantId, com.evandev.fieldguide.api.EntryUnlockData.UnlockTrigger.SCAN);
     }
 }

@@ -10,8 +10,8 @@ import com.evandev.fieldguide.client.gui.widget.BookTextAreaWidget;
 import com.evandev.fieldguide.client.gui.widget.BookTextFieldWidget;
 import com.evandev.fieldguide.client.gui.widget.FieldGuideSearchBox;
 import com.evandev.fieldguide.client.gui.widget.PageTurnButton;
-import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.data.Category;
+import com.evandev.fieldguide.config.ClientConfig;
+import com.evandev.fieldguide.api.Category;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -59,17 +59,17 @@ public class FieldGuideJournalScreen extends BookScreen {
         if (currentSpread == 0) {
             String jTitle = manager.getJournalTitle();
             int jtWidth = Math.max(100, this.font.width(jTitle.isEmpty() ? "Journal" : jTitle));
-            BookTextFieldWidget journalTitleWidget = new BookTextFieldWidget(this.font, this.leftPageBounds.x_center() - jtWidth / 2, this.leftPageBounds.top() + 36, jtWidth, font.lineHeight, jTitle, ModConfig.get().getTextTitleColorInt(), 100, FieldGuideLimits.MAX_JOURNAL_TITLE_LENGTH, manager::setJournalTitle).setCentered(true);
+            BookTextFieldWidget journalTitleWidget = new BookTextFieldWidget(this.font, this.leftPageBounds.x_center() - jtWidth / 2, this.leftPageBounds.top() + 36, jtWidth, font.lineHeight, jTitle, ClientConfig.get().getTextTitleColorInt(), 100, FieldGuideLimits.MAX_JOURNAL_TITLE_LENGTH, manager::setJournalTitle).setCentered(true);
             this.addRenderableWidget(journalTitleWidget);
         } else {
             JournalPage lPage = pages.get(currentSpread * 2 - 1);
 
-            BookTextFieldWidget leftTitleWidget = new BookTextFieldWidget(this.font, textXLeft, titleY, textAreaWidth, font.lineHeight, lPage.title, ModConfig.get().getTextTitleColorInt(), textAreaWidth, FieldGuideLimits.MAX_JOURNAL_PAGE_TITLE_LENGTH, text -> {
+            BookTextFieldWidget leftTitleWidget = new BookTextFieldWidget(this.font, textXLeft, titleY, textAreaWidth, font.lineHeight, lPage.title, ClientConfig.get().getTextTitleColorInt(), textAreaWidth, FieldGuideLimits.MAX_JOURNAL_PAGE_TITLE_LENGTH, text -> {
                 lPage.title = text;
                 manager.saveJournal();
             });
 
-            BookTextAreaWidget leftContentWidget = new BookTextAreaWidget(this.font, textXLeft, textY, textAreaWidth, textAreaHeight, 12, ModConfig.get().getTextColorInt(), false, FieldGuideLimits.MAX_JOURNAL_PAGE_CONTENT_LENGTH, lPage.content, text -> {
+            BookTextAreaWidget leftContentWidget = new BookTextAreaWidget(this.font, textXLeft, textY, textAreaWidth, textAreaHeight, 12, ClientConfig.get().getTextColorInt(), false, FieldGuideLimits.MAX_JOURNAL_PAGE_CONTENT_LENGTH, lPage.content, text -> {
                 lPage.content = text;
                 manager.saveJournal();
             });
@@ -81,12 +81,12 @@ public class FieldGuideJournalScreen extends BookScreen {
         // Right Page
         JournalPage rPage = pages.get(currentSpread == 0 ? 0 : currentSpread * 2);
 
-        BookTextFieldWidget rightTitleWidget = new BookTextFieldWidget(this.font, textXRight, titleY, textAreaWidth, font.lineHeight, rPage.title, ModConfig.get().getTextTitleColorInt(), textAreaWidth, FieldGuideLimits.MAX_JOURNAL_PAGE_TITLE_LENGTH, text -> {
+        BookTextFieldWidget rightTitleWidget = new BookTextFieldWidget(this.font, textXRight, titleY, textAreaWidth, font.lineHeight, rPage.title, ClientConfig.get().getTextTitleColorInt(), textAreaWidth, FieldGuideLimits.MAX_JOURNAL_PAGE_TITLE_LENGTH, text -> {
             rPage.title = text;
             manager.saveJournal();
         });
 
-        BookTextAreaWidget rightContentWidget = new BookTextAreaWidget(this.font, textXRight, textY, textAreaWidth, textAreaHeight, 12, ModConfig.get().getTextColorInt(), false, FieldGuideLimits.MAX_JOURNAL_PAGE_CONTENT_LENGTH, rPage.content, text -> {
+        BookTextAreaWidget rightContentWidget = new BookTextAreaWidget(this.font, textXRight, textY, textAreaWidth, textAreaHeight, 12, ClientConfig.get().getTextColorInt(), false, FieldGuideLimits.MAX_JOURNAL_PAGE_CONTENT_LENGTH, rPage.content, text -> {
             rPage.content = text;
             manager.saveJournal();
         });
@@ -208,17 +208,17 @@ public class FieldGuideJournalScreen extends BookScreen {
 
         if (currentSpread > 0) {
             String leftPageStr = (currentSpread * 2) + "";
-            guiGraphics.drawString(this.font, leftPageStr, this.leftPageBounds.x_center() - this.font.width(leftPageStr) / 2, this.leftPageBounds.bottom() - 11, ModConfig.get().getPageNumberColorInt(), false);
+            guiGraphics.drawString(this.font, leftPageStr, this.leftPageBounds.x_center() - this.font.width(leftPageStr) / 2, this.leftPageBounds.bottom() - 11, ClientConfig.get().getPageNumberColorInt(), false);
 
             JournalPage lPage = pages.get(currentSpread * 2 - 1);
-            guiGraphics.drawString(this.font, dateFormat.format(new Date(lPage.timestamp)), this.leftPageBounds.left() + 6, dateY, ModConfig.get().getTextMutedColorInt(), false);
+            guiGraphics.drawString(this.font, dateFormat.format(new Date(lPage.timestamp)), this.leftPageBounds.left() + 6, dateY, ClientConfig.get().getTextMutedColorInt(), false);
         }
 
         String rightPageStr = (currentSpread * 2 + 1) + "";
-        guiGraphics.drawString(this.font, rightPageStr, this.rightPageBounds.x_center() - this.font.width(rightPageStr) / 2, this.rightPageBounds.bottom() - 11, ModConfig.get().getPageNumberColorInt(), false);
+        guiGraphics.drawString(this.font, rightPageStr, this.rightPageBounds.x_center() - this.font.width(rightPageStr) / 2, this.rightPageBounds.bottom() - 11, ClientConfig.get().getPageNumberColorInt(), false);
 
         JournalPage rPage = pages.get(currentSpread == 0 ? 0 : currentSpread * 2);
-        guiGraphics.drawString(this.font, dateFormat.format(new Date(rPage.timestamp)), this.rightPageBounds.left() + 6, dateY, ModConfig.get().getTextMutedColorInt(), false);
+        guiGraphics.drawString(this.font, dateFormat.format(new Date(rPage.timestamp)), this.rightPageBounds.left() + 6, dateY, ClientConfig.get().getTextMutedColorInt(), false);
 
         guiGraphics.pose().popPose();
     }

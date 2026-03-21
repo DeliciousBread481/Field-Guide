@@ -1,16 +1,20 @@
 package com.evandev.fieldguide;
 
+import com.evandev.fieldguide.api.VariantDef;
+import com.evandev.fieldguide.api.VariantProvider;
+import com.evandev.fieldguide.compat.exposure.ExposureNeoForgeEventHandler;
 import com.evandev.fieldguide.network.*;
+import com.evandev.fieldguide.platform.NeoForgeRegistryHelper;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.command.FieldGuideCommand;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
+import com.evandev.fieldguide.server.progress.FieldGuideTriggers;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
+import com.evandev.fieldguide.util.EntryResolver;
+import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tags.TagKey;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
@@ -31,6 +35,7 @@ import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 public class FieldGuideMod {
 
     public FieldGuideMod(IEventBus modEventBus) {
+        NeoForgeRegistryHelper.init(modEventBus);
         CommonClass.init();
 
         NeoForge.EVENT_BUS.register(this);
@@ -42,7 +47,7 @@ public class FieldGuideMod {
     }
 
     private void registerExposureCompat() {
-        NeoForge.EVENT_BUS.register(com.evandev.fieldguide.compat.exposure.ExposureNeoForgeEventHandler.class);
+        NeoForge.EVENT_BUS.register(ExposureNeoForgeEventHandler.class);
     }
 
     private void registerPayloads(final RegisterPayloadHandlersEvent event) {
@@ -53,6 +58,7 @@ public class FieldGuideMod {
         registrar.playToClient(SyncCategoriesPacket.TYPE, SyncCategoriesPacket.CODEC, (packet, context) -> context.enqueueWork(() -> FieldGuideNeoForgeClient.handleSyncCategories(packet)));
         registrar.playToClient(ProgressUpdatePacket.TYPE, ProgressUpdatePacket.CODEC, (packet, context) -> context.enqueueWork(() -> FieldGuideNeoForgeClient.handleProgressUpdate(packet)));
         registrar.playToClient(ExportContentPacket.TYPE, ExportContentPacket.CODEC, (packet, context) -> context.enqueueWork(packet::handleClient));
+        registrar.playToClient(SyncConfigPacket.TYPE, SyncConfigPacket.CODEC, (packet, context) -> context.enqueueWork(() -> FieldGuideNeoForgeClient.handleSyncConfig(packet)));
 
         // C2S
         registrar.playToServer(ScanUnlockPacket.TYPE, ScanUnlockPacket.CODEC, (packet, context) -> context.enqueueWork(() -> {
@@ -65,6 +71,9 @@ public class FieldGuideMod {
             if (context.player() instanceof ServerPlayer sp) packet.handleServer(sp);
         }));
         registrar.playToServer(UpdateJournalPacket.TYPE, UpdateJournalPacket.CODEC, (packet, context) -> context.enqueueWork(() -> {
+            if (context.player() instanceof ServerPlayer sp) packet.handleServer(sp);
+        }));
+        registrar.playToServer(CopyPagePacket.TYPE, CopyPagePacket.CODEC, (packet, context) -> context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer sp) packet.handleServer(sp);
         }));
     }
@@ -120,18 +129,25 @@ public class FieldGuideMod {
     @SubscribeEvent
     public void onLivingDeath(LivingDeathEvent event) {
         if (event.getSource().getEntity() instanceof ServerPlayer player) {
-            TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "kill_to_unlock"));
+            FieldGuideProgressManager manager = FieldGuideProgressManager.getInstance();
 
-            var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(event.getEntity().getType());
-            if (key.isPresent()) {
-                var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
-                if (holder.isPresent() && holder.get().is(killToUnlockTag)) {
-                    ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType());
-                    PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
-                    if (progress != null) {
-                        progress.unlock(player, entityId);
+            if (manager.wasRecentlyScanned(player, event.getEntity().getId())) {
+                FieldGuideTriggers.SCAN_AND_KILL.get().trigger(player, event.getEntity());
+            }
+
+            ResourceLocation entityId = EntryResolver.getEntryId(event.getEntity().getType());
+            PlayerFieldGuideProgress progress = manager.getProgress(player);
+
+            if (progress != null) {
+                String variantId = null;
+                if (event.getEntity() instanceof Mob mob) {
+                    VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(mob);
+                    if (provider != null) {
+                        VariantDef current = provider.getCurrent(mob);
+                        if (current != null) variantId = current.id();
                     }
                 }
+                progress.unlock(player, entityId, variantId, false);
             }
         }
     }

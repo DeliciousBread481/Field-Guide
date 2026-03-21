@@ -1,11 +1,15 @@
 package com.evandev.fieldguide.compat.exposure;
 
-import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.api.EntryUnlockData;
+import com.evandev.fieldguide.api.VariantDef;
+import com.evandev.fieldguide.api.VariantProvider;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
 import com.evandev.fieldguide.util.EntryResolver;
+import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import io.github.mortuusars.exposure.world.camera.frame.EntityInFrame;
 import io.github.mortuusars.exposure.world.camera.frame.Frame;
 import io.github.mortuusars.exposure.world.item.PhotographItem;
@@ -13,6 +17,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.boss.EnderDragonPart;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
@@ -21,27 +26,27 @@ import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.*;
 
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 public class ExposureCompat {
 
     public static void onPhotographTaken(Player player, Frame frame) {
-        if (!ModConfig.get().exposureUnlockViaPhotograph) return;
+        if (!ServerConfig.get().exposureUnlockViaPhotograph) return;
         unlockContentInFrame(player, frame);
     }
 
     private static void unlockContentInFrame(Player player, Frame frame) {
         if (!(player instanceof ServerPlayer serverPlayer)) return;
 
-        Set<Object> hitTargets = new HashSet<>();
+        Map<Object, String> hitTargets = new HashMap<>();
 
         if (frame != null && frame.entitiesInFrame() != null) {
             for (EntityInFrame entityInFrame : frame.entitiesInFrame()) {
                 ResourceLocation entityId = entityInFrame.id();
                 if (entityId != null) {
-                    BuiltInRegistries.ENTITY_TYPE.getOptional(entityId).ifPresent(hitTargets::add);
+                    BuiltInRegistries.ENTITY_TYPE.getOptional(entityId).ifPresent(type -> hitTargets.put(type, null));
                 }
             }
         }
@@ -63,7 +68,19 @@ public class ExposureCompat {
         if (entityHit != null) {
             Entity hitEntity = entityHit.getEntity();
             if (hitEntity instanceof EnderDragonPart part) hitEntity = part.parentMob;
-            hitTargets.add(hitEntity.getType());
+
+            String variantId = null;
+            if (hitEntity instanceof Mob mob) {
+                VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(mob);
+                if (provider != null) {
+                    VariantDef current = provider.getCurrent(mob);
+                    if (current != null) {
+                        variantId = current.id();
+                    }
+                }
+            }
+
+            hitTargets.put(hitEntity.getType(), variantId);
         }
 
         int gridSize = 7;
@@ -86,7 +103,7 @@ public class ExposureCompat {
                     if (blockHit.getType() == HitResult.Type.BLOCK) {
                         BlockState state = player.level().getBlockState(blockHit.getBlockPos());
 
-                        hitTargets.add(state.getBlock());
+                        hitTargets.put(state.getBlock(), null);
 
                         if (state.canBeReplaced()) {
                             currentStart = blockHit.getLocation().add(viewVec.scale(0.01));
@@ -104,7 +121,10 @@ public class ExposureCompat {
         PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(serverPlayer);
         if (progress == null) return;
 
-        for (Object target : hitTargets) {
+        for (Map.Entry<Object, String> targetEntry : hitTargets.entrySet()) {
+            Object target = targetEntry.getKey();
+            String variantId = targetEntry.getValue();
+
             List<Object> possibleEntries = ServerFieldGuideManager.getInstance().getEntriesForTarget(target);
             if (possibleEntries.isEmpty()) continue;
 
@@ -121,10 +141,10 @@ public class ExposureCompat {
                         int score = 0;
                         if (composite.components() != null) {
                             for (Object comp : composite.components()) {
-                                if (hitTargets.contains(comp)) score++;
+                                if (hitTargets.containsKey(comp)) score++;
                             }
                         }
-                        if (composite.displayEntry() != null && hitTargets.contains(composite.displayEntry())) {
+                        if (composite.displayEntry() != null && hitTargets.containsKey(composite.displayEntry())) {
                             score += 2;
                         }
 
@@ -147,7 +167,7 @@ public class ExposureCompat {
 
             ResourceLocation id = EntryResolver.getEntryId(bestMatch);
             if (id != null) {
-                progress.unlock(serverPlayer, id);
+                progress.tryUnlock(serverPlayer, id, variantId, EntryUnlockData.UnlockTrigger.SCAN);
             }
         }
     }

@@ -64,6 +64,12 @@ dependencies {
 
     // Mixed Litter
     compileOnly "maven.modrinth:mixed-litter:${mixed_litter_version}"
+
+    // Cobblemon
+    compileOnly "com.cobblemon:neoforge:${cobblemon_version}"
+
+    // KubeJS
+    compileOnly "maven.modrinth:kubejs:${kubejs_version}"
 }
 
 publishMods {

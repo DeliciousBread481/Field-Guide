@@ -38,6 +38,9 @@ dependencies {
     modImplementation "maven.modrinth:exposure:${exposure_fabric_version}"
     modImplementation "maven.modrinth:forge-config-api-port:${fcapi_version}-Fabric"
 
+    // Cobblemon
+    modCompileOnly "com.cobblemon:fabric:${cobblemon_version}"
+
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
 }

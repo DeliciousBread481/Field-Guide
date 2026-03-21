@@ -1,14 +1,18 @@
 package com.evandev.fieldguide.client.scanning;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.api.VariantDef;
+import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.progress.ProgressManager;
-import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.data.Category;
-import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.config.ClientConfig;
+import com.evandev.fieldguide.config.ServerConfig;
+import com.evandev.fieldguide.api.Category;
+import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.network.ScanUnlockPacket;
 import com.evandev.fieldguide.platform.Services;
+import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import com.evandev.fieldguide.util.ModTags;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -19,7 +23,9 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.boss.EnderDragonPart;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.Block;
@@ -61,8 +67,8 @@ public class FieldGuideScanner {
                 (minecraft.player.isUsingItem() && minecraft.player.getUseItem().is(ModTags.Items.SPYGLASSES)) ||
                 Services.PLATFORM.hasSpyglass(minecraft.player);
 
-        boolean canScan = (hasSpyglass && ModConfig.get().enableSpyglassScanning) || ModConfig.get().enableNakedEyeScanning;
-        boolean isScanningActive = canScan && !ModConfig.get().disableScanning;
+        boolean canScan = (hasSpyglass && ServerConfig.get().enableSpyglassScanning) || ServerConfig.get().enableNakedEyeScanning;
+        boolean isScanningActive = canScan && !ServerConfig.get().disableScanning;
 
         if (FieldGuideClient.SCAN_KEY != null && !FieldGuideClient.SCAN_KEY.isUnbound()) {
             isScanningActive = isScanningActive && FieldGuideClient.SCAN_KEY.isDown();
@@ -214,10 +220,10 @@ public class FieldGuideScanner {
                     Services.PLATFORM.hasSpyglass(minecraft.player));
 
             double activeScanDist = 0;
-            if (usingSpyglass && ModConfig.get().enableSpyglassScanning) {
-                activeScanDist = ModConfig.get().spyglassScanDistance;
-            } else if (ModConfig.get().enableNakedEyeScanning) {
-                activeScanDist = ModConfig.get().nakedEyeScanDistance;
+            if (usingSpyglass && ServerConfig.get().enableSpyglassScanning) {
+                activeScanDist = ServerConfig.get().spyglassScanDistance;
+            } else if (ServerConfig.get().enableNakedEyeScanning) {
+                activeScanDist = ServerConfig.get().nakedEyeScanDistance;
             }
 
             boolean outOfRange = hitDistSq > (activeScanDist * activeScanDist);
@@ -246,7 +252,7 @@ public class FieldGuideScanner {
 
                     if (foundTarget instanceof Block) this.scanningPos = blockHit.getBlockPos();
 
-                    if (scanTicks >= (int) (ModConfig.get().scanSpeed * 20)) {
+                    if (scanTicks >= (int) (ServerConfig.get().scanSpeed * 20)) {
                         completeScan(minecraft, targetKey, foundTarget);
                     }
                 } else {
@@ -254,7 +260,7 @@ public class FieldGuideScanner {
                     scanningTarget = foundTarget;
                     this.scanningPos = (scanningTarget instanceof Block) ? blockHit.getBlockPos() : null;
 
-                    if (ModConfig.get().playScanningSound) {
+                    if (ClientConfig.get().playScanningSound) {
                         Objects.requireNonNull(minecraft.player).playSound(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 0.5F, 1.0F);
                     }
                     scanTicks = 0;
@@ -367,14 +373,25 @@ public class FieldGuideScanner {
         ResourceLocation entryId = ClientFieldGuideManager.getEntryId(targetKey);
         if (entryId != null) {
             ResourceLocation scannedTargetId;
-            if (foundTarget instanceof Entity entity) {
+            String variantId = "";
+            if (foundTarget instanceof ItemEntity itemEntity) {
+                scannedTargetId = BuiltInRegistries.ITEM.getKey(itemEntity.getItem().getItem());
+            } else if (foundTarget instanceof Entity entity) {
                 scannedTargetId = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+                List<VariantDef> variants = FieldGuideVariantManager.getVariants(entity);
+                if (!variants.isEmpty()) {
+                    VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(entity);
+                    if (provider != null) {
+                        VariantDef current = provider.getCurrent((Mob) entity);
+                        if (current != null) variantId = current.id();
+                    }
+                }
             } else {
                 scannedTargetId = BuiltInRegistries.BLOCK.getKey((Block) foundTarget);
             }
             BlockPos targetBlockPos = (foundTarget instanceof Block) ? scanningPos : null;
             int targetEntityId = (foundTarget instanceof Entity) ? ((Entity) foundTarget).getId() : 0;
-            Services.NETWORK.sendToServer(new ScanUnlockPacket(entryId, scannedTargetId, targetBlockPos, targetEntityId));
+            Services.NETWORK.sendToServer(new ScanUnlockPacket(entryId, variantId, scannedTargetId, targetBlockPos, targetEntityId));
         }
 
         fadingTarget = foundTarget;
@@ -411,7 +428,7 @@ public class FieldGuideScanner {
 
     public float getScanProgress(float partialTicks) {
         float lerped = (float) prevScanTicks + ((float) scanTicks - (float) prevScanTicks) * partialTicks;
-        return Math.min(1.0F, lerped / (int) (ModConfig.get().scanSpeed * 20));
+        return Math.min(1.0F, lerped / (int) (ServerConfig.get().scanSpeed * 20));
     }
 
     public Object getOutOfRangeTarget() {

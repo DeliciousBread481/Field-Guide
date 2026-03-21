@@ -1,12 +1,16 @@
 package com.evandev.fieldguide;
 
+import com.evandev.fieldguide.api.VariantDef;
+import com.evandev.fieldguide.api.VariantProvider;
 import com.evandev.fieldguide.compat.exposure.ExposureFabricEventHandler;
 import com.evandev.fieldguide.network.*;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.command.FieldGuideCommand;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
+import com.evandev.fieldguide.server.progress.FieldGuideTriggers;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
+import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityCombatEvents;
@@ -26,8 +30,10 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
@@ -42,12 +48,14 @@ public class FieldGuideMod implements ModInitializer {
         PayloadTypeRegistry.playS2C().register(SyncLootPacket.TYPE, SyncLootPacket.CODEC);
         PayloadTypeRegistry.playS2C().register(ExportContentPacket.TYPE, ExportContentPacket.CODEC);
         PayloadTypeRegistry.playS2C().register(ProgressUpdatePacket.TYPE, ProgressUpdatePacket.CODEC);
+        PayloadTypeRegistry.playS2C().register(SyncConfigPacket.TYPE, SyncConfigPacket.CODEC);
 
         // Register Server-bound payloads
         PayloadTypeRegistry.playC2S().register(ScanUnlockPacket.TYPE, ScanUnlockPacket.CODEC);
         PayloadTypeRegistry.playC2S().register(MarkSeenPacket.TYPE, MarkSeenPacket.CODEC);
         PayloadTypeRegistry.playC2S().register(UpdateEntryDataPacket.TYPE, UpdateEntryDataPacket.CODEC);
         PayloadTypeRegistry.playC2S().register(UpdateJournalPacket.TYPE, UpdateJournalPacket.CODEC);
+        PayloadTypeRegistry.playC2S().register(CopyPagePacket.TYPE, CopyPagePacket.CODEC);
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> FieldGuideCommand.register(dispatcher));
 
@@ -112,8 +120,17 @@ public class FieldGuideMod implements ModInitializer {
             context.server().execute(() -> packet.handleServer(context.player()));
         });
 
+        ServerPlayNetworking.registerGlobalReceiver(CopyPagePacket.TYPE, (packet, context) -> {
+            context.server().execute(() -> packet.handleServer(context.player()));
+        });
+
         ServerEntityCombatEvents.AFTER_KILLED_OTHER_ENTITY.register((world, entity, killedEntity) -> {
             if (entity instanceof ServerPlayer player) {
+                FieldGuideProgressManager manager = FieldGuideProgressManager.getInstance();
+                if (manager.wasRecentlyScanned(player, killedEntity.getId())) {
+                    FieldGuideTriggers.SCAN_AND_KILL.get().trigger(player, killedEntity);
+                }
+
                 TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "kill_to_unlock"));
 
                 var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(killedEntity.getType());
@@ -123,7 +140,16 @@ public class FieldGuideMod implements ModInitializer {
                         ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(killedEntity.getType());
                         PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
                         if (progress != null) {
-                            progress.unlock(player, entityId);
+                            String variantId = "";
+                            List<VariantDef> variants = FieldGuideVariantManager.getVariants(killedEntity);
+                            if (!variants.isEmpty()) {
+                                VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(killedEntity);
+                                if (provider != null) {
+                                    VariantDef current = provider.getCurrent((Mob) killedEntity);
+                                    if (current != null) variantId = current.id();
+                                }
+                            }
+                            progress.unlock(player, entityId, variantId, false);
                         }
                     }
                 }

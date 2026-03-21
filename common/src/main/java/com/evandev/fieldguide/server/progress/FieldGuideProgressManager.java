@@ -18,9 +18,11 @@ import java.util.UUID;
 public class FieldGuideProgressManager {
     private static final FieldGuideProgressManager NOOP = new FieldGuideProgressManager();
     private static FieldGuideProgressManager INSTANCE = NOOP;
-    private final Map<UUID, PlayerFieldGuideProgress> playerProgress = new HashMap<>();
+
     private MinecraftServer server;
     private Path progressDir;
+    private final Map<UUID, PlayerFieldGuideProgress> playerProgress = new HashMap<>();
+    private final Map<UUID, Map<Integer, Long>> recentlyScannedEntities = new HashMap<>();
 
     private FieldGuideProgressManager() {
     }
@@ -28,6 +30,21 @@ public class FieldGuideProgressManager {
     private FieldGuideProgressManager(MinecraftServer server) {
         this.server = server;
         this.progressDir = server.getWorldPath(LevelResource.ROOT).resolve("fieldguide_progress");
+    }
+
+    public void recordScan(ServerPlayer player, int entityId) {
+        recentlyScannedEntities.computeIfAbsent(player.getUUID(), k -> new HashMap<>()).put(entityId, System.currentTimeMillis());
+    }
+
+    public boolean wasRecentlyScanned(ServerPlayer player, int entityId) {
+        Map<Integer, Long> scans = recentlyScannedEntities.get(player.getUUID());
+        if (scans != null) {
+            Long time = scans.get(entityId);
+            if (time != null) {
+                return (System.currentTimeMillis() - time) < 10000; // 10 seconds
+            }
+        }
+        return false;
     }
 
     public static void init(MinecraftServer server) {

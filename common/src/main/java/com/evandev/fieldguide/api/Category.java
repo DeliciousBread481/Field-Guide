@@ -1,4 +1,4 @@
-package com.evandev.fieldguide.data;
+package com.evandev.fieldguide.api;
 
 import com.evandev.fieldguide.Constants;
 import net.minecraft.network.RegistryFriendlyByteBuf;

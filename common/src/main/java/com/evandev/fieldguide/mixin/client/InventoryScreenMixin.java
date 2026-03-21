@@ -3,7 +3,7 @@ package com.evandev.fieldguide.mixin.client;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.gui.screens.BookScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideCategoryScreen;
-import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.config.ClientConfig;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.WidgetSprites;
@@ -34,16 +34,16 @@ public abstract class InventoryScreenMixin extends EffectRenderingInventoryScree
 
     @Inject(method = "init", at = @At("RETURN"))
     private void addFieldGuideButton(CallbackInfo ci) {
-        if (!ModConfig.get().showInventoryButton) {
+        if (!ClientConfig.get().showInventoryButton) {
             return;
         }
 
-        int xPos = this.leftPos + ModConfig.get().inventoryButtonXOffset;
-        int yPos = this.topPos + ModConfig.get().inventoryButtonYOffset;
+        int xPos = this.leftPos + ClientConfig.get().inventoryButtonXOffset;
+        int yPos = this.topPos + ClientConfig.get().inventoryButtonYOffset;
 
         this.fieldguide$guideButton = new ImageButton(xPos, yPos, 20, 18, GUIDE_BUTTON_SPRITES, (button) -> {
             if (this.minecraft != null) {
-                String defaultMode = ModConfig.get().defaultScreen;
+                String defaultMode = ClientConfig.get().defaultScreen;
                 if ("last_opened_screen".equals(defaultMode) && BookScreen.lastOpenedScreen != null) {
                     this.minecraft.setScreen(BookScreen.lastOpenedScreen);
                 } else {
@@ -58,9 +58,9 @@ public abstract class InventoryScreenMixin extends EffectRenderingInventoryScree
 
     @Inject(method = "render", at = @At("HEAD"))
     private void updateButtonPosition(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
-        if (this.fieldguide$guideButton != null && ModConfig.get().showInventoryButton) {
-            this.fieldguide$guideButton.setX(this.leftPos + ModConfig.get().inventoryButtonXOffset);
-            this.fieldguide$guideButton.setY(this.topPos + ModConfig.get().inventoryButtonYOffset);
+        if (this.fieldguide$guideButton != null && ClientConfig.get().showInventoryButton) {
+            this.fieldguide$guideButton.setX(this.leftPos + ClientConfig.get().inventoryButtonXOffset);
+            this.fieldguide$guideButton.setY(this.topPos + ClientConfig.get().inventoryButtonYOffset);
         }
     }
 }

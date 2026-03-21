@@ -1,13 +1,21 @@
 package com.evandev.fieldguide;
 
+import com.google.gson.reflect.TypeToken;
 import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Type;
+import java.util.List;
+import java.util.Map;
 
 public class Constants {
     public static final String MOD_ID = "fieldguide";
     public static final String MOD_NAME = "FieldGuide";
     public static final Logger LOG = LoggerFactory.getLogger(MOD_NAME);
+
+    public static final Type LIST_STRING_TYPE = new TypeToken<List<String>>() {}.getType();
+    public static final Type MAP_STRING_LIST_STRING_TYPE = new TypeToken<Map<String, List<String>>>() {}.getType();
 
     // Backgrounds
     public static final ResourceLocation BOOK_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/book.png");
@@ -17,6 +25,10 @@ public class Constants {
     public static final ResourceLocation TOAST_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/toast.png");
     public static final ResourceLocation JOURNAL_TITLE_PAGE_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/page_journal_title.png");
     public static final ResourceLocation JOURNAL_PAGE_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/page_journal.png");
+    public static final ResourceLocation VARIANT_WIDGET_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/variant_selector.png");
+
+    // Sounds
+    public static final ResourceLocation ITEM_PICKUP_SOUND = ResourceLocation.fromNamespaceAndPath("minecraft", "entity.item.pickup");
 
     // Elements
     public static final ResourceLocation WIDGETS_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/widgets.png");
@@ -28,6 +40,8 @@ public class Constants {
     public static final ResourceLocation TOAST_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/book_icon.png");
     public static final ResourceLocation ATTRIBUTES_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes.png");
     public static final ResourceLocation SCANNING_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/scanning.png");
+    public static final ResourceLocation OVERVIEW_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/overview_icon.png");
+    public static final ResourceLocation CLOSE_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/close.png");
 
     // Mob Type Icons
     public static final ResourceLocation HOSTILE_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/hostile.png");

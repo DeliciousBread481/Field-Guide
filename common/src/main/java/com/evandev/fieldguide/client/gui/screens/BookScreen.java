@@ -5,8 +5,8 @@ import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.widget.TabButton;
-import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.data.Category;
+import com.evandev.fieldguide.config.ServerConfig;
+import com.evandev.fieldguide.api.Category;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -65,7 +65,7 @@ public abstract class BookScreen extends Screen {
             boolean isIntro = cat.getId().getPath().equals("intro");
 
             boolean hasUnlocked = false;
-            if (ModConfig.get().hideTabsUntilUnlocked && !isIntro && entries != null) {
+            if (ServerConfig.get().hideTabsUntilUnlocked && !isIntro && entries != null) {
                 for (Object entry : entries) {
                     if (ClientFieldGuideManager.isUnlocked(entry)) {
                         hasUnlocked = true;

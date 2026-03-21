@@ -1,10 +1,16 @@
 package com.evandev.fieldguide.client.gui.toasts;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.api.VariantDef;
+import com.evandev.fieldguide.api.VariantProvider;
+import com.evandev.fieldguide.api.VirtualFieldGuideEntry;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
-import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
+import com.evandev.fieldguide.config.ClientConfig;
+import com.evandev.fieldguide.platform.Services;
+import com.evandev.fieldguide.util.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.toasts.Toast;
@@ -13,16 +19,22 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
+
 public class FieldGuideToast implements Toast {
     private final Object entry;
+    private final String variantId;
     private Entity cachedEntity = null;
     private boolean entityInitialized = false;
 
-    public FieldGuideToast(Object entry) {
+    public FieldGuideToast(Object entry, String variantId) {
         this.entry = entry;
+        this.variantId = variantId;
     }
 
     @Override
@@ -32,15 +44,35 @@ public class FieldGuideToast implements Toast {
         Component name = ClientFieldGuideManager.getEntryName(entry);
         Component discovered = Component.translatable("fieldguide.toast.discovered");
 
-        guiGraphics.drawString(toastComponent.getMinecraft().font, name, 30, 7, ModConfig.get().getTextTitleColorInt(), false);
+        guiGraphics.drawString(toastComponent.getMinecraft().font, name, 30, 7, ClientConfig.get().getTextTitleColorInt(), false);
         guiGraphics.drawString(toastComponent.getMinecraft().font, discovered, 30, 17, 0xAF8C5C, false);
 
         int iconX = 16;
         int iconY = 17;
         Object coreEntry = this.entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : this.entry;
 
-        if (!entityInitialized && coreEntry instanceof EntityType<?> type) {
-            cachedEntity = type.create(Minecraft.getInstance().level);
+        boolean isCobblemon = this.entry instanceof VirtualFieldGuideEntry virt && virt.virtualType().equals("cobblemon");
+        boolean isTutorial = this.entry instanceof VirtualFieldGuideEntry virt && virt.virtualType().equals("tutorial");
+
+        if (!entityInitialized) {
+            if (Services.PLATFORM.isModLoaded("cobblemon") && isCobblemon) {
+                cachedEntity = FieldGuideCobblemonCompat.getDummyPokemon(((VirtualFieldGuideEntry) this.entry).id(), Minecraft.getInstance().level);
+            } else if (coreEntry instanceof EntityType<?> type) {
+                cachedEntity = type.create(Minecraft.getInstance().level);
+
+                if (variantId != null && cachedEntity instanceof Mob mob) {
+                    VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(mob);
+                    if (provider != null) {
+                        List<VariantDef> variants = FieldGuideVariantManager.getVariants(mob);
+                        for (VariantDef def : variants) {
+                            if (def.id().equals(variantId)) {
+                                provider.apply(mob, def);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
             entityInitialized = true;
         }
 
@@ -50,14 +82,20 @@ public class FieldGuideToast implements Toast {
             } else {
                 EntryRenderHelper.renderBlock(guiGraphics, block, iconX, iconY, 12.0F, true, false, 1.0F);
             }
+        } else if (isCobblemon && cachedEntity instanceof LivingEntity) {
+            EntryRenderHelper.renderCobblemon(guiGraphics, (VirtualFieldGuideEntry) this.entry, iconX, iconY, 24, 24, true, false, 1.0F);
+        } else if (isTutorial) {
+            EntryRenderHelper.renderTutorial(guiGraphics, (VirtualFieldGuideEntry) this.entry, iconX, iconY, 24, 24, true, false, 1.0F);
         } else if (coreEntry instanceof EntityType<?>) {
-            if (cachedEntity instanceof LivingEntity living) {
-                EntryRenderHelper.renderEntityNormalized(guiGraphics, living, iconX, iconY, 24, 24, 22, true, false, 1.0F);
+            if (cachedEntity != null) {
+                EntryRenderHelper.renderEntityNormalized(guiGraphics, cachedEntity, iconX, iconY, 24, 24, true, false, 1.0F);
             } else {
                 guiGraphics.blit(Constants.TOAST_ICON, 8, 8, 0, 0, 16, 16, 16, 16);
             }
         } else if (coreEntry instanceof Block block) {
             EntryRenderHelper.renderBlock(guiGraphics, block, iconX, iconY, 12.0F, true, false, 1.0F);
+        } else if (coreEntry instanceof Item item) {
+            EntryRenderHelper.renderItem(guiGraphics, item, iconX, iconY, 20.0F, true, false, 1.0F);
         } else {
             guiGraphics.blit(Constants.TOAST_ICON, 8, 8, 0, 0, 16, 16, 16, 16);
         }

@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.server;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.ModDataComponents;
 import com.evandev.fieldguide.server.loot.ParsedDrop;
 import com.evandev.fieldguide.server.loot.StaticLootParser;
 import com.evandev.fieldguide.util.EntryResolver;
@@ -47,12 +48,9 @@ public class LootTableHelper {
                 for (ParsedDrop drop : finalDrops) {
                     ItemStack stack = drop.stack.copy();
 
-                    CustomData customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-                    CompoundTag tag = customData.copyTag();
-                    tag.putFloat("FieldGuideDropChance", drop.chance * 100.0f);
-                    tag.putInt("FieldGuideMin", drop.minCount);
-                    tag.putInt("FieldGuideMax", drop.maxCount);
-                    stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+                    stack.set(ModDataComponents.DROP_CHANCE.get(), drop.chance * 100.0f);
+                    stack.set(ModDataComponents.MIN_DROP.get(), drop.minCount);
+                    stack.set(ModDataComponents.MAX_DROP.get(), drop.maxCount);
 
                     formattedDrops.add(stack);
                 }
@@ -62,7 +60,7 @@ public class LootTableHelper {
         }
         applyConfigModifications(entry, formattedDrops);
         if (!formattedDrops.isEmpty()) {
-            ResourceLocation id = EntryResolver.getEntryId(entry);
+            ResourceLocation id = EntryResolver.getEntryId(entry, false);
             if (id != null) {
                 lootMap.computeIfAbsent(id, k -> new ArrayList<>()).addAll(formattedDrops);
             }
@@ -137,10 +135,7 @@ public class LootTableHelper {
                     Item i = BuiltInRegistries.ITEM.get(ResourceLocation.parse(target));
                     if (i != Items.AIR) {
                         ItemStack s = new ItemStack(i);
-                        CustomData customData = s.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-                        CompoundTag tag = customData.copyTag();
-                        tag.putFloat("FieldGuideDropChance", 100.0f);
-                        s.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+                        s.set(ModDataComponents.DROP_CHANCE.get(), 100.0f);
                         distinctDrops.add(s);
                         added = true;
                     }

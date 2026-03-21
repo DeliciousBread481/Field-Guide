@@ -1,7 +1,7 @@
 package com.evandev.fieldguide.client.search;
 
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
-import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.util.EntryResolver;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;

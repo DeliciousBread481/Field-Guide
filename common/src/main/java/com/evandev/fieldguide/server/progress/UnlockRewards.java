@@ -1,7 +1,7 @@
 package com.evandev.fieldguide.server.progress;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
@@ -12,13 +12,14 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 class UnlockRewards {
 
-    static void grant(ServerPlayer player, ResourceLocation entryId) {
+    static void grant(ServerPlayer player, ResourceLocation entryId, boolean grantXp) {
         try {
-            ModConfig config = ModConfig.get();
-            if (config.grantXpOnScan && config.xpAmountOnScan > 0) {
+            ServerConfig config = ServerConfig.get();
+            if (grantXp && config.grantXpOnScan && config.xpAmountOnScan > 0) {
                 player.giveExperiencePoints(config.xpAmountOnScan);
             }
 
@@ -28,7 +29,7 @@ class UnlockRewards {
         }
     }
 
-    private static void executeCommands(ServerPlayer player, ResourceLocation entryId, ModConfig config) {
+    private static void executeCommands(ServerPlayer player, ResourceLocation entryId, ServerConfig config) {
         List<String> commandsToRun = new ArrayList<>(config.globalScanCommands);
 
         String idStr = entryId.toString();
@@ -44,7 +45,7 @@ class UnlockRewards {
         if (!commandsToRun.isEmpty()) {
             CommandSourceStack sourceStack = createRewardSourceStack(player, entryId);
             for (String cmd : commandsToRun) {
-                player.getServer().getCommands().performPrefixedCommand(sourceStack, cmd);
+                Objects.requireNonNull(player.getServer()).getCommands().performPrefixedCommand(sourceStack, cmd);
             }
         }
     }
@@ -74,7 +75,7 @@ class UnlockRewards {
                     }
                 },
                 player.position(), player.getRotationVector(), player.serverLevel(),
-                2, sourceName, Component.literal(sourceName), player.getServer(), player
+                2, sourceName, Component.literal(sourceName), Objects.requireNonNull(player.getServer()), player
         );
     }
 }

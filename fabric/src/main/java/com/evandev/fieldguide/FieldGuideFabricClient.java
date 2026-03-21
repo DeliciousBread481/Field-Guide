@@ -3,9 +3,11 @@ package com.evandev.fieldguide;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.ModRenderTypes;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
+import com.evandev.fieldguide.network.SyncConfigPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.fabricmc.api.ClientModInitializer;
@@ -44,7 +46,7 @@ public class FieldGuideFabricClient implements ClientModInitializer {
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             ClientFieldGuideManager.getInstance().onClientTick(client);
-            FieldGuideClient.onClientTick(client);
+            FieldGuideClient.onClientTick();
         });
 
         ClientPlayNetworking.registerGlobalReceiver(SyncLootPacket.TYPE, (packet, context) -> {
@@ -69,6 +71,9 @@ public class FieldGuideFabricClient implements ClientModInitializer {
                         packet.getLootRemovals(),
                         packet.shouldClearCache()
                 );
+
+                // Call variants separately as in 1.20.1
+                manager.updateVariants(packet.getVariants());
             });
         });
 
@@ -76,8 +81,11 @@ public class FieldGuideFabricClient implements ClientModInitializer {
             context.client().execute(() -> ClientFieldGuideManager.getInstance().applyServerUpdate(packet));
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(ExportContentPacket.TYPE, (packet, context) -> {
-            context.client().execute(packet::handleClient);
+        ClientPlayNetworking.registerGlobalReceiver(SyncConfigPacket.TYPE, (packet, context) -> {
+            context.client().execute(() -> {
+                ServerConfig synced = ServerConfig.fromJson(packet.configJson());
+                ServerConfig.setSyncedConfig(synced);
+            });
         });
 
         CoreShaderRegistrationCallback.EVENT.register(context -> {

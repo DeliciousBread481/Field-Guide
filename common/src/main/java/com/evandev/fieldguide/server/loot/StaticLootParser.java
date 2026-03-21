@@ -1,7 +1,7 @@
 package com.evandev.fieldguide.server.loot;
 
 import com.evandev.fieldguide.compat.reliableremover.ReliableRemoverCompat;
-import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.mixin.accessor.*;
 import com.evandev.fieldguide.platform.Services;
 import net.minecraft.server.level.ServerLevel;
@@ -27,6 +27,7 @@ import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 public class StaticLootParser {
 
@@ -63,7 +64,7 @@ public class StaticLootParser {
         List<LootPool> pools = ((LootTableAccessor) table).fieldguide$getPools();
 
         LootParams params = new LootParams.Builder(level).create(LootContextParamSets.EMPTY);
-        LootContext context = new LootContext.Builder(params).create(java.util.Optional.empty());
+        LootContext context = new LootContext.Builder(params).create(Optional.empty());
 
         for (LootPool pool : pools) {
             LootPoolAccessor poolAcc = (LootPoolAccessor) pool;
@@ -113,7 +114,7 @@ public class StaticLootParser {
                 }
 
                 if (!stack.is(Items.AIR)) {
-                    boolean isHidden = Services.PLATFORM.isModLoaded("reliable_remover") && ModConfig.get().enableReliableRemover && ReliableRemoverCompat.isHidden(stack);
+                    boolean isHidden = Services.PLATFORM.isModLoaded("reliable_remover") && ServerConfig.get().enableReliableRemover && ReliableRemoverCompat.isHidden(stack);
                     if (!isHidden) {
                         drops.add(new ParsedDrop(stack, branchChance, min, max));
                     }

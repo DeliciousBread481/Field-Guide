@@ -6,7 +6,8 @@ import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuidePhotographScreen;
 import com.evandev.fieldguide.client.gui.widget.FieldGuidePhotographWidget;
 import com.evandev.fieldguide.client.progress.ProgressManager;
-import com.evandev.fieldguide.config.ModConfig;
+import com.evandev.fieldguide.config.ClientConfig;
+import com.evandev.fieldguide.config.ServerConfig;
 import io.github.mortuusars.exposure.ExposureClient;
 import io.github.mortuusars.exposure.client.gui.screen.ItemListScreen;
 import io.github.mortuusars.exposure.client.render.photograph.PhotographStyle;
@@ -37,8 +38,12 @@ public class ClientExposureCompat {
     private static final WidgetSprites ADD_PHOTO_SPRITES = new WidgetSprites(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/exposure/add_photo"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/exposure/add_photo_highlighted"));
     private static final ResourceLocation MISSING_PHOTOGRAPH_BACKGROUND = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/exposure/missing_photograph.png");
 
-    public static void setupExposureWidgets(FieldGuideEntryScreen screen, Object entry) {
+    public static void setupExposureWidgets(FieldGuideEntryScreen screen, Object entry, String variantId) {
         if (!ClientFieldGuideManager.isUnlocked(entry)) return;
+
+        if (variantId != null && !variantId.isEmpty() && !ServerConfig.get().unlockAllVariants) {
+            if (!ClientFieldGuideManager.isVariantUnlocked(entry, variantId)) return;
+        }
 
         int leftX = screen.getLeftPageBounds().left();
         int leftY = screen.getLeftPageBounds().top();
@@ -49,16 +54,16 @@ public class ClientExposureCompat {
         int iconX = leftX + leftWidth - iconSize - 12;
         int iconY = leftY + 12;
 
-        ItemStack existingPhoto = ProgressManager.getInstance().getPhotograph(entry);
+        ItemStack existingPhoto = ProgressManager.getInstance().getPhotograph(entry, variantId);
 
         if (existingPhoto.isEmpty()) {
-            if (ModConfig.get().exposureAddPhotographButton) {
+            if (ClientConfig.get().exposureAddPhotographButton) {
                 ImageButton addPhotoButton = new ImageButton(iconX, iconY, iconSize, iconSize, ADD_PHOTO_SPRITES, btn -> {
-                    openPhotographSelector(screen, entry);
+                    openPhotographSelector(screen, entry, variantId);
                 }, Component.translatable("gui.fieldguide.add_photograph"));
 
                 addPhotoButton.setTooltip(Tooltip.create(Component.translatable("gui.fieldguide.add_photograph")));
-                screen.addWidgetPublic(addPhotoButton);
+                screen.addExposureWidget(addPhotoButton);
             }
         } else {
             int photoWidth = 108;
@@ -81,18 +86,20 @@ public class ClientExposureCompat {
             FieldGuidePhotographWidget photoWidget = new FieldGuidePhotographWidget(
                     photoX, photoY, photoWidth, photoHeight,
                     exposureArea,
-                    () -> ProgressManager.getInstance().getPhotograph(entry),
+                    () -> ProgressManager.getInstance().getPhotograph(entry, variantId),
 
                     () -> Minecraft.getInstance().setScreen(new FieldGuidePhotographScreen(screen, List.of(new ItemAndStack<>(existingPhoto)))),
 
                     () -> {
-                        ProgressManager.getInstance().setPhotograph(entry, -1, ItemStack.EMPTY);
-                        Minecraft.getInstance().setScreen(new FieldGuideEntryScreen(screen.getParentScreen(), entry));
+                        ProgressManager.getInstance().setPhotograph(entry, -1, ItemStack.EMPTY, variantId);
+                        FieldGuideEntryScreen newScreen = new FieldGuideEntryScreen(screen.getParentScreen(), entry);
+                        newScreen.setInitialVariant(variantId);
+                        Minecraft.getInstance().setScreen(newScreen);
                     },
                     tooltipText
             );
 
-            screen.addWidgetPublic(photoWidget);
+            screen.addExposureWidget(photoWidget);
         }
     }
 
@@ -136,7 +143,7 @@ public class ClientExposureCompat {
         }
     }
 
-    private static void openPhotographSelector(FieldGuideEntryScreen parent, Object entry) {
+    private static void openPhotographSelector(FieldGuideEntryScreen parent, Object entry, String variantId) {
         Player player = Minecraft.getInstance().player;
         if (player == null) return;
 
@@ -153,9 +160,11 @@ public class ClientExposureCompat {
         Minecraft.getInstance().setScreen(new PhotographSelectionScreen(parent, photographs, stack -> {
             Integer slot = slotMap.get(stack);
             if (slot != null) {
-                ProgressManager.getInstance().setPhotograph(entry, slot, stack);
+                ProgressManager.getInstance().setPhotograph(entry, slot, stack, variantId);
             }
-            Minecraft.getInstance().setScreen(new FieldGuideEntryScreen(parent.getParentScreen(), entry));
+            FieldGuideEntryScreen newScreen = new FieldGuideEntryScreen(parent.getParentScreen(), entry);
+            newScreen.setInitialVariant(variantId);
+            Minecraft.getInstance().setScreen(newScreen);
         }));
     }
 

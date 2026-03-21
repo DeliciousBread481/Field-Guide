@@ -1,7 +1,7 @@
 package com.evandev.fieldguide.client.gui.util;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.api.AutoPopulateRegistry;
 import com.evandev.fieldguide.platform.Services;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
@@ -20,15 +20,39 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.Stream;
 
 public class IconCacheManager {
     private static final Path CACHE_DIR = Services.PLATFORM.getConfigDirectory().resolve("../fieldguide_cache");
-    private static final Map<String, ResourceLocation> TEXTURE_CACHE = new HashMap<>();
     private static final int RENDER_SIZE = 256;
+
+    private static final Map<String, ResourceLocation> TEXTURE_CACHE = new ConcurrentHashMap<>();
+    private static final Set<String> PENDING_GENERATIONS = ConcurrentHashMap.newKeySet();
+    private static final Deque<Runnable> MAIN_THREAD_TASKS = new ConcurrentLinkedDeque<>();
+
+    private static final ExecutorService IO_EXECUTOR = Executors.newFixedThreadPool(
+            Math.min(4, Runtime.getRuntime().availableProcessors()),
+            r -> {
+                Thread t = new Thread(r, "FieldGuide-IconCache-IO");
+                t.setDaemon(true);
+                return t;
+            }
+    );
+
+    public static void tick() {
+        long startTime = System.currentTimeMillis();
+        int processed = 0;
+
+        while (!MAIN_THREAD_TASKS.isEmpty() && processed < 5 && (System.currentTimeMillis() - startTime) < 10) {
+            Runnable task = MAIN_THREAD_TASKS.pollFirst();
+            if (task != null) {
+                task.run();
+                processed++;
+            }
+        }
+    }
 
     public static void init() {
         try {
@@ -44,59 +68,82 @@ public class IconCacheManager {
             mc.getTextureManager().release(id);
         }
         TEXTURE_CACHE.clear();
+        PENDING_GENERATIONS.clear();
+        MAIN_THREAD_TASKS.clear();
 
-        if (Files.exists(CACHE_DIR)) {
-            try (Stream<Path> walk = Files.walk(CACHE_DIR)) {
-                walk.sorted(java.util.Comparator.reverseOrder())
-                        .map(Path::toFile)
-                        .forEach(File::delete);
-            } catch (IOException e) {
-                Constants.LOG.error("Failed to delete icon cache directory", e);
+        CompletableFuture.runAsync(() -> {
+            if (Files.exists(CACHE_DIR)) {
+                try (Stream<Path> walk = Files.walk(CACHE_DIR)) {
+                    walk.sorted(Comparator.reverseOrder())
+                            .map(Path::toFile)
+                            .forEach(File::delete);
+                } catch (IOException e) {
+                    Constants.LOG.error("Failed to delete icon cache directory", e);
+                }
             }
-        }
+        }, IO_EXECUTOR);
     }
 
-    public static Optional<ResourceLocation> getOrGenerateIcon(Object entry, boolean isPage, Runnable renderAction) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-        String fileName = id.getPath() + (isPage ? "_page" : "_grid") + ".png";
+    public static Optional<ResourceLocation> getOrGenerateIcon(Object baseEntry, Object cacheKey, boolean isPage, Runnable renderAction) {
+        String entryKey = AutoPopulateRegistry.getEntryKey(baseEntry);
+        if (entryKey.isEmpty()) return Optional.empty();
 
-        String key = id.toString().replace(":", "_").replace("/", "_") + (isPage ? "_page" : "_grid");
+        String variantSuffix = "";
+        if (cacheKey instanceof String str && str.contains("#")) {
+            variantSuffix = "_" + str.substring(str.indexOf('#') + 1).replace(":", "_").toLowerCase(Locale.ROOT);
+        }
+
+        String fileName = (entryKey.replace(":", "_").replace("/", "_") + variantSuffix + (isPage ? "_page" : "_grid") + ".png").toLowerCase(Locale.ROOT);
+        String key = (entryKey.replace(":", "_").replace("/", "_") + variantSuffix + (isPage ? "_page" : "_grid")).toLowerCase(Locale.ROOT);
 
         if (TEXTURE_CACHE.containsKey(key)) {
             return Optional.of(TEXTURE_CACHE.get(key));
         }
 
-        if (!Files.exists(CACHE_DIR)) init();
-        Path cachedFilePath = CACHE_DIR.resolve(id.getNamespace()).resolve("textures/fieldguide/entries").resolve(fileName);
-        File cachedFile = cachedFilePath.toFile();
-
-        if (!cachedFile.exists()) {
-            cachedFile.getParentFile().mkdirs();
-            generateAndSaveIcon(cachedFile, renderAction);
+        if (!PENDING_GENERATIONS.add(key)) {
+            return Optional.empty();
         }
 
-        if (cachedFile.exists()) {
-            try {
-                NativeImage image = NativeImage.read(Files.newInputStream(cachedFile.toPath()));
+        CompletableFuture.supplyAsync(() -> {
+            if (!Files.exists(CACHE_DIR)) init();
+            ResourceLocation id = AutoPopulateRegistry.getEntryId(baseEntry);
+            Path cachedFilePath = CACHE_DIR.resolve(id.getNamespace()).resolve("textures/fieldguide/entries").resolve(fileName);
+            File cachedFile = cachedFilePath.toFile();
+
+            if (cachedFile.exists()) {
+                try {
+                    return NativeImage.read(Files.newInputStream(cachedFile.toPath()));
+                } catch (IOException e) {
+                    Constants.LOG.error("Failed to load cached icon: {}", key, e);
+                }
+            }
+            return null;
+        }, IO_EXECUTOR).thenAcceptAsync(image -> {
+            if (image != null) {
                 DynamicTexture texture = new DynamicTexture(image);
                 ResourceLocation texLoc = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "generated_icon/" + key);
                 Minecraft.getInstance().getTextureManager().register(texLoc, texture);
                 TEXTURE_CACHE.put(key, texLoc);
-                return Optional.of(texLoc);
-            } catch (IOException e) {
-                Constants.LOG.error("Failed to load cached icon: {}", key, e);
+                PENDING_GENERATIONS.remove(key);
+            } else {
+                ResourceLocation id = AutoPopulateRegistry.getEntryId(baseEntry);
+                MAIN_THREAD_TASKS.addFirst(() -> generateAndSaveIcon(id.getNamespace(), fileName, key, renderAction));
             }
-        }
+        }, Minecraft.getInstance());
 
         return Optional.empty();
     }
 
-    private static void generateAndSaveIcon(File outputFile, Runnable renderAction) {
+    private static void generateAndSaveIcon(String namespace, String fileName, String key, Runnable renderAction) {
+        if (TEXTURE_CACHE.containsKey(key)) {
+            PENDING_GENERATIONS.remove(key);
+            return;
+        }
+
         Minecraft mc = Minecraft.getInstance();
         Matrix4f oldProjection = RenderSystem.getProjectionMatrix();
 
         RenderTarget renderTarget = new TextureTarget(RENDER_SIZE, RENDER_SIZE, true, Minecraft.ON_OSX);
-
         renderTarget.setClearColor(0.0F, 0.0F, 0.0F, 0.0F);
         renderTarget.clear(Minecraft.ON_OSX);
 
@@ -130,15 +177,32 @@ public class IconCacheManager {
 
         NativeImage nativeImage = new NativeImage(RENDER_SIZE, RENDER_SIZE, false);
 
-        try (nativeImage) {
+        try {
             RenderSystem.bindTexture(renderTarget.getColorTextureId());
             nativeImage.downloadTexture(0, false);
             nativeImage.flipY();
-            nativeImage.writeToFile(outputFile);
-        } catch (IOException e) {
-            Constants.LOG.error("Failed to save generated icon", e);
+
+            DynamicTexture texture = new DynamicTexture(nativeImage);
+            ResourceLocation texLoc = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "generated_icon/" + key);
+            mc.getTextureManager().register(texLoc, texture);
+            TEXTURE_CACHE.put(key, texLoc);
+
+            CompletableFuture.runAsync(() -> {
+                try {
+                    Path cachedFilePath = CACHE_DIR.resolve(namespace).resolve("textures/fieldguide/entries").resolve(fileName);
+                    cachedFilePath.getParent().toFile().mkdirs();
+                    nativeImage.writeToFile(cachedFilePath.toFile());
+                } catch (IOException e) {
+                    Constants.LOG.error("Failed to save generated icon", e);
+                }
+            }, IO_EXECUTOR);
+
+        } catch (Exception e) {
+            Constants.LOG.error("Failed to process generated icon", e);
+            nativeImage.close();
         } finally {
             renderTarget.destroyBuffers();
+            PENDING_GENERATIONS.remove(key);
         }
     }
 }

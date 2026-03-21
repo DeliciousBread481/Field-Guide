@@ -1,4 +1,4 @@
-package com.evandev.fieldguide.data;
+package com.evandev.fieldguide.api;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -9,7 +9,7 @@ import java.util.function.IntFunction;
 
 public class CategoryType {
     public enum Type {
-        ENTRY, AUTO_POPULATE, COMPOSITE;
+        ENTRY, AUTO_POPULATE, COMPOSITE, VIRTUAL;
 
         private static final IntFunction<Type> BY_ID = ByIdMap.continuous(
                 Type::ordinal,

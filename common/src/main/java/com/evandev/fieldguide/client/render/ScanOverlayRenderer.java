@@ -4,8 +4,8 @@ import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.ModRenderTypes;
 import com.evandev.fieldguide.client.scanning.FieldGuideScanner;
 import com.evandev.fieldguide.compat.etf.EtfCompat;
-import com.evandev.fieldguide.config.ModConfig;
-import com.evandev.fieldguide.data.CompositeFieldGuideEntry;
+import com.evandev.fieldguide.config.ClientConfig;
+import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.util.ModTags;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -25,6 +25,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.boss.EnderDragonPart;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
@@ -65,14 +66,14 @@ public class ScanOverlayRenderer {
             float pulse = (float) (Math.sin(System.currentTimeMillis() / 200.0) * 0.5 + 0.5);
             alpha = 0.0F + (pulse * 0.2F);
         } else {
-            int colorInt = ModConfig.get().getScanOverlayColorInt();
+            int colorInt = ClientConfig.get().getScanOverlayColorInt();
             Color c = new Color(colorInt);
             red = c.getRed() / 255.0F;
             green = c.getGreen() / 255.0F;
             blue = c.getBlue() / 255.0F;
             alpha = (float) (scanner.getScanningEntity() != null || scanner.getScanningTarget() != null
-                    ? ModConfig.get().scanOverlayAlpha
-                    : ModConfig.get().scanOverlayAlpha * scanner.getFadeProgress(partialTick));
+                    ? ClientConfig.get().scanOverlayAlpha
+                    : ClientConfig.get().scanOverlayAlpha * scanner.getFadeProgress(partialTick));
         }
 
         if (targetBlock != null && alpha > 0.01f) {
@@ -86,7 +87,7 @@ public class ScanOverlayRenderer {
 
     private static Entity resolveEntity(Entity entity) {
         if (entity == null) return null;
-        if (entity instanceof net.minecraft.world.entity.boss.EnderDragonPart dragonPart) {
+        if (entity instanceof EnderDragonPart dragonPart) {
             return dragonPart.parentMob;
         }
         try {

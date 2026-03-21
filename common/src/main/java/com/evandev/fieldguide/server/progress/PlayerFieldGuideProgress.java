@@ -1,8 +1,11 @@
 package com.evandev.fieldguide.server.progress;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.api.EntryUnlockData;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.platform.Services;
+import com.evandev.fieldguide.server.ServerFieldGuideManager;
+import com.evandev.fieldguide.util.EntryResolver;
 import com.google.gson.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -49,34 +52,185 @@ public class PlayerFieldGuideProgress {
         return list.subList(Math.min(index, list.size()), Math.min(index + length, list.size()));
     }
 
-    public boolean unlock(ServerPlayer player, ResourceLocation entryId) {
+    public void checkDefaultUnlocks(ServerPlayer player) {
+        for (ResourceLocation entryId : ServerFieldGuideManager.getInstance().getAllEntryIds()) {
+            EntryUnlockData unlockData = ServerFieldGuideManager.getInstance().getUnlockData(entryId);
+            if (unlockData.unlockedByDefault() && canUnlock(entryId)) {
+                unlock(player, entryId, null, false);
+            }
+        }
+    }
+
+    public boolean canUnlock(ResourceLocation entryId) {
+        EntryUnlockData unlockData = ServerFieldGuideManager.getInstance().getUnlockData(entryId);
+        for (ResourceLocation prereq : unlockData.prerequisites()) {
+            if (!isUnlocked(prereq)) return false;
+        }
+        return true;
+    }
+
+    public void tryUnlock(ServerPlayer player, ResourceLocation triggeredId, String variantId, EntryUnlockData.UnlockTrigger trigger) {
+        // unlock the thing that was triggered directly
+        tryUnlockDirect(player, triggeredId, variantId, trigger);
+
+        // unlock other entries that have this triggeredId as 'triggerOn'
+        for (ResourceLocation entryId : ServerFieldGuideManager.getInstance().getEntriesTriggeredBy(triggeredId)) {
+            tryUnlockDirect(player, entryId, null, trigger);
+        }
+    }
+
+    private void tryUnlockDirect(ServerPlayer player, ResourceLocation entryId, String variantId, EntryUnlockData.UnlockTrigger trigger) {
+        if (!ServerFieldGuideManager.getInstance().hasEntry(entryId)) return;
+
+        if (isUnlocked(entryId)) {
+            if (variantId != null && !variantId.isEmpty()) {
+                unlock(player, entryId, variantId, true);
+            }
+            return;
+        }
+
+        if (!canUnlock(entryId)) return;
+
+        EntryUnlockData unlockData = ServerFieldGuideManager.getInstance().getUnlockData(entryId);
+        if (unlockData.triggers().isEmpty() || unlockData.triggers().contains(trigger)) {
+            unlock(player, entryId, variantId, true);
+        }
+    }
+
+    public void unlock(ServerPlayer player, ResourceLocation entryId, String variantId, boolean grantXp) {
         String id = entryId.toString();
+        boolean newlyUnlocked = false;
+
         if (unlockedEntries.add(id)) {
             discoveryTimes.put(id, System.currentTimeMillis());
             discoveryGameTimes.put(id, player.serverLevel().dayTime());
             pendingUnlocks.add(id);
             pendingRevokes.remove(id);
-            dirty = true;
-            UnlockRewards.grant(player, entryId);
-            return true;
+            newlyUnlocked = true;
+            UnlockRewards.grant(player, entryId, grantXp);
+            FieldGuideTriggers.ENTRY_UNLOCKED.get().trigger(player, entryId);
+
+            ResourceLocation categoryId = ServerFieldGuideManager.getInstance().getCategoryForEntryId(entryId);
+            if (categoryId != null) {
+                Set<ResourceLocation> categoryEntries = ServerFieldGuideManager.getInstance().getEntryIdsForCategory(categoryId);
+                if (!categoryEntries.isEmpty() && categoryEntries.stream().allMatch(e -> isUnlocked(e.toString()))) {
+                    FieldGuideTriggers.CATEGORY_COMPLETED.get().trigger(player, categoryId);
+                }
+            }
         }
-        return false;
+
+        if (variantId != null && !variantId.isEmpty()) {
+            String fullVariantId = id + "#" + variantId;
+            if (unlockedEntries.add(fullVariantId)) {
+                pendingUnlocks.add(fullVariantId);
+                pendingRevokes.remove(fullVariantId);
+                newlyUnlocked = true;
+            }
+        }
+
+        if (newlyUnlocked) {
+            dirty = true;
+            checkDefaultUnlocks(player);
+        }
     }
 
     public boolean revoke(String entryId) {
-        if (unlockedEntries.remove(entryId)) {
-            seenEntries.remove(entryId);
-            discoveryTimes.remove(entryId);
-            discoveryGameTimes.remove(entryId);
-            entryPhotographs.remove(entryId);
-            customNames.remove(entryId);
-            customDescriptions.remove(entryId);
-            pendingRevokes.add(entryId);
-            pendingUnlocks.remove(entryId);
-            dirty = true;
-            return true;
+        boolean removed = false;
+        List<String> toRemove = new ArrayList<>();
+        for (String id : unlockedEntries) {
+            if (id.equals(entryId) || id.startsWith(entryId + "#")) {
+                toRemove.add(id);
+            }
         }
-        return false;
+
+        for (String id : toRemove) {
+            if (unlockedEntries.remove(id)) {
+                seenEntries.remove(id);
+                discoveryTimes.remove(id);
+                discoveryGameTimes.remove(id);
+                entryPhotographs.remove(id);
+                customNames.remove(id);
+                customDescriptions.remove(id);
+                pendingRevokes.add(id);
+                pendingUnlocks.remove(id);
+                removed = true;
+            }
+        }
+
+        if (removed) {
+            dirty = true;
+        }
+        return removed;
+    }
+
+    public List<String> getUnlockedVariants(String entryId) {
+        List<String> variants = new ArrayList<>();
+        for (String id : unlockedEntries) {
+            if (id.startsWith(entryId + "#")) {
+                variants.add(id.substring(entryId.length() + 1));
+            }
+        }
+        return variants;
+    }
+
+    public String getCustomName(String entryId) {
+        return customNames.get(entryId);
+    }
+
+    public String getCustomDescription(String entryId) {
+        return customDescriptions.get(entryId);
+    }
+
+    public String getEntryPhotograph(String entryId) {
+        return entryPhotographs.get(entryId);
+    }
+
+    public long getDiscoveryTime(String entryId) {
+        return discoveryTimes.getOrDefault(entryId, 0L);
+    }
+
+    public long getDiscoveryGameTime(String entryId) {
+        return discoveryGameTimes.getOrDefault(entryId, 0L);
+    }
+
+    public void setCustomName(String entryId, String name) {
+        if (name == null || name.isEmpty()) {
+            customNames.remove(entryId);
+        } else {
+            customNames.put(entryId, name);
+        }
+        pendingEntryResync.add(entryId);
+        dirty = true;
+    }
+
+    public void setCustomDescription(String entryId, String description) {
+        if (description == null || description.isEmpty()) {
+            customDescriptions.remove(entryId);
+        } else {
+            customDescriptions.put(entryId, description);
+        }
+        pendingEntryResync.add(entryId);
+        dirty = true;
+    }
+
+    public void setEntryPhotograph(String entryId, String photograph) {
+        if (photograph == null || photograph.isEmpty()) {
+            entryPhotographs.remove(entryId);
+        } else {
+            entryPhotographs.put(entryId, photograph);
+        }
+        pendingEntryResync.add(entryId);
+        dirty = true;
+    }
+
+    public void setDiscoveryTime(String entryId, long time) {
+        discoveryTimes.put(entryId, time);
+        dirty = true;
+    }
+
+    public void setDiscoveryGameTime(String entryId, long gameTime) {
+        discoveryGameTimes.put(entryId, gameTime);
+        dirty = true;
     }
 
     public boolean revoke(ResourceLocation entryId) {
@@ -100,17 +254,22 @@ public class PlayerFieldGuideProgress {
         }
     }
 
-    public boolean markSeen(String entryId) {
+    public void markSeen(String entryId) {
         if (unlockedEntries.contains(entryId) && seenEntries.add(entryId)) {
             pendingSeen.add(entryId);
             dirty = true;
-            return true;
         }
-        return false;
     }
 
     public boolean isUnlocked(String entryId) {
-        return unlockedEntries.contains(entryId);
+        if (unlockedEntries.contains(entryId)) return true;
+        try {
+            ResourceLocation id = ResourceLocation.parse(entryId);
+            ResourceLocation rawId = EntryResolver.getRawId(id);
+            return unlockedEntries.contains(rawId.toString());
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public boolean isUnlocked(ResourceLocation entryId) {
@@ -119,33 +278,6 @@ public class PlayerFieldGuideProgress {
 
     public Set<String> getUnlockedEntries() {
         return Collections.unmodifiableSet(unlockedEntries);
-    }
-
-    public void setCustomName(String entryId, String name) {
-        if (name == null || name.isEmpty()) {
-            customNames.remove(entryId);
-        } else {
-            customNames.put(entryId, name);
-        }
-        dirty = true;
-    }
-
-    public void setCustomDescription(String entryId, String desc) {
-        if (desc == null || desc.isEmpty()) {
-            customDescriptions.remove(entryId);
-        } else {
-            customDescriptions.put(entryId, desc);
-        }
-        dirty = true;
-    }
-
-    public void setPhotograph(String entryId, String nbtString) {
-        if (nbtString == null || nbtString.isEmpty()) {
-            entryPhotographs.remove(entryId);
-        } else {
-            entryPhotographs.put(entryId, nbtString);
-        }
-        dirty = true;
     }
 
     public void setJournalTitle(String title) {
@@ -221,6 +353,10 @@ public class PlayerFieldGuideProgress {
                             .discoveryGameTimes(gameTimes)
                             .customNames(names)
                             .customDescriptions(descs)
+                            .killedOnly(ServerFieldGuideManager.getInstance().getAllEntryIds().stream()
+                                    .filter(id -> ServerFieldGuideManager.getInstance().getUnlockData(id).triggers().contains(EntryUnlockData.UnlockTrigger.KILL))
+                                    .map(ResourceLocation::toString)
+                                    .toList())
                             .build(),
                     player
             );

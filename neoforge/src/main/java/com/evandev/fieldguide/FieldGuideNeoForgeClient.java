@@ -4,8 +4,10 @@ import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.ModRenderTypes;
 import com.evandev.fieldguide.config.ClothConfigIntegration;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
+import com.evandev.fieldguide.network.SyncConfigPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
@@ -26,6 +28,11 @@ public class FieldGuideNeoForgeClient {
         ClientFieldGuideManager.getInstance().updateLootCache(packet.lootCache(), packet.clearCache());
     }
 
+    public static void handleSyncConfig(SyncConfigPacket packet) {
+        ServerConfig synced = ServerConfig.fromJson(packet.configJson());
+        ServerConfig.setSyncedConfig(synced);
+    }
+
     public static void handleSyncCategories(SyncCategoriesPacket packet) {
         ClientFieldGuideManager.getInstance().updateCategoriesFromServer(
                 packet.getCategories(),
@@ -41,6 +48,8 @@ public class FieldGuideNeoForgeClient {
                 packet.getLootRemovals(),
                 packet.shouldClearCache()
         );
+
+        ClientFieldGuideManager.getInstance().updateVariants(packet.getVariants());
     }
 
     public static void handleProgressUpdate(ProgressUpdatePacket packet) {
@@ -96,7 +105,7 @@ public class FieldGuideNeoForgeClient {
         public static void onClientTick(ClientTickEvent.Post event) {
             Minecraft client = Minecraft.getInstance();
             ClientFieldGuideManager.getInstance().onClientTick(client);
-            FieldGuideClient.onClientTick(client);
+            FieldGuideClient.onClientTick();
         }
 
         @SubscribeEvent
