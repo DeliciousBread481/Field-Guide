@@ -29,11 +29,13 @@ import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -182,7 +184,12 @@ public class FieldGuideEntryScreen extends BookScreen {
                         this.onClose();
                     }
                 }
-            });
+            }) {
+                @Override
+                public void playDownSound(SoundManager handler) {
+                    handler.play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 1.0F));
+                }
+            };
             copyBtn.active = canCopy;
             this.addRenderableWidget(copyBtn).setTooltip(createCopyTooltip(canCopy));
         }
