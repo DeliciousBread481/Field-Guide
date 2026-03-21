@@ -61,6 +61,10 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         return INSTANCE;
     }
 
+    public Map<ResourceLocation, List<Object>> getResolvedEntries() {
+        return this.resolvedCategoryEntries;
+    }
+
     public EntryUnlockData getUnlockData(ResourceLocation entryId) {
         if (entryUnlockDataMap.containsKey(entryId)) {
             return entryUnlockDataMap.get(entryId);

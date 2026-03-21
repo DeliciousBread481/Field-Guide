@@ -25,34 +25,40 @@ public class ClientLootManager {
             this.dropCache.clear();
         }
 
-        for (Map.Entry<ResourceLocation, List<ItemStack>> entry : lootCache.entrySet()) {
-            ResourceLocation id = entry.getKey();
-            List<ItemStack> drops = entry.getValue();
-            dropCache.put(id, drops);
-        }
+        this.dropCache.putAll(lootCache);
     }
 
     public List<ItemStack> getDrops(Object entry) {
         List<ItemStack> rawDrops = new ArrayList<>();
+
         if (entry instanceof CompositeFieldGuideEntry composite) {
             Set<Object> uniqueComponents = new HashSet<>();
             if (composite.displayEntry() != null) uniqueComponents.add(composite.displayEntry());
             if (composite.components() != null) uniqueComponents.addAll(composite.components());
+
             for (Object comp : uniqueComponents) {
-                ResourceLocation id = AutoPopulateRegistry.getEntryId(comp, false);
+                ResourceLocation id = AutoPopulateRegistry.getEntryId(comp, true);
                 rawDrops.addAll(dropCache.getOrDefault(id, Collections.emptyList()));
             }
         } else {
-            ResourceLocation id = AutoPopulateRegistry.getEntryId(entry, false);
+            ResourceLocation id = AutoPopulateRegistry.getEntryId(entry, true);
             rawDrops.addAll(dropCache.getOrDefault(id, Collections.emptyList()));
         }
 
         List<ItemStack> distinct = new ArrayList<>();
         for (ItemStack stack : rawDrops) {
-            if (distinct.stream().noneMatch(s -> isSameLootItem(s, stack))) {
+            boolean isDuplicate = false;
+            for (ItemStack existing : distinct) {
+                if (isSameLootItem(existing, stack)) {
+                    isDuplicate = true;
+                    break;
+                }
+            }
+            if (!isDuplicate) {
                 distinct.add(stack);
             }
         }
+
         return distinct;
     }
 

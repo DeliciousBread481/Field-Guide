@@ -2,13 +2,13 @@ package com.evandev.fieldguide.server;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.ModDataComponents;
+import com.evandev.fieldguide.api.AutoPopulateRegistry;
+import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.server.loot.ParsedDrop;
 import com.evandev.fieldguide.server.loot.StaticLootParser;
 import com.evandev.fieldguide.util.EntryResolver;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -17,8 +17,8 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.storage.loot.LootTable;
 
 import java.util.*;
@@ -27,62 +27,124 @@ public class LootTableHelper {
 
     public static Map<ResourceLocation, List<ItemStack>> generateLootMap(ServerLevel level) {
         Map<ResourceLocation, List<ItemStack>> lootMap = new HashMap<>();
-        for (EntityType<?> type : BuiltInRegistries.ENTITY_TYPE) {
-            ResourceKey<LootTable> tableId = type.getDefaultLootTable();
+        Set<Object> uniqueEntries = new HashSet<>();
+        Map<ResourceLocation, List<Object>> resolvedEntries = ServerFieldGuideManager.getInstance().getResolvedEntries();
 
-            processEntry(level, type, tableId, lootMap);
+        for (List<Object> categoryEntries : resolvedEntries.values()) {
+            for (Object entry : categoryEntries) {
+                uniqueEntries.add(entry);
+
+                if (entry instanceof CompositeFieldGuideEntry composite) {
+                    if (composite.displayEntry() != null) uniqueEntries.add(composite.displayEntry());
+                    if (composite.components() != null) uniqueEntries.addAll(composite.components());
+                }
+            }
         }
-        for (Block block : BuiltInRegistries.BLOCK) {
-            processEntry(level, block, block.getLootTable(), lootMap);
+
+        for (Object entry : uniqueEntries) {
+            ResourceKey<LootTable> tableId = null;
+
+            if (entry instanceof EntityType<?> type) {
+                tableId = type.getDefaultLootTable();
+            } else if (entry instanceof Block block) {
+                tableId = block.getLootTable();
+            } else if (entry instanceof Item item && Block.byItem(item) != Blocks.AIR) {
+                tableId = Block.byItem(item).getLootTable();
+            }
+
+            processEntry(level, entry, tableId, lootMap);
         }
+
         return lootMap;
     }
 
     private static void processEntry(ServerLevel level, Object entry, ResourceKey<LootTable> tableId, Map<ResourceLocation, List<ItemStack>> lootMap) {
         List<ItemStack> formattedDrops = new ArrayList<>();
-        if (tableId != null && !tableId.toString().equals("minecraft:empty")) {
+
+        if (tableId != null && !tableId.location().toString().equals("minecraft:empty")) {
             try {
                 LootTable table = level.getServer().reloadableRegistries().getLootTable(tableId);
                 List<ParsedDrop> finalDrops = StaticLootParser.parseTable(table, level);
 
                 for (ParsedDrop drop : finalDrops) {
                     ItemStack stack = drop.stack.copy();
-
                     stack.set(ModDataComponents.DROP_CHANCE.get(), drop.chance * 100.0f);
                     stack.set(ModDataComponents.MIN_DROP.get(), drop.minCount);
                     stack.set(ModDataComponents.MAX_DROP.get(), drop.maxCount);
-
                     formattedDrops.add(stack);
                 }
             } catch (Exception e) {
-                Constants.LOG.error("FieldGuide: Failed to parse loot table {}", tableId, e);
+                Constants.LOG.error("Failed to parse loot table {}", tableId.location(), e);
             }
         }
+
         applyConfigModifications(entry, formattedDrops);
+
         if (!formattedDrops.isEmpty()) {
-            ResourceLocation id = EntryResolver.getEntryId(entry, false);
+            ResourceLocation id = AutoPopulateRegistry.getEntryId(entry, true);
             if (id != null) {
-                lootMap.computeIfAbsent(id, k -> new ArrayList<>()).addAll(formattedDrops);
+                List<ItemStack> existing = lootMap.computeIfAbsent(id, k -> new ArrayList<>());
+                for (ItemStack newStack : formattedDrops) {
+                    boolean found = false;
+                    for (ItemStack s : existing) {
+
+                        ItemStack copyExisting = s.copy();
+                        copyExisting.remove(ModDataComponents.DROP_CHANCE.get());
+                        copyExisting.remove(ModDataComponents.MIN_DROP.get());
+                        copyExisting.remove(ModDataComponents.MAX_DROP.get());
+
+                        ItemStack copyNew = newStack.copy();
+                        copyNew.remove(ModDataComponents.DROP_CHANCE.get());
+                        copyNew.remove(ModDataComponents.MIN_DROP.get());
+                        copyNew.remove(ModDataComponents.MAX_DROP.get());
+
+                        if (ItemStack.isSameItemSameComponents(copyExisting, copyNew)) {
+                            float existingChance = s.getOrDefault(ModDataComponents.DROP_CHANCE.get(), 0.0f);
+                            float newChance = newStack.getOrDefault(ModDataComponents.DROP_CHANCE.get(), 0.0f);
+                            s.set(ModDataComponents.DROP_CHANCE.get(), Math.min(100.0f, existingChance + newChance));
+
+                            int existingMin = s.getOrDefault(ModDataComponents.MIN_DROP.get(), 1);
+                            int newMin = newStack.getOrDefault(ModDataComponents.MIN_DROP.get(), 1);
+                            s.set(ModDataComponents.MIN_DROP.get(), Math.min(existingMin, newMin));
+
+                            int existingMax = s.getOrDefault(ModDataComponents.MAX_DROP.get(), 1);
+                            int newMax = newStack.getOrDefault(ModDataComponents.MAX_DROP.get(), 1);
+                            s.set(ModDataComponents.MAX_DROP.get(), Math.max(existingMax, newMax));
+
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        existing.add(newStack);
+                    }
+                }
             }
         }
     }
 
     private static boolean matchesTarget(Object entry, String targetStr) {
-        ResourceLocation entryId = EntryResolver.getEntryId(entry);
+        Object coreEntry = entry instanceof CompositeFieldGuideEntry composite ? composite.displayEntry() : entry;
+        ResourceLocation entryId = EntryResolver.getRawId(EntryResolver.getEntryId(coreEntry));
+
         if (entryId == null) return false;
         if (targetStr.startsWith("#")) {
             try {
                 ResourceLocation tagId = ResourceLocation.parse(targetStr.substring(1));
-                if (entry instanceof EntityType<?> type) {
+                if (coreEntry instanceof EntityType<?> type) {
                     return BuiltInRegistries.ENTITY_TYPE.getHolder(BuiltInRegistries.ENTITY_TYPE.getResourceKey(type).get()).get().is(TagKey.create(Registries.ENTITY_TYPE, tagId));
-                } else if (entry instanceof Block block) {
+                } else if (coreEntry instanceof Block block) {
                     return BuiltInRegistries.BLOCK.getHolder(BuiltInRegistries.BLOCK.getResourceKey(block).get()).get().is(TagKey.create(Registries.BLOCK, tagId));
+                } else if (coreEntry instanceof Item item) {
+                    return BuiltInRegistries.ITEM.getHolder(BuiltInRegistries.ITEM.getResourceKey(item).get()).get().is(TagKey.create(Registries.ITEM, tagId));
                 }
             } catch (Exception ignored) {
             }
             return false;
         }
-        return entryId.toString().equals(targetStr);
+
+        ResourceLocation targetId = EntryResolver.getRawId(ResourceLocation.parse(targetStr));
+        return entryId.equals(targetId);
     }
 
     public static void applyConfigModifications(Object entry, List<ItemStack> distinctDrops) {
@@ -122,17 +184,15 @@ public class LootTableHelper {
                     try {
                         for (var holder : BuiltInRegistries.ITEM.getTagOrEmpty(TagKey.create(Registries.ITEM, ResourceLocation.parse(target.substring(1))))) {
                             ItemStack s = new ItemStack(holder.value());
-                            CustomData customData = s.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-                            CompoundTag tag = customData.copyTag();
-                            tag.putFloat("FieldGuideDropChance", 100.0f);
-                            s.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+                            s.set(ModDataComponents.DROP_CHANCE.get(), 100.0f);
                             distinctDrops.add(s);
                             added = true;
                         }
-                    } catch (Exception ignored) {
+                    } catch (Exception e) {
+                        Constants.LOG.error("Failed to parse loot addition tag {}", target, e);
                     }
                 } else {
-                    Item i = BuiltInRegistries.ITEM.get(ResourceLocation.parse(target));
+                    Item i = BuiltInRegistries.ITEM.get(EntryResolver.getRawId(ResourceLocation.parse(target)));
                     if (i != Items.AIR) {
                         ItemStack s = new ItemStack(i);
                         s.set(ModDataComponents.DROP_CHANCE.get(), 100.0f);
@@ -143,6 +203,5 @@ public class LootTableHelper {
             }
         }
         if (added) distinctDrops.sort(Comparator.comparing(s -> s.getHoverName().getString()));
-        distinctDrops.removeIf(ItemStack::isEmpty);
     }
 }
