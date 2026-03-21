@@ -107,6 +107,10 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         return EntryResolver.hasEntry(resolvedCategoryEntries, entryId);
     }
 
+    public Map<ResourceLocation, List<Object>> getResolvedEntries() {
+        return this.resolvedCategoryEntries;
+    }
+
     public boolean isKillToUnlock(ResourceLocation entryId) {
         TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(Constants.MOD_ID, "kill_to_unlock"));
         TagKey<EntityType<?>> bossesTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(Constants.MOD_ID, "bosses"));

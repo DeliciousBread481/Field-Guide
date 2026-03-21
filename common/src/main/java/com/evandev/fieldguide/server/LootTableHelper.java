@@ -6,7 +6,6 @@ import com.evandev.fieldguide.api.CompositeFieldGuideEntry;
 import com.evandev.fieldguide.server.loot.ParsedDrop;
 import com.evandev.fieldguide.server.loot.StaticLootParser;
 import com.evandev.fieldguide.util.EntryResolver;
-import com.evandev.fieldguide.util.entry.EntryResolutionHelper;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
@@ -26,24 +25,35 @@ public class LootTableHelper {
 
     public static Map<ResourceLocation, List<ItemStack>> generateLootMap(ServerLevel level) {
         Map<ResourceLocation, List<ItemStack>> lootMap = new HashMap<>();
-        Set<ResourceLocation> allEntryIds = ServerFieldGuideManager.getInstance().getAllEntryIds();
-
         Set<Object> uniqueEntries = new HashSet<>();
-        for (ResourceLocation entryId : allEntryIds) {
-            EntryResolutionHelper.resolveSingleEntry(entryId, null, null).ifPresent(uniqueEntries::add);
+
+        Map<ResourceLocation, List<Object>> resolvedEntries = ServerFieldGuideManager.getInstance().getResolvedEntries();
+
+        for (List<Object> categoryEntries : resolvedEntries.values()) {
+            for (Object entry : categoryEntries) {
+                uniqueEntries.add(entry);
+
+                if (entry instanceof CompositeFieldGuideEntry composite) {
+                    if (composite.displayEntry() != null) uniqueEntries.add(composite.displayEntry());
+                    if (composite.components() != null) uniqueEntries.addAll(composite.components());
+                }
+            }
         }
 
         for (Object entry : uniqueEntries) {
             ResourceLocation tableId = null;
-            if (entry instanceof EntityType<?> type) tableId = type.getDefaultLootTable();
-            else if (entry instanceof Block block) tableId = block.getLootTable();
-            else if (entry instanceof CompositeFieldGuideEntry composite) {
-                Object display = composite.displayEntry();
-                if (display instanceof EntityType<?> type) tableId = type.getDefaultLootTable();
-                else if (display instanceof Block block) tableId = block.getLootTable();
+
+            if (entry instanceof EntityType<?> type) {
+                tableId = type.getDefaultLootTable();
+            } else if (entry instanceof Block block) {
+                tableId = block.getLootTable();
+            } else if (entry instanceof Item item && Block.byItem(item) != net.minecraft.world.level.block.Blocks.AIR) {
+                tableId = Block.byItem(item).getLootTable();
             }
+
             processEntry(level, entry, tableId, lootMap);
         }
+
         return lootMap;
     }
 
@@ -63,7 +73,7 @@ public class LootTableHelper {
                     formattedDrops.add(stack);
                 }
             } catch (Exception e) {
-                Constants.LOG.error("FieldGuide: Failed to parse loot table {}", tableId, e);
+                Constants.LOG.error("Failed to parse loot table {}", tableId, e);
             }
         }
 
