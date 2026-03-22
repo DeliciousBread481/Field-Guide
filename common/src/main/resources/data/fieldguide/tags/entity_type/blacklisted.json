@@ -651,6 +651,14 @@
     {
       "id": "vital_herbs:pedestal_ring",
       "required": false
+    },
+    {
+      "id": "cobblemon:pokemon",
+      "required": false
+    },
+    {
+      "id": "cobblemon:npc",
+      "required": false
     }
   ]
 }

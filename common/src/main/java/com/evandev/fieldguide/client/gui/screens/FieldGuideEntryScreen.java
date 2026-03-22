@@ -338,12 +338,17 @@ public class FieldGuideEntryScreen extends BookScreen {
 
     private void loadSpawnBiomes() {
         Object coreEntry = EntryResolver.resolveCoreEntry(entry);
-        if (!(coreEntry instanceof EntityType<?>) && !(coreEntry instanceof Block)) return;
+        boolean isCobblemon = isCobblemon(entry);
+        if (!(coreEntry instanceof EntityType<?>) && !(coreEntry instanceof Block) && !isCobblemon) return;
 
         EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(entry);
 
         if (visual != null && visual.spawnBiomes != null) {
             spawnBiomes.addAll(visual.spawnBiomes);
+        }
+
+        if (isCobblemon && Services.PLATFORM.isModLoaded("cobblemon")) {
+            spawnBiomes.addAll(FieldGuideCobblemonCompat.getCobblemonBiomes(entry));
         }
 
         ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
@@ -361,13 +366,6 @@ public class FieldGuideEntryScreen extends BookScreen {
                 if (parts.length == 2 && categoryManager.isBiomeMatch(entry, ResourceLocation.parse(parts[1]))) {
                     ResourceLocation biomeId = ResourceLocation.parse(parts[1]);
 
-                    if (Services.PLATFORM.isModLoaded("immersiveoverlays")) {
-                        ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(biomeId.getNamespace(), "textures/immersiveoverlays/" + biomeId.getPath() + ".png");
-                        if (this.minecraft != null && this.minecraft.getResourceManager().getResource(texture).isEmpty()) {
-                            continue;
-                        }
-                    }
-
                     if (!spawnBiomes.contains(biomeId)) {
                         spawnBiomes.add(biomeId);
                     }
@@ -384,15 +382,22 @@ public class FieldGuideEntryScreen extends BookScreen {
             this.addRenderableWidget(new PaginatedGridWidget<>(this.rightPageBounds.left() + 2, this.rightPageBounds.bottom() - 33, this.rightPageBounds.width() - 4, itemSize, 5, itemSize, 0, spawnBiomes, (graphics, item, x, y, mouseX, mouseY) -> {
                 ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(item.getNamespace(), "textures/immersiveoverlays/" + item.getPath() + ".png");
 
+                boolean mouseOver = Bounds.isMouseOver(mouseX, mouseY, x, y, itemSize, itemSize) && (this.variantOverviewWidget == null || !this.variantOverviewWidget.isMouseOver(mouseX, mouseY));
+                int backgroundOffset = mouseOver ? itemSize : 0;
+                graphics.blit(Constants.WIDGETS_TEXTURE, x, y, 20, 64 + backgroundOffset, itemSize, itemSize);
+                int offset = (itemSize - 16) / 2;
+
                 if (Minecraft.getInstance().getResourceManager().getResource(texture).isPresent()) {
-                    boolean mouseOver = Bounds.isMouseOver(mouseX, mouseY, x, y, itemSize, itemSize);
-                    int backgroundOffset = mouseOver ? itemSize : 0;
-                    graphics.blit(Constants.WIDGETS_TEXTURE, x, y, 20, 64 + backgroundOffset, itemSize, itemSize);
-                    int offset = (itemSize - 16) / 2;
                     graphics.blit(texture, x + offset, y + offset, 0, 0, 16, 16, 16, 16);
-                    if (Bounds.isMouseOver(mouseX, mouseY, x + offset, y + offset, 16, 16)) {
-                        graphics.renderTooltip(this.font, Component.translatable("biome." + item.getNamespace() + "." + item.getPath()), mouseX, mouseY);
+                } else {
+                    ResourceLocation plainsTexture = ResourceLocation.fromNamespaceAndPath("minecraft", "textures/immersiveoverlays/plains.png");
+                    if (Minecraft.getInstance().getResourceManager().getResource(plainsTexture).isPresent()) {
+                        graphics.blit(plainsTexture, x + offset, y + offset, 0, 0, 16, 16, 16, 16);
                     }
+                }
+
+                if (Bounds.isMouseOver(mouseX, mouseY, x + offset, y + offset, 16, 16)) {
+                    graphics.renderTooltip(this.font, Component.translatable("biome." + item.getNamespace() + "." + item.getPath()), mouseX, mouseY);
                 }
             }, item -> {
                 if (this.minecraft != null) this.minecraft.setScreen(new FieldGuideCategoryScreen("=!" + item, this));

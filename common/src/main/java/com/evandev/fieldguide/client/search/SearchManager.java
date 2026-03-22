@@ -1,7 +1,9 @@
 package com.evandev.fieldguide.client.search;
 
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.entry.EntryResolver;
+import com.evandev.fieldguide.platform.Services;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -136,6 +138,16 @@ public class SearchManager {
 
                                 if (EntryResolver.isValidEntity(spawn.type, categoryId)) {
                                     if (entry != null && !results.contains(entry) && entries.contains(entry)) {
+                                        results.add(entry);
+                                    }
+                                }
+                            }
+                        }
+
+                        if (Services.PLATFORM.isModLoaded("cobblemon")) {
+                            for (Object entry : entries) {
+                                if (FieldGuideCobblemonCompat.isCobblemonBiomeMatch(entry, biomeEntry.getKey().location(), biomeRegistry.getHolderOrThrow(biomeEntry.getKey()))) {
+                                    if (!results.contains(entry)) {
                                         results.add(entry);
                                     }
                                 }
