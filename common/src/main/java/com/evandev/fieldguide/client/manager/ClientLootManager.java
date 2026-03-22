@@ -2,6 +2,7 @@ package com.evandev.fieldguide.client.manager;
 
 import com.evandev.fieldguide.api.AutoPopulateRegistry;
 import com.evandev.fieldguide.api.GuideEntry;
+import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.network.RequestLootPacket;
 import com.evandev.fieldguide.platform.Services;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -85,6 +86,10 @@ public class ClientLootManager {
                     requestLoot(id);
                 }
             }
+        }
+
+        if (Services.PLATFORM.isModLoaded("cobblemon")) {
+            rawDrops.addAll(FieldGuideCobblemonCompat.getCobblemonDrops(entry));
         }
 
         List<ItemStack> distinct = new ArrayList<>();
