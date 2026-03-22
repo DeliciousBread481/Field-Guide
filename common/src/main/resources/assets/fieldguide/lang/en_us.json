@@ -167,6 +167,14 @@
 
   "category.fieldguide.exposure": "Exposure Integration",
 
+  "category.fieldguide.seasons": "Seasons Integration",
+  "option.fieldguide.show_season_icons": "Show Season Icons",
+  "option.fieldguide.show_season_icons.tooltip": "If enabled, icons will appear on crop entries indicating which seasons they grow in.",
+  "fieldguide.season.spring": "Spring",
+  "fieldguide.season.summer": "Summer",
+  "fieldguide.season.autumn": "Autumn",
+  "fieldguide.season.winter": "Winter",
+
   "option.fieldguide.exposure.add_photograph_button": "Enable 'Add Photograph' Button",
   "option.fieldguide.exposure.add_photograph_button.tooltip": "If enabled, a button will appear in the entry screen allowing you to attach an existing photograph from your inventory.",
 

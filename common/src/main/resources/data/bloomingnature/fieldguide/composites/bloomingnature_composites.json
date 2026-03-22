@@ -1,0 +1,77 @@
+{
+  "values": [
+    {
+      "id": "bloomingnature:aspen_sapling",
+      "structure_nbt": "bloomingnature:aspen_tree_straight",
+      "components": [
+        "bloomingnature:aspen_log",
+        "bloomingnature:aspen_leaves"
+      ]
+    },
+    {
+      "id": "bloomingnature:larch_sapling",
+      "structure_nbt": "bloomingnature:larch",
+      "components": [
+        "bloomingnature:larch_log",
+        "bloomingnature:larch_leaves"
+      ]
+    },
+    {
+      "id": "bloomingnature:swamp_oak_sapling",
+      "structure_nbt": "bloomingnature:swamp_oak_tree",
+      "components": [
+        "bloomingnature:swamp_oak_log",
+        "bloomingnature:swamp_oak_leaves"
+      ]
+    },
+    {
+      "id": "bloomingnature:swamp_cypress_sapling",
+      "structure_nbt": "bloomingnature:swamp_cypress",
+      "components": [
+        "bloomingnature:swamp_cypress_log",
+        "bloomingnature:swamp_cypress_leaves"
+      ]
+    },
+    {
+      "id": "bloomingnature:chestnut_sapling",
+      "structure_nbt": "bloomingnature:plains_chestnut_tree",
+      "components": [
+        "bloomingnature:chestnut_log",
+        "bloomingnature:chestnut_leaves"
+      ]
+    },
+    {
+      "id": "bloomingnature:fir_sapling",
+      "structure_nbt": "bloomingnature:snowy_taiga_fir",
+      "components": [
+        "bloomingnature:fir_log",
+        "bloomingnature:fir_leaves"
+      ]
+    },
+    {
+      "id": "bloomingnature:baobab_sapling",
+      "structure_nbt": "bloomingnature:baobab",
+      "components": [
+        "bloomingnature:baobab_log",
+        "bloomingnature:baobab_leaves"
+      ]
+    },
+    {
+      "id": "bloomingnature:ebony_sapling",
+      "structure_nbt": "bloomingnature:ebony",
+      "components": [
+        "bloomingnature:ebony_log",
+        "bloomingnature:ebony_wood",
+        "bloomingnature:ebony_leaves"
+      ]
+    },
+    {
+      "id": "bloomingnature:fan_palm_sprout",
+      "structure_nbt": "bloomingnature:beach_fan_palm",
+      "components": [
+        "bloomingnature:fan_palm_log",
+        "bloomingnature:fan_palm_leaves"
+      ]
+    }
+  ]
+}

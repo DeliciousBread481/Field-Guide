@@ -16,6 +16,7 @@
       example.
 - Added increased functionality for entry unlocking criteria.
     - This includes killing, obtaining, scanning, and prerequisite entries.
+- Added Blooming Nature and Vanilla Backport compatibility (@thoughtRock05)
 
 ### Changed
 
@@ -29,3 +30,4 @@
 
 - Fixed certain commands causing client crashes.
 - Fixed selected Exposure photographs for entries not persisting.
+- Fixed issue with Iron's Spells and Spellbooks spell forging.
