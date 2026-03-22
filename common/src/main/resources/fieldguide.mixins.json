@@ -6,6 +6,7 @@
   "plugin": "com.evandev.fieldguide.mixin.FieldGuideMixinPlugin",
   "compatibilityLevel": "JAVA_18",
   "mixins": [
+    "InventoryMixin",
     "accessor.CompositeEntryBaseAccessor",
     "accessor.EntityAccessor",
     "accessor.LootItemAccessor",

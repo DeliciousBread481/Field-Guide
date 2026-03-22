@@ -78,7 +78,8 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             return new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.KILL), Collections.emptyList());
         }
 
-        if ("item".equals(entryId.getNamespace()) && BuiltInRegistries.ITEM.containsKey(EntryResolver.getRawId(entryId))) {
+        ResourceLocation rawId = EntryResolver.getRawId(entryId);
+        if (("item".equals(entryId.getNamespace()) || BuiltInRegistries.ITEM.containsKey(entryId)) && BuiltInRegistries.ITEM.containsKey(rawId)) {
             return new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.OBTAIN), Collections.emptyList());
         }
 
