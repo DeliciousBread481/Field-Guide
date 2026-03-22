@@ -61,7 +61,7 @@ public final class FieldGuideCobblemonCompat {
             @Override
             public void apply(PokemonEntity entity, VariantDef def) {
                 ResourceLocation id = getPokemonEntryId(entity);
-                String formName = (String) def.value();
+                String formName = def.id();
                 FORM_CACHE.put(id, formName);
                 DUMMY_CACHE.remove(id);
             }
