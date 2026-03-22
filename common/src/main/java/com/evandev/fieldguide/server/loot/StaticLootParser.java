@@ -76,9 +76,12 @@ public class StaticLootParser {
                         min = Math.max(0, Math.round(getMinRolls(provider)));
                         max = Math.max(min, Math.round(getMaxRolls(provider)));
                     }
-                    try {
-                        stack = function.apply(stack, context);
-                    } catch (Exception ignored) {
+
+                    if (function.getClass().getName().startsWith("net.minecraft.")) {
+                        try {
+                            stack = function.apply(stack, context);
+                        } catch (Exception ignored) {
+                        }
                     }
                 }
 
