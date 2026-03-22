@@ -2,6 +2,8 @@ package com.evandev.fieldguide.client.manager;
 
 import com.evandev.fieldguide.api.AutoPopulateRegistry;
 import com.evandev.fieldguide.api.GuideEntry;
+import com.evandev.fieldguide.network.RequestLootPacket;
+import com.evandev.fieldguide.platform.Services;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
@@ -13,6 +15,7 @@ public class ClientLootManager {
     private static final ClientLootManager INSTANCE = new ClientLootManager();
 
     private final Map<Object, List<ItemStack>> dropCache = new HashMap<>();
+    private final Set<ResourceLocation> requestedIds = new HashSet<>();
 
     private ClientLootManager() {
     }
@@ -21,19 +24,29 @@ public class ClientLootManager {
         return INSTANCE;
     }
 
+    public void clear() {
+        this.dropCache.clear();
+        this.requestedIds.clear();
+    }
+
     public void updateLootCache(Map<ResourceLocation, List<ItemStack>> lootCache, boolean clearCache) {
         if (clearCache) {
-            this.dropCache.clear();
+            this.clear();
         }
 
-        for (Map.Entry<ResourceLocation, List<ItemStack>> entry : lootCache.entrySet()) {
-            ResourceLocation id = entry.getKey();
-            List<ItemStack> drops = entry.getValue();
-
-            String namespace = id.getNamespace();
-            if (namespace.equals("item") || namespace.equals("entity") || namespace.equals("block") || namespace.equals("fieldguide") || namespace.equals("cobblemon")) {
+        if (lootCache != null) {
+            for (Map.Entry<ResourceLocation, List<ItemStack>> entry : lootCache.entrySet()) {
+                ResourceLocation id = entry.getKey();
+                List<ItemStack> drops = entry.getValue();
                 dropCache.put(id, drops);
             }
+        }
+    }
+
+    public void requestLoot(ResourceLocation entryId) {
+        if (entryId != null && !requestedIds.contains(entryId)) {
+            requestedIds.add(entryId);
+            Services.NETWORK.sendToServer(new RequestLootPacket(entryId));
         }
     }
 
@@ -55,11 +68,23 @@ public class ClientLootManager {
             }
             for (Object comp : uniqueComponents) {
                 ResourceLocation id = AutoPopulateRegistry.getEntryId(comp, true);
-                rawDrops.addAll(dropCache.getOrDefault(id, Collections.emptyList()));
+                if (id != null) {
+                    if (dropCache.containsKey(id)) {
+                        rawDrops.addAll(dropCache.get(id));
+                    } else {
+                        requestLoot(id);
+                    }
+                }
             }
         } else {
             ResourceLocation id = AutoPopulateRegistry.getEntryId(entry, true);
-            rawDrops.addAll(dropCache.getOrDefault(id, Collections.emptyList()));
+            if (id != null) {
+                if (dropCache.containsKey(id)) {
+                    rawDrops.addAll(dropCache.get(id));
+                } else {
+                    requestLoot(id);
+                }
+            }
         }
 
         List<ItemStack> distinct = new ArrayList<>();

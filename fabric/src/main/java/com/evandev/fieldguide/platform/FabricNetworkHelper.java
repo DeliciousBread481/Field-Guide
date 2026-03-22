@@ -21,6 +21,7 @@ public class FabricNetworkHelper implements INetworkHelper {
     public static final ResourceLocation UPDATE_ENTRY_DATA_CHANNEL = new ResourceLocation(Constants.MOD_ID, "update_entry_data");
     public static final ResourceLocation UPDATE_JOURNAL_CHANNEL = new ResourceLocation(Constants.MOD_ID, "update_journal");
     public static final ResourceLocation RIP_OUT_CHANNEL = new ResourceLocation(Constants.MOD_ID, "rip_out");
+    public static final ResourceLocation REQUEST_LOOT_CHANNEL = new ResourceLocation(Constants.MOD_ID, "request_loot");
 
     @Override
     public void sendToServer(Object packet) {
@@ -40,6 +41,9 @@ public class FabricNetworkHelper implements INetworkHelper {
         } else if (packet instanceof CopyPagePacket copyPagePacket) {
             copyPagePacket.encode(buf);
             ClientPlayNetworking.send(RIP_OUT_CHANNEL, buf);
+        } else if (packet instanceof RequestLootPacket requestLootPacket) {
+            requestLootPacket.encode(buf);
+            ClientPlayNetworking.send(REQUEST_LOOT_CHANNEL, buf);
         }
     }
 

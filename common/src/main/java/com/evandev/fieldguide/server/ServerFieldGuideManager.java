@@ -274,28 +274,11 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                 Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(catChunk, entryChunk, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap(), false, isLast), player);
             }
         }
+    }
 
-        if (!serverLootCache.isEmpty()) {
-            Map<ResourceLocation, List<ItemStack>> chunk = new HashMap<>();
-            int count = 0;
-            int maxChunkSize = 15;
-            boolean isFirstLoot = true;
-
-            for (var entry : serverLootCache.entrySet()) {
-                chunk.put(entry.getKey(), entry.getValue());
-                count++;
-
-                if (count >= maxChunkSize) {
-                    Services.NETWORK.sendToPlayer(new SyncLootPacket(new HashMap<>(chunk), isFirstLoot), player);
-                    chunk.clear();
-                    count = 0;
-                    isFirstLoot = false;
-                }
-            }
-
-            if (!chunk.isEmpty()) {
-                Services.NETWORK.sendToPlayer(new SyncLootPacket(chunk, isFirstLoot), player);
-            }
+    public void syncLootToPlayer(ServerPlayer player, ResourceLocation entryId) {
+        if (serverLootCache.containsKey(entryId)) {
+            Services.NETWORK.sendToPlayer(new SyncLootPacket(Map.of(entryId, serverLootCache.get(entryId)), false), player);
         }
     }
 

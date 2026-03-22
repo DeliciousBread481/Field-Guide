@@ -33,7 +33,8 @@ public class ForgeNetworkHelper implements INetworkHelper {
         CHANNEL.registerMessage(id++, MarkSeenPacket.class, MarkSeenPacket::encode, MarkSeenPacket::new, FieldGuideMod::handleMarkSeen, Optional.of(NetworkDirection.PLAY_TO_SERVER));
         CHANNEL.registerMessage(id++, UpdateEntryDataPacket.class, UpdateEntryDataPacket::encode, UpdateEntryDataPacket::new, FieldGuideMod::handleUpdateEntryData, Optional.of(NetworkDirection.PLAY_TO_SERVER));
         CHANNEL.registerMessage(id++, UpdateJournalPacket.class, UpdateJournalPacket::encode, UpdateJournalPacket::new, FieldGuideMod::handleUpdateJournal, Optional.of(NetworkDirection.PLAY_TO_SERVER));
-        CHANNEL.registerMessage(id++, CopyPagePacket.class, CopyPagePacket::encode, CopyPagePacket::new, FieldGuideMod::handleRipOut, Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        CHANNEL.registerMessage(id++, CopyPagePacket.class, CopyPagePacket::encode, CopyPagePacket::new, FieldGuideMod::handleCopy, Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        CHANNEL.registerMessage(id++, RequestLootPacket.class, RequestLootPacket::encode, RequestLootPacket::new, FieldGuideMod::handleRequestLoot, Optional.of(NetworkDirection.PLAY_TO_SERVER));
     }
 
     @Override

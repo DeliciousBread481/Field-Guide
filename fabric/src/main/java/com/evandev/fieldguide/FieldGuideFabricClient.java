@@ -3,6 +3,7 @@ package com.evandev.fieldguide;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.ModRenderTypes;
+import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
@@ -52,7 +53,12 @@ public class FieldGuideFabricClient implements ClientModInitializer {
 
         ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.SYNC_LOOT_CHANNEL, (client, handler, buf, responseSender) -> {
             SyncLootPacket packet = new SyncLootPacket(buf);
-            client.execute(() -> ClientFieldGuideManager.getInstance().updateLootCache(packet.getLootCache(), packet.isClearCache()));
+            client.execute(() -> {
+                ClientFieldGuideManager.getInstance().updateLootCache(packet.getLootCache(), packet.isClearCache());
+                if (client.screen instanceof FieldGuideEntryScreen screen) {
+                    screen.refresh();
+                }
+            });
         });
 
         ClientPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.SYNC_CATEGORIES_CHANNEL, (client, handler, buf, responseSender) -> {

@@ -111,6 +111,11 @@ public class FieldGuideMod implements ModInitializer {
             server.execute(() -> packet.handleServer(player));
         });
 
+        ServerPlayNetworking.registerGlobalReceiver(FabricNetworkHelper.REQUEST_LOOT_CHANNEL, (server, player, handler, buf, responseSender) -> {
+            RequestLootPacket packet = new RequestLootPacket(buf);
+            server.execute(() -> packet.handleServer(player));
+        });
+
         ServerEntityCombatEvents.AFTER_KILLED_OTHER_ENTITY.register((world, entity, killedEntity) -> {
             if (entity instanceof ServerPlayer player) {
                 FieldGuideProgressManager manager = FieldGuideProgressManager.getInstance();
