@@ -441,7 +441,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         List<Season> seasons = SeasonsAPI.getGrowingSeasons(entry);
         if (seasons.isEmpty()) return;
 
-        int iconSize = 12;
+        int iconSize = 8;
         int spacing = 2;
         int totalWidth = (iconSize * seasons.size()) + (spacing * (seasons.size() - 1));
         int startX = x - (totalWidth / 2);
