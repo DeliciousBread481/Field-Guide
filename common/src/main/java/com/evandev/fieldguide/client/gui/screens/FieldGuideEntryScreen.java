@@ -66,7 +66,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     private PageTurnButton prevVariantButton;
     private PageTurnButton nextVariantButton;
     private VariantOverviewWidget variantOverviewWidget;
-    private ImageButton overviewToggleButton;
+//    private PageTurnButton overviewToggleButton;
 
     public FieldGuideEntryScreen(FieldGuideCategoryScreen parent, Object entry) {
         super(getTitleForEntry(entry));
@@ -144,21 +144,23 @@ public class FieldGuideEntryScreen extends BookScreen {
             widget.visible = !overviewVisible;
         }
 
-        if (this.overviewToggleButton != null) {
-            if (overviewVisible) {
-                this.overviewToggleButton.visible = false;
-            } else {
-                String variantId = (!entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) ? entityVariants.get(currentVariantIndex).id() : null;
-                boolean hasPhoto = !ProgressManager.getInstance().getPhotograph(entry, variantId).isEmpty();
-                this.overviewToggleButton.visible = !hasPhoto;
-            }
-        }
+//        if (this.overviewToggleButton != null) {
+//            if (overviewVisible) {
+//                this.overviewToggleButton.visible = false;
+//            } else {
+//                String variantId = (!entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) ? entityVariants.get(currentVariantIndex).id() : null;
+//                boolean hasPhoto = !ProgressManager.getInstance().getPhotograph(entry, variantId).isEmpty();
+//                this.overviewToggleButton.visible = !hasPhoto;
+//            }
+//        }
 
         if (this.prevVariantButton != null) {
-            this.prevVariantButton.visible = !overviewVisible && currentVariantIndex > 0;
+            this.prevVariantButton.visible = !overviewVisible;
+            this.prevVariantButton.active = currentVariantIndex > 0;
         }
         if (this.nextVariantButton != null) {
-            this.nextVariantButton.visible = !overviewVisible && currentVariantIndex < entityVariants.size() - 1;
+            this.nextVariantButton.visible = !overviewVisible;
+            this.nextVariantButton.active = currentVariantIndex < entityVariants.size() - 1;
         }
     }
 
@@ -190,7 +192,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             int v = 192;
             int vDiff = canCopy ? 24 : 0;
 
-            this.addRenderableWidget(new PageTurnButton(this.bounds.right() - 13, this.bounds.top() + 54, 24, 24, u, v, vDiff, Constants.WIDGETS_TEXTURE, (btn) -> {
+            this.addRenderableWidget(new PageTurnButton(this.bounds.right() - 13, this.bounds.bottom() - 44, 24, 24, u, v, vDiff, Constants.WIDGETS_TEXTURE, (btn) -> {
                         if (canCopy) {
                             ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
                             if (id != null) {
@@ -205,18 +207,18 @@ public class FieldGuideEntryScreen extends BookScreen {
         }
 
         if (this.entityVariants.size() > 1 && this.renderedEntity instanceof LivingEntity living) {
-            this.overviewToggleButton = new ImageButton(this.leftPageBounds.left() + 10, this.leftPageBounds.top() + 10, 16, 16, 0, 0, 16, Constants.OVERVIEW_ICON, 16, 32, (btn) -> {
-                if (this.variantOverviewWidget != null) {
-                    this.variantOverviewWidget.toggleVisibility();
-                }
-            });
-            this.overviewToggleButton.setTooltip(Tooltip.create(Component.translatable("gui.fieldguide.variant_selector.tooltip")));
-            this.addRenderableWidget(this.overviewToggleButton);
+//            this.overviewToggleButton = new PageTurnButton(this.leftPageBounds.left() + 10, this.leftPageBounds.top() + 10, 16, 16, 0, 0, 16, Constants.OVERVIEW_ICON, (btn) -> {
+//                if (this.variantOverviewWidget != null) {
+//                    this.variantOverviewWidget.toggleVisibility();
+//                }
+//            });
+//            this.overviewToggleButton.setTooltip(Tooltip.create(Component.translatable("gui.fieldguide.variant_selector.tooltip")));
+//            this.addRenderableWidget(this.overviewToggleButton);
 
-            int widgetWidth = 142;
-            int widgetHeight = 166;
-            int widgetX = this.leftPageBounds.left() + (this.leftPageBounds.width() / 2) - (widgetWidth / 2);
-            int widgetY = this.leftPageBounds.top() + (this.leftPageBounds.height() / 2) - (widgetHeight / 2);
+            int widgetWidth = this.leftPageBounds.width();
+            int widgetHeight = this.leftPageBounds.height();
+            int widgetX = this.leftPageBounds.left();
+            int widgetY = this.leftPageBounds.top();
 
             this.variantOverviewWidget = new VariantOverviewWidget(widgetX, widgetY, widgetWidth, widgetHeight, this.entry, living, this.entityVariants, this::setVariantIndex, this::updateWidgetVisibility);
             this.addRenderableWidget(this.variantOverviewWidget);
@@ -265,11 +267,10 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (this.renderedEntity != null) {
             this.entityVariants = FieldGuideVariantManager.getVariants(this.renderedEntity);
             if (this.entityVariants.size() > 1) {
-                int centerX = leftPageBounds.x_center();
                 int centerY = leftPageBounds.y_center() - 15;
 
-                this.prevVariantButton = new PageTurnButton(centerX - 70, centerY - 8, 16, 16, 0, 16, 16, Constants.WIDGETS_TEXTURE, b -> cycleVariant(-1));
-                this.nextVariantButton = new PageTurnButton(centerX + 54, centerY - 8, 16, 16, 16, 16, 16, Constants.WIDGETS_TEXTURE, b -> cycleVariant(1));
+                this.prevVariantButton = new PageTurnButton(leftPageBounds.left(), centerY - 8, 16, 16, 0, 16, 16, Constants.WIDGETS_TEXTURE, b -> cycleVariant(-1));
+                this.nextVariantButton = new PageTurnButton(leftPageBounds.right() - 16, centerY - 8, 16, 16, 16, 16, 16, Constants.WIDGETS_TEXTURE, b -> cycleVariant(1));
 
                 this.addRenderableWidget(prevVariantButton);
                 this.addRenderableWidget(nextVariantButton);
@@ -309,19 +310,22 @@ public class FieldGuideEntryScreen extends BookScreen {
             if (mouseX >= xPos - 50 && mouseX <= xPos + 50 && mouseY >= yPos - 50 && mouseY <= yPos + 50) {
                 if (ClientFieldGuideManager.isUnlocked(entry)) {
                     if (button == 0) {
-                        EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(entry);
-
-                        if (visual != null && visual.customSound != null && this.minecraft != null) {
-                            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(visual.customSound), 1.0F, 1.0F));
-                        } else if ((isCobblemon(entry) || clickEntry instanceof EntityType<?>) && renderedEntity != null) {
-                            FieldGuideClient.playMobCry(this.renderedEntity);
-                        } else if (clickEntry instanceof Block block && this.minecraft != null) {
-                            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(block.defaultBlockState().getSoundType().getBreakSound(), 1.0F, 1.0F));
-                        } else if (clickEntry instanceof Item && this.minecraft != null) {
-                            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(Constants.ITEM_PICKUP_SOUND), 1.0F, 1.0F));
+                        if (this.variantOverviewWidget != null) {
+                            this.variantOverviewWidget.toggleVisibility();
                         }
+//                        EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(entry);
+//
+//                        if (visual != null && visual.customSound != null && this.minecraft != null) {
+//                            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(visual.customSound), 1.0F, 1.0F));
+//                        } else if ((isCobblemon(entry) || clickEntry instanceof EntityType<?>) && renderedEntity != null) {
+//                            FieldGuideClient.playMobCry(this.renderedEntity);
+//                        } else if (clickEntry instanceof Block block && this.minecraft != null) {
+//                            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(block.defaultBlockState().getSoundType().getBreakSound(), 1.0F, 1.0F));
+//                        } else if (clickEntry instanceof Item && this.minecraft != null) {
+//                            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(Constants.ITEM_PICKUP_SOUND), 1.0F, 1.0F));
+//                        }
                     }
-                    this.lastClickTime = System.currentTimeMillis();
+                    //this.lastClickTime = System.currentTimeMillis();
                 }
                 return true;
             }
@@ -494,7 +498,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
         }
         refreshExposureWidgets();
-        lastClickTime = System.currentTimeMillis();
+        //lastClickTime = System.currentTimeMillis();
         this.updateWidgetVisibility();
     }
 
@@ -513,7 +517,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                 }
             }
             refreshExposureWidgets();
-            lastClickTime = System.currentTimeMillis();
+            //lastClickTime = System.currentTimeMillis();
         }
     }
 
