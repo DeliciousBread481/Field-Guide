@@ -6,6 +6,7 @@ import com.evandev.fieldguide.client.gui.screens.BookScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideCategoryScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.client.scan.FieldGuideScanner;
+import com.evandev.fieldguide.compat.SeasonsCompat;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.mixin.accessor.MobAccessor;
@@ -28,6 +29,8 @@ public class FieldGuideClient {
     public static KeyMapping SCAN_KEY;
 
     public static void init() {
+        SeasonsCompat.init();
+
         OPEN_GUIDE_KEY = new KeyMapping(
                 "key.fieldguide.open",
                 InputConstants.Type.KEYSYM,

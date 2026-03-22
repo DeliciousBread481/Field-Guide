@@ -52,6 +52,7 @@ public class ClientConfig {
 
     public boolean useRealWorldDate = false;
     public boolean showToasts = true;
+    public boolean showSeasonIcons = true;
 
     public boolean exposureAddPhotographButton = true;
     public boolean exposureShowPhotographsInGrid = true;

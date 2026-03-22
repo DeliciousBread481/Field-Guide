@@ -76,6 +76,10 @@ dependencies {
     // KubeJS
     modCompileOnly "maven.modrinth:kubejs:${kubejs_forge_version}"
 
+    // Serene Seasons
+    modImplementation "maven.modrinth:serene-seasons:${serene_seasons_forge_version}"
+    modRuntimeOnly "maven.modrinth:glitchcore:0.0.1.1"
+
     compileOnly project(":common")
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
 }

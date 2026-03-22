@@ -393,6 +393,15 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> clientConfig.exposureShowPhotographsInGrid = newValue)
                 .build());
 
+        // Seasons
+        ConfigCategory seasonsCat = builder.getOrCreateCategory(Component.translatable("category.fieldguide.seasons"));
+
+        seasonsCat.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.show_season_icons"), clientConfig.showSeasonIcons)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.fieldguide.show_season_icons.tooltip"))
+                .setSaveConsumer(newValue -> clientConfig.showSeasonIcons = newValue)
+                .build());
+
         return builder.build();
     }
 
