@@ -131,7 +131,7 @@ public class EntryResolver {
         if (id == null) return null;
         String ns = id.getNamespace();
         if (ns.equals("item") || ns.equals("entity") || ns.equals("block")) {
-            return ResourceLocation.parse(id.getPath().replace("/", ":"));
+            return ResourceLocation.parse(id.getPath().replaceFirst("/", ":"));
         }
         return id;
     }
