@@ -16,7 +16,9 @@
       example.
 - Added increased functionality for entry unlocking criteria.
     - This includes killing, obtaining, scanning, and prerequisite entries.
-- Added Blooming Nature and Vanilla Backport compatibility (@thoughtRock05)
+- Added Blooming Nature and Vanilla Backport compatibility (@thoughtRock05).
+- Added seasons integration.
+    - Only Serene Seasons is supported for now, integration with other seasons mods is planned for the near future.
 
 ### Changed
 
