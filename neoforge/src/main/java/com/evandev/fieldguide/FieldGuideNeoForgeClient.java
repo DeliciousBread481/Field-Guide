@@ -3,6 +3,7 @@ package com.evandev.fieldguide;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.ModRenderTypes;
+import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.config.ClothConfigIntegration;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
@@ -26,6 +27,9 @@ public class FieldGuideNeoForgeClient {
 
     public static void handleSyncLoot(SyncLootPacket packet) {
         ClientFieldGuideManager.getInstance().updateLootCache(packet.lootCache(), packet.clearCache());
+        if (Minecraft.getInstance().screen instanceof FieldGuideEntryScreen screen) {
+            screen.refresh();
+        }
     }
 
     public static void handleSyncConfig(SyncConfigPacket packet) {

@@ -56,6 +56,7 @@ public class FieldGuideMod implements ModInitializer {
         PayloadTypeRegistry.playC2S().register(UpdateEntryDataPacket.TYPE, UpdateEntryDataPacket.CODEC);
         PayloadTypeRegistry.playC2S().register(UpdateJournalPacket.TYPE, UpdateJournalPacket.CODEC);
         PayloadTypeRegistry.playC2S().register(CopyPagePacket.TYPE, CopyPagePacket.CODEC);
+        PayloadTypeRegistry.playC2S().register(RequestLootPacket.TYPE, RequestLootPacket.CODEC);
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> FieldGuideCommand.register(dispatcher));
 
@@ -121,6 +122,10 @@ public class FieldGuideMod implements ModInitializer {
         });
 
         ServerPlayNetworking.registerGlobalReceiver(CopyPagePacket.TYPE, (packet, context) -> {
+            context.server().execute(() -> packet.handleServer(context.player()));
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(RequestLootPacket.TYPE, (packet, context) -> {
             context.server().execute(() -> packet.handleServer(context.player()));
         });
 

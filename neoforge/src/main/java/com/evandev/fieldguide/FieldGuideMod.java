@@ -76,6 +76,9 @@ public class FieldGuideMod {
         registrar.playToServer(CopyPagePacket.TYPE, CopyPagePacket.CODEC, (packet, context) -> context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer sp) packet.handleServer(sp);
         }));
+        registrar.playToServer(RequestLootPacket.TYPE, RequestLootPacket.CODEC, (packet, context) -> context.enqueueWork(() -> {
+            if (context.player() instanceof ServerPlayer sp) packet.handleServer(sp);
+        }));
     }
 
     @SubscribeEvent

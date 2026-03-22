@@ -3,6 +3,7 @@ package com.evandev.fieldguide;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.ModRenderTypes;
+import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
@@ -50,7 +51,13 @@ public class FieldGuideFabricClient implements ClientModInitializer {
         });
 
         ClientPlayNetworking.registerGlobalReceiver(SyncLootPacket.TYPE, (packet, context) -> {
-            context.client().execute(() -> ClientFieldGuideManager.getInstance().updateLootCache(packet.lootCache(), packet.clearCache()));
+            context.client().execute(() -> {
+                ClientFieldGuideManager.getInstance().updateLootCache(packet.lootCache(), packet.clearCache());
+
+                if (context.client().screen instanceof FieldGuideEntryScreen screen) {
+                    screen.refresh();
+                }
+            });
         });
 
         ClientPlayNetworking.registerGlobalReceiver(SyncCategoriesPacket.TYPE, (packet, context) -> {
@@ -73,7 +80,6 @@ public class FieldGuideFabricClient implements ClientModInitializer {
                         packet.shouldClearCache()
                 );
 
-                // Call variants separately as in 1.20.1
                 manager.updateVariants(packet.getVariants());
             });
         });

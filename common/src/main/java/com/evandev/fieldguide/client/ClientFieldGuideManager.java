@@ -43,7 +43,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public static void clearCache() {
-        ClientLootManager.getInstance().getDropCache().clear();
+        ClientLootManager.getInstance().clear();
         ClientCategoryManager.getInstance().getResolvedCategoryEntries().clear();
         EntryRenderHelper.clearCache();
         ClientCategoryManager.getInstance().resolveAllEntries();
@@ -244,7 +244,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public void onWorldUnload() {
-        ClientLootManager.getInstance().getDropCache().clear();
+        ClientLootManager.getInstance().clear();
         ProgressManager.getInstance().onWorldUnload();
         ServerConfig.resetSyncedConfig();
     }

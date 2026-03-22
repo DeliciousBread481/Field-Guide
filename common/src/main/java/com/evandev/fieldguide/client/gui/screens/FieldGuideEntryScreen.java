@@ -105,6 +105,12 @@ public class FieldGuideEntryScreen extends BookScreen {
         this.initialVariant = variantId;
     }
 
+    public void refresh() {
+        if (this.minecraft != null) {
+            this.init(this.minecraft, this.width, this.height);
+        }
+    }
+
     public FieldGuideCategoryScreen getParentScreen() {
         return parent;
     }
