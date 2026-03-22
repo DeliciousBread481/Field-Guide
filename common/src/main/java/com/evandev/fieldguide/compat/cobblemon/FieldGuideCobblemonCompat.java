@@ -12,18 +12,22 @@ import com.evandev.fieldguide.api.GuideEntry;
 import com.evandev.fieldguide.api.variant.VariantDef;
 import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
-import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.entry.EntryResolver;
+import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -32,6 +36,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.Biome;
 
 import java.io.Reader;
 import java.util.*;
@@ -45,6 +50,7 @@ public final class FieldGuideCobblemonCompat {
     private static final Map<ResourceLocation, String> FORM_CACHE = new HashMap<>();
     private static final Map<ResourceLocation, List<ItemStack>> COBBLEMON_DROPS_CACHE = new HashMap<>();
     private static final List<Object> AUTO_POPULATE_CACHE = new ArrayList<>();
+    private static final Map<ResourceLocation, Set<String>> COBBLEMON_BIOMES_CACHE = new HashMap<>();
 
     static {
         FieldGuideVariantManager.registerProvider(PokemonEntity.class, new VariantProvider<>() {
@@ -260,7 +266,7 @@ public final class FieldGuideCobblemonCompat {
 
                     if (json.has("name")) {
                         String speciesName = json.get("name").getAsString().toLowerCase(Locale.ROOT);
-                        ResourceLocation entryId = new ResourceLocation("fieldguide", "cobblemon/" + speciesName + "_standard");
+                        ResourceLocation entryId = new ResourceLocation(Constants.MOD_ID, "cobblemon/" + speciesName + "_standard");
                         int pokedexNumber = json.has("nationalPokedexNumber") ? json.get("nationalPokedexNumber").getAsInt() : Integer.MAX_VALUE;
 
                         if (json.has("drops")) {
@@ -302,23 +308,56 @@ public final class FieldGuideCobblemonCompat {
         for (Map.Entry<GuideEntry, Integer> sortedEntry : sortedEntries) {
             AUTO_POPULATE_CACHE.add(sortedEntry.getKey());
         }
-    }
 
-    public static List<ItemStack> getCobblemonDrops(Object entry) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-        if (id == null) return List.of();
+        Map<ResourceLocation, List<Resource>> spawnPoolFiles = resourceManager.listResourceStacks(
+                "spawn_pool_world", id -> id.getNamespace().equals(MOD_ID) && id.getPath().endsWith(".json")
+        );
 
-        if (COBBLEMON_DROPS_CACHE.containsKey(id)) {
-            return COBBLEMON_DROPS_CACHE.get(id);
+        if (spawnPoolFiles.isEmpty()) {
+            spawnPoolFiles = resourceManager.listResourceStacks(
+                    "spawn_pool", id -> id.getNamespace().equals(MOD_ID) && id.getPath().endsWith(".json")
+            );
         }
 
-        String speciesName = getSpeciesName(id);
-        ResourceLocation standardId = new ResourceLocation(Constants.MOD_ID, "cobblemon/" + speciesName + "_standard");
-        if (COBBLEMON_DROPS_CACHE.containsKey(standardId)) {
-            return COBBLEMON_DROPS_CACHE.get(standardId);
-        }
+        for (Map.Entry<ResourceLocation, List<Resource>> entry : spawnPoolFiles.entrySet()) {
+            for (Resource resource : entry.getValue()) {
+                try (Reader reader = resource.openAsReader()) {
+                    JsonObject json = GsonHelper.parse(reader);
+                    if (json.has("spawns")) {
+                        JsonArray spawns = json.getAsJsonArray("spawns");
+                        for (JsonElement spawnEl : spawns) {
+                            JsonObject spawn = spawnEl.getAsJsonObject();
+                            if (spawn.has("pokemon")) {
+                                String pokemonStr = spawn.get("pokemon").getAsString().toLowerCase(Locale.ROOT);
+                                String speciesName = pokemonStr.split(" ")[0];
+                                ResourceLocation entryId = new ResourceLocation(Constants.MOD_ID, "cobblemon/" + speciesName + "_standard");
 
-        return List.of();
+                                if (spawn.has("condition")) {
+                                    JsonObject condition = spawn.getAsJsonObject("condition");
+                                    if (condition.has("biomes")) {
+                                        JsonArray biomes = condition.getAsJsonArray("biomes");
+                                        for (JsonElement biomeEl : biomes) {
+                                            COBBLEMON_BIOMES_CACHE.computeIfAbsent(entryId, k -> new HashSet<>()).add(biomeEl.getAsString());
+                                        }
+                                    }
+                                }
+                                if (spawn.has("anticondition")) {
+                                    JsonObject anti = spawn.getAsJsonObject("anticondition");
+                                    if (anti.has("biomes")) {
+                                        JsonArray biomes = anti.getAsJsonArray("biomes");
+                                        for (JsonElement biomeEl : biomes) {
+                                            Set<String> set = COBBLEMON_BIOMES_CACHE.get(entryId);
+                                            if (set != null) set.remove(biomeEl.getAsString());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        }
     }
 
     public static List<Object> getAutoPopulateEntries() {
@@ -345,4 +384,73 @@ public final class FieldGuideCobblemonCompat {
         return MOD_ID.equals(id.getNamespace());
     }
 
+
+    public static List<ItemStack> getCobblemonDrops(Object entry) {
+        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        if (id == null) return List.of();
+
+        if (COBBLEMON_DROPS_CACHE.containsKey(id)) {
+            return COBBLEMON_DROPS_CACHE.get(id);
+        }
+
+        String speciesName = getSpeciesName(id);
+        ResourceLocation standardId = new ResourceLocation(Constants.MOD_ID, "cobblemon/" + speciesName + "_standard");
+        if (COBBLEMON_DROPS_CACHE.containsKey(standardId)) {
+            return COBBLEMON_DROPS_CACHE.get(standardId);
+        }
+
+        return List.of();
+    }
+
+    public static List<ResourceLocation> getCobblemonBiomes(Object entry) {
+        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        if (id == null) return List.of();
+
+        Set<String> conditions = COBBLEMON_BIOMES_CACHE.get(id);
+        if (conditions == null) {
+            String speciesName = getSpeciesName(id);
+            ResourceLocation standardId = new ResourceLocation(Constants.MOD_ID, "cobblemon/" + speciesName + "_standard");
+            conditions = COBBLEMON_BIOMES_CACHE.get(standardId);
+        }
+
+        if (conditions == null) return List.of();
+
+        List<ResourceLocation> results = new ArrayList<>();
+        var connection = Minecraft.getInstance().getConnection();
+        if (connection != null) {
+            var biomeRegistry = connection.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.BIOME);
+            for (var biomeEntry : biomeRegistry.entrySet()) {
+                if (isCobblemonBiomeMatch(entry, biomeEntry.getKey().location(), biomeRegistry.getHolderOrThrow(biomeEntry.getKey()))) {
+                    results.add(biomeEntry.getKey().location());
+                }
+            }
+        }
+        return results;
+    }
+
+    public static boolean isCobblemonBiomeMatch(Object entry, ResourceLocation biomeId, Holder<Biome> holder) {
+        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        if (id == null) return false;
+
+        Set<String> conditions = COBBLEMON_BIOMES_CACHE.get(id);
+        if (conditions == null) {
+            String speciesName = getSpeciesName(id);
+            ResourceLocation standardId = new ResourceLocation(Constants.MOD_ID, "cobblemon/" + speciesName + "_standard");
+            conditions = COBBLEMON_BIOMES_CACHE.get(standardId);
+        }
+
+        if (conditions == null) return false;
+
+        for (String condition : conditions) {
+            if (condition.startsWith("#")) {
+                String tagPath = condition.substring(1);
+                TagKey<Biome> tagKey = TagKey.create(Registries.BIOME, new ResourceLocation(tagPath));
+                if (holder.is(tagKey)) return true;
+            } else {
+                if (biomeId.toString().equals(condition) || biomeId.getPath().equals(condition)) return true;
+            }
+        }
+
+        return false;
+    }
 }
