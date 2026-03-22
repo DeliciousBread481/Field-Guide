@@ -230,15 +230,4 @@ public class FieldGuideMod {
             }
         }
     }
-
-    @SubscribeEvent
-    public void onItemPickup(EntityItemPickupEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) {
-            ResourceLocation itemId = EntryResolver.getEntryId(event.getItem().getItem().getItem());
-            PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
-            if (progress != null) {
-                progress.tryUnlock(player, itemId, null, EntryUnlockData.UnlockTrigger.OBTAIN);
-            }
-        }
-    }
 }
