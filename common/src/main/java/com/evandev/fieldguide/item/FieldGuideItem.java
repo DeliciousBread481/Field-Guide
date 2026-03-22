@@ -23,7 +23,7 @@ public class FieldGuideItem extends Item {
     @Override
     public @NotNull InteractionResultHolder<ItemStack> use(Level level, @NotNull Player player, @NotNull InteractionHand hand) {
         if (level.isClientSide) {
-            Services.CLIENT.openFieldGuide();
+            Services.getClient().openFieldGuide();
         }
         return InteractionResultHolder.sidedSuccess(player.getItemInHand(hand), level.isClientSide());
     }
