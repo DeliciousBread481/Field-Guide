@@ -5,6 +5,8 @@ import com.evandev.fieldguide.FieldGuideLimits;
 import com.evandev.fieldguide.ModDataComponents;
 import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.api.GuideEntry;
+import com.evandev.fieldguide.api.seasons.Season;
+import com.evandev.fieldguide.api.seasons.SeasonsAPI;
 import com.evandev.fieldguide.api.variant.VariantDef;
 import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.client.ClientConstants;
@@ -625,7 +627,53 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
         }
 
+        if (unlocked) {
+            renderSeasons(guiGraphics, xPos, yPos, mouseX, mouseY);
+        }
+
         super.render(guiGraphics, mouseX, mouseY, partialTick);
+    }
+
+    private void renderSeasons(GuiGraphics guiGraphics, int x, int y, int mouseX, int mouseY) {
+        List<Season> seasons = SeasonsAPI.getGrowingSeasons(entry);
+        if (seasons.isEmpty()) return;
+
+        int iconSize = 12;
+        int spacing = 2;
+        int totalWidth = (iconSize * seasons.size()) + (spacing * (seasons.size() - 1));
+        int startX = x - (totalWidth / 2);
+        int startY = y + 42;
+
+        boolean ssLoaded = Services.PLATFORM.isModLoaded("sereneseasons");
+        ResourceLocation ssTexture = ResourceLocation.fromNamespaceAndPath("sereneseasons", "textures/item/ss_icon.png");
+
+        for (int i = 0; i < seasons.size(); i++) {
+            Season season = seasons.get(i);
+            int drawX = startX + (i * (iconSize + spacing));
+
+            RenderSystem.enableBlend();
+            if (ssLoaded) {
+                int u = 0;
+                int v = 0;
+                switch (season) {
+                    case SUMMER -> u = 8;
+                    case AUTUMN -> v = 8;
+                    case WINTER -> {
+                        u = 8;
+                        v = 8;
+                    }
+                }
+                guiGraphics.blit(ssTexture, drawX, startY, iconSize, iconSize, u, v, 8, 8, 16, 16);
+            } else {
+                ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/icons/" + season.getId() + ".png");
+                guiGraphics.blit(texture, drawX, startY, 0, 0, iconSize, iconSize, iconSize, iconSize);
+            }
+            RenderSystem.disableBlend();
+
+            if (Bounds.isMouseOver(mouseX, mouseY, drawX, startY, iconSize, iconSize)) {
+                guiGraphics.renderTooltip(this.font, season.getDisplayName(), mouseX, mouseY);
+            }
+        }
     }
 
     private void renderAlignment(GuiGraphics guiGraphics, LivingEntity entity, int mouseX, int mouseY) {

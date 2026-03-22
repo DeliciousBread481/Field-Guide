@@ -70,6 +70,10 @@ dependencies {
 
     // KubeJS
     compileOnly "maven.modrinth:kubejs:${kubejs_version}"
+
+    // Serene Seasons
+    implementation "maven.modrinth:serene-seasons:${serene_seasons_neoforge_version}"
+    runtimeOnly "maven.modrinth:glitchcore:8wmCpbQ2"
 }
 
 publishMods {
