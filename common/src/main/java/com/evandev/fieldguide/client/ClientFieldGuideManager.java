@@ -2,8 +2,8 @@ package com.evandev.fieldguide.client;
 
 import com.evandev.fieldguide.api.AutoPopulateRegistry;
 import com.evandev.fieldguide.api.Category;
-import com.evandev.fieldguide.api.variant.DatapackVariant;
 import com.evandev.fieldguide.api.GuideEntry;
+import com.evandev.fieldguide.api.variant.DatapackVariant;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.data.JournalPage;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
@@ -15,10 +15,12 @@ import com.evandev.fieldguide.client.manager.ClientVisualManager;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.client.scan.FieldGuideScanner;
 import com.evandev.fieldguide.client.search.SearchManager;
+import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.config.ServerConfig;
-import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.entry.EntryResolver;
+import com.evandev.fieldguide.network.ProgressUpdatePacket;
+import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -31,6 +33,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     private static final ClientFieldGuideManager INSTANCE = new ClientFieldGuideManager();
@@ -241,6 +244,31 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
     public void onWorldLoad() {
         ProgressManager.getInstance().onWorldLoad();
+        warmUpCache();
+    }
+
+    private void warmUpCache() {
+        CompletableFuture.runAsync(() -> {
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException ignored) {
+            }
+
+            List<Object> entries = getValidEntries();
+            for (Object entry : entries) {
+                loadBiomesInBackground(entry);
+
+                if (isUnlocked(entry)) {
+                    getDrops(entry);
+                }
+            }
+        });
+    }
+
+    private void loadBiomesInBackground(Object entry) {
+        if (Services.PLATFORM.isModLoaded("cobblemon") && EntryResolver.getEntryId(entry).getNamespace().equals("cobblemon")) {
+            FieldGuideCobblemonCompat.getCobblemonBiomes(entry);
+        }
     }
 
     public void onWorldUnload() {

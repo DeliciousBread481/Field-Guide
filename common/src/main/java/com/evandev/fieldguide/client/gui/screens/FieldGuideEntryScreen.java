@@ -49,12 +49,16 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 
 public class FieldGuideEntryScreen extends BookScreen {
     private final FieldGuideCategoryScreen parent;
     private final Object entry;
     private final List<ResourceLocation> spawnBiomes = new ArrayList<>();
     private final List<AbstractWidget> exposureWidgets = new ArrayList<>();
+    private List<ItemStack> loadedDrops = new ArrayList<>();
+    private boolean dataLoaded = false;
+    private boolean isLoadingData = false;
     private String initialVariant = null;
     private Entity renderedEntity;
     private long lastClickTime = 0;
@@ -168,16 +172,40 @@ public class FieldGuideEntryScreen extends BookScreen {
         else if (parent != null) this.setSelectedCategory(parent.getSelectedCategory());
 
         super.init();
-        spawnBiomes.clear();
+
         boolean unlocked = ClientFieldGuideManager.isUnlocked(entry);
         if (ClientFieldGuideManager.isNew(entry)) {
             ClientFieldGuideManager.markAsSeen(entry);
         }
         setupTextWidgets(unlocked);
         setupEntityPreview();
-        loadSpawnBiomes();
-        setupBiomeWidget(unlocked);
-        setupDropWidget(unlocked);
+
+        if (unlocked) {
+            this.loadedDrops = ClientFieldGuideManager.getInstance().getDrops(entry);
+        }
+
+        if (!dataLoaded && !isLoadingData) {
+            isLoadingData = true;
+            CompletableFuture.runAsync(() -> {
+                loadSpawnBiomes();
+                if (unlocked) {
+                    this.loadedDrops = ClientFieldGuideManager.getInstance().getDrops(entry);
+                }
+                if (this.minecraft != null) {
+                    this.minecraft.execute(() -> {
+                        this.dataLoaded = true;
+                        this.isLoadingData = false;
+                        this.refresh();
+                    });
+                }
+            });
+        }
+
+        if (dataLoaded) {
+            setupBiomeWidget(unlocked);
+            setupDropWidget(unlocked);
+        }
+
         setupNavigationButtons();
         refreshExposureWidgets();
 
@@ -435,6 +463,10 @@ public class FieldGuideEntryScreen extends BookScreen {
             renderSeasons(guiGraphics, xPos, yPos, mouseX, mouseY);
         }
 
+        if (!dataLoaded) {
+            guiGraphics.drawString(this.font, Component.translatable("gui.fieldguide.loading"), this.bounds.left() + 20, this.bounds.bottom() - 30, ClientConfig.get().getTextMutedColorInt(), false);
+        }
+
         super.render(guiGraphics, mouseX, mouseY, partialTick);
     }
 
@@ -525,6 +557,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(entry);
 
+        spawnBiomes.clear();
         if (visual != null && visual.spawnBiomes != null) {
             spawnBiomes.addAll(visual.spawnBiomes);
         }
@@ -561,7 +594,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         if (unlocked && !spawnBiomes.isEmpty()) {
             int itemSize = 20;
-            this.addRenderableWidget(new PaginatedGridWidget<>(this.rightPageBounds.left() + 2, this.rightPageBounds.bottom() - 33, this.rightPageBounds.width() - 4, itemSize, 5, itemSize, 0, spawnBiomes, (graphics, item, x, y, mouseX, mouseY) -> {
+            this.addRenderableWidget(new PaginatedGridWidget<>(this.rightPageBounds.left() + 2, this.rightPageBounds.bottom() - 33, this.rightPageBounds.width() - 4, itemSize, 5, itemSize, 0, new ArrayList<>(spawnBiomes), (graphics, item, x, y, mouseX, mouseY) -> {
                 ResourceLocation texture = new ResourceLocation(item.getNamespace(), "textures/immersiveoverlays/" + item.getPath() + ".png");
 
                 boolean mouseOver = Bounds.isMouseOver(mouseX, mouseY, x, y, itemSize, itemSize) && (this.variantOverviewWidget == null || !this.variantOverviewWidget.isMouseOver(mouseX, mouseY));
@@ -590,7 +623,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     private void setupDropWidget(boolean unlocked) {
         if (ServerConfig.get().disableLootDisplay) return;
 
-        List<ItemStack> drops = unlocked ? ClientFieldGuideManager.getInstance().getDrops(entry) : List.of();
+        List<ItemStack> drops = loadedDrops;
 
         if (unlocked && drops.isEmpty() && isCobblemon(entry)) {
             drops = FieldGuideCobblemonCompat.getCobblemonDrops(entry);

@@ -7,6 +7,7 @@ import com.evandev.fieldguide.network.RequestLootPacket;
 import com.evandev.fieldguide.platform.Services;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
@@ -106,17 +107,28 @@ public class ClientLootManager {
         if (a.getTag() == b.getTag()) return true;
         if (a.getTag() == null || b.getTag() == null) return false;
 
-        CompoundTag tagA = a.getTag().copy();
-        tagA.remove("FieldGuideDropChance");
-        tagA.remove("FieldGuideMin");
-        tagA.remove("FieldGuideMax");
+        CompoundTag tagA = a.getTag();
+        CompoundTag tagB = b.getTag();
 
-        CompoundTag tagB = b.getTag().copy();
-        tagB.remove("FieldGuideDropChance");
-        tagB.remove("FieldGuideMin");
-        tagB.remove("FieldGuideMax");
+        Set<String> allKeys = new HashSet<>(tagA.getAllKeys());
+        allKeys.addAll(tagB.getAllKeys());
 
-        return tagA.equals(tagB);
+        for (String key : allKeys) {
+            if (key.equals("FieldGuideDropChance") || key.equals("FieldGuideMin") || key.equals("FieldGuideMax")) {
+                continue;
+            }
+
+            Tag valA = tagA.get(key);
+            Tag valB = tagB.get(key);
+
+            if (valA == null) {
+                if (valB != null) return false;
+            } else if (!valA.equals(valB)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public Map<Object, List<ItemStack>> getDropCache() {
