@@ -518,7 +518,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
                 }
 
                 // Category Title
-                Component title = Component.translatable("category.fieldguide." + this.getSelectedCategory().getId().getPath());
+                Component title = Component.translatable(this.getSelectedCategory().getTranslationKey());
                 renderTitle(guiGraphics, title);
             }
         }
@@ -576,7 +576,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
         guiGraphics.blit(Constants.TITLE_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
 
         Category category = this.getSelectedCategory();
-        Component title = Component.translatable("category.fieldguide." + category.getId().getPath());
+        Component title = Component.translatable(category.getTranslationKey());
         int titleY = this.leftPageBounds.top() + 36;
         List<FormattedCharSequence> lines = this.font.split(title, 70);
 

@@ -28,7 +28,7 @@ public class TabButton extends ImageButton {
 
         Component tooltipText = category.getId().getPath().equals("intro")
                 ? Component.literal(ClientFieldGuideManager.getInstance().getJournalTitle())
-                : Component.translatable("category.fieldguide." + category.getId().getPath());
+                : Component.translatable(category.getTranslationKey());
 
         this.setTooltip(Tooltip.create(tooltipText));
     }

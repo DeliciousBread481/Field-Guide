@@ -247,11 +247,11 @@
   "commands.fieldguide.reload.started": "Reloading Field Guide data...",
   "commands.fieldguide.reload.success": "Field Guide reloaded and synced to online players.",
 
-  "category.fieldguide.monsters": "Monsters",
-  "category.fieldguide.animals": "Animals",
-  "category.fieldguide.plants": "Plants",
-  "category.fieldguide.bosses": "Bosses",
-  "category.fieldguide.cobblemon": "Cobblemon",
+  "category.fieldguide.fieldguide.monsters": "Monsters",
+  "category.fieldguide.fieldguide.animals": "Animals",
+  "category.fieldguide.fieldguide.plants": "Plants",
+  "category.fieldguide.fieldguide.bosses": "Bosses",
+  "category.fieldguide.fieldguide.cobblemon": "Cobblemon",
 
   "fieldguide.name.minecraft.oak_sapling": "Oak Tree",
   "fieldguide.name.minecraft.spruce_sapling": "Spruce Tree",

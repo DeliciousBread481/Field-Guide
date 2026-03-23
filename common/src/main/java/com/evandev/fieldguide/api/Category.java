@@ -21,6 +21,10 @@ public class Category {
         return id;
     }
 
+    public String getTranslationKey() {
+        return "category." + id.getNamespace() + ".fieldguide." + id.getPath();
+    }
+
     public int getSortIndex() {
         return sortIndex;
     }
