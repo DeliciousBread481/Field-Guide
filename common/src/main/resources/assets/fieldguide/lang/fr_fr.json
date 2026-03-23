@@ -195,10 +195,10 @@
   "commands.fieldguide.reload.started": "Rechargement des données du Guide de Terrain...",
   "commands.fieldguide.reload.success": "Guide de Terrain rechargé et synchronisé avec les joueurs en ligne.",
 
-  "category.fieldguide.monsters": "Monstres",
-  "category.fieldguide.animals": "Animaux",
-  "category.fieldguide.plants": "Plantes",
-  "category.fieldguide.bosses": "Bosses",
+  "category.fieldguide.fieldguide.monsters": "Monstres",
+  "category.fieldguide.fieldguide.animals": "Animaux",
+  "category.fieldguide.fieldguide.plants": "Plantes",
+  "category.fieldguide.fieldguide.bosses": "Bosses",
 
   "fieldguide.name.minecraft.oak_sapling": "Chêne",
   "fieldguide.name.minecraft.spruce_sapling": "Sapin",
