@@ -51,6 +51,7 @@ public final class FieldGuideCobblemonCompat {
     private static final Map<ResourceLocation, List<ItemStack>> COBBLEMON_DROPS_CACHE = new HashMap<>();
     private static final List<Object> AUTO_POPULATE_CACHE = new ArrayList<>();
     private static final Map<ResourceLocation, Set<String>> COBBLEMON_BIOMES_CACHE = new HashMap<>();
+    private static final Map<ResourceLocation, List<ResourceLocation>> RESOLVED_BIOME_CACHE = new HashMap<>();
 
     static {
         FieldGuideVariantManager.registerProvider(PokemonEntity.class, new VariantProvider<>() {
@@ -129,6 +130,7 @@ public final class FieldGuideCobblemonCompat {
     public static void clearCache() {
         DUMMY_CACHE.clear();
         VARIANT_DUMMY_CACHE.clear();
+        RESOLVED_BIOME_CACHE.clear();
     }
 
     public static String getFormForEntry(ResourceLocation id) {
@@ -454,6 +456,10 @@ public final class FieldGuideCobblemonCompat {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
         if (id == null) return List.of();
 
+        if (RESOLVED_BIOME_CACHE.containsKey(id)) {
+            return RESOLVED_BIOME_CACHE.get(id);
+        }
+
         Set<String> conditions = COBBLEMON_BIOMES_CACHE.get(id);
         if (conditions == null) {
             String speciesName = getSpeciesName(id);
@@ -473,6 +479,7 @@ public final class FieldGuideCobblemonCompat {
                 }
             }
         }
+        RESOLVED_BIOME_CACHE.put(id, results);
         return results;
     }
 

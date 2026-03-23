@@ -105,11 +105,12 @@ public class ClientLootManager {
         if (!ItemStack.isSameItem(a, b)) return false;
 
         ItemStack copyA = a.copy();
+        ItemStack copyB = b.copy();
+
         copyA.remove(ModDataComponents.DROP_CHANCE.get());
         copyA.remove(ModDataComponents.MIN_DROP.get());
         copyA.remove(ModDataComponents.MAX_DROP.get());
 
-        ItemStack copyB = b.copy();
         copyB.remove(ModDataComponents.DROP_CHANCE.get());
         copyB.remove(ModDataComponents.MIN_DROP.get());
         copyB.remove(ModDataComponents.MAX_DROP.get());

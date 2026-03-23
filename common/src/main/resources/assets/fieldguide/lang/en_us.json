@@ -219,6 +219,7 @@
   "gui.fieldguide.copy.tooltip": "Copy Page",
   "gui.fieldguide.copy.requires_paper": "Requires Paper",
   "gui.fieldguide.back": "Back",
+  "gui.fieldguide.loading": "Loading...",
 
   "key.fieldguide.open": "Open Field Guide",
   "key.fieldguide.scan": "Start Scanning",
