@@ -2,10 +2,10 @@ package com.evandev.fieldguide.server.progress;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.EntryUnlockData;
+import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
-import com.evandev.fieldguide.entry.EntryResolver;
 import com.google.gson.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -355,6 +355,10 @@ public class PlayerFieldGuideProgress {
                             .customDescriptions(descs)
                             .killedOnly(ServerFieldGuideManager.getInstance().getAllEntryIds().stream()
                                     .filter(id -> ServerFieldGuideManager.getInstance().getUnlockData(id).triggers().contains(EntryUnlockData.UnlockTrigger.KILL))
+                                    .map(ResourceLocation::toString)
+                                    .toList())
+                            .eatenOnly(ServerFieldGuideManager.getInstance().getAllEntryIds().stream()
+                                    .filter(id -> ServerFieldGuideManager.getInstance().getUnlockData(id).triggers().contains(EntryUnlockData.UnlockTrigger.EAT))
                                     .map(ResourceLocation::toString)
                                     .toList())
                             .build(),

@@ -112,7 +112,7 @@ public class FieldGuideScanManager {
         }
 
         ResourceLocation entryId = ClientFieldGuideManager.getEntryId(targetKey);
-        if (entryId != null && ClientFieldGuideManager.getInstance().isKillToUnlock(entryId)) {
+        if (entryId != null && (ClientFieldGuideManager.getInstance().isKillToUnlock(entryId) || ClientFieldGuideManager.getInstance().isEatToUnlock(entryId))) {
             state.setOutOfRangeTarget(foundTarget);
             state.setOutOfRangePos(null);
             state.resetScanTicks();

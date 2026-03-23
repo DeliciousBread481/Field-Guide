@@ -28,6 +28,7 @@ public class ProgressUpdatePacket implements CustomPacketPayload {
     private final Map<String, String> customDescriptions;
     private final Map<String, String> entryPhotographs;
     private final List<String> killedOnly;
+    private final List<String> eatenOnly;
     private final Optional<String> journalTitle;
     private final Optional<List<PlayerFieldGuideProgress.JournalPageData>> journalPages;
 
@@ -43,6 +44,7 @@ public class ProgressUpdatePacket implements CustomPacketPayload {
         this.customDescriptions = builder.customDescriptions;
         this.entryPhotographs = builder.entryPhotographs;
         this.killedOnly = builder.killedOnly;
+        this.eatenOnly = builder.eatenOnly;
         this.journalTitle = builder.journalTitle;
         this.journalPages = builder.journalPages;
     }
@@ -59,6 +61,7 @@ public class ProgressUpdatePacket implements CustomPacketPayload {
         this.customDescriptions = buf.readMap(b -> b.readUtf(), b -> b.readUtf());
         this.entryPhotographs = buf.readMap(b -> b.readUtf(), b -> b.readUtf());
         this.killedOnly = buf.readList(FriendlyByteBuf::readUtf);
+        this.eatenOnly = buf.readList(FriendlyByteBuf::readUtf);
 
         this.journalTitle = buf.readOptional(FriendlyByteBuf::readUtf);
         this.journalPages = buf.readOptional(b -> b.readList(b2 ->
@@ -82,6 +85,7 @@ public class ProgressUpdatePacket implements CustomPacketPayload {
         buf.writeMap(customDescriptions, (b, k) -> b.writeUtf(k), (b, v) -> b.writeUtf(v));
         buf.writeMap(entryPhotographs, (b, k) -> b.writeUtf(k), (b, v) -> b.writeUtf(v));
         buf.writeCollection(killedOnly, FriendlyByteBuf::writeUtf);
+        buf.writeCollection(eatenOnly, FriendlyByteBuf::writeUtf);
         buf.writeOptional(journalTitle, FriendlyByteBuf::writeUtf);
         buf.writeOptional(journalPages, (b, pages) ->
                 b.writeCollection(pages, (b2, page) -> {
@@ -135,6 +139,10 @@ public class ProgressUpdatePacket implements CustomPacketPayload {
         return killedOnly;
     }
 
+    public List<String> getEatenOnly() {
+        return eatenOnly;
+    }
+
     public Optional<String> getJournalTitle() {
         return journalTitle;
     }
@@ -155,6 +163,7 @@ public class ProgressUpdatePacket implements CustomPacketPayload {
         private Map<String, String> customDescriptions = Collections.emptyMap();
         private Map<String, String> entryPhotographs = Collections.emptyMap();
         private List<String> killedOnly = Collections.emptyList();
+        private List<String> eatenOnly = Collections.emptyList();
         private Optional<String> journalTitle = Optional.empty();
         private Optional<List<PlayerFieldGuideProgress.JournalPageData>> journalPages = Optional.empty();
 
@@ -210,6 +219,11 @@ public class ProgressUpdatePacket implements CustomPacketPayload {
 
         public Builder killedOnly(List<String> killedOnly) {
             this.killedOnly = killedOnly;
+            return this;
+        }
+
+        public Builder eatenOnly(List<String> eatenOnly) {
+            this.eatenOnly = eatenOnly;
             return this;
         }
 

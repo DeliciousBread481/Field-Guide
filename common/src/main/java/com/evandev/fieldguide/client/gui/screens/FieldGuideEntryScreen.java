@@ -574,8 +574,22 @@ public class FieldGuideEntryScreen extends BookScreen {
         int textAreaWidth = this.rightPageBounds.width() - 10;
 
         if (!unlocked) {
+            ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
+            Component lockedMessage = Component.translatable("fieldguide.description.locked");
+            if (entryId != null) {
+                if (ClientFieldGuideManager.getInstance().isKillToUnlock(entryId)) {
+                    lockedMessage = Component.translatable("fieldguide.description.locked.kill");
+                } else if (ClientFieldGuideManager.getInstance().isEatToUnlock(entryId)) {
+                    lockedMessage = Component.translatable("fieldguide.description.locked.eat");
+                } else if (ServerConfig.get().enableNakedEyeScanning) {
+                    lockedMessage = Component.translatable("fieldguide.description.locked.no_spyglass");
+                } else {
+                    lockedMessage = Component.translatable("fieldguide.description.locked");
+                }
+            }
+
             guiGraphics.drawString(this.font, getTitleForEntry(entry), titleX, titleY, ClientConfig.get().getTextMutedColorInt(), false);
-            guiGraphics.drawWordWrap(font, Component.translatable("fieldguide.description.locked"), textX, titleY + 30, textAreaWidth, ClientConfig.get().getTextMutedColorInt());
+            guiGraphics.drawWordWrap(font, lockedMessage, textX, titleY + 30, textAreaWidth, ClientConfig.get().getTextMutedColorInt());
         } else {
             long discoveryTime = ProgressManager.getInstance().getDiscoveryTime(entry);
             if (discoveryTime > 0) {

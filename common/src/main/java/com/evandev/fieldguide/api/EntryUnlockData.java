@@ -37,7 +37,8 @@ public record EntryUnlockData(
     public enum UnlockTrigger {
         KILL,
         SCAN,
-        OBTAIN;
+        OBTAIN,
+        EAT;
 
         private static final IntFunction<UnlockTrigger> BY_ID = ByIdMap.continuous(
                 UnlockTrigger::ordinal,
