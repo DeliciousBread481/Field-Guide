@@ -58,24 +58,52 @@ public final class FieldGuideCobblemonCompat {
             public List<VariantDef> getVariants(PokemonEntity entity) {
                 Species species = entity.getPokemon().getSpecies();
                 List<VariantDef> variants = new ArrayList<>();
+                
+                String standardName = species.getStandardForm().getName();
+                variants.add(new VariantDef(standardName, standardName));
+                
                 for (FormData form : species.getForms()) {
-                    variants.add(new VariantDef(form.getName(), form.getName()));
+                    if (!form.getName().equalsIgnoreCase(standardName)) {
+                        variants.add(new VariantDef(form.getName(), form.getName()));
+                    }
                 }
                 return variants;
             }
 
             @Override
             public void apply(PokemonEntity entity, VariantDef def) {
-                ResourceLocation id = getPokemonEntryId(entity);
                 String formName = def.id();
-                FORM_CACHE.put(id, formName);
-                DUMMY_CACHE.remove(id);
+                Pokemon pokemon = entity.getPokemon();
+                FormData form = pokemon.getSpecies().getForms().stream()
+                        .filter(f -> f.getName().equalsIgnoreCase(formName))
+                        .findFirst()
+                        .orElse(null);
+
+                if (form == null && (formName.equalsIgnoreCase("standard") || formName.equalsIgnoreCase("normal") || formName.equalsIgnoreCase(pokemon.getSpecies().getStandardForm().getName()))) {
+                    form = pokemon.getSpecies().getStandardForm();
+                }
+
+                if (form != null) {
+                    pokemon.setForm(form);
+                    pokemon.updateAspects();
+                    entity.refreshDimensions();
+                    entity.getEntityData().set(PokemonEntity.getASPECTS(), pokemon.getAspects());
+
+                    ResourceLocation id = getPokemonEntryId(entity);
+                    FORM_CACHE.put(id, formName);
+                    DUMMY_CACHE.remove(id);
+                }
             }
 
             @Override
             public VariantDef getCurrent(PokemonEntity entity) {
                 String formName = entity.getPokemon().getForm().getName();
                 return new VariantDef(formName, formName);
+            }
+
+            @Override
+            public String getCacheKey(PokemonEntity entity) {
+                return MOD_ID + ":" + entity.getPokemon().getSpecies().getResourceIdentifier().getPath();
             }
         });
     }
@@ -124,27 +152,25 @@ public final class FieldGuideCobblemonCompat {
         String speciesName = getSpeciesName(id);
 
         try {
-            StringBuilder propsStr = new StringBuilder("species=" + speciesName);
-            if (!variantName.equals("standard")) {
-                Species species = PokemonSpecies.getByIdentifier(ResourceLocation.fromNamespaceAndPath(MOD_ID, speciesName));
-                if (species != null) {
-                    for (FormData f : species.getForms()) {
-                        if (f.getName().equals(variantName)) {
-                            for (String aspect : f.getAspects()) {
-                                propsStr.append(" ").append(aspect);
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-
-            PokemonProperties props = PokemonProperties.Companion.parse(propsStr.toString(), " ", "=");
+            PokemonProperties props = PokemonProperties.Companion.parse("species=" + speciesName + " form=" + variantName, " ", "=");
             PokemonEntity pokemonEntity = props.createEntity(level);
             pokemonEntity.setNoAi(true);
 
-            pokemonEntity.getEntityData().set(PokemonEntity.getASPECTS(), pokemonEntity.getPokemon().getAspects());
-            pokemonEntity.getEntityData().set(PokemonEntity.getSPECIES(), pokemonEntity.getPokemon().getSpecies().getResourceIdentifier().toString());
+            Pokemon pokemon = pokemonEntity.getPokemon();
+            FormData form = pokemon.getSpecies().getForms().stream()
+                    .filter(f -> f.getName().equalsIgnoreCase(variantName))
+                    .findFirst()
+                    .orElse(null);
+            if (form == null && (variantName.equalsIgnoreCase("standard") || variantName.equalsIgnoreCase("normal") || variantName.equalsIgnoreCase(pokemon.getSpecies().getStandardForm().getName()))) {
+                form = pokemon.getSpecies().getStandardForm();
+            }
+            if (form != null) {
+                pokemon.setForm(form);
+            }
+            pokemon.updateAspects();
+
+            pokemonEntity.getEntityData().set(PokemonEntity.getASPECTS(), pokemon.getAspects());
+            pokemonEntity.getEntityData().set(PokemonEntity.getSPECIES(), pokemon.getSpecies().getResourceIdentifier().toString());
 
             pokemonEntity.setTicksLived(25);
             pokemonEntity.setYRot(0.0F);
@@ -188,27 +214,25 @@ public final class FieldGuideCobblemonCompat {
         String formName = FORM_CACHE.getOrDefault(id, getDefaultForm(id));
 
         try {
-            StringBuilder propsStr = new StringBuilder("species=" + speciesName);
-            if (!formName.equals("standard")) {
-                Species species = PokemonSpecies.getByIdentifier(ResourceLocation.fromNamespaceAndPath(MOD_ID, speciesName));
-                if (species != null) {
-                    for (FormData f : species.getForms()) {
-                        if (f.getName().equals(formName)) {
-                            for (String aspect : f.getAspects()) {
-                                propsStr.append(" ").append(aspect);
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-
-            PokemonProperties props = PokemonProperties.Companion.parse(propsStr.toString(), " ", "=");
+            PokemonProperties props = PokemonProperties.Companion.parse("species=" + speciesName + " form=" + formName, " ", "=");
             PokemonEntity pokemonEntity = props.createEntity(level);
             pokemonEntity.setNoAi(true);
 
-            pokemonEntity.getEntityData().set(PokemonEntity.getASPECTS(), pokemonEntity.getPokemon().getAspects());
-            pokemonEntity.getEntityData().set(PokemonEntity.getSPECIES(), pokemonEntity.getPokemon().getSpecies().getResourceIdentifier().toString());
+            Pokemon pokemon = pokemonEntity.getPokemon();
+            FormData form = pokemon.getSpecies().getForms().stream()
+                    .filter(f -> f.getName().equalsIgnoreCase(formName))
+                    .findFirst()
+                    .orElse(null);
+            if (form == null && (formName.equalsIgnoreCase("standard") || formName.equalsIgnoreCase("normal") || formName.equalsIgnoreCase(pokemon.getSpecies().getStandardForm().getName()))) {
+                form = pokemon.getSpecies().getStandardForm();
+            }
+            if (form != null) {
+                pokemon.setForm(form);
+            }
+            pokemon.updateAspects();
+
+            pokemonEntity.getEntityData().set(PokemonEntity.getASPECTS(), pokemon.getAspects());
+            pokemonEntity.getEntityData().set(PokemonEntity.getSPECIES(), pokemon.getSpecies().getResourceIdentifier().toString());
 
             pokemonEntity.setTicksLived(25);
             pokemonEntity.setYRot(0.0F);

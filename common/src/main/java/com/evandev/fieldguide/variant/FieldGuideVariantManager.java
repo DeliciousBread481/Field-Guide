@@ -102,12 +102,6 @@ public class FieldGuideVariantManager {
     @SuppressWarnings("unchecked")
     public static List<VariantDef> getVariants(Entity entity) {
         if (!(entity instanceof Mob mob)) return List.of();
-        Class<?> clazz = mob.getClass();
-        String cacheKey = clazz.getName();
-
-        if (VARIANT_CACHE.containsKey(cacheKey)) {
-            return VARIANT_CACHE.get(cacheKey);
-        }
 
         VariantProvider<Mob> provider = getProvider(entity);
         boolean fromReflection = false;
@@ -117,10 +111,15 @@ public class FieldGuideVariantManager {
         }
 
         if (provider != null) {
+            String cacheKey = provider.getCacheKey(mob);
+            if (VARIANT_CACHE.containsKey(cacheKey)) {
+                return VARIANT_CACHE.get(cacheKey);
+            }
+
             List<VariantDef> variants = provider.getVariants(mob);
             VARIANT_CACHE.put(cacheKey, variants);
             if (fromReflection) {
-                registerProvider((Class<Mob>) clazz, provider);
+                registerProvider((Class<Mob>) mob.getClass(), provider);
             }
             return variants;
         }
@@ -129,12 +128,13 @@ public class FieldGuideVariantManager {
     }
 
     public static List<VariantDef> getVariants(EntityType<?> type, Level level) {
-        String cacheKey = BuiltInRegistries.ENTITY_TYPE.getKey(type).toString();
-
         if (level != null) {
             try {
                 Entity entity = type.create(level);
                 if (entity instanceof Mob mob) {
+                    VariantProvider<Mob> provider = getProvider(entity);
+                    String cacheKey = provider != null ? provider.getCacheKey(mob) : BuiltInRegistries.ENTITY_TYPE.getKey(type).toString();
+
                     if (ENTITY_TYPE_VARIANT_CACHE.containsKey(cacheKey)) {
                         return ENTITY_TYPE_VARIANT_CACHE.get(cacheKey);
                     }
