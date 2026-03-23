@@ -135,4 +135,8 @@ public class FieldGuideProgressManager {
     public boolean isKillToUnlock(ResourceLocation entryId) {
         return ServerFieldGuideManager.getInstance().isKillToUnlock(entryId);
     }
+
+    public boolean isEatToUnlock(ResourceLocation entryId) {
+        return ServerFieldGuideManager.getInstance().isEatToUnlock(entryId);
+    }
 }

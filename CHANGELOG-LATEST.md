@@ -20,6 +20,7 @@
 - Added seasons integration.
     - Only Serene Seasons is supported for now, integration with other seasons mods is planned for the near future.
 - Added fallback icon for when a biome is missing a texture in Immersive Overlays.
+- Added 'eat to unlock' and 'obtain' triggers.
 
 ### Changed
 

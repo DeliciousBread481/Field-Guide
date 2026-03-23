@@ -16,6 +16,7 @@ public record EntryUnlockData(
     public enum UnlockTrigger {
         KILL,
         SCAN,
-        OBTAIN
+        OBTAIN,
+        EAT
     }
 }

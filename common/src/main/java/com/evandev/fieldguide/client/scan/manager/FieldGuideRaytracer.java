@@ -7,8 +7,8 @@ import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ServerConfig;
-import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.entry.EntryResolver;
+import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -117,16 +117,21 @@ public class FieldGuideRaytracer {
             boolean isScannable = cat != null;
 
             TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation("fieldguide", "kill_to_unlock"));
-            boolean requiresKill = false;
+            boolean requiresAction = false;
             if (actualTargetKey instanceof EntityType<?> actualType) {
                 var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(actualType);
                 if (key.isPresent()) {
                     var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
-                    if (holder.isPresent() && holder.get().is(killToUnlockTag)) requiresKill = true;
+                    if (holder.isPresent() && holder.get().is(killToUnlockTag)) requiresAction = true;
+                }
+            } else if (actualTargetKey instanceof net.minecraft.world.item.Item item) {
+                ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
+                if (ClientFieldGuideManager.getInstance().isEatToUnlock(id)) {
+                    requiresAction = true;
                 }
             }
 
-            if (entryForTarget != null && isScannable && !requiresKill) {
+            if (entryForTarget != null && isScannable && !requiresAction) {
                 boolean needsScan = !ProgressManager.getInstance().isUnlocked(entryForTarget);
                 if (hitEntity instanceof Mob mob) {
                     var provider = FieldGuideVariantManager.getProvider(mob);

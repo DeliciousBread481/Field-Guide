@@ -74,6 +74,10 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             return new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.KILL), Collections.emptyList());
         }
 
+        if (isEatToUnlock(entryId)) {
+            return new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.EAT), Collections.emptyList());
+        }
+
         if ("item".equals(entryId.getNamespace()) && BuiltInRegistries.ITEM.containsKey(EntryResolver.getRawId(entryId))) {
             return new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.OBTAIN), Collections.emptyList());
         }
@@ -121,6 +125,16 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                 .flatMap(BuiltInRegistries.ENTITY_TYPE::getResourceKey)
                 .flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder)
                 .map(h -> h.is(killToUnlockTag) || h.is(bossesTag))
+                .orElse(false);
+    }
+
+    public boolean isEatToUnlock(ResourceLocation entryId) {
+        TagKey<Item> eatToUnlockTag = TagKey.create(Registries.ITEM, new ResourceLocation(Constants.MOD_ID, "eat_to_unlock"));
+
+        return BuiltInRegistries.ITEM.getOptional(EntryResolver.getRawId(entryId))
+                .flatMap(BuiltInRegistries.ITEM::getResourceKey)
+                .flatMap(BuiltInRegistries.ITEM::getHolder)
+                .map(h -> h.is(eatToUnlockTag))
                 .orElse(false);
     }
 
@@ -221,6 +235,8 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                         EntryUnlockData unlockData = EntryUnlockData.DEFAULT;
                         if (isKillToUnlock(id)) {
                             unlockData = new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.KILL), Collections.emptyList());
+                        } else if (isEatToUnlock(id)) {
+                            unlockData = new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.EAT), Collections.emptyList());
                         } else if (obj instanceof Item) {
                             unlockData = new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.OBTAIN), Collections.emptyList());
                         }
