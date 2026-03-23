@@ -10,4 +10,8 @@ public interface VariantProvider<T extends Mob> {
     void apply(T entity, VariantDef def);
 
     VariantDef getCurrent(T entity);
+
+    default String getCacheKey(T entity) {
+        return entity.getClass().getName();
+    }
 }

@@ -3,8 +3,6 @@ package com.evandev.fieldguide.variant;
 import com.evandev.fieldguide.api.variant.DatapackVariant;
 import com.evandev.fieldguide.api.variant.VariantDef;
 import com.evandev.fieldguide.api.variant.VariantProvider;
-import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
-import com.evandev.fieldguide.platform.Services;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
@@ -103,28 +101,6 @@ public class FieldGuideVariantManager {
     @SuppressWarnings("unchecked")
     public static List<VariantDef> getVariants(Entity entity) {
         if (!(entity instanceof Mob mob)) return List.of();
-        Class<?> clazz = mob.getClass();
-        String cacheKey = clazz.getName();
-
-        if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
-            ResourceLocation id = FieldGuideCobblemonCompat.getPokemonEntryId(entity);
-            cacheKey += ":" + id;
-
-            if (VARIANT_CACHE.containsKey(cacheKey)) {
-                return VARIANT_CACHE.get(cacheKey);
-            }
-
-            List<VariantDef> variants = FieldGuideCobblemonCompat.getVariantIds(id).stream()
-                    .map(name -> new VariantDef(name, name))
-                    .toList();
-
-            VARIANT_CACHE.put(cacheKey, variants);
-            return variants;
-        }
-
-        if (VARIANT_CACHE.containsKey(cacheKey)) {
-            return VARIANT_CACHE.get(cacheKey);
-        }
 
         VariantProvider<Mob> provider = getProvider(entity);
         boolean fromReflection = false;
@@ -134,10 +110,15 @@ public class FieldGuideVariantManager {
         }
 
         if (provider != null) {
+            String cacheKey = provider.getCacheKey(mob);
+            if (VARIANT_CACHE.containsKey(cacheKey)) {
+                return VARIANT_CACHE.get(cacheKey);
+            }
+
             List<VariantDef> variants = provider.getVariants(mob);
             VARIANT_CACHE.put(cacheKey, variants);
             if (fromReflection) {
-                registerProvider((Class<Mob>) clazz, provider);
+                registerProvider((Class<Mob>) mob.getClass(), provider);
             }
             return variants;
         }
@@ -146,16 +127,12 @@ public class FieldGuideVariantManager {
     }
 
     public static List<VariantDef> getVariants(EntityType<?> type, Level level) {
-        String cacheKey = BuiltInRegistries.ENTITY_TYPE.getKey(type).toString();
-
         if (level != null) {
             try {
                 Entity entity = type.create(level);
                 if (entity instanceof Mob mob) {
-                    if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
-                        ResourceLocation id = FieldGuideCobblemonCompat.getPokemonEntryId(entity);
-                        cacheKey += ":" + id;
-                    }
+                    VariantProvider<Mob> provider = getProvider(entity);
+                    String cacheKey = provider != null ? provider.getCacheKey(mob) : BuiltInRegistries.ENTITY_TYPE.getKey(type).toString();
 
                     if (ENTITY_TYPE_VARIANT_CACHE.containsKey(cacheKey)) {
                         return ENTITY_TYPE_VARIANT_CACHE.get(cacheKey);

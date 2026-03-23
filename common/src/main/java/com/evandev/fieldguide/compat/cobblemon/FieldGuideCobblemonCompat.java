@@ -124,22 +124,7 @@ public final class FieldGuideCobblemonCompat {
         String speciesName = getSpeciesName(id);
 
         try {
-            StringBuilder propsStr = new StringBuilder("species=" + speciesName);
-            if (!variantName.equals("standard")) {
-                Species species = PokemonSpecies.INSTANCE.getByIdentifier(new ResourceLocation(MOD_ID, speciesName));
-                if (species != null) {
-                    for (FormData f : species.getForms()) {
-                        if (f.getName().equals(variantName)) {
-                            for (String aspect : f.getAspects()) {
-                                propsStr.append(" ").append(aspect);
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-
-            PokemonProperties props = PokemonProperties.Companion.parse(propsStr.toString(), " ", "=");
+            PokemonProperties props = PokemonProperties.Companion.parse("species=" + speciesName + " form=" + variantName, " ", "=");
             PokemonEntity pokemonEntity = props.createEntity(level);
             pokemonEntity.setNoAi(true);
 
@@ -188,22 +173,7 @@ public final class FieldGuideCobblemonCompat {
         String formName = FORM_CACHE.getOrDefault(id, getDefaultForm(id));
 
         try {
-            StringBuilder propsStr = new StringBuilder("species=" + speciesName);
-            if (!formName.equals("standard")) {
-                Species species = PokemonSpecies.INSTANCE.getByIdentifier(new ResourceLocation(MOD_ID, speciesName));
-                if (species != null) {
-                    for (FormData f : species.getForms()) {
-                        if (f.getName().equals(formName)) {
-                            for (String aspect : f.getAspects()) {
-                                propsStr.append(" ").append(aspect);
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-
-            PokemonProperties props = PokemonProperties.Companion.parse(propsStr.toString(), " ", "=");
+            PokemonProperties props = PokemonProperties.Companion.parse("species=" + speciesName + " form=" + formName, " ", "=");
             PokemonEntity pokemonEntity = props.createEntity(level);
             pokemonEntity.setNoAi(true);
 
@@ -241,7 +211,7 @@ public final class FieldGuideCobblemonCompat {
             Species species = pokemon.getSpecies();
 
             String speciesName = species.getResourceIdentifier().getPath();
-            return new ResourceLocation("fieldguide", "cobblemon/" + speciesName + "_standard");
+            return new ResourceLocation(Constants.MOD_ID, "cobblemon/" + speciesName + "_standard");
         } catch (Exception e) {
             Constants.LOG.error("Failed to parse Cobblemon properties for Field Guide ID", e);
         }

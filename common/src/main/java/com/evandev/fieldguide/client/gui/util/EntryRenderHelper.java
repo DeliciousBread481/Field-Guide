@@ -130,7 +130,7 @@ public class EntryRenderHelper {
         final VariantProvider<Mob> finalProvider = provider;
         final VariantDef finalVariant = currentVariant;
 
-        renderWithCache(entity.getType(), cacheKey, guiGraphics, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, () -> {
+        renderWithCache(baseId, cacheKey, guiGraphics, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, () -> {
 
             VariantDef tempOriginal = null;
             if (finalProvider != null && entity instanceof Mob mob) {
