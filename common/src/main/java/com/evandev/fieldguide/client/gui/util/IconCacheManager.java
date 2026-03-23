@@ -89,8 +89,9 @@ public class IconCacheManager {
         if (entryKey.isEmpty()) return Optional.empty();
 
         String variantSuffix = "";
-        if (cacheKey instanceof String str && str.contains("#")) {
-            variantSuffix = "_" + str.substring(str.indexOf('#') + 1).replace(":", "_").toLowerCase(Locale.ROOT);
+        String cacheKeyStr = cacheKey.toString();
+        if (cacheKeyStr.contains("#")) {
+            variantSuffix = "_" + cacheKeyStr.substring(cacheKeyStr.indexOf('#') + 1).replace(":", "_").toLowerCase(Locale.ROOT);
         }
 
         String fileName = (entryKey.replace(":", "_").replace("/", "_") + variantSuffix + (isPage ? "_page" : "_grid") + ".png").toLowerCase(Locale.ROOT);

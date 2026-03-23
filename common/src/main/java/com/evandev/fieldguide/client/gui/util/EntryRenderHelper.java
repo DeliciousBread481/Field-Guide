@@ -12,8 +12,8 @@ import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.mixin.accessor.EntityAccessor;
 import com.evandev.fieldguide.platform.Services;
-import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import com.evandev.fieldguide.server.structure.StructureUtils;
+import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -125,7 +125,13 @@ public class EntryRenderHelper {
             baseId = FieldGuideCobblemonCompat.getPokemonEntryId(entity);
         }
 
-        Object cacheKey = variantId.isEmpty() ? baseId : baseId.toString() + "#" + variantId;
+        String finalVariantId = variantId;
+        if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
+            if (finalVariantId.isEmpty()) {
+                finalVariantId = FieldGuideCobblemonCompat.getFormForEntry(baseId);
+            }
+        }
+        Object cacheKey = finalVariantId.isEmpty() ? baseId : baseId.toString() + "#" + finalVariantId;
 
         final VariantProvider<Mob> finalProvider = provider;
         final VariantDef finalVariant = currentVariant;
