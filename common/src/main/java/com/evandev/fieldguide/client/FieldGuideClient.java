@@ -2,6 +2,8 @@ package com.evandev.fieldguide.client;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.Category;
+import com.evandev.fieldguide.api.attribute.AttributeRegistry;
+import com.evandev.fieldguide.client.attribute.DefaultAttributeProvider;
 import com.evandev.fieldguide.client.gui.screens.BookScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideCategoryScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
@@ -30,6 +32,7 @@ public class FieldGuideClient {
 
     public static void init() {
         SeasonsCompat.init();
+        AttributeRegistry.register(new DefaultAttributeProvider());
 
         OPEN_GUIDE_KEY = new KeyMapping(
                 "key.fieldguide.open",

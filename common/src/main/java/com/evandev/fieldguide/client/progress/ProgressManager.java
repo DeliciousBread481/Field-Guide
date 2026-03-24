@@ -210,20 +210,33 @@ public class ProgressManager {
 
     public String getCustomName(Object entry) {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-        return id != null ? customNames.get(id.toString()) : null;
+        return id != null ? getCustomName(id.toString()) : null;
+    }
+
+    public String getCustomName(String entryId) {
+        return customNames.get(entryId);
     }
 
     public void setCustomName(Object entry, String name) {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
         if (id != null) {
-            boolean clear = name == null || name.isEmpty() || name.equals(ClientFieldGuideManager.getDefaultName(entry));
-            if (clear) {
-                customNames.remove(id.toString());
-            } else {
-                customNames.put(id.toString(), name);
-            }
-            Services.NETWORK.sendToServer(UpdateEntryDataPacket.setName(id, clear ? null : name));
+            setCustomVariantName(id, null, name);
         }
+    }
+
+    public void setCustomVariantName(ResourceLocation entryId, String variantId, String name) {
+        String key = entryId.toString();
+        if (variantId != null && !variantId.isEmpty()) {
+            key += "#" + variantId;
+        }
+
+        boolean clear = name == null || name.isEmpty();
+        if (clear) {
+            customNames.remove(key);
+        } else {
+            customNames.put(key, name);
+        }
+        Services.NETWORK.sendToServer(UpdateEntryDataPacket.setVariantName(entryId, variantId, clear ? null : name));
     }
 
     public String getCustomDescription(Object entry) {

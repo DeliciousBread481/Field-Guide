@@ -51,6 +51,7 @@ public class ClientConfig {
     public double detailsUnlockedSilhouetteAlpha = 1.0D;
 
     public boolean useRealWorldDate = false;
+    public boolean showUnlockDate = true;
     public boolean showToasts = true;
     public boolean showSeasonIcons = true;
 

@@ -46,8 +46,13 @@ public class PageItem extends Item {
                     // Unlock variants
                     if (tag.contains("Variants")) {
                         ListTag variants = tag.getList("Variants", Tag.TAG_STRING);
+                        CompoundTag variantNames = tag.getCompound("CustomVariantNames");
                         for (int i = 0; i < variants.size(); i++) {
-                            progress.unlock(serverPlayer, entryId, variants.getString(i), false);
+                            String variantId = variants.getString(i);
+                            progress.unlock(serverPlayer, entryId, variantId, false);
+                            if (variantNames.contains(variantId)) {
+                                progress.setCustomName(entryId + "#" + variantId, variantNames.getString(variantId));
+                            }
                         }
                     }
 

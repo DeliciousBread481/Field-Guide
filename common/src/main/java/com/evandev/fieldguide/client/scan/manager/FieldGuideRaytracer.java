@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.client.scan.manager;
 
+import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.AutoPopulateRegistry;
 import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.api.GuideEntry;
@@ -116,7 +117,7 @@ public class FieldGuideRaytracer {
             Category cat = ClientFieldGuideManager.getInstance().getCategoryForEntry(entryForTarget);
             boolean isScannable = cat != null;
 
-            TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation("fieldguide", "kill_to_unlock"));
+            TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, new ResourceLocation(Constants.MOD_ID, "kill_to_unlock"));
             boolean requiresAction = false;
             if (actualTargetKey instanceof EntityType<?> actualType) {
                 var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(actualType);

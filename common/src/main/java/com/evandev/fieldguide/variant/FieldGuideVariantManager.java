@@ -6,6 +6,7 @@ import com.evandev.fieldguide.api.variant.VariantProvider;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -22,6 +23,7 @@ import net.minecraft.world.level.Level;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class FieldGuideVariantManager {
 
@@ -186,6 +188,16 @@ public class FieldGuideVariantManager {
 
     public static List<String> getVariantIds(EntityType<?> type, Level level) {
         return getVariants(type, level).stream().map(VariantDef::id).toList();
+    }
+
+    public static Component getVariantDisplayName(VariantDef variant) {
+        String name = variant.id();
+        if (name.contains(":")) name = name.substring(name.indexOf(':') + 1);
+
+        name = Arrays.stream(name.split("_"))
+                .map(s -> s.isEmpty() ? s : s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase())
+                .collect(Collectors.joining(" "));
+        return Component.literal(name);
     }
 
     private static VariantProvider<Mob> getDatapackProvider(ResourceLocation entityId) {

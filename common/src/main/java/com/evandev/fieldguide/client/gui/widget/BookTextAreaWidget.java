@@ -30,6 +30,7 @@ public class BookTextAreaWidget extends AbstractWidget {
     private int selectionPos;
     private int scrollOffset = 0;
     private boolean isDraggingScrollbar = false;
+    private boolean editable = true;
     private Consumer<String> onSpillover;
 
     public BookTextAreaWidget(Font font, int x, int y, int width, int height, int maxVisibleLines, int textColor, boolean scrollable, int maxCharacters, String initialText, Consumer<String> onChanged) {
@@ -59,6 +60,18 @@ public class BookTextAreaWidget extends AbstractWidget {
         this.computeLineStarts();
         this.cursorPos = Math.min(this.cursorPos, this.text.length());
         this.selectionPos = this.cursorPos;
+    }
+
+    public void setValue(String value) {
+        setText(value);
+    }
+
+    public boolean isEditable() {
+        return editable;
+    }
+
+    public void setEditable(boolean editable) {
+        this.editable = editable;
     }
 
     private void computeLineStarts() {
@@ -156,8 +169,10 @@ public class BookTextAreaWidget extends AbstractWidget {
         }
 
         if (this.isMouseOver(mouseX, mouseY)) {
-            this.setFocused(true);
-            setCursorPosFromMouse(mouseX, mouseY);
+            if (this.editable) {
+                this.setFocused(true);
+                setCursorPosFromMouse(mouseX, mouseY);
+            }
             return true;
         }
         this.setFocused(false);
@@ -195,7 +210,7 @@ public class BookTextAreaWidget extends AbstractWidget {
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
-        if (!this.isFocused()) return false;
+        if (!this.isFocused() || !this.editable) return false;
         String proposedText;
         int newCursor;
         if (selectionPos != cursorPos) {
@@ -215,53 +230,62 @@ public class BookTextAreaWidget extends AbstractWidget {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (!this.isFocused()) return false;
 
-        if (Screen.isSelectAll(keyCode)) {
-            selectionPos = 0;
-            cursorPos = text.length();
-            return true;
-        }
-        if (Screen.isCopy(keyCode)) {
-            if (selectionPos != cursorPos) {
+        if (this.editable) {
+            if (Screen.isSelectAll(keyCode)) {
+                selectionPos = 0;
+                cursorPos = text.length();
+                return true;
+            }
+            if (Screen.isCopy(keyCode)) {
+                if (selectionPos != cursorPos) {
+                    int start = Math.min(cursorPos, selectionPos);
+                    int end = Math.max(cursorPos, selectionPos);
+                    Minecraft.getInstance().keyboardHandler.setClipboard(text.substring(start, end));
+                }
+                return true;
+            }
+            if (Screen.isCut(keyCode)) {
+                if (selectionPos != cursorPos) {
+                    int start = Math.min(cursorPos, selectionPos);
+                    int end = Math.max(cursorPos, selectionPos);
+                    Minecraft.getInstance().keyboardHandler.setClipboard(text.substring(start, end));
+                    deleteSelection();
+                }
+                return true;
+            }
+            if (Screen.isPaste(keyCode)) {
+                String clipboard = Minecraft.getInstance().keyboardHandler.getClipboard();
+                if (!clipboard.isEmpty()) {
+                    int start = Math.min(cursorPos, selectionPos);
+                    int end = Math.max(cursorPos, selectionPos);
+                    updateText(text.substring(0, start) + clipboard + text.substring(end), start + clipboard.length());
+                }
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_BACKSPACE) {
+                if (selectionPos != cursorPos) {
+                    deleteSelection();
+                } else if (cursorPos > 0) {
+                    updateText(text.substring(0, cursorPos - 1) + text.substring(cursorPos), cursorPos - 1);
+                }
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_DELETE) {
+                if (selectionPos != cursorPos) {
+                    deleteSelection();
+                } else if (cursorPos < text.length()) {
+                    updateText(text.substring(0, cursorPos) + text.substring(cursorPos + 1), cursorPos);
+                }
+                return true;
+            }
+            if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
                 int start = Math.min(cursorPos, selectionPos);
                 int end = Math.max(cursorPos, selectionPos);
-                Minecraft.getInstance().keyboardHandler.setClipboard(text.substring(start, end));
+                updateText(text.substring(0, start) + "\n" + text.substring(end), start + 1);
+                return true;
             }
-            return true;
         }
-        if (Screen.isCut(keyCode)) {
-            if (selectionPos != cursorPos) {
-                int start = Math.min(cursorPos, selectionPos);
-                int end = Math.max(cursorPos, selectionPos);
-                Minecraft.getInstance().keyboardHandler.setClipboard(text.substring(start, end));
-                deleteSelection();
-            }
-            return true;
-        }
-        if (Screen.isPaste(keyCode)) {
-            String clipboard = Minecraft.getInstance().keyboardHandler.getClipboard();
-            if (!clipboard.isEmpty()) {
-                int start = Math.min(cursorPos, selectionPos);
-                int end = Math.max(cursorPos, selectionPos);
-                updateText(text.substring(0, start) + clipboard + text.substring(end), start + clipboard.length());
-            }
-            return true;
-        }
-        if (keyCode == GLFW.GLFW_KEY_BACKSPACE) {
-            if (selectionPos != cursorPos) {
-                deleteSelection();
-            } else if (cursorPos > 0) {
-                updateText(text.substring(0, cursorPos - 1) + text.substring(cursorPos), cursorPos - 1);
-            }
-            return true;
-        }
-        if (keyCode == GLFW.GLFW_KEY_DELETE) {
-            if (selectionPos != cursorPos) {
-                deleteSelection();
-            } else if (cursorPos < text.length()) {
-                updateText(text.substring(0, cursorPos) + text.substring(cursorPos + 1), cursorPos);
-            }
-            return true;
-        }
+
         if (keyCode == GLFW.GLFW_KEY_LEFT) {
             if (Screen.hasControlDown()) cursorPos = getWordPosition(text, cursorPos, -1);
             else if (cursorPos > 0) cursorPos--;
@@ -282,12 +306,6 @@ public class BookTextAreaWidget extends AbstractWidget {
         }
         if (keyCode == GLFW.GLFW_KEY_DOWN) {
             moveCursorLine(1);
-            return true;
-        }
-        if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
-            int start = Math.min(cursorPos, selectionPos);
-            int end = Math.max(cursorPos, selectionPos);
-            updateText(text.substring(0, start) + "\n" + text.substring(end), start + 1);
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
@@ -467,8 +485,8 @@ public class BookTextAreaWidget extends AbstractWidget {
             if (isDraggingScrollbar || isScrollbarHovered(mouseX, mouseY)) {
                 thumbTextureOffset = 8;
             }
-            guiGraphics.blitNineSliced(Constants.WIDGETS_TEXTURE, scrollbarX, scrollbarY, 4, scrollbarHeight, 2, 2,4, 16, 32, 0);
-            guiGraphics.blitNineSliced(Constants.WIDGETS_TEXTURE, scrollbarX, thumbY, 4, thumbHeight, 2, 3,4, 16, 32 + thumbTextureOffset, 0);
+            guiGraphics.blitNineSliced(Constants.WIDGETS_TEXTURE, scrollbarX, scrollbarY, 4, scrollbarHeight, 2, 2, 4, 16, 32, 0);
+            guiGraphics.blitNineSliced(Constants.WIDGETS_TEXTURE, scrollbarX, thumbY, 4, thumbHeight, 2, 3, 4, 16, 32 + thumbTextureOffset, 0);
         }
     }
 

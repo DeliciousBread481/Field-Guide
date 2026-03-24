@@ -182,6 +182,12 @@ public class ClothConfigIntegration {
         // Interface (Visuals)
         ConfigCategory interfaceCat = builder.getOrCreateCategory(Component.translatable("category.fieldguide.interface"));
 
+        interfaceCat.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.show_unlock_date"), clientConfig.showUnlockDate)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.fieldguide.show_unlock_date.tooltip"))
+                .setSaveConsumer(newValue -> clientConfig.showUnlockDate = newValue)
+                .build());
+
         interfaceCat.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.use_real_world_date"), clientConfig.useRealWorldDate)
                 .setDefaultValue(false)
                 .setTooltip(Component.translatable("option.fieldguide.use_real_world_date.tooltip"))

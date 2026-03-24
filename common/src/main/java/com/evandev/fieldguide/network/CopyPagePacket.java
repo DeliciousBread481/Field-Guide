@@ -99,10 +99,18 @@ public class CopyPagePacket {
 
         if (!variants.isEmpty()) {
             ListTag variantsTag = new ListTag();
+            CompoundTag variantNamesTag = new CompoundTag();
             for (String v : variants) {
                 variantsTag.add(StringTag.valueOf(v));
+                String vName = progress.getCustomName(idStr + "#" + v);
+                if (vName != null) {
+                    variantNamesTag.putString(v, vName);
+                }
             }
             tag.put("Variants", variantsTag);
+            if (!variantNamesTag.isEmpty()) {
+                tag.put("CustomVariantNames", variantNamesTag);
+            }
         }
 
         if (customName != null) tag.putString("CustomName", customName);

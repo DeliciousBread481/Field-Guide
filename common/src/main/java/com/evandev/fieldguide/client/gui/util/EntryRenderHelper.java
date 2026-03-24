@@ -483,6 +483,8 @@ public class EntryRenderHelper {
         boolean silhouette = !unlocked || ServerConfig.get().keepSilhouetteWhenUnlocked;
 
         if (silhouette) {
+            guiGraphics.flush();
+
             int color;
             double alpha;
             if (isPage) {

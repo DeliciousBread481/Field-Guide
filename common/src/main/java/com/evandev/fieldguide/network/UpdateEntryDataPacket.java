@@ -44,6 +44,10 @@ public class UpdateEntryDataPacket {
         return new UpdateEntryDataPacket(Action.SET_NAME, entryId, "", new NameData(name));
     }
 
+    public static UpdateEntryDataPacket setVariantName(ResourceLocation entryId, String variantId, String name) {
+        return new UpdateEntryDataPacket(Action.SET_NAME, entryId, variantId != null ? variantId : "", new NameData(name));
+    }
+
     public static UpdateEntryDataPacket setDescription(ResourceLocation entryId, String description) {
         return new UpdateEntryDataPacket(Action.SET_DESCRIPTION, entryId, "", new DescriptionData(description));
     }

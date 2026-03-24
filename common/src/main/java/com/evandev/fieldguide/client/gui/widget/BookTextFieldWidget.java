@@ -24,6 +24,7 @@ public class BookTextFieldWidget extends AbstractWidget {
     private int cursorPos;
     private int selectionPos;
     private boolean centered = false;
+    private boolean editable = true;
 
     public BookTextFieldWidget(Font font, int x, int y, int width, int height, String text, int textColor, int maxTextWidth, int maxCharacters, Consumer<String> onChanged) {
         super(x, y, width, height, Component.empty());
@@ -52,6 +53,18 @@ public class BookTextFieldWidget extends AbstractWidget {
         this.selectionPos = Math.min(this.text.length(), this.selectionPos);
     }
 
+    public void setValue(String value) {
+        setText(value);
+    }
+
+    public boolean isEditable() {
+        return editable;
+    }
+
+    public void setEditable(boolean editable) {
+        this.editable = editable;
+    }
+
     private void tryUpdateText(String newText, int newCursorPos, int newSelectionPos) {
         if (newText.length() <= maxCharacters && font.width(newText) <= maxTextWidth) {
             this.text = newText;
@@ -64,11 +77,13 @@ public class BookTextFieldWidget extends AbstractWidget {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (this.isMouseOver(mouseX, mouseY)) {
-            this.setFocused(true);
-            int renderX = this.centered ? this.getX() + (this.width - this.font.width(text)) / 2 : this.getX();
-            int relativeX = (int) (mouseX - renderX);
-            cursorPos = this.font.plainSubstrByWidth(text, Math.max(0, relativeX)).length();
-            if (!Screen.hasShiftDown()) selectionPos = cursorPos;
+            if (this.editable) {
+                this.setFocused(true);
+                int renderX = this.centered ? this.getX() + (this.width - this.font.width(text)) / 2 : this.getX();
+                int relativeX = (int) (mouseX - renderX);
+                cursorPos = this.font.plainSubstrByWidth(text, Math.max(0, relativeX)).length();
+                if (!Screen.hasShiftDown()) selectionPos = cursorPos;
+            }
             return true;
         }
         this.setFocused(false);
@@ -77,7 +92,7 @@ public class BookTextFieldWidget extends AbstractWidget {
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
-        if (!this.isFocused()) return false;
+        if (!this.isFocused() || !this.editable) return false;
         String proposedText;
         int newCursor;
         if (selectionPos != cursorPos) {
@@ -98,56 +113,58 @@ public class BookTextFieldWidget extends AbstractWidget {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (!this.isFocused()) return false;
 
-        if (Screen.isSelectAll(keyCode)) {
-            selectionPos = 0;
-            cursorPos = text.length();
-            return true;
-        }
-        if (Screen.isCopy(keyCode)) {
-            if (selectionPos != cursorPos) {
-                int start = Math.min(cursorPos, selectionPos);
-                int end = Math.max(cursorPos, selectionPos);
-                Minecraft.getInstance().keyboardHandler.setClipboard(text.substring(start, end));
+        if (this.editable) {
+            if (Screen.isSelectAll(keyCode)) {
+                selectionPos = 0;
+                cursorPos = text.length();
+                return true;
             }
-            return true;
-        }
-        if (Screen.isCut(keyCode)) {
-            if (selectionPos != cursorPos) {
-                int start = Math.min(cursorPos, selectionPos);
-                int end = Math.max(cursorPos, selectionPos);
-                Minecraft.getInstance().keyboardHandler.setClipboard(text.substring(start, end));
-                deleteSelection();
+            if (Screen.isCopy(keyCode)) {
+                if (selectionPos != cursorPos) {
+                    int start = Math.min(cursorPos, selectionPos);
+                    int end = Math.max(cursorPos, selectionPos);
+                    Minecraft.getInstance().keyboardHandler.setClipboard(text.substring(start, end));
+                }
+                return true;
             }
-            return true;
-        }
-        if (Screen.isPaste(keyCode)) {
-            String clipboard = Minecraft.getInstance().keyboardHandler.getClipboard();
-            if (!clipboard.isEmpty()) {
-                int start = Math.min(cursorPos, selectionPos);
-                int end = Math.max(cursorPos, selectionPos);
-                String proposedText = text.substring(0, start) + clipboard + text.substring(end);
-                tryUpdateText(proposedText, start + clipboard.length(), start + clipboard.length());
+            if (Screen.isCut(keyCode)) {
+                if (selectionPos != cursorPos) {
+                    int start = Math.min(cursorPos, selectionPos);
+                    int end = Math.max(cursorPos, selectionPos);
+                    Minecraft.getInstance().keyboardHandler.setClipboard(text.substring(start, end));
+                    deleteSelection();
+                }
+                return true;
             }
-            return true;
-        }
+            if (Screen.isPaste(keyCode)) {
+                String clipboard = Minecraft.getInstance().keyboardHandler.getClipboard();
+                if (!clipboard.isEmpty()) {
+                    int start = Math.min(cursorPos, selectionPos);
+                    int end = Math.max(cursorPos, selectionPos);
+                    String proposedText = text.substring(0, start) + clipboard + text.substring(end);
+                    tryUpdateText(proposedText, start + clipboard.length(), start + clipboard.length());
+                }
+                return true;
+            }
 
-        if (keyCode == GLFW.GLFW_KEY_BACKSPACE) {
-            if (selectionPos != cursorPos) {
-                deleteSelection();
-            } else if (cursorPos > 0) {
-                String proposedText = text.substring(0, cursorPos - 1) + text.substring(cursorPos);
-                tryUpdateText(proposedText, cursorPos - 1, cursorPos - 1);
+            if (keyCode == GLFW.GLFW_KEY_BACKSPACE) {
+                if (selectionPos != cursorPos) {
+                    deleteSelection();
+                } else if (cursorPos > 0) {
+                    String proposedText = text.substring(0, cursorPos - 1) + text.substring(cursorPos);
+                    tryUpdateText(proposedText, cursorPos - 1, cursorPos - 1);
+                }
+                return true;
             }
-            return true;
-        }
-        if (keyCode == GLFW.GLFW_KEY_DELETE) {
-            if (selectionPos != cursorPos) {
-                deleteSelection();
-            } else if (cursorPos < text.length()) {
-                String proposedText = text.substring(0, cursorPos) + text.substring(cursorPos + 1);
-                tryUpdateText(proposedText, cursorPos, cursorPos);
+            if (keyCode == GLFW.GLFW_KEY_DELETE) {
+                if (selectionPos != cursorPos) {
+                    deleteSelection();
+                } else if (cursorPos < text.length()) {
+                    String proposedText = text.substring(0, cursorPos) + text.substring(cursorPos + 1);
+                    tryUpdateText(proposedText, cursorPos, cursorPos);
+                }
+                return true;
             }
-            return true;
         }
         if (keyCode == GLFW.GLFW_KEY_LEFT) {
             if (Screen.hasControlDown()) cursorPos = getWordPosition(text, cursorPos, -1);
