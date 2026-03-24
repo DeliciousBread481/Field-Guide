@@ -69,6 +69,9 @@ public class FieldGuideEntryScreen extends BookScreen {
     private VariantOverviewWidget variantOverviewWidget;
 //    private PageTurnButton overviewToggleButton;
 
+    private float hoverScale = 1.0f;
+    private long lastRenderTime = 0;
+
     public FieldGuideEntryScreen(FieldGuideCategoryScreen parent, Object entry) {
         super(getTitleForEntry(entry));
         this.parent = parent;
@@ -429,6 +432,27 @@ public class FieldGuideEntryScreen extends BookScreen {
         int xPos = leftPageBounds.x_center();
         int yPos = leftPageBounds.y_center() - 15;
 
+        boolean mouseOverEntity = mouseX >= xPos - 50 && mouseX <= xPos + 50 && mouseY >= yPos - 50 && mouseY <= yPos + 50;
+
+        float targetScale = 1.0f;
+        if (mouseOverEntity && ClientFieldGuideManager.isUnlocked(entry) && this.variantOverviewWidget != null && !this.variantOverviewWidget.isVisible()) {
+            boolean currentVariantUnlocked = ServerConfig.get().unlockAllVariants || entityVariants.isEmpty() || ClientFieldGuideManager.isVariantUnlocked(entry, entityVariants.get(currentVariantIndex).id());
+            if (currentVariantUnlocked) {
+                targetScale = 1.05f;
+            }
+        }
+
+        long currentTime = System.currentTimeMillis();
+        if (lastRenderTime > 0) {
+            float deltaTime = (currentTime - lastRenderTime) / 1000.0f;
+            float speed = 10.0f;
+            float factor = 1.0f - (float) Math.pow(0.01, deltaTime * speed);
+            hoverScale = hoverScale + (targetScale - hoverScale) * factor;
+        }
+        lastRenderTime = currentTime;
+
+        bounce *= hoverScale;
+
         boolean hideEntity = Services.PLATFORM.isModLoaded("exposure") && ClientExposureCompat.hasPhotograph(entry);
         Object renderEntry = EntryResolver.resolveCoreEntry(entry);
 
@@ -545,7 +569,9 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
         }
 
-        ProgressManager.getInstance().setSelectedVariant(entry, this.initialVariant);
+        if (ServerConfig.get().unlockAllVariants || ClientFieldGuideManager.isVariantUnlocked(entry, this.initialVariant)) {
+            ProgressManager.getInstance().setSelectedVariant(entry, this.initialVariant);
+        }
 
         refreshExposureWidgets();
         //lastClickTime = System.currentTimeMillis();
@@ -567,7 +593,9 @@ public class FieldGuideEntryScreen extends BookScreen {
                 }
             }
 
-            ProgressManager.getInstance().setSelectedVariant(entry, this.initialVariant);
+            if (ServerConfig.get().unlockAllVariants || ClientFieldGuideManager.isVariantUnlocked(entry, this.initialVariant)) {
+                ProgressManager.getInstance().setSelectedVariant(entry, this.initialVariant);
+            }
 
             refreshExposureWidgets();
             //lastClickTime = System.currentTimeMillis();

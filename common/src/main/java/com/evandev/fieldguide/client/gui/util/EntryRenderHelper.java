@@ -473,10 +473,12 @@ public class EntryRenderHelper {
     }
 
     private static void drawCachedTexture(GuiGraphics guiGraphics, ResourceLocation texture, int x, int y, int width, int height, boolean unlocked, boolean isPage, float bounceScale) {
-        int scaledWidth = (int) (width * bounceScale);
-        int scaledHeight = (int) (height * bounceScale);
-        int drawX = x - scaledWidth / 2;
-        int drawY = y - scaledHeight / 2;
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(x, y, 0);
+        guiGraphics.pose().scale(bounceScale, bounceScale, 1.0f);
+
+        float drawX = -width / 2.0f;
+        float drawY = -height / 2.0f;
 
         boolean silhouette = !unlocked || ServerConfig.get().keepSilhouetteWhenUnlocked;
 
@@ -506,9 +508,9 @@ public class EntryRenderHelper {
             VertexConsumer consumer = guiGraphics.bufferSource().getBuffer(RenderType.entityCutout(texture));
             Matrix4f matrix = guiGraphics.pose().last().pose();
 
-            consumer.vertex(matrix, drawX, drawY + scaledHeight, 0).color(255, 255, 255, 255).uv(0.0F, 1.0F).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
-            consumer.vertex(matrix, drawX + scaledWidth, drawY + scaledHeight, 0).color(255, 255, 255, 255).uv(1.0F, 1.0F).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
-            consumer.vertex(matrix, drawX + scaledWidth, drawY, 0).color(255, 255, 255, 255).uv(1.0F, 0.0F).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
+            consumer.vertex(matrix, drawX, drawY + height, 0).color(255, 255, 255, 255).uv(0.0F, 1.0F).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
+            consumer.vertex(matrix, drawX + width, drawY + height, 0).color(255, 255, 255, 255).uv(1.0F, 1.0F).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
+            consumer.vertex(matrix, drawX + width, drawY, 0).color(255, 255, 255, 255).uv(1.0F, 0.0F).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
             consumer.vertex(matrix, drawX, drawY, 0).color(255, 255, 255, 255).uv(0.0F, 0.0F).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(LightTexture.FULL_BRIGHT).normal(0, 0, 1).endVertex();
 
             guiGraphics.flush();
@@ -519,7 +521,9 @@ public class EntryRenderHelper {
         } else {
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
             RenderSystem.enableBlend();
-            guiGraphics.blit(texture, drawX, drawY, 0, 0, scaledWidth, scaledHeight, scaledWidth, scaledHeight);
+            guiGraphics.blit(texture, (int) drawX, (int) drawY, 0, 0, width, height, width, height);
         }
+
+        guiGraphics.pose().popPose();
     }
 }

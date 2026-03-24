@@ -7,13 +7,11 @@ import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
-import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
@@ -39,7 +37,9 @@ public class VariantOverviewWidget extends AbstractWidget {
     //private final ImageButton closeButton;
     private final PageTurnButton leftButton;
     private final PageTurnButton rightButton;
+    private final float[] hoverScales = new float[9];
     private int currentPage = 0;
+    private long lastRenderTime = 0;
 
     public VariantOverviewWidget(int x, int y, int width, int height, Object entry, LivingEntity renderedEntity, List<VariantDef> variants, Consumer<Integer> onVariantSelected, Runnable onToggle) {
         super(x, y, width, height, Component.empty());
@@ -52,13 +52,21 @@ public class VariantOverviewWidget extends AbstractWidget {
         //this.currentTitleText = Component.translatable("gui.fieldguide.variants");
         this.visible = false;
 
+        Arrays.fill(hoverScales, 1.0f);
+
         //this.closeButton = new PageTurnButton(x + 7 , y + 9, 10, 10, 0, 0, 10, Constants.CLOSE_ICON, (btn) -> this.toggleVisibility());
 
         this.leftButton = new PageTurnButton(x + 10, y + height - 26, 16, 16, 0, 16, 16, Constants.WIDGETS_TEXTURE, (btn) -> {
-            if (currentPage > 0) currentPage--;
+            if (currentPage > 0) {
+                currentPage--;
+                Arrays.fill(hoverScales, 1.0f);
+            }
         });
         this.rightButton = new PageTurnButton(x + width - 26, y + height - 26, 16, 16, 16, 16, 16, Constants.WIDGETS_TEXTURE, (btn) -> {
-            if (currentPage < maxPages - 1) currentPage++;
+            if (currentPage < maxPages - 1) {
+                currentPage++;
+                Arrays.fill(hoverScales, 1.0f);
+            }
         });
     }
 
@@ -115,6 +123,10 @@ public class VariantOverviewWidget extends AbstractWidget {
             }
         }
 
+        long currentTime = System.currentTimeMillis();
+        float deltaTime = lastRenderTime > 0 ? (currentTime - lastRenderTime) / 1000.0f : 0.0f;
+        lastRenderTime = currentTime;
+
         for (int i = startIdx; i < endIdx; i++) {
             int gridIndex = i - startIdx;
             Bounds bounds = getGridCellBoundsLocal(gridIndex);
@@ -135,7 +147,16 @@ public class VariantOverviewWidget extends AbstractWidget {
                 }
             }
 
-            EntryRenderHelper.renderEntityNormalized(graphics, renderEntity, bounds.x_center(), bounds.y_center(), bounds.width(), bounds.height(), isUnlocked, false, 1.0f, false);
+            float targetScale = (hovered && isUnlocked) ? 1.05f : 1.0f;
+            if (deltaTime > 0) {
+                float speed = 10.0f;
+                float factor = 1.0f - (float) Math.pow(0.01, deltaTime * speed);
+                hoverScales[gridIndex] = hoverScales[gridIndex] + (targetScale - hoverScales[gridIndex]) * factor;
+            } else {
+                hoverScales[gridIndex] = targetScale;
+            }
+
+            EntryRenderHelper.renderEntityNormalized(graphics, renderEntity, bounds.x_center(), bounds.y_center(), bounds.width(), bounds.height(), isUnlocked, false, hoverScales[gridIndex], false);
 
             if (hovered) {
                 if (isUnlocked) {
