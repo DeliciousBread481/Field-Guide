@@ -6,7 +6,7 @@ import com.evandev.fieldguide.compat.exposure.ExposureCompat;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -161,8 +161,7 @@ public class UpdateEntryDataPacket implements CustomPacketPayload {
                 return;
             }
 
-            CompoundTag tag = new CompoundTag();
-            stack.save(player.registryAccess(), tag);
+            Tag tag = stack.saveOptional(player.registryAccess());
             progress.setEntryPhotograph(entryId, tag.toString());
         }
     }
