@@ -12,11 +12,9 @@ import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.client.ClientConstants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
-import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.gui.widget.*;
-import com.evandev.fieldguide.client.manager.ClientCategoryManager;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
@@ -495,26 +493,26 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         Object renderEntry = EntryResolver.resolveCoreEntry(entry);
 
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(xPos, yPos, 0);
+        guiGraphics.pose().scale(bounce, bounce, bounce);
+        guiGraphics.pose().translate(-xPos, -yPos, 0);
+
         if (entry instanceof GuideEntry ge && ge.isStructure() && renderEntry instanceof Block block) {
             if (!hideEntity) {
                 if (ge.structureData() != null && (ge.structureData().structureNbt() != null || (ge.structureData().stackedBlocks() != null && !ge.structureData().stackedBlocks().isEmpty()))) {
-                    EntryRenderHelper.renderStructure(guiGraphics, ge, xPos, yPos, 112, unlocked, true, bounce);
+                    EntryRenderHelper.renderStructure(guiGraphics, ge, xPos, yPos, 112, unlocked, true, 1.0f);
                 } else {
-                    EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 40.0F, unlocked, true, bounce);
+                    EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 40.0F, unlocked, true, 1.0f);
                 }
             }
         } else if (entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && ge.virtualData().virtualType().equals("cobblemon")) {
             if (!hideEntity) {
-                EntryRenderHelper.renderCobblemon(guiGraphics, ge, xPos, yPos, 112, 112, unlocked, true, bounce);
-            }
-            Entity dummy = FieldGuideCobblemonCompat.getDummyPokemon(ge.id(), Minecraft.getInstance().level);
-            if (unlocked && dummy instanceof LivingEntity living) {
-                if (!hideEntity) renderAttributes(guiGraphics, living);
-                renderAlignment(guiGraphics, living, mouseX, mouseY);
+                EntryRenderHelper.renderCobblemon(guiGraphics, ge, xPos, yPos, 112, 112, unlocked, true, 1.0f);
             }
         } else if (entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && ge.virtualData().virtualType().equals("tutorial")) {
             if (!hideEntity) {
-                EntryRenderHelper.renderTutorial(guiGraphics, ge, xPos, yPos, 112, 112, unlocked, true, bounce);
+                EntryRenderHelper.renderTutorial(guiGraphics, ge, xPos, yPos, 112, 112, unlocked, true, 1.0f);
             }
         } else if (renderEntry instanceof EntityType && renderedEntity != null) {
             boolean variantUnlocked = unlocked;
@@ -523,24 +521,29 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
 
             if (!hideEntity) {
-                EntryRenderHelper.renderEntityNormalized(guiGraphics, renderedEntity, xPos, yPos, 112, 112, variantUnlocked, true, bounce);
-            }
-
-            if (unlocked && renderedEntity instanceof LivingEntity living) {
-                if (!hideEntity) renderAttributes(guiGraphics, living);
-                renderAlignment(guiGraphics, living, mouseX, mouseY);
+                EntryRenderHelper.renderEntityNormalized(guiGraphics, renderedEntity, xPos, yPos, 112, 112, variantUnlocked, true, 1.0f);
             }
         } else if (renderEntry instanceof Block block) {
             if (!hideEntity) {
-                EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 40.0F, unlocked, true, bounce);
+                EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 40.0F, unlocked, true, 1.0f);
             }
         } else if (renderEntry instanceof Item item) {
             if (!hideEntity) {
-                EntryRenderHelper.renderItem(guiGraphics, item, xPos, yPos, 60.0F, unlocked, true, bounce);
+                EntryRenderHelper.renderItem(guiGraphics, item, xPos, yPos, 60.0F, unlocked, true, 1.0f);
             }
         }
+        guiGraphics.pose().popPose();
 
         if (unlocked) {
+            if (renderEntry instanceof EntityType || (entry instanceof GuideEntry ge && ge.isVirtual() && "cobblemon".equals(ge.virtualData().virtualType()))) {
+                Entity dummy = (renderedEntity != null) ? renderedEntity : FieldGuideCobblemonCompat.getDummyPokemon(((GuideEntry) entry).id(), Minecraft.getInstance().level);
+
+                if (dummy instanceof LivingEntity living) {
+                    if (!hideEntity) renderAttributes(guiGraphics, living);
+                    renderAlignment(guiGraphics, living, mouseX, mouseY);
+                }
+            }
+
             renderSeasons(guiGraphics, xPos, yPos, mouseX, mouseY);
         }
 
@@ -656,42 +659,8 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private void loadSpawnBiomes() {
-        Object coreEntry = EntryResolver.resolveCoreEntry(entry);
-        boolean isCobblemon = isCobblemon(entry);
-        if (!(coreEntry instanceof EntityType<?>) && !(coreEntry instanceof Block) && !isCobblemon) return;
-
-        EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(entry);
-
         spawnBiomes.clear();
-        if (visual != null && visual.spawnBiomes != null) {
-            spawnBiomes.addAll(visual.spawnBiomes);
-        }
-
-        if (isCobblemon && Services.PLATFORM.isModLoaded("cobblemon")) {
-            spawnBiomes.addAll(FieldGuideCobblemonCompat.getCobblemonBiomes(entry));
-        }
-
-        ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
-        if (entryId != null) {
-            ClientCategoryManager categoryManager = ClientCategoryManager.getInstance();
-            for (String removal : categoryManager.getBiomeRemovals()) {
-                String[] parts = removal.split("\\|");
-                if (parts.length == 2 && categoryManager.isBiomeMatch(entry, ResourceLocation.parse(parts[1]))) {
-                    spawnBiomes.remove(ResourceLocation.parse(parts[1]));
-                }
-            }
-
-            for (String addition : categoryManager.getBiomeAdditions()) {
-                String[] parts = addition.split("\\|");
-                if (parts.length == 2 && categoryManager.isBiomeMatch(entry, ResourceLocation.parse(parts[1]))) {
-                    ResourceLocation biomeId = ResourceLocation.parse(parts[1]);
-
-                    if (!spawnBiomes.contains(biomeId)) {
-                        spawnBiomes.add(biomeId);
-                    }
-                }
-            }
-        }
+        spawnBiomes.addAll(ClientFieldGuideManager.getInstance().getResolvedBiomes(entry));
     }
 
     private void setupBiomeWidget(boolean unlocked) {

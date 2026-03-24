@@ -148,6 +148,18 @@ public class VariantOverviewWidget extends AbstractWidget {
                 }
             }
 
+            graphics.pose().pushPose();
+
+            int centerX = bounds.x_center();
+            int centerY = bounds.y_center();
+            graphics.pose().translate(centerX, centerY, 0);
+            float currentScale = hoverScales[gridIndex];
+            graphics.pose().scale(currentScale, currentScale, currentScale);
+
+            graphics.pose().translate(-centerX, -centerY, 0);
+
+            EntryRenderHelper.renderEntityNormalized(graphics, renderEntity, centerX, centerY, bounds.width(), bounds.height(), isUnlocked, false, 1.0f, false);
+
             float targetScale = (hovered && isUnlocked) ? 1.05f : 1.0f;
             if (deltaTime > 0) {
                 float speed = 10.0f;
@@ -157,7 +169,7 @@ public class VariantOverviewWidget extends AbstractWidget {
                 hoverScales[gridIndex] = targetScale;
             }
 
-            EntryRenderHelper.renderEntityNormalized(graphics, renderEntity, bounds.x_center(), bounds.y_center(), bounds.width(), bounds.height(), isUnlocked, false, hoverScales[gridIndex], false);
+            graphics.pose().popPose();
 
             if (hovered) {
                 if (isUnlocked) {

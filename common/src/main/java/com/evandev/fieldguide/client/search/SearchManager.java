@@ -3,6 +3,7 @@ package com.evandev.fieldguide.client.search;
 import com.evandev.fieldguide.api.seasons.Season;
 import com.evandev.fieldguide.api.seasons.SeasonsAPI;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.client.manager.ClientLootManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.platform.Services;
@@ -13,7 +14,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 
@@ -125,13 +125,11 @@ public class SearchManager {
         List<Object> results = new ArrayList<>();
         if (dropQuery.isEmpty()) return results;
 
-        for (Object entry : entries) {
-            List<ItemStack> drops = ClientFieldGuideManager.getInstance().getDrops(entry);
-            boolean match = drops.stream().anyMatch(stack -> {
-                String name = stack.getHoverName().getString().toLowerCase(Locale.ROOT);
-                return exactMatch ? name.equals(dropQuery) : name.contains(dropQuery);
-            });
-            if (match) results.add(entry);
+        List<Object> drops = ClientLootManager.getInstance().getEntriesDropping(dropQuery, exactMatch);
+        for (Object entry : drops) {
+            if (entries.contains(entry)) {
+                results.add(entry);
+            }
         }
         return results;
     }

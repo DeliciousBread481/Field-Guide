@@ -8,10 +8,7 @@ import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.data.JournalPage;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.gui.util.IconCacheManager;
-import com.evandev.fieldguide.client.manager.ClientCategoryManager;
-import com.evandev.fieldguide.client.manager.ClientLootManager;
-import com.evandev.fieldguide.client.manager.ClientTextManager;
-import com.evandev.fieldguide.client.manager.ClientVisualManager;
+import com.evandev.fieldguide.client.manager.*;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.client.scan.FieldGuideScanner;
 import com.evandev.fieldguide.client.search.SearchManager;
@@ -29,14 +26,16 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     private static final ClientFieldGuideManager INSTANCE = new ClientFieldGuideManager();
+    private final Map<ResourceLocation, List<ResourceLocation>> biomeCache = new ConcurrentHashMap<>();
 
     private ClientFieldGuideManager() {
     }
@@ -248,40 +247,59 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
 
     public void onWorldLoad() {
         ProgressManager.getInstance().onWorldLoad();
-        warmUpCache();
-    }
-
-    private void warmUpCache() {
-        CompletableFuture.runAsync(() -> {
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException ignored) {
-            }
-
-            List<Object> entries = getValidEntries();
-            for (Object entry : entries) {
-                loadBiomesInBackground(entry);
-
-                if (isUnlocked(entry)) {
-                    getDrops(entry);
-                }
-            }
-        });
-    }
-
-    private void loadBiomesInBackground(Object entry) {
-        if (Services.PLATFORM.isModLoaded("cobblemon") && EntryResolver.getEntryId(entry).getNamespace().equals("cobblemon")) {
-            FieldGuideCobblemonCompat.getCobblemonBiomes(entry);
-        }
+        ClientCacheManager.init();
     }
 
     public void onWorldUnload() {
         ClientLootManager.getInstance().clear();
         ProgressManager.getInstance().onWorldUnload();
+        ClientCacheManager.onWorldUnload();
+        biomeCache.clear();
         ServerConfig.resetSyncedConfig();
+    }
+
+    public List<ResourceLocation> getResolvedBiomes(Object entry) {
+        ResourceLocation entryId = getEntryId(entry);
+        if (entryId == null) return Collections.emptyList();
+
+        if (biomeCache.containsKey(entryId)) {
+            return biomeCache.get(entryId);
+        }
+
+        List<ResourceLocation> diskBiomes = ClientCacheManager.loadBiomes(entryId);
+        if (diskBiomes != null) {
+            biomeCache.put(entryId, diskBiomes);
+            return diskBiomes;
+        }
+
+        Object coreEntry = EntryResolver.resolveCoreEntry(entry);
+        boolean isCobblemon = entryId.getNamespace().equals("cobblemon");
+        if (!(coreEntry instanceof EntityType<?>) && !(coreEntry instanceof Block) && !isCobblemon) {
+            return Collections.emptyList();
+        }
+
+        EntryVisual visual = getEntryVisual(entry);
+        Set<ResourceLocation> biomes = new LinkedHashSet<>();
+
+        if (visual != null && visual.spawnBiomes != null) {
+            biomes.addAll(visual.spawnBiomes);
+        }
+
+        if (isCobblemon && Services.PLATFORM.isModLoaded("cobblemon")) {
+            biomes.addAll(FieldGuideCobblemonCompat.getCobblemonBiomes(entry));
+        }
+
+        ClientCategoryManager categoryManager = ClientCategoryManager.getInstance();
+        categoryManager.getBiomeRemovals(entry).forEach(biomes::remove);
+        biomes.addAll(categoryManager.getBiomeAdditions(entry));
+
+        List<ResourceLocation> result = new ArrayList<>(biomes);
+        biomeCache.put(entryId, result);
+        ClientCacheManager.saveBiomes(entryId, result);
+        return result;
     }
 
     public void applyServerUpdate(ProgressUpdatePacket packet) {
         ProgressManager.getInstance().applyServerUpdate(packet);
     }
-}
+    }

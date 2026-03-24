@@ -4,8 +4,9 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.ModDataComponents;
 import com.evandev.fieldguide.api.AutoPopulateRegistry;
 import com.evandev.fieldguide.api.GuideEntry;
-import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.entry.EntryResolver;
+import com.evandev.fieldguide.server.ServerFieldGuideManager;
+import com.evandev.fieldguide.server.data.ItemStackKey;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -93,39 +94,29 @@ public class LootTableHelper {
             ResourceLocation id = AutoPopulateRegistry.getEntryId(entry, true);
             if (id != null) {
                 List<ItemStack> existing = lootMap.computeIfAbsent(id, k -> new ArrayList<>());
+                Map<ItemStackKey, ItemStack> existingMap = new LinkedHashMap<>();
+                for (ItemStack s : existing) {
+                    existingMap.put(new ItemStackKey(s), s);
+                }
+
                 for (ItemStack newStack : formattedDrops) {
-                    boolean found = false;
-                    for (ItemStack s : existing) {
+                    ItemStackKey key = new ItemStackKey(newStack);
+                    ItemStack existingStack = existingMap.get(key);
+                    if (existingStack != null) {
+                        float existingChance = existingStack.getOrDefault(ModDataComponents.DROP_CHANCE.get(), 0.0f);
+                        float newChance = newStack.getOrDefault(ModDataComponents.DROP_CHANCE.get(), 0.0f);
+                        existingStack.set(ModDataComponents.DROP_CHANCE.get(), Math.min(100.0f, existingChance + newChance));
 
-                        ItemStack copyExisting = s.copy();
-                        copyExisting.remove(ModDataComponents.DROP_CHANCE.get());
-                        copyExisting.remove(ModDataComponents.MIN_DROP.get());
-                        copyExisting.remove(ModDataComponents.MAX_DROP.get());
+                        int existingMin = existingStack.getOrDefault(ModDataComponents.MIN_DROP.get(), 1);
+                        int newMin = newStack.getOrDefault(ModDataComponents.MIN_DROP.get(), 1);
+                        existingStack.set(ModDataComponents.MIN_DROP.get(), Math.min(existingMin, newMin));
 
-                        ItemStack copyNew = newStack.copy();
-                        copyNew.remove(ModDataComponents.DROP_CHANCE.get());
-                        copyNew.remove(ModDataComponents.MIN_DROP.get());
-                        copyNew.remove(ModDataComponents.MAX_DROP.get());
-
-                        if (ItemStack.isSameItemSameComponents(copyExisting, copyNew)) {
-                            float existingChance = s.getOrDefault(ModDataComponents.DROP_CHANCE.get(), 0.0f);
-                            float newChance = newStack.getOrDefault(ModDataComponents.DROP_CHANCE.get(), 0.0f);
-                            s.set(ModDataComponents.DROP_CHANCE.get(), Math.min(100.0f, existingChance + newChance));
-
-                            int existingMin = s.getOrDefault(ModDataComponents.MIN_DROP.get(), 1);
-                            int newMin = newStack.getOrDefault(ModDataComponents.MIN_DROP.get(), 1);
-                            s.set(ModDataComponents.MIN_DROP.get(), Math.min(existingMin, newMin));
-
-                            int existingMax = s.getOrDefault(ModDataComponents.MAX_DROP.get(), 1);
-                            int newMax = newStack.getOrDefault(ModDataComponents.MAX_DROP.get(), 1);
-                            s.set(ModDataComponents.MAX_DROP.get(), Math.max(existingMax, newMax));
-
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
+                        int existingMax = existingStack.getOrDefault(ModDataComponents.MAX_DROP.get(), 1);
+                        int newMax = newStack.getOrDefault(ModDataComponents.MAX_DROP.get(), 1);
+                        existingStack.set(ModDataComponents.MAX_DROP.get(), Math.max(existingMax, newMax));
+                    } else {
                         existing.add(newStack);
+                        existingMap.put(key, newStack);
                     }
                 }
             }
