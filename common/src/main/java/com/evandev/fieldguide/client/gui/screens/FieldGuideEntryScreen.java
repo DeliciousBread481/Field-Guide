@@ -378,7 +378,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 //                            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(Constants.ITEM_PICKUP_SOUND), 1.0F, 1.0F));
 //                        }
                     }
-                    //this.lastClickTime = System.currentTimeMillis();
+                    this.lastClickTime = System.currentTimeMillis();
                 }
                 return true;
             }
@@ -454,10 +454,13 @@ public class FieldGuideEntryScreen extends BookScreen {
         int xPos = leftPageBounds.x_center();
         int yPos = leftPageBounds.y_center() - 15;
 
+        String variantId = (!entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) ? entityVariants.get(currentVariantIndex).id() : null;
+        boolean hideEntity = Services.PLATFORM.isModLoaded("exposure") && ClientExposureCompat.hasPhotograph(entry, variantId);
+
         boolean mouseOverEntity = mouseX >= xPos - 50 && mouseX <= xPos + 50 && mouseY >= yPos - 50 && mouseY <= yPos + 50;
 
         float targetScale = 1.0f;
-        if (mouseOverEntity && ClientFieldGuideManager.isUnlocked(entry) && this.variantOverviewWidget != null && !this.variantOverviewWidget.isVisible()) {
+        if (!hideEntity && mouseOverEntity && ClientFieldGuideManager.isUnlocked(entry) && this.variantOverviewWidget != null && !this.variantOverviewWidget.isVisible()) {
             boolean currentVariantUnlocked = ServerConfig.get().unlockAllVariants || entityVariants.isEmpty() || ClientFieldGuideManager.isVariantUnlocked(entry, entityVariants.get(currentVariantIndex).id());
             if (currentVariantUnlocked) {
                 targetScale = 1.05f;
@@ -475,7 +478,6 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         bounce *= hoverScale;
 
-        boolean hideEntity = Services.PLATFORM.isModLoaded("exposure") && ClientExposureCompat.hasPhotograph(entry);
         Object renderEntry = EntryResolver.resolveCoreEntry(entry);
 
         if (entry instanceof GuideEntry ge && ge.isStructure() && renderEntry instanceof Block block) {
@@ -492,7 +494,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
             Entity dummy = FieldGuideCobblemonCompat.getDummyPokemon(ge.id(), Minecraft.getInstance().level);
             if (unlocked && dummy instanceof LivingEntity living) {
-                renderAttributes(guiGraphics, living);
+                if (!hideEntity) renderAttributes(guiGraphics, living);
                 renderAlignment(guiGraphics, living, mouseX, mouseY);
             }
         } else if (entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && ge.virtualData().virtualType().equals("tutorial")) {
@@ -510,7 +512,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
 
             if (unlocked && renderedEntity instanceof LivingEntity living) {
-                renderAttributes(guiGraphics, living);
+                if (!hideEntity) renderAttributes(guiGraphics, living);
                 renderAlignment(guiGraphics, living, mouseX, mouseY);
             }
         } else if (renderEntry instanceof Block block) {
@@ -609,7 +611,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         }
 
         refreshExposureWidgets();
-        //lastClickTime = System.currentTimeMillis();
+        this.lastClickTime = System.currentTimeMillis();
         this.updateWidgetVisibility();
     }
 
@@ -633,7 +635,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             }
 
             refreshExposureWidgets();
-            //lastClickTime = System.currentTimeMillis();
+            this.lastClickTime = System.currentTimeMillis();
         }
     }
 
