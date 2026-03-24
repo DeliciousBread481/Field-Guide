@@ -5,14 +5,15 @@ import com.evandev.fieldguide.FieldGuideLimits;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.data.JournalPage;
 import com.evandev.fieldguide.client.gui.toasts.FieldGuideToast;
+import com.evandev.fieldguide.client.gui.util.IconCacheManager;
 import com.evandev.fieldguide.config.ClientConfig;
+import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.network.MarkSeenPacket;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.network.UpdateEntryDataPacket;
 import com.evandev.fieldguide.network.UpdateJournalPacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
-import com.evandev.fieldguide.entry.EntryResolver;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -42,6 +43,7 @@ public class ProgressManager {
     private final Map<String, String> customDescriptions = new HashMap<>();
     private final Map<String, String> customNames = new HashMap<>();
     private final Map<String, String> entryPhotographs = new HashMap<>();
+    private final Map<String, String> selectedVariants = new HashMap<>();
     private final Set<String> killedOnly = new HashSet<>();
     private final Set<String> eatenOnly = new HashSet<>();
     private final List<JournalPage> journalPages = new ArrayList<>();
@@ -90,6 +92,7 @@ public class ProgressManager {
             customNames.clear();
             customDescriptions.clear();
             entryPhotographs.clear();
+            selectedVariants.clear();
             killedOnly.clear();
             eatenOnly.clear();
         }
@@ -100,6 +103,7 @@ public class ProgressManager {
             discoveryTimes.remove(id);
             discoveryGameTimes.remove(id);
             entryPhotographs.remove(id);
+            selectedVariants.remove(id);
         }
 
         Map<String, String> toastsToShow = new HashMap<>();
@@ -134,6 +138,7 @@ public class ProgressManager {
         applyEntryMap(packet.getCustomNames(), customNames);
         applyEntryMap(packet.getCustomDescriptions(), customDescriptions);
         applyEntryMap(packet.getEntryPhotographs(), entryPhotographs);
+        applyEntryMap(packet.getSelectedVariants(), selectedVariants);
 
         killedOnly.clear();
         killedOnly.addAll(packet.getKilledOnly());
@@ -234,6 +239,32 @@ public class ProgressManager {
         }
     }
 
+    public String getSelectedVariant(Object entry) {
+        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        return id != null ? getSelectedVariant(id) : null;
+    }
+
+    public String getSelectedVariant(ResourceLocation id) {
+        return selectedVariants.get(id.toString());
+    }
+
+    public void setSelectedVariant(Object entry, String variantId) {
+        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        if (id != null) {
+            setSelectedVariant(id, variantId);
+        }
+    }
+
+    public void setSelectedVariant(ResourceLocation id, String variantId) {
+        if (variantId == null || variantId.isEmpty()) {
+            selectedVariants.remove(id.toString());
+        } else {
+            selectedVariants.put(id.toString(), variantId);
+        }
+        IconCacheManager.clearCache();
+        Services.NETWORK.sendToServer(UpdateEntryDataPacket.setSelectedVariant(id, variantId));
+    }
+
     public ItemStack getPhotograph(Object entry) {
         return getPhotograph(entry, null);
     }
@@ -315,6 +346,7 @@ public class ProgressManager {
         customDescriptions.clear();
         customNames.clear();
         entryPhotographs.clear();
+        selectedVariants.clear();
         journalPages.clear();
         journalTitle = "My Field Guide";
         lastUnlockTime = 0;
@@ -330,6 +362,7 @@ public class ProgressManager {
         customDescriptions.clear();
         customNames.clear();
         entryPhotographs.clear();
+        selectedVariants.clear();
         journalPages.clear();
         journalTitle = "My Field Guide";
         lastUnlockTime = 0;

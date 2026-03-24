@@ -21,6 +21,7 @@ public class ProgressUpdatePacket {
     private final Map<String, String> customNames;
     private final Map<String, String> customDescriptions;
     private final Map<String, String> entryPhotographs;
+    private final Map<String, String> selectedVariants;
     private final List<String> killedOnly;
     private final List<String> eatenOnly;
     private final Optional<String> journalTitle;
@@ -37,6 +38,7 @@ public class ProgressUpdatePacket {
         this.customNames = builder.customNames;
         this.customDescriptions = builder.customDescriptions;
         this.entryPhotographs = builder.entryPhotographs;
+        this.selectedVariants = builder.selectedVariants;
         this.killedOnly = builder.killedOnly;
         this.eatenOnly = builder.eatenOnly;
         this.journalTitle = builder.journalTitle;
@@ -54,6 +56,7 @@ public class ProgressUpdatePacket {
         this.customNames = buf.readMap(FriendlyByteBuf::readUtf, FriendlyByteBuf::readUtf);
         this.customDescriptions = buf.readMap(FriendlyByteBuf::readUtf, FriendlyByteBuf::readUtf);
         this.entryPhotographs = buf.readMap(FriendlyByteBuf::readUtf, FriendlyByteBuf::readUtf);
+        this.selectedVariants = buf.readMap(FriendlyByteBuf::readUtf, FriendlyByteBuf::readUtf);
         this.killedOnly = buf.readList(FriendlyByteBuf::readUtf);
         this.eatenOnly = buf.readList(FriendlyByteBuf::readUtf);
         this.journalTitle = buf.readOptional(FriendlyByteBuf::readUtf);
@@ -72,6 +75,7 @@ public class ProgressUpdatePacket {
         buf.writeMap(customNames, FriendlyByteBuf::writeUtf, FriendlyByteBuf::writeUtf);
         buf.writeMap(customDescriptions, FriendlyByteBuf::writeUtf, FriendlyByteBuf::writeUtf);
         buf.writeMap(entryPhotographs, FriendlyByteBuf::writeUtf, FriendlyByteBuf::writeUtf);
+        buf.writeMap(selectedVariants, FriendlyByteBuf::writeUtf, FriendlyByteBuf::writeUtf);
         buf.writeCollection(killedOnly, FriendlyByteBuf::writeUtf);
         buf.writeCollection(eatenOnly, FriendlyByteBuf::writeUtf);
         buf.writeOptional(journalTitle, FriendlyByteBuf::writeUtf);
@@ -123,6 +127,10 @@ public class ProgressUpdatePacket {
         return entryPhotographs;
     }
 
+    public Map<String, String> getSelectedVariants() {
+        return selectedVariants;
+    }
+
     public List<String> getKilledOnly() {
         return killedOnly;
     }
@@ -150,6 +158,7 @@ public class ProgressUpdatePacket {
         private Map<String, String> customNames = Collections.emptyMap();
         private Map<String, String> customDescriptions = Collections.emptyMap();
         private Map<String, String> entryPhotographs = Collections.emptyMap();
+        private Map<String, String> selectedVariants = Collections.emptyMap();
         private List<String> killedOnly = Collections.emptyList();
         private List<String> eatenOnly = Collections.emptyList();
         private Optional<String> journalTitle = Optional.empty();
@@ -202,6 +211,11 @@ public class ProgressUpdatePacket {
 
         public Builder entryPhotographs(Map<String, String> photos) {
             this.entryPhotographs = photos;
+            return this;
+        }
+
+        public Builder selectedVariants(Map<String, String> selectedVariants) {
+            this.selectedVariants = selectedVariants;
             return this;
         }
 

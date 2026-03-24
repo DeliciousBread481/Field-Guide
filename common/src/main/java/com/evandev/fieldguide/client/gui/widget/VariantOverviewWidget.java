@@ -135,7 +135,7 @@ public class VariantOverviewWidget extends AbstractWidget {
                 }
             }
 
-            EntryRenderHelper.renderEntityNormalized(graphics, renderEntity, bounds.x_center(), bounds.y_center(), bounds.width(), bounds.height(), isUnlocked, false, 1.0f);
+            EntryRenderHelper.renderEntityNormalized(graphics, renderEntity, bounds.x_center(), bounds.y_center(), bounds.width(), bounds.height(), isUnlocked, false, 1.0f, false);
 
             if (hovered) {
                 if (isUnlocked) {

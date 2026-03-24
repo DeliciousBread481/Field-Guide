@@ -300,6 +300,10 @@ public class FieldGuideEntryScreen extends BookScreen {
                 this.addRenderableWidget(prevVariantButton);
                 this.addRenderableWidget(nextVariantButton);
 
+                if (this.initialVariant == null) {
+                    this.initialVariant = ProgressManager.getInstance().getSelectedVariant(entry);
+                }
+
                 VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(this.renderedEntity);
                 if (provider != null) {
                     VariantDef current = provider.getCurrent((Mob) this.renderedEntity);
@@ -540,6 +544,9 @@ public class FieldGuideEntryScreen extends BookScreen {
                 this.renderedEntity = FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
             }
         }
+
+        ProgressManager.getInstance().setSelectedVariant(entry, this.initialVariant);
+
         refreshExposureWidgets();
         //lastClickTime = System.currentTimeMillis();
         this.updateWidgetVisibility();
@@ -559,6 +566,9 @@ public class FieldGuideEntryScreen extends BookScreen {
                     this.renderedEntity = FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
                 }
             }
+
+            ProgressManager.getInstance().setSelectedVariant(entry, this.initialVariant);
+
             refreshExposureWidgets();
             //lastClickTime = System.currentTimeMillis();
         }

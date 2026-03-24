@@ -8,10 +8,13 @@ import com.cobblemon.mod.common.pokemon.Pokemon;
 import com.cobblemon.mod.common.pokemon.Species;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.EntryKind;
+import com.evandev.fieldguide.api.EntryUnlockData;
 import com.evandev.fieldguide.api.GuideEntry;
+import com.evandev.fieldguide.api.VirtualData;
 import com.evandev.fieldguide.api.variant.VariantDef;
 import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
@@ -101,6 +104,7 @@ public final class FieldGuideCobblemonCompat {
 
                     ResourceLocation id = getPokemonEntryId(entity);
                     FORM_CACHE.put(id, form.getName());
+                    ProgressManager.getInstance().setSelectedVariant(id, form.getName());
                     DUMMY_CACHE.remove(id);
                 }
             }
@@ -133,7 +137,16 @@ public final class FieldGuideCobblemonCompat {
         RESOLVED_BIOME_CACHE.clear();
     }
 
+    public static String getCurrentForm(LivingEntity entity) {
+        if (entity instanceof PokemonEntity pokemon) {
+            return pokemon.getPokemon().getForm().getName();
+        }
+        return "standard";
+    }
+
     public static String getFormForEntry(ResourceLocation id) {
+        String selected = ProgressManager.getInstance().getSelectedVariant(id);
+        if (selected != null) return selected;
         return FORM_CACHE.getOrDefault(id, getDefaultForm(id));
     }
 
@@ -227,6 +240,11 @@ public final class FieldGuideCobblemonCompat {
      * Used to provide health, drops, and general entity data.
      */
     public static LivingEntity getDummyPokemon(ResourceLocation id, Level level) {
+        String selectedForm = ProgressManager.getInstance().getSelectedVariant(id);
+        if (selectedForm != null) {
+            return getDummyVariant(id, selectedForm, level);
+        }
+
         if (DUMMY_CACHE.containsKey(id)) {
             return DUMMY_CACHE.get(id);
         }
@@ -344,7 +362,7 @@ public final class FieldGuideCobblemonCompat {
                         }
 
                         sortedEntries.add(new AbstractMap.SimpleEntry<>(
-                                new GuideEntry(entryId, null, null, EntryKind.NORMAL, true, false, null, null, null, new com.evandev.fieldguide.api.VirtualData("cobblemon"), com.evandev.fieldguide.api.EntryUnlockData.DEFAULT),
+                                new GuideEntry(entryId, null, null, EntryKind.NORMAL, true, false, null, null, null, new VirtualData("cobblemon"), EntryUnlockData.DEFAULT),
                                 pokedexNumber
                         ));
                     }

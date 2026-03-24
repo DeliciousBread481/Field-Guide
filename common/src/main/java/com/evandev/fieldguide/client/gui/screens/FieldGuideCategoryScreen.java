@@ -4,6 +4,7 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.api.GuideEntry;
 import com.evandev.fieldguide.api.variant.VariantDef;
+import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.data.EntryVisual;
@@ -16,8 +17,8 @@ import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.config.ServerConfig;
-import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.entry.EntryResolver;
+import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.ChatFormatting;
@@ -34,6 +35,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.biome.Biome;
@@ -703,25 +705,45 @@ public class FieldGuideCategoryScreen extends BookScreen {
     private Entity getCachedEntity(Object entry) {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
         if (id == null) return null;
-        if (entryCache.containsKey(id)) return entryCache.get(id);
 
-        if (this.minecraft == null || this.minecraft.level == null) return null;
+        Entity entity = entryCache.get(id);
+        if (entity == null) {
+            if (this.minecraft == null || this.minecraft.level == null) return null;
 
-        Entity entity = null;
-        if (entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "cobblemon".equals(ge.virtualData().virtualType())) {
-            entity = FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
-        } else {
-            Object coreEntry = EntryResolver.resolveCoreEntry(entry);
-            if (coreEntry instanceof EntityType<?> type) {
-                try {
-                    entity = type.create(this.minecraft.level);
-                } catch (Exception e) {
-                    Constants.LOG.error("Failed to create entity for guide: {}", type.getDescription().getString());
+            if (entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "cobblemon".equals(ge.virtualData().virtualType())) {
+                entity = FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
+            } else {
+                Object coreEntry = EntryResolver.resolveCoreEntry(entry);
+                if (coreEntry instanceof EntityType<?> type) {
+                    try {
+                        entity = type.create(this.minecraft.level);
+                    } catch (Exception e) {
+                        Constants.LOG.error("Failed to create entity for guide: {}", type.getDescription().getString());
+                    }
+                }
+            }
+            if (entity != null) entryCache.put(id, entity);
+        }
+
+        if (entity instanceof Mob mob) {
+            String selectedVariant = ProgressManager.getInstance().getSelectedVariant(entry);
+            if (selectedVariant != null) {
+                VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(mob);
+                if (provider != null) {
+                    VariantDef current = provider.getCurrent(mob);
+                    if (!current.id().equals(selectedVariant)) {
+                        List<VariantDef> variants = provider.getVariants(mob);
+                        for (VariantDef variant : variants) {
+                            if (variant.id().equals(selectedVariant)) {
+                                provider.apply(mob, variant);
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }
 
-        entryCache.put(id, entity);
         return entity;
     }
 
