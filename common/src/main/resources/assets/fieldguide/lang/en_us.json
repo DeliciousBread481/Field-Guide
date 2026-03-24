@@ -125,6 +125,9 @@
   "option.fieldguide.details_unlocked_silhouette_alpha": "Details Discovered Silhouette Opacity",
   "option.fieldguide.details_unlocked_silhouette_alpha.tooltip": "The opacity of the discovered entry silhouettes within the details pages (0.0 - 1.0).",
 
+  "option.fieldguide.show_unlock_date": "Show Unlock Date Icon",
+  "option.fieldguide.show_unlock_date.tooltip": "If enabled, a small quill icon will appear in the top right of discovered entries. Hovering over it will display the date and time the entry was unlocked.",
+
   "option.fieldguide.use_real_world_date": "Use Real-World Date",
   "option.fieldguide.use_real_world_date.tooltip": "If true, discovery dates are shown using the real-world date instead of the in-game day.",
 
@@ -195,6 +198,8 @@
   "fieldguide.alignment.passive": "Passive",
   "fieldguide.alignment.neutral": "Neutral",
   "fieldguide.alignment.hostile": "Hostile",
+  "fieldguide.attribute.health": "Health",
+  "fieldguide.attribute.armor": "Armor",
 
   "fieldguide.date.in_game": "Day %s, %s",
   "fieldguide.time.day": "Morning",

@@ -19,6 +19,7 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Map;
 
 public class PageItem extends Item {
 
@@ -42,8 +43,14 @@ public class PageItem extends Item {
                     // Unlock variants
                     List<String> variants = stack.get(ModDataComponents.VARIANTS.get());
                     if (variants != null) {
+                        Map<String, String> variantNames = stack.get(ModDataComponents.CUSTOM_VARIANT_NAMES.get());
                         for (String variant : variants) {
                             progress.unlock(serverPlayer, entryId, variant, false);
+
+                            // Restore custom variant names
+                            if (variantNames != null && variantNames.containsKey(variant)) {
+                                progress.setCustomName(entryId + "#" + variant, variantNames.get(variant));
+                            }
                         }
                     }
 

@@ -21,7 +21,9 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public record CopyPagePacket(ResourceLocation entryId) implements CustomPacketPayload {
@@ -83,6 +85,18 @@ public record CopyPagePacket(ResourceLocation entryId) implements CustomPacketPa
         List<String> variants = progress.getUnlockedVariants(idStr);
         if (!variants.isEmpty()) {
             page.set(ModDataComponents.VARIANTS.get(), variants);
+
+            Map<String, String> variantNames = new HashMap<>();
+            for (String v : variants) {
+                String vName = progress.getCustomName(idStr + "#" + v);
+                if (vName != null) {
+                    variantNames.put(v, vName);
+                }
+            }
+
+            if (!variantNames.isEmpty()) {
+                page.set(ModDataComponents.CUSTOM_VARIANT_NAMES.get(), variantNames);
+            }
         }
 
         String customName = progress.getCustomName(idStr);

@@ -7,6 +7,7 @@ import com.evandev.fieldguide.client.ClientConstants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
+import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
@@ -25,7 +26,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class VariantOverviewWidget extends AbstractWidget {
 
@@ -35,7 +35,6 @@ public class VariantOverviewWidget extends AbstractWidget {
     private final Consumer<Integer> onVariantSelected;
     private final Runnable onToggle;
     private final int maxPages;
-    //private final ImageButton closeButton;
     private final PageTurnButton leftButton;
     private final PageTurnButton rightButton;
     private final float[] hoverScales = new float[9];
@@ -50,12 +49,9 @@ public class VariantOverviewWidget extends AbstractWidget {
         this.onVariantSelected = onVariantSelected;
         this.onToggle = onToggle;
         this.maxPages = (int) Math.ceil(variants.size() / 9.0);
-        //this.currentTitleText = Component.translatable("gui.fieldguide.variants");
         this.visible = false;
 
         Arrays.fill(hoverScales, 1.0f);
-
-        //this.closeButton = new PageTurnButton(x + 7 , y + 9, 10, 10, 0, 0, 10, Constants.CLOSE_ICON, (btn) -> this.toggleVisibility());
 
         this.leftButton = new PageTurnButton(x + (width / 2) - 24, y + height - 20, 16, 16, ClientConstants.PREV_SPRITES, (btn) -> {
             if (currentPage > 0) {
@@ -173,13 +169,8 @@ public class VariantOverviewWidget extends AbstractWidget {
 
             if (hovered) {
                 if (isUnlocked) {
-                    String name = variant.id();
-                    if (name.contains(":")) name = name.substring(name.indexOf(':') + 1);
-
-                    name = Arrays.stream(name.split("_"))
-                            .map(s -> s.isEmpty() ? s : s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase())
-                            .collect(Collectors.joining(" "));
-                    tooltipText = Component.literal(name);
+                    String customVariantName = ProgressManager.getInstance().getCustomName(ClientFieldGuideManager.getEntryId(entry).toString() + "#" + variant.id());
+                    tooltipText = customVariantName != null ? Component.literal(customVariantName) : FieldGuideVariantManager.getVariantDisplayName(variant);
                 } else {
                     tooltipText = Component.literal("???");
                 }
@@ -193,13 +184,10 @@ public class VariantOverviewWidget extends AbstractWidget {
             }
         }
 
-        //int titleWidth = Minecraft.getInstance().font.width(this.currentTitleText);
-        //graphics.drawString(Minecraft.getInstance().font, this.currentTitleText, this.getX() + (this.width / 2) - (titleWidth / 2), this.getY() + 10, ClientConfig.get().getTextTitleColorInt(), false);
         if (tooltipText != null) {
             graphics.renderTooltip(Minecraft.getInstance().font, tooltipText, mouseX, mouseY);
         }
 
-        //this.closeButton.render(graphics, mouseX, mouseY, partialTicks);
         if (this.currentPage > 0) this.leftButton.render(graphics, mouseX, mouseY, partialTicks);
         if (this.currentPage < maxPages - 1) this.rightButton.render(graphics, mouseX, mouseY, partialTicks);
 
@@ -210,7 +198,6 @@ public class VariantOverviewWidget extends AbstractWidget {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!this.visible) return false;
 
-        //if (this.closeButton.mouseClicked(mouseX, mouseY, button)) return true;
         if (this.currentPage > 0 && this.leftButton.mouseClicked(mouseX, mouseY, button)) return true;
         if (this.currentPage < maxPages - 1 && this.rightButton.mouseClicked(mouseX, mouseY, button)) return true;
 

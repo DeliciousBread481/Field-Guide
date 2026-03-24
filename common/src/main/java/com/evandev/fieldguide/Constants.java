@@ -14,14 +14,20 @@ public class Constants {
     public static final String MOD_NAME = "FieldGuide";
     public static final Logger LOG = LoggerFactory.getLogger(MOD_NAME);
 
-    public static final Type LIST_STRING_TYPE = new TypeToken<List<String>>() {}.getType();
-    public static final Type MAP_STRING_LIST_STRING_TYPE = new TypeToken<Map<String, List<String>>>() {}.getType();
+    public static final Type LIST_STRING_TYPE = new TypeToken<List<String>>() {
+    }.getType();
+
+    public static final Type MAP_STRING_LIST_STRING_TYPE = new TypeToken<Map<String, List<String>>>() {
+    }.getType();
 
     // Backgrounds
     public static final ResourceLocation BOOK_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/book.png");
     public static final ResourceLocation TITLE_PAGE_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/page_title.png");
     public static final ResourceLocation LIST_PAGE_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/page_list.png");
     public static final ResourceLocation DETAILS_PAGE_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/page_details.png");
+    public static final ResourceLocation DETAILS_PAGE_V_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/page_details_v.png");
+    public static final ResourceLocation DETAILS_PAGE_A_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/page_details_a.png");
+    public static final ResourceLocation DETAILS_PAGE_VA_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/page_details_va.png");
     public static final ResourceLocation TOAST_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/toast.png");
     public static final ResourceLocation JOURNAL_TITLE_PAGE_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/page_journal_title.png");
     public static final ResourceLocation JOURNAL_PAGE_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/page_journal.png");
@@ -38,10 +44,11 @@ public class Constants {
     // Icons
     public static final ResourceLocation DEFAULT_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/book.png");
     public static final ResourceLocation TOAST_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/book_icon.png");
+    public static final ResourceLocation QUILL_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/quill.png");
     public static final ResourceLocation ATTRIBUTES_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes.png");
     public static final ResourceLocation SCANNING_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/scanning.png");
 
-    // Mob Type Icons
+    // Mob Alignment Icons
     public static final ResourceLocation HOSTILE_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/hostile.png");
     public static final ResourceLocation PASSIVE_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/passive.png");
     public static final ResourceLocation NEUTRAL_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/neutral.png");

@@ -5,6 +5,8 @@ import com.evandev.fieldguide.FieldGuideLimits;
 import com.evandev.fieldguide.ModDataComponents;
 import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.api.GuideEntry;
+import com.evandev.fieldguide.api.attribute.AttributeRegistry;
+import com.evandev.fieldguide.api.attribute.GuideAttribute;
 import com.evandev.fieldguide.api.seasons.Season;
 import com.evandev.fieldguide.api.seasons.SeasonsAPI;
 import com.evandev.fieldguide.api.variant.VariantDef;
@@ -12,6 +14,7 @@ import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.client.ClientConstants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
+import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.gui.widget.*;
@@ -31,14 +34,19 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -53,6 +61,7 @@ import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 
 public class FieldGuideEntryScreen extends BookScreen {
+    private static final int LINE_HEIGHT = 9;
     private final FieldGuideCategoryScreen parent;
     private final Object entry;
     private final List<ResourceLocation> spawnBiomes = new ArrayList<>();
@@ -68,10 +77,14 @@ public class FieldGuideEntryScreen extends BookScreen {
     private PageTurnButton prevVariantButton;
     private PageTurnButton nextVariantButton;
     private VariantOverviewWidget variantOverviewWidget;
-//    private PageTurnButton overviewToggleButton;
 
     private float hoverScale = 1.0f;
     private long lastRenderTime = 0;
+
+    private BookTextFieldWidget nameWidget;
+    private BookTextFieldWidget variantWidget;
+    private BookTextAreaWidget descriptionWidget;
+    private List<GuideAttribute> activeAttributes = new ArrayList<>();
 
     public FieldGuideEntryScreen(FieldGuideCategoryScreen parent, Object entry) {
         super(getTitleForEntry(entry));
@@ -149,16 +162,6 @@ public class FieldGuideEntryScreen extends BookScreen {
             widget.visible = !overviewVisible;
         }
 
-//        if (this.overviewToggleButton != null) {
-//            if (overviewVisible) {
-//                this.overviewToggleButton.visible = false;
-//            } else {
-//                String variantId = (!entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) ? entityVariants.get(currentVariantIndex).id() : null;
-//                boolean hasPhoto = !ProgressManager.getInstance().getPhotograph(entry, variantId).isEmpty();
-//                this.overviewToggleButton.visible = !hasPhoto;
-//            }
-//        }
-
         if (this.prevVariantButton != null) {
             this.prevVariantButton.visible = !overviewVisible;
             this.prevVariantButton.active = currentVariantIndex > 0;
@@ -217,7 +220,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             boolean hasPaper = this.minecraft != null && this.minecraft.player != null && (this.minecraft.player.isCreative() || this.minecraft.player.getInventory().contains(Items.PAPER.getDefaultInstance()));
             boolean canCopy = hasPaper || (this.minecraft != null && this.minecraft.player != null && this.minecraft.player.isCreative());
 
-            PageTurnButton copyBtn = new PageTurnButton(this.bounds.right() - 13, this.bounds.top() + 54, 24, 24, ClientConstants.COPY_SPRITES, (btn) -> {
+            PageTurnButton copyBtn = new PageTurnButton(this.bounds.right() - 13, this.bounds.bottom() - 44, 24, 24, ClientConstants.COPY_SPRITES, (btn) -> {
                 if (canCopy) {
                     ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
                     if (id != null) {
@@ -236,14 +239,6 @@ public class FieldGuideEntryScreen extends BookScreen {
         }
 
         if (this.entityVariants.size() > 1 && this.renderedEntity instanceof LivingEntity living) {
-//            this.overviewToggleButton = new PageTurnButton(this.leftPageBounds.left() + 10, this.leftPageBounds.top() + 10, 16, 16, 0, 0, 16, Constants.OVERVIEW_ICON, (btn) -> {
-//                if (this.variantOverviewWidget != null) {
-//                    this.variantOverviewWidget.toggleVisibility();
-//                }
-//            });
-//            this.overviewToggleButton.setTooltip(Tooltip.create(Component.translatable("gui.fieldguide.variant_selector.tooltip")));
-//            this.addRenderableWidget(this.overviewToggleButton);
-
             int widgetWidth = this.leftPageBounds.width();
             int widgetHeight = this.leftPageBounds.height();
             int widgetX = this.leftPageBounds.left();
@@ -259,21 +254,51 @@ public class FieldGuideEntryScreen extends BookScreen {
     private void setupTextWidgets(boolean unlocked) {
         int textX = this.rightPageBounds.left() + 6;
         int titleY = this.leftPageBounds.top() + 8;
-        int textY = this.rightPageBounds.top() + 38;
         int textAreaWidth = this.rightPageBounds.width() - 12;
-        int textAreaHeight = this.rightPageBounds.height() - 74;
 
         if (unlocked) {
             String initialName = ClientFieldGuideManager.getEntryName(entry).getString();
             if (!ServerConfig.get().disableEditingNames) {
-                this.addRenderableWidget(new BookTextFieldWidget(this.font, textX, titleY, textAreaWidth, font.lineHeight, initialName, ClientConfig.get().getTextTitleColorInt(), textAreaWidth, FieldGuideLimits.MAX_ENTRY_NAME_LENGTH,
-                        newName -> ClientFieldGuideManager.setCustomName(entry, newName)));
+                this.nameWidget = new BookTextFieldWidget(this.font, textX, titleY, textAreaWidth, LINE_HEIGHT, initialName, ClientConfig.get().getTextTitleColorInt(), textAreaWidth, FieldGuideLimits.MAX_ENTRY_NAME_LENGTH,
+                        newName -> ClientFieldGuideManager.setCustomName(entry, newName));
+                this.addRenderableWidget(this.nameWidget);
             }
+
+            int currentY = titleY + LINE_HEIGHT + 2;
+
+            if (!entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) {
+                VariantDef variant = entityVariants.get(currentVariantIndex);
+                String variantId = variant.id();
+                String customVariantName = ProgressManager.getInstance().getCustomName(ClientFieldGuideManager.getEntryId(entry).toString() + "#" + variantId);
+                String initialVariantName = customVariantName != null ? customVariantName : FieldGuideVariantManager.getVariantDisplayName(variant).getString();
+
+                this.variantWidget = new BookTextFieldWidget(this.font, textX, currentY, textAreaWidth, LINE_HEIGHT, initialVariantName, ClientConfig.get().getTextMutedColorInt(), textAreaWidth, FieldGuideLimits.MAX_ENTRY_NAME_LENGTH,
+                        newName -> {
+                            ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
+                            if (entryId != null) {
+                                ProgressManager.getInstance().setCustomVariantName(entryId, variantId, newName);
+                            }
+                        });
+                this.addRenderableWidget(this.variantWidget);
+                currentY += LINE_HEIGHT;
+            }
+
+            this.activeAttributes = AttributeRegistry.getAttributes(entry, renderedEntity);
+            if (!activeAttributes.isEmpty()) {
+                currentY += (LINE_HEIGHT * 2);
+            } else {
+                currentY += LINE_HEIGHT;
+            }
+
+            int textY = currentY + 1;
+            int textAreaHeight = this.rightPageBounds.bottom() - 29 - textY;
+            int maxLines = textAreaHeight / LINE_HEIGHT;
 
             String initialDesc = ClientFieldGuideManager.getEntryDescription(entry);
             if (!ServerConfig.get().disableEditingDescriptions) {
-                this.addRenderableWidget(new BookTextAreaWidget(this.font, textX, textY, textAreaWidth, textAreaHeight, 10, ClientConfig.get().getTextColorInt(), true, FieldGuideLimits.MAX_ENTRY_DESCRIPTION_LENGTH, initialDesc,
-                        newDesc -> ClientFieldGuideManager.setCustomDescription(entry, newDesc)));
+                this.descriptionWidget = new BookTextAreaWidget(this.font, textX, textY, textAreaWidth, textAreaHeight, maxLines, LINE_HEIGHT, ClientConfig.get().getTextColorInt(), true, FieldGuideLimits.MAX_ENTRY_DESCRIPTION_LENGTH, initialDesc,
+                        newDesc -> ClientFieldGuideManager.setCustomDescription(entry, newDesc));
+                this.addRenderableWidget(this.descriptionWidget);
             }
         }
     }
@@ -376,17 +401,17 @@ public class FieldGuideEntryScreen extends BookScreen {
                         if (this.variantOverviewWidget != null) {
                             this.variantOverviewWidget.toggleVisibility();
                         }
-//                        EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(entry);
-//
-//                        if (visual != null && visual.customSound != null && this.minecraft != null) {
-//                            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(visual.customSound), 1.0F, 1.0F));
-//                        } else if ((isCobblemon(entry) || clickEntry instanceof EntityType<?>) && renderedEntity != null) {
-//                            FieldGuideClient.playMobCry(this.renderedEntity);
-//                        } else if (clickEntry instanceof Block block && this.minecraft != null) {
-//                            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(block.defaultBlockState().getSoundType().getBreakSound(), 1.0F, 1.0F));
-//                        } else if (clickEntry instanceof Item && this.minecraft != null) {
-//                            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(Constants.ITEM_PICKUP_SOUND), 1.0F, 1.0F));
-//                        }
+                        EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(entry);
+
+                        if (visual != null && visual.customSound != null && this.minecraft != null) {
+                            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(visual.customSound), 1.0F, 1.0F));
+                        } else if ((isCobblemon(entry) || clickEntry instanceof EntityType<?>) && renderedEntity != null) {
+                            FieldGuideClient.playMobCry(this.renderedEntity);
+                        } else if (clickEntry instanceof Block block && this.minecraft != null) {
+                            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(block.defaultBlockState().getSoundType().getBreakSound(), 1.0F, 1.0F));
+                        } else if (clickEntry instanceof Item && this.minecraft != null) {
+                            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(Constants.ITEM_PICKUP_SOUND), 1.0F, 1.0F));
+                        }
                     }
                     this.lastClickTime = System.currentTimeMillis();
                 }
@@ -397,6 +422,25 @@ public class FieldGuideEntryScreen extends BookScreen {
         return false;
     }
 
+    private ResourceLocation getDetailsTexture() {
+        if (!ClientFieldGuideManager.isUnlocked(entry)) {
+            return Constants.DETAILS_PAGE_TEXTURE;
+        }
+
+        boolean hasVariants = !entityVariants.isEmpty();
+        boolean hasAttributes = !activeAttributes.isEmpty();
+
+        if (hasVariants && hasAttributes) {
+            return Constants.DETAILS_PAGE_VA_TEXTURE;
+        } else if (hasVariants) {
+            return Constants.DETAILS_PAGE_V_TEXTURE;
+        } else if (hasAttributes) {
+            return Constants.DETAILS_PAGE_A_TEXTURE;
+        } else {
+            return Constants.DETAILS_PAGE_TEXTURE;
+        }
+    }
+
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderFieldGuideBackground(guiGraphics, mouseX, mouseY, partialTick);
@@ -405,13 +449,14 @@ public class FieldGuideEntryScreen extends BookScreen {
         guiGraphics.pose().translate(0, 0, 50);
 
         guiGraphics.blit(Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
-        guiGraphics.blit(Constants.DETAILS_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
+
+        ResourceLocation detailsTexture = getDetailsTexture();
+        guiGraphics.blit(detailsTexture, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
 
         boolean unlocked = ClientFieldGuideManager.isUnlocked(entry);
 
         int titleY = this.leftPageBounds.top() + 8;
         int titleX = this.rightPageBounds.left() + 6;
-        int textX = this.rightPageBounds.left() + 6;
         int textAreaWidth = this.rightPageBounds.width() - 10;
 
         if (!unlocked) {
@@ -429,11 +474,12 @@ public class FieldGuideEntryScreen extends BookScreen {
                 }
             }
 
+            RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
             guiGraphics.drawString(this.font, getTitleForEntry(entry), titleX, titleY, ClientConfig.get().getTextMutedColorInt(), false);
-            guiGraphics.drawWordWrap(font, lockedMessage, textX, titleY + 30, textAreaWidth, ClientConfig.get().getTextMutedColorInt());
+            guiGraphics.drawWordWrap(font, lockedMessage, titleX, titleY + 21, textAreaWidth, ClientConfig.get().getTextMutedColorInt());
         } else {
             long discoveryTime = ProgressManager.getInstance().getDiscoveryTime(entry);
-            if (discoveryTime > 0) {
+            if (discoveryTime > 0 && ClientConfig.get().showUnlockDate) {
                 Component dateComponent;
 
                 if (ClientConfig.get().useRealWorldDate) {
@@ -448,15 +494,42 @@ public class FieldGuideEntryScreen extends BookScreen {
 
                     dateComponent = Component.translatable("fieldguide.date.in_game", days, Component.translatable(timeKey));
                 }
-                guiGraphics.drawString(this.font, dateComponent, titleX, titleY + this.font.lineHeight + 2, ClientConfig.get().getTextMutedColorInt(), false);
+
+                int quillX = this.rightPageBounds.right() - 15;
+                int quillY = this.rightPageBounds.top() + 6;
+                RenderSystem.enableBlend();
+                guiGraphics.blit(Constants.QUILL_ICON, quillX, quillY, 0, 0, 11, 11, 11, 11);
+                RenderSystem.disableBlend();
+
+                if (mouseX >= quillX && mouseX <= quillX + 11 && mouseY >= quillY && mouseY <= quillY + 11) {
+                    guiGraphics.renderTooltip(this.font, dateComponent, mouseX, mouseY);
+                }
             }
 
             if (ServerConfig.get().disableEditingNames) {
                 guiGraphics.drawString(this.font, ClientFieldGuideManager.getEntryName(entry), titleX, titleY, ClientConfig.get().getTextTitleColorInt(), false);
+                if (!entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) {
+                    VariantDef variant = entityVariants.get(currentVariantIndex);
+                    String variantId = variant.id();
+                    String customVariantName = ProgressManager.getInstance().getCustomName(ClientFieldGuideManager.getEntryId(entry).toString() + "#" + variantId);
+                    Component variantName = customVariantName != null ? Component.literal(customVariantName) : FieldGuideVariantManager.getVariantDisplayName(variant);
+                    guiGraphics.drawString(this.font, variantName, titleX, titleY + LINE_HEIGHT + 3, ClientConfig.get().getTextMutedColorInt(), false);
+                }
             }
+
+            renderDynamicAttributes(guiGraphics, mouseX, mouseY);
+
             if (ServerConfig.get().disableEditingDescriptions) {
-                int textY = this.rightPageBounds.top() + 38;
-                guiGraphics.drawWordWrap(font, Component.literal(ClientFieldGuideManager.getEntryDescription(entry)), textX, textY, textAreaWidth, ClientConfig.get().getTextColorInt());
+                int textY = titleY + LINE_HEIGHT + 3; // Name
+                if (!entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) {
+                    textY += LINE_HEIGHT; // Variant
+                }
+                if (!activeAttributes.isEmpty()) {
+                    textY += (LINE_HEIGHT * 2); // Attributes
+                } else {
+                    textY += LINE_HEIGHT; // Buffer
+                }
+                guiGraphics.drawWordWrap(font, Component.literal(ClientFieldGuideManager.getEntryDescription(entry)), titleX, textY, textAreaWidth, ClientConfig.get().getTextColorInt());
             }
         }
 
@@ -535,15 +608,6 @@ public class FieldGuideEntryScreen extends BookScreen {
         guiGraphics.pose().popPose();
 
         if (unlocked) {
-            if (renderEntry instanceof EntityType || (entry instanceof GuideEntry ge && ge.isVirtual() && "cobblemon".equals(ge.virtualData().virtualType()))) {
-                Entity dummy = (renderedEntity != null) ? renderedEntity : FieldGuideCobblemonCompat.getDummyPokemon(((GuideEntry) entry).id(), Minecraft.getInstance().level);
-
-                if (dummy instanceof LivingEntity living) {
-                    if (!hideEntity) renderAttributes(guiGraphics, living);
-                    renderAlignment(guiGraphics, living, mouseX, mouseY);
-                }
-            }
-
             renderSeasons(guiGraphics, xPos, yPos, mouseX, mouseY);
         }
 
@@ -551,6 +615,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             guiGraphics.drawString(this.font, Component.translatable("gui.fieldguide.loading"), this.bounds.left() + 20, this.bounds.bottom() - 30, ClientConfig.get().getTextMutedColorInt(), false);
         }
 
+        guiGraphics.pose().popPose();
         super.render(guiGraphics, mouseX, mouseY, partialTick);
     }
 
@@ -628,7 +693,9 @@ public class FieldGuideEntryScreen extends BookScreen {
             ProgressManager.getInstance().setSelectedVariant(entry, this.initialVariant);
         }
 
+        this.activeAttributes = AttributeRegistry.getAttributes(entry, renderedEntity);
         refreshExposureWidgets();
+        updateVariantTextWidget();
         this.lastClickTime = System.currentTimeMillis();
         this.updateWidgetVisibility();
     }
@@ -653,8 +720,28 @@ public class FieldGuideEntryScreen extends BookScreen {
                 ProgressManager.getInstance().setSelectedVariant(entry, this.initialVariant);
             }
 
+            this.activeAttributes = AttributeRegistry.getAttributes(entry, renderedEntity);
             refreshExposureWidgets();
+            updateVariantTextWidget();
             this.lastClickTime = System.currentTimeMillis();
+        }
+    }
+
+    private void updateVariantTextWidget() {
+        if (this.variantWidget != null && !entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) {
+            VariantDef variant = entityVariants.get(currentVariantIndex);
+            String variantId = variant.id();
+            boolean variantUnlocked = ServerConfig.get().unlockAllVariants || ClientFieldGuideManager.isVariantUnlocked(entry, variantId);
+
+            if (!variantUnlocked) {
+                this.variantWidget.setValue("???");
+                this.variantWidget.setEditable(false);
+            } else {
+                String customVariantName = ProgressManager.getInstance().getCustomName(ClientFieldGuideManager.getEntryId(entry).toString() + "#" + variantId);
+                String name = customVariantName != null ? customVariantName : FieldGuideVariantManager.getVariantDisplayName(variant).getString();
+                this.variantWidget.setValue(name);
+                this.variantWidget.setEditable(!ServerConfig.get().disableEditingNames);
+            }
         }
     }
 
@@ -770,6 +857,11 @@ public class FieldGuideEntryScreen extends BookScreen {
             if (FieldGuideClient.OPEN_GUIDE_KEY.matches(keyCode, scanCode)) return true;
         }
 
+        if (this.minecraft != null && this.minecraft.player != null && this.minecraft.options.keyInventory.matches(keyCode, scanCode)) {
+            this.minecraft.setScreen(new InventoryScreen(this.minecraft.player));
+            return true;
+        }
+
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
@@ -781,66 +873,46 @@ public class FieldGuideEntryScreen extends BookScreen {
         }
     }
 
-    private void renderAlignment(GuiGraphics guiGraphics, LivingEntity entity, int mouseX, int mouseY) {
-        ResourceLocation icon;
-        Component typeComponent;
+    private void renderDynamicAttributes(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        if (activeAttributes.isEmpty()) return;
 
-        if (entity instanceof NeutralMob) {
-            icon = Constants.NEUTRAL_ICON;
-            typeComponent = Component.translatable("fieldguide.alignment.neutral");
-        } else if (entry instanceof EntityType<?> type && type.getCategory() == MobCategory.MONSTER) {
-            icon = Constants.HOSTILE_ICON;
-            typeComponent = Component.translatable("fieldguide.alignment.hostile");
-        } else {
-            icon = Constants.PASSIVE_ICON;
-            typeComponent = Component.translatable("fieldguide.alignment.passive");
-        }
+        RenderSystem.setShaderColor(1, 1, 1, 1);
 
-        int titleY = this.leftPageBounds.top() + 8;
-        int iconX = this.rightPageBounds.right() - 14;
-        int iconY = titleY - 3;
-
-        RenderSystem.enableBlend();
-        guiGraphics.blit(icon, iconX, iconY, 0, 0, 12, 12, 12, 12);
-        RenderSystem.disableBlend();
-
-        if (Bounds.isMouseOver(mouseX, mouseY, iconX, iconY, 12, 12)) {
-            guiGraphics.renderTooltip(this.font, typeComponent, mouseX, mouseY);
-        }
-    }
-
-    private void renderAttributes(GuiGraphics guiGraphics, LivingEntity entity) {
-        RenderSystem.setShaderTexture(0, Constants.ATTRIBUTES_TEXTURE);
-        int iconSize = 9;
+        int iconSize = 10;
         int iconSpacing = 2;
         int gap = 8;
 
-        int yPos = leftPageBounds.bottom() - 47 - iconSize;
-
-        String health = String.valueOf((int) entity.getMaxHealth() / 2);
-        String armor = String.valueOf(entity.getArmorValue());
-        boolean showArmor = !armor.equals("0");
-
-        int healthWidth = this.font.width(health) + iconSpacing + iconSize;
-        int armorWidth = this.font.width(armor) + iconSpacing + iconSize;
-        int totalWidth = healthWidth + (showArmor ? gap + armorWidth : 0);
-
-        int xPos = this.leftPageBounds.x_center() - (totalWidth / 2);
-
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(0, 0, 2);
-
-        guiGraphics.blitSprite(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/attributes_background"), xPos - 4, yPos - 3, totalWidth + 8, 16);
-
-        guiGraphics.blit(Constants.ATTRIBUTES_TEXTURE, xPos, yPos, 0, 0, iconSize, iconSize, 32, 32);
-        guiGraphics.drawString(this.font, health, xPos + iconSize + iconSpacing, yPos + 1, ClientConfig.get().getTextColorInt(), false);
-
-        if (showArmor) {
-            xPos = xPos + healthWidth + gap;
-            guiGraphics.blit(Constants.ATTRIBUTES_TEXTURE, xPos, yPos, 0, iconSize, iconSize, iconSize, 32, 32);
-            guiGraphics.drawString(this.font, armor, xPos + iconSize + iconSpacing, yPos + 1, ClientConfig.get().getTextColorInt(), false);
+        int titleY = this.leftPageBounds.top() + 8;
+        int currentY = titleY + LINE_HEIGHT + 2;
+        if (!entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) {
+            currentY += LINE_HEIGHT;
         }
-        guiGraphics.pose().popPose();
+
+        int startX = this.rightPageBounds.left() + 6;
+        int drawX = startX;
+
+        int iconYOffset = (LINE_HEIGHT * 2 - iconSize) / 2;
+
+        for (GuideAttribute attr : activeAttributes) {
+            RenderSystem.setShaderTexture(0, attr.icon());
+            guiGraphics.blit(attr.icon(), drawX, currentY + iconYOffset + (iconSize - attr.height()) / 2, attr.u(), attr.v(), attr.width(), attr.height(), attr.textureWidth(), attr.textureHeight());
+
+            if (attr.value() != null) {
+                guiGraphics.drawString(this.font, attr.value(), drawX + attr.width() + iconSpacing, currentY + iconYOffset + 1, ClientConfig.get().getTextColorInt(), false);
+                drawX += attr.width() + iconSpacing + font.width(attr.value()) + gap;
+            } else {
+                drawX += attr.width() + gap;
+            }
+        }
+
+        drawX = startX;
+        for (GuideAttribute attr : activeAttributes) {
+            int width = attr.width() + (attr.value() != null ? iconSpacing + font.width(attr.value()) : 0);
+            if (mouseX >= drawX && mouseX <= drawX + width && mouseY >= currentY && mouseY <= currentY + (LINE_HEIGHT * 2)) {
+                this.setTooltipForNextRenderPass(attr.tooltip());
+            }
+            drawX += width + gap;
+        }
     }
 
     private Tooltip createCopyTooltip(boolean canCopy) {
