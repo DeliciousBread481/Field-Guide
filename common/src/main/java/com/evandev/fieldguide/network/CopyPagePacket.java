@@ -1,9 +1,9 @@
 package com.evandev.fieldguide.network;
 
+import com.evandev.fieldguide.entry.EntryResolutionHelper;
 import com.evandev.fieldguide.item.ModItems;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
-import com.evandev.fieldguide.entry.EntryResolutionHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
@@ -85,7 +85,14 @@ public class CopyPagePacket {
         }
 
         if (nameComponent == null) {
-            nameComponent = Component.translatable(getTranslationKey(entryId));
+            if (entryId.getNamespace().equals("fieldguide") && entryId.getPath().startsWith("cobblemon/")) {
+                String species = entryId.getPath().substring("cobblemon/".length());
+                int underscore = species.lastIndexOf('_');
+                if (underscore != -1) species = species.substring(0, underscore);
+                nameComponent = Component.translatable("cobblemon.species." + species + ".name");
+            } else {
+                nameComponent = Component.translatable(getTranslationKey(entryId));
+            }
         }
 
         tag.putString("EntryName", Component.Serializer.toJson(nameComponent));

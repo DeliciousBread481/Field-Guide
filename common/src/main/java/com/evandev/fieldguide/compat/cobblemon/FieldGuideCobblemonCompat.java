@@ -101,11 +101,6 @@ public final class FieldGuideCobblemonCompat {
 
                     entity.getEntityData().set(PokemonEntity.getASPECTS(), pokemon.getAspects());
                     entity.onSyncedDataUpdated(PokemonEntity.getASPECTS());
-
-                    ResourceLocation id = getPokemonEntryId(entity);
-                    FORM_CACHE.put(id, form.getName());
-                    ProgressManager.getInstance().setSelectedVariant(id, form.getName());
-                    DUMMY_CACHE.remove(id);
                 }
             }
 
@@ -205,6 +200,7 @@ public final class FieldGuideCobblemonCompat {
             pokemonEntity.getEntityData().set(PokemonEntity.getASPECTS(), pokemon.getAspects());
             pokemonEntity.onSyncedDataUpdated(PokemonEntity.getASPECTS());
             pokemonEntity.getEntityData().set(PokemonEntity.getSPECIES(), pokemon.getSpecies().getResourceIdentifier().toString());
+            pokemonEntity.onSyncedDataUpdated(PokemonEntity.getSPECIES());
 
             pokemonEntity.setTicksLived(25);
             pokemonEntity.setYRot(0.0F);

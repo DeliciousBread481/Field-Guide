@@ -313,7 +313,12 @@ public class FieldGuideEntryScreen extends BookScreen {
                     for (int i = 0; i < this.entityVariants.size(); i++) {
                         if (this.entityVariants.get(i).id().equals(this.initialVariant)) {
                             this.currentVariantIndex = i;
-                            provider.apply((Mob) this.renderedEntity, this.entityVariants.get(i));
+                            if (isCobblemon(entry) && this.minecraft != null) {
+                                ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+                                this.renderedEntity = FieldGuideCobblemonCompat.getDummyVariant(id, this.initialVariant, this.minecraft.level);
+                            } else {
+                                provider.apply((Mob) this.renderedEntity, this.entityVariants.get(i));
+                            }
                             break;
                         } else if (this.initialVariant == null && this.entityVariants.get(i).id().equals(current.id())) {
                             this.currentVariantIndex = i;
@@ -598,11 +603,11 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(renderedEntity);
         if (provider != null) {
-            provider.apply((Mob) renderedEntity, entityVariants.get(currentVariantIndex));
-
             if (isCobblemon(entry) && this.minecraft != null) {
                 ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-                this.renderedEntity = FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
+                this.renderedEntity = FieldGuideCobblemonCompat.getDummyVariant(id, this.initialVariant, this.minecraft.level);
+            } else {
+                provider.apply((Mob) renderedEntity, entityVariants.get(currentVariantIndex));
             }
         }
 
@@ -620,13 +625,14 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (index >= 0 && index < entityVariants.size()) {
             currentVariantIndex = index;
             this.initialVariant = entityVariants.get(currentVariantIndex).id();
+
             VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(renderedEntity);
             if (provider != null) {
-                provider.apply((Mob) renderedEntity, entityVariants.get(currentVariantIndex));
-
                 if (isCobblemon(entry) && this.minecraft != null) {
                     ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-                    this.renderedEntity = FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
+                    this.renderedEntity = FieldGuideCobblemonCompat.getDummyVariant(id, this.initialVariant, this.minecraft.level);
+                } else {
+                    provider.apply((Mob) renderedEntity, entityVariants.get(currentVariantIndex));
                 }
             }
 

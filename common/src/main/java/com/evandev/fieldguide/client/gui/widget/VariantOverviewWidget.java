@@ -174,7 +174,10 @@ public class VariantOverviewWidget extends AbstractWidget {
         }
 
         if (provider != null && renderedEntity instanceof Mob mob && originalVariant != null) {
-            provider.apply(mob, originalVariant);
+            boolean isCobblemon = Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(renderedEntity);
+            if (!isCobblemon) {
+                provider.apply(mob, originalVariant);
+            }
         }
 
         //int titleWidth = Minecraft.getInstance().font.width(this.currentTitleText);

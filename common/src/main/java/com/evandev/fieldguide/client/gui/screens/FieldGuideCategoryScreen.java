@@ -779,7 +779,10 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
             Object coreEntry = EntryResolver.resolveCoreEntry(entry);
             Entity dummy = getCachedEntity(entry);
-            if (dummy != null && (coreEntry instanceof EntityType<?>)) {
+
+            boolean isCobblemon = entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "cobblemon".equals(ge.virtualData().virtualType());
+
+            if (dummy != null && (coreEntry instanceof EntityType<?> || isCobblemon)) {
                 List<VariantDef> variants = FieldGuideVariantManager.getVariants(dummy);
                 if (variants.size() > 1) {
                     int unlockedCount = ServerConfig.get().unlockAllVariants ? variants.size() : 0;
