@@ -1,5 +1,7 @@
 package com.evandev.fieldguide.client.search;
 
+import com.evandev.fieldguide.api.seasons.Season;
+import com.evandev.fieldguide.api.seasons.SeasonsAPI;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.entry.EntryResolver;
@@ -68,8 +70,25 @@ public class SearchManager {
         if (processedQuery.startsWith("^")) return matchByDrop(processedQuery.substring(1), entries, exactMatch);
         if (processedQuery.startsWith("!")) return matchByBiome(processedQuery.substring(1), entries, exactMatch);
         if (processedQuery.startsWith("@")) return matchByModId(processedQuery.substring(1), entries, exactMatch);
+        if (processedQuery.startsWith("$")) return matchBySeason(processedQuery.substring(1), entries, exactMatch);
 
         return matchByNameOrId(processedQuery, entries, exactMatch);
+    }
+
+    private static List<Object> matchBySeason(String seasonQuery, List<Object> entries, boolean exactMatch) {
+        List<Object> results = new ArrayList<>();
+        if (seasonQuery.isEmpty()) return results;
+
+        for (Object entry : entries) {
+            List<Season> seasons = SeasonsAPI.getGrowingSeasons(entry);
+            boolean match = seasons.stream().anyMatch(season -> {
+                String id = season.getId().toLowerCase(Locale.ROOT);
+                String name = season.getDisplayName().getString().toLowerCase(Locale.ROOT);
+                return exactMatch ? (id.equals(seasonQuery) || name.equals(seasonQuery)) : (id.contains(seasonQuery) || name.contains(seasonQuery));
+            });
+            if (match) results.add(entry);
+        }
+        return results;
     }
 
     private static List<Object> matchByTag(String tagQuery, List<Object> entries, boolean exactMatch) {

@@ -14,8 +14,9 @@
   "gui.fieldguide.searching_name": "Searching Name",
   "gui.fieldguide.searching_drops": "Searching Drops",
   "gui.fieldguide.searching_biomes": "Searching Biomes",
-  "gui.fieldguide.searching_tags": "Searching Tags",
-  "gui.fieldguide.searching_mod": "Searching Mod",
+  "gui.fieldguide.searching_seasons": "Searching Seasons",
+  "gui.fieldguide.grows_in": "Grows in %s",
+  "gui.fieldguide.searching_tags": "Searching Tags",  "gui.fieldguide.searching_mod": "Searching Mod",
 
   "category.fieldguide.main": "Field Guide",
   "category.fieldguide.general": "General Settings",

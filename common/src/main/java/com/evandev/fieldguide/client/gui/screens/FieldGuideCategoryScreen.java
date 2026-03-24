@@ -3,6 +3,7 @@ package com.evandev.fieldguide.client.gui.screens;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.api.GuideEntry;
+import com.evandev.fieldguide.api.seasons.Season;
 import com.evandev.fieldguide.api.variant.VariantDef;
 import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
@@ -472,6 +473,22 @@ public class FieldGuideCategoryScreen extends BookScreen {
                     }
                 } else if (searchQuery.startsWith("=#")) {
                     renderTitle(guiGraphics, Component.literal("#" + searchQuery.substring(2)), 0, ClientConfig.get().getTextColorInt());
+                } else if (searchQuery.startsWith("=$")) {
+                    String seasonId = searchQuery.substring(2).toLowerCase(Locale.ROOT);
+                    Season season = null;
+                    for (Season s : Season.values()) {
+                        if (s.getId().equals(seasonId)) {
+                            season = s;
+                            break;
+                        }
+                    }
+
+                    if (season != null) {
+                        Component seasonName = season.getDisplayName();
+                        renderTitle(guiGraphics, Component.translatable("gui.fieldguide.grows_in", seasonName), 0, ClientConfig.get().getTextColorInt());
+                    } else {
+                        renderTitle(guiGraphics, Component.translatable("gui.fieldguide.searching_seasons"));
+                    }
                 } else if (searchQuery.startsWith("=^")) {
                     String dropQuery = searchQuery.substring(2).toLowerCase(Locale.ROOT);
                     ItemStack displayStack = ItemStack.EMPTY;

@@ -334,6 +334,27 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         if (super.mouseClicked(mouseX, mouseY, button)) return true;
 
+        List<Season> seasons = SeasonsAPI.getGrowingSeasons(entry);
+        if (!seasons.isEmpty()) {
+            int iconSize = 8;
+            int spacing = 2;
+            int totalWidth = (iconSize * seasons.size()) + (spacing * (seasons.size() - 1));
+            int xPos = leftPageBounds.x_center();
+            int yPos = leftPageBounds.y_center() - 15;
+            int startX = xPos - (totalWidth / 2);
+            int startY = yPos + 42;
+
+            for (int i = 0; i < seasons.size(); i++) {
+                int drawX = startX + (i * (iconSize + spacing));
+                if (Bounds.isMouseOver(mouseX, mouseY, drawX - 2, startY - 2, iconSize + 4, iconSize + 4)) {
+                    if (this.minecraft != null) {
+                        this.minecraft.setScreen(new FieldGuideCategoryScreen("=$" + seasons.get(i).getId(), this));
+                        return true;
+                    }
+                }
+            }
+        }
+
         Object clickEntry = EntryResolver.resolveCoreEntry(entry);
 
         if ((button == 0 || button == 1) && (renderedEntity != null || clickEntry instanceof Block || clickEntry instanceof Item)) {
@@ -362,6 +383,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                 return true;
             }
         }
+
         return false;
     }
 
@@ -529,7 +551,16 @@ public class FieldGuideEntryScreen extends BookScreen {
             Season season = seasons.get(i);
             int drawX = startX + (i * (iconSize + spacing));
 
+            boolean hovered = Bounds.isMouseOver(mouseX, mouseY, drawX - 2, startY - 2, iconSize + 4, iconSize + 4);
+
             RenderSystem.enableBlend();
+            if (hovered) {
+                guiGraphics.pose().pushPose();
+                guiGraphics.pose().translate(drawX + iconSize / 2.0, startY + iconSize / 2.0, 0);
+                guiGraphics.pose().scale(1.1f, 1.1f, 1.1f);
+                guiGraphics.pose().translate(-(drawX + iconSize / 2.0), -(startY + iconSize / 2.0), 0);
+            }
+
             if (ssLoaded) {
                 int u = 0;
                 int v = 0;
@@ -546,9 +577,13 @@ public class FieldGuideEntryScreen extends BookScreen {
                 ResourceLocation texture = new ResourceLocation(Constants.MOD_ID, "textures/gui/icons/" + season.getId() + ".png");
                 guiGraphics.blit(texture, drawX, startY, 0, 0, iconSize, iconSize, iconSize, iconSize);
             }
+
+            if (hovered) {
+                guiGraphics.pose().popPose();
+            }
             RenderSystem.disableBlend();
 
-            if (Bounds.isMouseOver(mouseX, mouseY, drawX, startY, iconSize, iconSize)) {
+            if (hovered) {
                 guiGraphics.renderTooltip(this.font, season.getDisplayName(), mouseX, mouseY);
             }
         }
