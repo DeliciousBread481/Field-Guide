@@ -1,6 +1,5 @@
 package com.evandev.fieldguide.variant;
 
-
 import com.evandev.fieldguide.api.variant.DatapackVariant;
 import com.evandev.fieldguide.api.variant.VariantDef;
 import com.evandev.fieldguide.api.variant.VariantProvider;
@@ -12,6 +11,9 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Sheep;
+import net.minecraft.world.entity.animal.horse.Horse;
+import net.minecraft.world.entity.animal.horse.Llama;
+import net.minecraft.world.entity.animal.horse.Variant;
 import net.minecraft.world.entity.npc.VillagerData;
 import net.minecraft.world.entity.npc.VillagerDataHolder;
 import net.minecraft.world.entity.npc.VillagerType;
@@ -19,10 +21,7 @@ import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.Level;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class FieldGuideVariantManager {
 
@@ -30,8 +29,10 @@ public class FieldGuideVariantManager {
     private static final Map<String, List<VariantDef>> VARIANT_CACHE = new HashMap<>();
     private static final Map<String, List<VariantDef>> ENTITY_TYPE_VARIANT_CACHE = new HashMap<>();
     private static final Map<ResourceLocation, List<DatapackVariant>> DATAPACK_VARIANTS = new HashMap<>();
+    private static final Set<Class<?>> FAILED_REFLECTION = new HashSet<>();
 
     static {
+        // Sheep
         registerProvider(Sheep.class, new VariantProvider<>() {
             @Override
             public List<VariantDef> getVariants(Sheep entity) {
@@ -48,6 +49,46 @@ public class FieldGuideVariantManager {
             @Override
             public VariantDef getCurrent(Sheep entity) {
                 return new VariantDef(entity.getColor().getName(), entity.getColor());
+            }
+        });
+
+        // Horse
+        registerProvider(Horse.class, new VariantProvider<>() {
+            @Override
+            public List<VariantDef> getVariants(Horse entity) {
+                return Arrays.stream(Variant.values())
+                        .map(v -> new VariantDef(v.name(), v))
+                        .toList();
+            }
+
+            @Override
+            public void apply(Horse entity, VariantDef def) {
+                entity.setVariant((Variant) def.value());
+            }
+
+            @Override
+            public VariantDef getCurrent(Horse entity) {
+                return new VariantDef(entity.getVariant().name(), entity.getVariant());
+            }
+        });
+
+        // Llama
+        registerProvider(Llama.class, new VariantProvider<>() {
+            @Override
+            public List<VariantDef> getVariants(Llama entity) {
+                return Arrays.stream(Llama.Variant.values())
+                        .map(v -> new VariantDef(v.name(), v))
+                        .toList();
+            }
+
+            @Override
+            public void apply(Llama entity, VariantDef def) {
+                entity.setVariant((Llama.Variant) def.value());
+            }
+
+            @Override
+            public VariantDef getCurrent(Llama entity) {
+                return new VariantDef(entity.getVariant().name(), entity.getVariant());
             }
         });
     }
@@ -73,10 +114,12 @@ public class FieldGuideVariantManager {
         }
 
         VariantProvider<T> provider = getProvider((Class<T>) mob.getClass());
-        if (provider == null) {
+        if (provider == null && !FAILED_REFLECTION.contains(mob.getClass())) {
             provider = (VariantProvider<T>) getReflectionProvider(mob);
             if (provider != null) {
                 registerProvider((Class<T>) mob.getClass(), provider);
+            } else {
+                FAILED_REFLECTION.add(mob.getClass());
             }
         }
         return provider;
@@ -99,16 +142,10 @@ public class FieldGuideVariantManager {
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     public static List<VariantDef> getVariants(Entity entity) {
         if (!(entity instanceof Mob mob)) return List.of();
 
         VariantProvider<Mob> provider = getProvider(entity);
-        boolean fromReflection = false;
-        if (provider == null) {
-            provider = getReflectionProvider(mob);
-            fromReflection = true;
-        }
 
         if (provider != null) {
             String cacheKey = provider.getCacheKey(mob);
@@ -118,9 +155,6 @@ public class FieldGuideVariantManager {
 
             List<VariantDef> variants = provider.getVariants(mob);
             VARIANT_CACHE.put(cacheKey, variants);
-            if (fromReflection) {
-                registerProvider((Class<Mob>) mob.getClass(), provider);
-            }
             return variants;
         }
 
@@ -220,8 +254,6 @@ public class FieldGuideVariantManager {
 
     private static VariantProvider<Mob> getReflectionProvider(Mob mob) {
         Method[] methods = mob.getClass().getMethods();
-        Method getter = null;
-        Method setter = null;
 
         for (Method m : methods) {
             String name = m.getName();
@@ -229,29 +261,22 @@ public class FieldGuideVariantManager {
                     (name.contains("Variant") || name.contains("Type") || name.contains("Color")) &&
                     !name.equals("getCollarColor")) {
 
+                if (!m.getReturnType().isEnum()) {
+                    continue;
+                }
+
                 String suffix = name.startsWith("get") ? name.substring(3) : name.substring(2);
                 try {
                     Method potentialSetter = mob.getClass().getMethod("set" + suffix, m.getReturnType());
-                    getter = m;
-                    setter = potentialSetter;
-                    break;
-                } catch (NoSuchMethodException ignored) {
-                }
-            }
-        }
 
-        if (getter != null) {
-            final Method finalGetter = getter;
-            final Method finalSetter = setter;
+                    final Method finalGetter = m;
+                    final Method finalSetter = potentialSetter;
 
-            try {
-                Object current = finalGetter.invoke(mob);
-                if (current instanceof Enum<?> currentEnum) {
                     return new VariantProvider<>() {
                         @Override
                         public List<VariantDef> getVariants(Mob entity) {
-                            return Arrays.stream(currentEnum.getDeclaringClass().getEnumConstants())
-                                    .map(e -> new VariantDef(e.name(), e))
+                            return Arrays.stream(finalGetter.getReturnType().getEnumConstants())
+                                    .map(e -> new VariantDef(((Enum<?>) e).name(), e))
                                     .toList();
                         }
 
@@ -273,8 +298,8 @@ public class FieldGuideVariantManager {
                             return new VariantDef("default", null);
                         }
                     };
+                } catch (NoSuchMethodException ignored) {
                 }
-            } catch (Exception ignored) {
             }
         }
         return null;

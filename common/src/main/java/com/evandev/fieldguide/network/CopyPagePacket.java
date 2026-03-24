@@ -68,7 +68,14 @@ public record CopyPagePacket(ResourceLocation entryId) implements CustomPacketPa
         }
 
         if (nameComponent == null) {
-            nameComponent = Component.translatable(getTranslationKey(entryId));
+            if (entryId.getNamespace().equals("fieldguide") && entryId.getPath().startsWith("cobblemon/")) {
+                String species = entryId.getPath().substring("cobblemon/".length());
+                int underscore = species.lastIndexOf('_');
+                if (underscore != -1) species = species.substring(0, underscore);
+                nameComponent = Component.translatable("cobblemon.species." + species + ".name");
+            } else {
+                nameComponent = Component.translatable(getTranslationKey(entryId));
+            }
         }
 
         page.set(ModDataComponents.ENTRY_NAME.get(), nameComponent);

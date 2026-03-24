@@ -8,14 +8,15 @@ import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ClientConfig;
-import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.entry.EntryResolver;
+import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastComponent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -56,7 +57,12 @@ public class FieldGuideToast implements Toast {
 
         if (!entityInitialized) {
             if (Services.PLATFORM.isModLoaded("cobblemon") && isCobblemon) {
-                cachedEntity = FieldGuideCobblemonCompat.getDummyPokemon(((GuideEntry) this.entry).id(), Minecraft.getInstance().level);
+                ResourceLocation id = ((GuideEntry) this.entry).id();
+                if (variantId != null) {
+                    cachedEntity = FieldGuideCobblemonCompat.getDummyVariant(id, variantId, Minecraft.getInstance().level);
+                } else {
+                    cachedEntity = FieldGuideCobblemonCompat.getDummyPokemon(id, Minecraft.getInstance().level);
+                }
             } else if (coreEntry instanceof EntityType<?> type) {
                 cachedEntity = type.create(Minecraft.getInstance().level);
 
@@ -79,12 +85,12 @@ public class FieldGuideToast implements Toast {
         if (this.entry instanceof GuideEntry ge && ge.isStructure() && coreEntry instanceof Block block) {
             EntryRenderHelper.renderStructure(guiGraphics, ge, iconX, iconY, 24, true, false, 1.0F);
         } else if (isCobblemon && cachedEntity instanceof LivingEntity) {
-            EntryRenderHelper.renderCobblemon(guiGraphics, (GuideEntry) this.entry, iconX, iconY, 24, 24, true, false, 1.0F);
+            EntryRenderHelper.renderCobblemon(guiGraphics, (GuideEntry) this.entry, iconX, iconY, 24, 24, true, false, 1.0F, false);
         } else if (isTutorial) {
             EntryRenderHelper.renderTutorial(guiGraphics, (GuideEntry) this.entry, iconX, iconY, 24, 24, true, false, 1.0F);
         } else if (coreEntry instanceof EntityType<?>) {
             if (cachedEntity != null) {
-                EntryRenderHelper.renderEntityNormalized(guiGraphics, cachedEntity, iconX, iconY, 24, 24, true, false, 1.0F);
+                EntryRenderHelper.renderEntityNormalized(guiGraphics, cachedEntity, iconX, iconY, 24, 24, true, false, 1.0F, false);
             } else {
                 guiGraphics.blit(Constants.TOAST_ICON, 8, 8, 0, 0, 16, 16, 16, 16);
             }

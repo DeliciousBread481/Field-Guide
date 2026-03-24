@@ -3,7 +3,9 @@ package com.evandev.fieldguide.client.gui.screens;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.api.GuideEntry;
+import com.evandev.fieldguide.api.seasons.Season;
 import com.evandev.fieldguide.api.variant.VariantDef;
+import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.client.ClientConstants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
@@ -34,6 +36,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.biome.Biome;
@@ -164,17 +167,42 @@ public class FieldGuideCategoryScreen extends BookScreen {
         }
 
         // Pagination Buttons
-        this.prevPageButton = new PageTurnButton(this.bounds.left() + 15, this.leftPageBounds.bottom() - 15, 16, 16, ClientConstants.PREV_PAGE_SPRITES, b -> prevPage());
-        this.nextPageButton = new PageTurnButton(this.bounds.right() - 14 - 16, this.rightPageBounds.bottom() - 15, 16, 16, ClientConstants.NEXT_PAGE_SPRITES, b -> nextPage());
+        this.prevPageButton = new PageTurnButton(
+                this.bounds.left() + 15,
+                this.leftPageBounds.bottom() - 15,
+                16,
+                16,
+                ClientConstants.PREV_PAGE_SPRITES,
+                b -> prevPage()
+        );
+
+        this.nextPageButton = new PageTurnButton(
+                this.bounds.right() - 30,
+                this.rightPageBounds.bottom() - 15,
+                16,
+                16,
+                ClientConstants.NEXT_PAGE_SPRITES,
+                b -> nextPage()
+        );
 
         this.addRenderableWidget(prevPageButton);
         this.addRenderableWidget(nextPageButton);
 
         // Back Button
-        this.backButton = new PageTurnButton(this.bounds.right() - 13, this.bounds.top() + 26, 24, 24, ClientConstants.BACK_SPRITES, b -> {
-            if (parent != null) Objects.requireNonNull(this.minecraft).setScreen(parent);
-            else this.searchBox.setValue("");
-        });
+        this.backButton = new PageTurnButton(
+                this.bounds.right() - 13,
+                this.bounds.top() + 26,
+                24,
+                24,
+                ClientConstants.BACK_SPRITES,
+                b -> {
+                    if (parent != null) {
+                        Objects.requireNonNull(this.minecraft).setScreen(parent);
+                    } else {
+                        this.searchBox.setValue("");
+                    }
+                }
+        );
 
         backButton.visible = false;
         this.addRenderableWidget(backButton);
@@ -448,6 +476,22 @@ public class FieldGuideCategoryScreen extends BookScreen {
                     }
                 } else if (searchQuery.startsWith("=#")) {
                     renderTitle(guiGraphics, Component.literal("#" + searchQuery.substring(2)), 0, ClientConfig.get().getTextColorInt());
+                } else if (searchQuery.startsWith("=$")) {
+                    String seasonId = searchQuery.substring(2).toLowerCase(Locale.ROOT);
+                    Season season = null;
+                    for (Season s : Season.values()) {
+                        if (s.getId().equals(seasonId)) {
+                            season = s;
+                            break;
+                        }
+                    }
+
+                    if (season != null) {
+                        Component seasonName = season.getDisplayName();
+                        renderTitle(guiGraphics, Component.translatable("gui.fieldguide.grows_in", seasonName), 0, ClientConfig.get().getTextColorInt());
+                    } else {
+                        renderTitle(guiGraphics, Component.translatable("gui.fieldguide.searching_seasons"));
+                    }
                 } else if (searchQuery.startsWith("=^")) {
                     String dropQuery = searchQuery.substring(2).toLowerCase(Locale.ROOT);
                     ItemStack displayStack = ItemStack.EMPTY;
@@ -681,25 +725,45 @@ public class FieldGuideCategoryScreen extends BookScreen {
     private Entity getCachedEntity(Object entry) {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
         if (id == null) return null;
-        if (entryCache.containsKey(id)) return entryCache.get(id);
 
-        if (this.minecraft == null || this.minecraft.level == null) return null;
+        Entity entity = entryCache.get(id);
+        if (entity == null) {
+            if (this.minecraft == null || this.minecraft.level == null) return null;
 
-        Entity entity = null;
-        if (entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "cobblemon".equals(ge.virtualData().virtualType())) {
-            entity = FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
-        } else {
-            Object coreEntry = EntryResolver.resolveCoreEntry(entry);
-            if (coreEntry instanceof EntityType<?> type) {
-                try {
-                    entity = type.create(this.minecraft.level);
-                } catch (Exception e) {
-                    Constants.LOG.error("Failed to create entity for guide: {}", type.getDescription().getString());
+            if (entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "cobblemon".equals(ge.virtualData().virtualType())) {
+                entity = FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
+            } else {
+                Object coreEntry = EntryResolver.resolveCoreEntry(entry);
+                if (coreEntry instanceof EntityType<?> type) {
+                    try {
+                        entity = type.create(this.minecraft.level);
+                    } catch (Exception e) {
+                        Constants.LOG.error("Failed to create entity for guide: {}", type.getDescription().getString());
+                    }
+                }
+            }
+            if (entity != null) entryCache.put(id, entity);
+        }
+
+        if (entity instanceof Mob mob) {
+            String selectedVariant = ProgressManager.getInstance().getSelectedVariant(entry);
+            if (selectedVariant != null) {
+                VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(mob);
+                if (provider != null) {
+                    VariantDef current = provider.getCurrent(mob);
+                    if (!current.id().equals(selectedVariant)) {
+                        List<VariantDef> variants = provider.getVariants(mob);
+                        for (VariantDef variant : variants) {
+                            if (variant.id().equals(selectedVariant)) {
+                                provider.apply(mob, variant);
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }
 
-        entryCache.put(id, entity);
         return entity;
     }
 
@@ -718,7 +782,10 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
             Object coreEntry = EntryResolver.resolveCoreEntry(entry);
             Entity dummy = getCachedEntity(entry);
-            if (dummy != null && (coreEntry instanceof EntityType<?>)) {
+
+            boolean isCobblemon = entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "cobblemon".equals(ge.virtualData().virtualType());
+
+            if (dummy != null && (coreEntry instanceof EntityType<?> || isCobblemon)) {
                 List<VariantDef> variants = FieldGuideVariantManager.getVariants(dummy);
                 if (variants.size() > 1) {
                     int unlockedCount = ServerConfig.get().unlockAllVariants ? variants.size() : 0;

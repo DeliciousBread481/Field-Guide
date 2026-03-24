@@ -32,6 +32,7 @@ public class PlayerFieldGuideProgress {
     private final Map<String, String> customNames = new HashMap<>();
     private final Map<String, String> customDescriptions = new HashMap<>();
     private final Map<String, String> entryPhotographs = new HashMap<>();
+    private final Map<String, String> selectedVariants = new HashMap<>();
     private final List<JournalPageData> journalPages = new ArrayList<>();
 
     private final Set<String> pendingUnlocks = new LinkedHashSet<>();
@@ -151,6 +152,7 @@ public class PlayerFieldGuideProgress {
                 entryPhotographs.remove(id);
                 customNames.remove(id);
                 customDescriptions.remove(id);
+                selectedVariants.remove(id);
                 pendingRevokes.add(id);
                 pendingUnlocks.remove(id);
                 removed = true;
@@ -183,6 +185,10 @@ public class PlayerFieldGuideProgress {
 
     public String getEntryPhotograph(String entryId) {
         return entryPhotographs.get(entryId);
+    }
+
+    public String getSelectedVariant(String entryId) {
+        return selectedVariants.get(entryId);
     }
 
     public long getDiscoveryTime(String entryId) {
@@ -223,6 +229,16 @@ public class PlayerFieldGuideProgress {
         dirty = true;
     }
 
+    public void setSelectedVariant(String entryId, String variantId) {
+        if (variantId == null || variantId.isEmpty()) {
+            selectedVariants.remove(entryId);
+        } else {
+            selectedVariants.put(entryId, variantId);
+        }
+        pendingEntryResync.add(entryId);
+        dirty = true;
+    }
+
     public void setDiscoveryTime(String entryId, long time) {
         discoveryTimes.put(entryId, time);
         dirty = true;
@@ -246,6 +262,7 @@ public class PlayerFieldGuideProgress {
             entryPhotographs.clear();
             customNames.clear();
             customDescriptions.clear();
+            selectedVariants.clear();
             pendingUnlocks.clear();
             pendingRevokes.clear();
             pendingSeen.clear();
@@ -334,6 +351,7 @@ public class PlayerFieldGuideProgress {
             Map<String, String> names = new HashMap<>();
             Map<String, String> descs = new HashMap<>();
             Map<String, String> photos = new HashMap<>();
+            Map<String, String> variants = new HashMap<>();
             for (String id : unlockedChunk) {
                 if (seenEntries.contains(id)) seenChunk.add(id);
                 if (discoveryTimes.containsKey(id)) times.put(id, discoveryTimes.get(id));
@@ -341,6 +359,7 @@ public class PlayerFieldGuideProgress {
                 if (customNames.containsKey(id)) names.put(id, customNames.get(id));
                 if (customDescriptions.containsKey(id)) descs.put(id, customDescriptions.get(id));
                 if (entryPhotographs.containsKey(id)) photos.put(id, entryPhotographs.get(id));
+                if (selectedVariants.containsKey(id)) variants.put(id, selectedVariants.get(id));
             }
 
             Services.NETWORK.sendToPlayer(
@@ -353,6 +372,7 @@ public class PlayerFieldGuideProgress {
                             .discoveryGameTimes(gameTimes)
                             .customNames(names)
                             .customDescriptions(descs)
+                            .selectedVariants(variants)
                             .killedOnly(ServerFieldGuideManager.getInstance().getAllEntryIds().stream()
                                     .filter(id -> ServerFieldGuideManager.getInstance().getUnlockData(id).triggers().contains(EntryUnlockData.UnlockTrigger.KILL))
                                     .map(ResourceLocation::toString)
@@ -397,10 +417,12 @@ public class PlayerFieldGuideProgress {
         Map<String, String> entryNames = new HashMap<>();
         Map<String, String> entryDescs = new HashMap<>();
         Map<String, String> entryPhotos = new HashMap<>();
+        Map<String, String> entryVariants = new HashMap<>();
         for (String id : pendingEntryResync) {
             entryNames.put(id, customNames.getOrDefault(id, ""));
             entryDescs.put(id, customDescriptions.getOrDefault(id, ""));
             entryPhotos.put(id, entryPhotographs.getOrDefault(id, ""));
+            entryVariants.put(id, selectedVariants.getOrDefault(id, ""));
         }
 
         boolean first = true;
@@ -426,6 +448,7 @@ public class PlayerFieldGuideProgress {
                             .customNames(first ? entryNames : Collections.emptyMap())
                             .customDescriptions(first ? entryDescs : Collections.emptyMap())
                             .entryPhotographs(first ? entryPhotos : Collections.emptyMap())
+                            .selectedVariants(first ? entryVariants : Collections.emptyMap())
                             .build(),
                     player
             );
@@ -471,6 +494,11 @@ public class PlayerFieldGuideProgress {
             if (json.has("entryPhotographs")) {
                 json.getAsJsonObject("entryPhotographs").entrySet().forEach(
                         e -> entryPhotographs.put(e.getKey(), e.getValue().getAsString())
+                );
+            }
+            if (json.has("selectedVariants")) {
+                json.getAsJsonObject("selectedVariants").entrySet().forEach(
+                        e -> selectedVariants.put(e.getKey(), e.getValue().getAsString())
                 );
             }
             if (json.has("journalTitle")) {
@@ -528,6 +556,10 @@ public class PlayerFieldGuideProgress {
             JsonObject photosObj = new JsonObject();
             entryPhotographs.forEach(photosObj::addProperty);
             json.add("entryPhotographs", photosObj);
+
+            JsonObject variantsObj = new JsonObject();
+            selectedVariants.forEach(variantsObj::addProperty);
+            json.add("selectedVariants", variantsObj);
 
             json.addProperty("journalTitle", journalTitle);
 

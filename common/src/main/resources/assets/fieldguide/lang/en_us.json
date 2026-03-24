@@ -14,6 +14,8 @@
   "gui.fieldguide.searching_name": "Searching Name",
   "gui.fieldguide.searching_drops": "Searching Drops",
   "gui.fieldguide.searching_biomes": "Searching Biomes",
+  "gui.fieldguide.searching_seasons": "Searching Seasons",
+  "gui.fieldguide.grows_in": "Grows in %s",
   "gui.fieldguide.searching_tags": "Searching Tags",
   "gui.fieldguide.searching_mod": "Searching Mod",
 
@@ -92,9 +94,6 @@
 
   "option.fieldguide.text_muted_color": "Muted Text Color",
   "option.fieldguide.text_muted_color.tooltip": "The hex color code used for muted/secondary text.",
-
-  "option.fieldguide.text_new_color": "New Entry Text Color",
-  "option.fieldguide.text_new_color.tooltip": "The hex color code used for the 'NEW' tag on recently discovered entries.",
 
   "option.fieldguide.text_cursor_color": "Text Cursor Color",
   "option.fieldguide.text_cursor_color.tooltip": "Hex color code for the text cursor.",

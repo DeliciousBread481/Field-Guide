@@ -5,6 +5,7 @@ import com.evandev.fieldguide.ModTags;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.entry.EntryValidator;
 import com.evandev.fieldguide.platform.Services;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -46,6 +47,25 @@ public class AutoPopulateRegistry {
                 .filter(b -> BuiltInRegistries.BLOCK.getKey(b).getNamespace().equals(modId))
                 .filter(b -> EntryValidator.isValidBlock(b, categoryId))
                 .sorted(Comparator.comparing(b -> BuiltInRegistries.BLOCK.getKey(b).toString()))
+                .map(Object.class::cast)
+                .toList());
+
+        register("blocks", (params, categoryId) -> BuiltInRegistries.BLOCK.stream()
+                .filter(b -> EntryValidator.isValidBlock(b, categoryId))
+                .sorted(Comparator.comparing(b -> BuiltInRegistries.BLOCK.getKey(b).toString()))
+                .map(Object.class::cast)
+                .toList());
+
+        register("items", (params, categoryId) -> BuiltInRegistries.ITEM.stream()
+                .filter(i -> !(i instanceof BlockItem))
+                .filter(i -> EntryValidator.isValidItem(i, categoryId))
+                .sorted(Comparator.comparing(i -> BuiltInRegistries.ITEM.getKey(i).toString()))
+                .map(Object.class::cast)
+                .toList());
+
+        register("food", (params, categoryId) -> BuiltInRegistries.ITEM.stream()
+                .filter(i -> i.components().has(DataComponents.FOOD) && EntryValidator.isValidItem(i, categoryId))
+                .sorted(Comparator.comparing(i -> BuiltInRegistries.ITEM.getKey(i).toString()))
                 .map(Object.class::cast)
                 .toList());
 

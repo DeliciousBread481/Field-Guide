@@ -5,15 +5,14 @@ import com.evandev.fieldguide.api.variant.VariantDef;
 import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.client.ClientConstants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
+import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
-import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
@@ -36,11 +35,12 @@ public class VariantOverviewWidget extends AbstractWidget {
     private final Consumer<Integer> onVariantSelected;
     private final Runnable onToggle;
     private final int maxPages;
-    private final ImageButton closeButton;
+    //private final ImageButton closeButton;
     private final PageTurnButton leftButton;
     private final PageTurnButton rightButton;
+    private final float[] hoverScales = new float[9];
     private int currentPage = 0;
-    private Component currentTitleText;
+    private long lastRenderTime = 0;
 
     public VariantOverviewWidget(int x, int y, int width, int height, Object entry, LivingEntity renderedEntity, List<VariantDef> variants, Consumer<Integer> onVariantSelected, Runnable onToggle) {
         super(x, y, width, height, Component.empty());
@@ -50,16 +50,24 @@ public class VariantOverviewWidget extends AbstractWidget {
         this.onVariantSelected = onVariantSelected;
         this.onToggle = onToggle;
         this.maxPages = (int) Math.ceil(variants.size() / 9.0);
-        this.currentTitleText = Component.translatable("gui.fieldguide.variants");
+        //this.currentTitleText = Component.translatable("gui.fieldguide.variants");
         this.visible = false;
 
-        this.closeButton = new ImageButton(x + width - 21, y + 11, 10, 10, ClientConstants.CLOSE_SPRITES, (btn) -> this.toggleVisibility());
+        Arrays.fill(hoverScales, 1.0f);
+
+        //this.closeButton = new PageTurnButton(x + 7 , y + 9, 10, 10, 0, 0, 10, Constants.CLOSE_ICON, (btn) -> this.toggleVisibility());
 
         this.leftButton = new PageTurnButton(x + (width / 2) - 24, y + height - 20, 16, 16, ClientConstants.PREV_SPRITES, (btn) -> {
-            if (currentPage > 0) currentPage--;
+            if (currentPage > 0) {
+                currentPage--;
+                Arrays.fill(hoverScales, 1.0f);
+            }
         });
         this.rightButton = new PageTurnButton(x + (width / 2) + 8, y + height - 20, 16, 16, ClientConstants.NEXT_SPRITES, (btn) -> {
-            if (currentPage < maxPages - 1) currentPage++;
+            if (currentPage < maxPages - 1) {
+                currentPage++;
+                Arrays.fill(hoverScales, 1.0f);
+            }
         });
     }
 
@@ -101,15 +109,10 @@ public class VariantOverviewWidget extends AbstractWidget {
 
         graphics.blit(Constants.VARIANT_WIDGET_TEXTURE, this.getX(), this.getY(), 0, 0, this.width, this.height, this.width, this.height);
 
-        this.currentTitleText = Component.translatable("gui.fieldguide.variants");
+        Component tooltipText = null;
 
         int startIdx = currentPage * 9;
         int endIdx = Math.min(startIdx + 9, variants.size());
-
-        int spacingX = 36;
-        int spacingY = 40;
-        int startX = this.getX() + (this.width / 2) - spacingX;
-        int startY = this.getY() + 40;
 
         VariantProvider<Mob> provider = null;
         VariantDef originalVariant = null;
@@ -121,14 +124,14 @@ public class VariantOverviewWidget extends AbstractWidget {
             }
         }
 
+        long currentTime = System.currentTimeMillis();
+        float deltaTime = lastRenderTime > 0 ? (currentTime - lastRenderTime) / 1000.0f : 0.0f;
+        lastRenderTime = currentTime;
+
         for (int i = startIdx; i < endIdx; i++) {
             int gridIndex = i - startIdx;
-            int row = gridIndex / 3;
-            int col = gridIndex % 3;
-
-            int itemX = startX + (col * spacingX);
-            int itemY = startY + (row * spacingY);
-
+            Bounds bounds = getGridCellBoundsLocal(gridIndex);
+            boolean hovered = bounds.contains(mouseX, mouseY);
             VariantDef variant = variants.get(i);
             boolean isUnlocked = ClientFieldGuideManager.isVariantUnlocked(entry, variant.id());
 
@@ -145,9 +148,18 @@ public class VariantOverviewWidget extends AbstractWidget {
                 }
             }
 
-            EntryRenderHelper.renderEntityNormalized(graphics, renderEntity, itemX, itemY + 8, 30, 30, isUnlocked, false, 1.0f);
+            float targetScale = (hovered && isUnlocked) ? 1.05f : 1.0f;
+            if (deltaTime > 0) {
+                float speed = 10.0f;
+                float factor = 1.0f - (float) Math.pow(0.01, deltaTime * speed);
+                hoverScales[gridIndex] = hoverScales[gridIndex] + (targetScale - hoverScales[gridIndex]) * factor;
+            } else {
+                hoverScales[gridIndex] = targetScale;
+            }
 
-            if (mouseX >= itemX - 16 && mouseX <= itemX + 16 && mouseY >= itemY - 16 && mouseY <= itemY + 16) {
+            EntryRenderHelper.renderEntityNormalized(graphics, renderEntity, bounds.x_center(), bounds.y_center(), bounds.width(), bounds.height(), isUnlocked, false, hoverScales[gridIndex], false);
+
+            if (hovered) {
                 if (isUnlocked) {
                     String name = variant.id();
                     if (name.contains(":")) name = name.substring(name.indexOf(':') + 1);
@@ -155,21 +167,27 @@ public class VariantOverviewWidget extends AbstractWidget {
                     name = Arrays.stream(name.split("_"))
                             .map(s -> s.isEmpty() ? s : s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase())
                             .collect(Collectors.joining(" "));
-                    this.currentTitleText = Component.literal(name);
+                    tooltipText = Component.literal(name);
                 } else {
-                    this.currentTitleText = Component.literal("???");
+                    tooltipText = Component.literal("???");
                 }
             }
         }
 
         if (provider != null && renderedEntity instanceof Mob mob && originalVariant != null) {
-            provider.apply(mob, originalVariant);
+            boolean isCobblemon = Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(renderedEntity);
+            if (!isCobblemon) {
+                provider.apply(mob, originalVariant);
+            }
         }
 
-        int titleWidth = Minecraft.getInstance().font.width(this.currentTitleText);
-        graphics.drawString(Minecraft.getInstance().font, this.currentTitleText, this.getX() + (this.width / 2) - (titleWidth / 2), this.getY() + 13, ClientConfig.get().getTextTitleColorInt(), false);
+        //int titleWidth = Minecraft.getInstance().font.width(this.currentTitleText);
+        //graphics.drawString(Minecraft.getInstance().font, this.currentTitleText, this.getX() + (this.width / 2) - (titleWidth / 2), this.getY() + 10, ClientConfig.get().getTextTitleColorInt(), false);
+        if (tooltipText != null) {
+            graphics.renderTooltip(Minecraft.getInstance().font, tooltipText, mouseX, mouseY);
+        }
 
-        this.closeButton.render(graphics, mouseX, mouseY, partialTicks);
+        //this.closeButton.render(graphics, mouseX, mouseY, partialTicks);
         if (this.currentPage > 0) this.leftButton.render(graphics, mouseX, mouseY, partialTicks);
         if (this.currentPage < maxPages - 1) this.rightButton.render(graphics, mouseX, mouseY, partialTicks);
 
@@ -180,32 +198,24 @@ public class VariantOverviewWidget extends AbstractWidget {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!this.visible) return false;
 
-        if (this.closeButton.mouseClicked(mouseX, mouseY, button)) return true;
+        //if (this.closeButton.mouseClicked(mouseX, mouseY, button)) return true;
         if (this.currentPage > 0 && this.leftButton.mouseClicked(mouseX, mouseY, button)) return true;
         if (this.currentPage < maxPages - 1 && this.rightButton.mouseClicked(mouseX, mouseY, button)) return true;
 
         int startIdx = currentPage * 9;
         int endIdx = Math.min(startIdx + 9, variants.size());
-        int spacingX = 36;
-        int spacingY = 40;
-        int startX = this.getX() + (this.width / 2) - spacingX;
-        int startY = this.getY() + 40;
 
         for (int i = startIdx; i < endIdx; i++) {
             int gridIndex = i - startIdx;
-            int row = gridIndex / 3;
-            int col = gridIndex % 3;
+            Bounds bounds = getGridCellBoundsLocal(gridIndex);
 
-            int itemX = startX + (col * spacingX);
-            int itemY = startY + (row * spacingY);
-
-            if (mouseX >= itemX - 16 && mouseX <= itemX + 16 && mouseY >= itemY - 16 && mouseY <= itemY + 16) {
+            if (bounds.contains((int) mouseX, (int) mouseY)) {
                 VariantDef variant = variants.get(i);
                 if (ClientFieldGuideManager.isVariantUnlocked(entry, variant.id())) {
                     this.visible = false;
                     this.onVariantSelected.accept(i);
                     if (this.onToggle != null) this.onToggle.run();
-                    Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                    Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F));
                 }
                 return true;
             }
@@ -221,4 +231,18 @@ public class VariantOverviewWidget extends AbstractWidget {
     @Override
     protected void updateWidgetNarration(@NotNull NarrationElementOutput narrationElementOutput) {
     }
+
+    private Bounds getGridCellBoundsLocal(int i) {
+        int cell_size = 40;
+        int gap = 1;
+        int startX = this.getX() + 6;
+        int startY = this.getY() + 6;
+        int localIndex = i % 9;
+        int col = localIndex % 3;
+        int row = localIndex / 3;
+        int x = startX + (col * (cell_size + gap));
+        int y = startY + (row * (cell_size + gap));
+        return new Bounds(x, y, cell_size, cell_size);
+    }
+
 }

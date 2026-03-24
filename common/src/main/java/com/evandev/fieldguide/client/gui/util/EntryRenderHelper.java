@@ -7,6 +7,7 @@ import com.evandev.fieldguide.api.variant.VariantDef;
 import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.data.EntryVisual;
+import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.config.ServerConfig;
@@ -108,6 +109,10 @@ public class EntryRenderHelper {
     }
 
     public static void renderEntityNormalized(GuiGraphics guiGraphics, Entity entity, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale) {
+        renderEntityNormalized(guiGraphics, entity, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, !isPage);
+    }
+
+    public static void renderEntityNormalized(GuiGraphics guiGraphics, Entity entity, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale, boolean syncWithProgress) {
         String variantId = "";
         VariantProvider<Mob> provider = null;
         VariantDef currentVariant = null;
@@ -115,8 +120,24 @@ public class EntryRenderHelper {
         if (entity instanceof Mob mob) {
             provider = FieldGuideVariantManager.getProvider(mob);
             if (provider != null) {
-                currentVariant = provider.getCurrent(mob);
-                variantId = currentVariant.id();
+                if (syncWithProgress) {
+                    ResourceLocation entryId = ClientFieldGuideManager.getEntryId(mob.getType());
+                    String selected = ProgressManager.getInstance().getSelectedVariant(entryId);
+                    if (selected != null) {
+                        for (VariantDef def : provider.getVariants(mob)) {
+                            if (def.id().equals(selected)) {
+                                currentVariant = def;
+                                variantId = selected;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (currentVariant == null) {
+                    currentVariant = provider.getCurrent(mob);
+                    variantId = currentVariant.id();
+                }
             }
         }
 
@@ -153,8 +174,18 @@ public class EntryRenderHelper {
     }
 
     public static void renderCobblemon(GuiGraphics guiGraphics, GuideEntry entry, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale) {
-        String formName = FieldGuideCobblemonCompat.getFormForEntry(entry.id());
-        Object cacheKey = formName.equals("standard") ? entry : entry.id().toString() + "#" + formName;
+        renderCobblemon(guiGraphics, entry, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, !isPage);
+    }
+
+    public static void renderCobblemon(GuiGraphics guiGraphics, GuideEntry entry, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale, boolean syncWithProgress) {
+        String formName;
+        if (syncWithProgress) {
+            formName = FieldGuideCobblemonCompat.getFormForEntry(entry.id());
+        } else {
+            LivingEntity dummy = FieldGuideCobblemonCompat.getDummyPokemon(entry.id(), Minecraft.getInstance().level);
+            formName = FieldGuideCobblemonCompat.getCurrentForm(dummy);
+        }
+        Object cacheKey = formName.equalsIgnoreCase("standard") ? entry : entry.id().toString() + "#" + formName;
 
         renderWithCache(entry, cacheKey, guiGraphics, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, () -> {
             ResourceLocation id = entry.id();

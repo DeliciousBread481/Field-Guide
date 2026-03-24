@@ -168,8 +168,8 @@ public class ClientExposureCompat {
         }));
     }
 
-    public static boolean hasPhotograph(Object entry) {
-        return !ProgressManager.getInstance().getPhotograph(entry).isEmpty();
+    public static boolean hasPhotograph(Object entry, String variantId) {
+        return !ProgressManager.getInstance().getPhotograph(entry, variantId).isEmpty();
     }
 
     private static class PhotographSelectionScreen extends ItemListScreen {

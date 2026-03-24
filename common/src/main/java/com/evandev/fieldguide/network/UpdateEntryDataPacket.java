@@ -46,6 +46,7 @@ public class UpdateEntryDataPacket implements CustomPacketPayload {
             case SET_DESCRIPTION -> new DescriptionData(buf.readUtf(MAX_DESCRIPTION_LENGTH));
             case SET_PHOTOGRAPH -> new PhotographData(buf.readVarInt());
             case REMOVE_PHOTOGRAPH -> new RemovePhotographData();
+            case SET_SELECTED_VARIANT -> new VariantData(buf.readUtf(128));
         };
     }
 
@@ -64,6 +65,11 @@ public class UpdateEntryDataPacket implements CustomPacketPayload {
     public static UpdateEntryDataPacket removePhotograph(ResourceLocation entryId, String variantId) {
         return new UpdateEntryDataPacket(Action.REMOVE_PHOTOGRAPH, entryId, variantId != null ? variantId : "", new RemovePhotographData());
     }
+
+    public static UpdateEntryDataPacket setSelectedVariant(ResourceLocation entryId, String variantId) {
+        return new UpdateEntryDataPacket(Action.SET_SELECTED_VARIANT, entryId, "", new VariantData(variantId));
+    }
+
 
     @Override
     public @NotNull Type<? extends CustomPacketPayload> type() {
@@ -96,7 +102,8 @@ public class UpdateEntryDataPacket implements CustomPacketPayload {
         SET_NAME,
         SET_DESCRIPTION,
         SET_PHOTOGRAPH,
-        REMOVE_PHOTOGRAPH
+        REMOVE_PHOTOGRAPH,
+        SET_SELECTED_VARIANT;
     }
 
     private interface Data {
@@ -174,6 +181,18 @@ public class UpdateEntryDataPacket implements CustomPacketPayload {
         @Override
         public void apply(String entryId, PlayerFieldGuideProgress progress, ServerPlayer player) {
             progress.setEntryPhotograph(entryId, null);
+        }
+    }
+
+    private record VariantData(String variantId) implements Data {
+        @Override
+        public void encode(FriendlyByteBuf buf) {
+            buf.writeUtf(variantId != null ? variantId : "", 128);
+        }
+
+        @Override
+        public void apply(String entryId, PlayerFieldGuideProgress progress, ServerPlayer player) {
+            progress.setSelectedVariant(entryId, variantId);
         }
     }
 }

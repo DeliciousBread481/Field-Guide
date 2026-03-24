@@ -1,15 +1,16 @@
 package com.evandev.fieldguide.client.scan.manager;
 
+import com.evandev.fieldguide.ModTags;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
+import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.config.ServerConfig;
+import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.network.ScanUnlockPacket;
 import com.evandev.fieldguide.platform.Services;
-import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
-import com.evandev.fieldguide.ModTags;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -187,6 +188,7 @@ public class FieldGuideScanManager {
                         var provider = FieldGuideVariantManager.getProvider(mob);
                         if (provider != null) {
                             variantId = provider.getCurrent(mob).id();
+                            ProgressManager.getInstance().setSelectedVariant(targetKey, variantId);
                         }
                     }
                 }

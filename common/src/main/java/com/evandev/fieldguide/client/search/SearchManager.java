@@ -1,5 +1,7 @@
 package com.evandev.fieldguide.client.search;
 
+import com.evandev.fieldguide.api.seasons.Season;
+import com.evandev.fieldguide.api.seasons.SeasonsAPI;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.entry.EntryResolver;
@@ -10,6 +12,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
@@ -67,8 +70,25 @@ public class SearchManager {
         if (processedQuery.startsWith("^")) return matchByDrop(processedQuery.substring(1), entries, exactMatch);
         if (processedQuery.startsWith("!")) return matchByBiome(processedQuery.substring(1), entries, exactMatch);
         if (processedQuery.startsWith("@")) return matchByModId(processedQuery.substring(1), entries, exactMatch);
+        if (processedQuery.startsWith("$")) return matchBySeason(processedQuery.substring(1), entries, exactMatch);
 
         return matchByNameOrId(processedQuery, entries, exactMatch);
+    }
+
+    private static List<Object> matchBySeason(String seasonQuery, List<Object> entries, boolean exactMatch) {
+        List<Object> results = new ArrayList<>();
+        if (seasonQuery.isEmpty()) return results;
+
+        for (Object entry : entries) {
+            List<Season> seasons = SeasonsAPI.getGrowingSeasons(entry);
+            boolean match = seasons.stream().anyMatch(season -> {
+                String id = season.getId().toLowerCase(Locale.ROOT);
+                String name = season.getDisplayName().getString().toLowerCase(Locale.ROOT);
+                return exactMatch ? (id.equals(seasonQuery) || name.equals(seasonQuery)) : (id.contains(seasonQuery) || name.contains(seasonQuery));
+            });
+            if (match) results.add(entry);
+        }
+        return results;
     }
 
     private static List<Object> matchByTag(String tagQuery, List<Object> entries, boolean exactMatch) {
@@ -87,6 +107,12 @@ public class SearchManager {
             } else if (coreEntry instanceof Block block) {
                 var key = BuiltInRegistries.BLOCK.getResourceKey(block);
                 key.flatMap(BuiltInRegistries.BLOCK::getHolder).ifPresent(holder -> {
+                    if (holder.tags().anyMatch(tag -> matchLocation(tag.location(), tagQuery, exactMatch)))
+                        results.add(entry);
+                });
+            } else if (coreEntry instanceof Item item) {
+                var key = BuiltInRegistries.ITEM.getResourceKey(item);
+                key.flatMap(BuiltInRegistries.ITEM::getHolder).ifPresent(holder -> {
                     if (holder.tags().anyMatch(tag -> matchLocation(tag.location(), tagQuery, exactMatch)))
                         results.add(entry);
                 });

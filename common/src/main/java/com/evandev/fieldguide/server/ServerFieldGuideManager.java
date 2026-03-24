@@ -18,6 +18,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
@@ -87,6 +88,10 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             return new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.OBTAIN), Collections.emptyList());
         }
 
+        if ("block".equals(entryId.getNamespace()) && BuiltInRegistries.BLOCK.containsKey(EntryResolver.getRawId(entryId))) {
+            return new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.SCAN), Collections.emptyList());
+        }
+
         return EntryUnlockData.DEFAULT;
     }
 
@@ -133,9 +138,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         TagKey<Item> eatToUnlockTag = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "eat_to_unlock"));
 
         return BuiltInRegistries.ITEM.getOptional(EntryResolver.getRawId(entryId))
-                .flatMap(BuiltInRegistries.ITEM::getResourceKey)
-                .flatMap(BuiltInRegistries.ITEM::getHolder)
-                .map(h -> h.is(eatToUnlockTag))
+                .map(item -> item.components().has(DataComponents.FOOD) || BuiltInRegistries.ITEM.getHolderOrThrow(BuiltInRegistries.ITEM.getResourceKey(item).get()).is(eatToUnlockTag))
                 .orElse(false);
     }
 
@@ -233,14 +236,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                         chunkCat.addEntryId(id);
                         if (!flattenedEntries.contains(existing)) flattenedEntries.add(existing);
                     } else {
-                        EntryUnlockData unlockData = EntryUnlockData.DEFAULT;
-                        if (isKillToUnlock(id)) {
-                            unlockData = new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.KILL), Collections.emptyList());
-                        } else if (isEatToUnlock(id)) {
-                            unlockData = new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.EAT), Collections.emptyList());
-                        } else if (obj instanceof Item) {
-                            unlockData = new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.OBTAIN), Collections.emptyList());
-                        }
+                        EntryUnlockData unlockData = getUnlockData(id);
 
                         GuideEntry synthesized = new GuideEntry(id, id, null, EntryKind.NORMAL, false, false, null, null, null, null, unlockData);
                         chunkCat.addEntryId(id);
