@@ -4,6 +4,7 @@ import com.evandev.fieldguide.compat.reliableremover.ReliableRemoverCompat;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.mixin.accessor.*;
 import com.evandev.fieldguide.platform.Services;
+import com.evandev.fieldguide.server.data.ItemStackKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
@@ -25,14 +26,20 @@ import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
 import net.minecraft.world.level.storage.loot.providers.number.NumberProvider;
 import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 public class StaticLootParser {
+    private static final Map<LootTable, List<ParsedDrop>> TABLE_CACHE = Collections.synchronizedMap(new IdentityHashMap<>());
+
+    public static void clearCache() {
+        TABLE_CACHE.clear();
+    }
 
     public static List<ParsedDrop> parseTable(LootTable table, ServerLevel level) {
+        if (TABLE_CACHE.containsKey(table)) {
+            return TABLE_CACHE.get(table);
+        }
+
         List<ParsedDrop> allDrops = new ArrayList<>();
         List<LootPool> pools = ((LootTableExpansion) table).fieldguide$getPools();
 
@@ -51,7 +58,9 @@ public class StaticLootParser {
             }
         }
 
-        return mergeDrops(allDrops);
+        List<ParsedDrop> merged = mergeDrops(allDrops);
+        TABLE_CACHE.put(table, merged);
+        return merged;
     }
 
     private static void parseEntry(LootPoolEntryContainer entry, List<ParsedDrop> drops, float parentChance, int totalWeight, LootContext context) {
@@ -167,19 +176,20 @@ public class StaticLootParser {
     }
 
     private static List<ParsedDrop> mergeDrops(List<ParsedDrop> drops) {
-        List<ParsedDrop> merged = new ArrayList<>();
+        Map<ItemStackKey, ParsedDrop> mergedMap = new LinkedHashMap<>();
         for (ParsedDrop drop : drops) {
-            ParsedDrop existing = merged.stream()
-                    .filter(d -> ItemStack.isSameItemSameTags(d.stack, drop.stack))
-                    .findFirst().orElse(null);
+            ItemStackKey key = new ItemStackKey(drop.stack);
+            ParsedDrop existing = mergedMap.get(key);
             if (existing != null) {
                 existing.chance += drop.chance;
                 existing.minCount = Math.min(existing.minCount, drop.minCount);
                 existing.maxCount = Math.max(existing.maxCount, drop.maxCount);
             } else {
-                merged.add(new ParsedDrop(drop.stack, drop.chance, drop.minCount, drop.maxCount));
+                mergedMap.put(key, new ParsedDrop(drop.stack.copy(), drop.chance, drop.minCount, drop.maxCount));
             }
         }
+
+        List<ParsedDrop> merged = new ArrayList<>(mergedMap.values());
 
         for (ParsedDrop drop : merged) {
             if (drop.chance > 1.0f) {

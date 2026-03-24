@@ -10,11 +10,9 @@ import com.evandev.fieldguide.api.variant.VariantDef;
 import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
-import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.gui.widget.*;
-import com.evandev.fieldguide.client.manager.ClientCategoryManager;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
@@ -646,42 +644,8 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     private void loadSpawnBiomes() {
-        Object coreEntry = EntryResolver.resolveCoreEntry(entry);
-        boolean isCobblemon = isCobblemon(entry);
-        if (!(coreEntry instanceof EntityType<?>) && !(coreEntry instanceof Block) && !isCobblemon) return;
-
-        EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(entry);
-
         spawnBiomes.clear();
-        if (visual != null && visual.spawnBiomes != null) {
-            spawnBiomes.addAll(visual.spawnBiomes);
-        }
-
-        if (isCobblemon && Services.PLATFORM.isModLoaded("cobblemon")) {
-            spawnBiomes.addAll(FieldGuideCobblemonCompat.getCobblemonBiomes(entry));
-        }
-
-        ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
-        if (entryId != null) {
-            ClientCategoryManager categoryManager = ClientCategoryManager.getInstance();
-            for (String removal : categoryManager.getBiomeRemovals()) {
-                String[] parts = removal.split("\\|");
-                if (parts.length == 2 && categoryManager.isBiomeMatch(entry, new ResourceLocation(parts[1]))) {
-                    spawnBiomes.remove(new ResourceLocation(parts[1]));
-                }
-            }
-
-            for (String addition : categoryManager.getBiomeAdditions()) {
-                String[] parts = addition.split("\\|");
-                if (parts.length == 2 && categoryManager.isBiomeMatch(entry, new ResourceLocation(parts[1]))) {
-                    ResourceLocation biomeId = new ResourceLocation(parts[1]);
-
-                    if (!spawnBiomes.contains(biomeId)) {
-                        spawnBiomes.add(biomeId);
-                    }
-                }
-            }
-        }
+        spawnBiomes.addAll(ClientFieldGuideManager.getInstance().getResolvedBiomes(entry));
     }
 
     private void setupBiomeWidget(boolean unlocked) {

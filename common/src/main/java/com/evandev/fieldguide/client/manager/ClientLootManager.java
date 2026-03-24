@@ -17,6 +17,7 @@ public class ClientLootManager {
     private static final ClientLootManager INSTANCE = new ClientLootManager();
 
     private final Map<Object, List<ItemStack>> dropCache = new HashMap<>();
+    private final Map<String, Set<ResourceLocation>> dropIndex = new HashMap<>();
     private final Set<ResourceLocation> requestedIds = new HashSet<>();
 
     private ClientLootManager() {
@@ -28,6 +29,7 @@ public class ClientLootManager {
 
     public void clear() {
         this.dropCache.clear();
+        this.dropIndex.clear();
         this.requestedIds.clear();
     }
 
@@ -41,12 +43,47 @@ public class ClientLootManager {
                 ResourceLocation id = entry.getKey();
                 List<ItemStack> drops = entry.getValue();
                 dropCache.put(id, drops);
+
+                // Index drops by name
+                for (ItemStack stack : drops) {
+                    String name = stack.getHoverName().getString().toLowerCase(Locale.ROOT);
+                    dropIndex.computeIfAbsent(name, k -> new HashSet<>()).add(id);
+                }
+            }
+            ClientCacheManager.saveAllDrops(lootCache);
+        }
+    }
+
+    public List<Object> getEntriesDropping(String dropName, boolean exact) {
+        Set<ResourceLocation> matchedIds = new HashSet<>();
+        String query = dropName.toLowerCase(Locale.ROOT);
+
+        if (exact) {
+            Set<ResourceLocation> ids = dropIndex.get(query);
+            if (ids != null) matchedIds.addAll(ids);
+        } else {
+            for (Map.Entry<String, Set<ResourceLocation>> entry : dropIndex.entrySet()) {
+                if (entry.getKey().contains(query)) {
+                    matchedIds.addAll(entry.getValue());
+                }
             }
         }
+
+        List<Object> results = new ArrayList<>();
+        ClientCategoryManager categoryManager = ClientCategoryManager.getInstance();
+        for (ResourceLocation id : matchedIds) {
+            results.addAll(categoryManager.getEntriesForTarget(id));
+        }
+        return results;
     }
 
     public void requestLoot(ResourceLocation entryId) {
         if (entryId != null && !requestedIds.contains(entryId)) {
+            List<ItemStack> diskDrops = ClientCacheManager.loadDrops(entryId);
+            if (diskDrops != null) {
+                dropCache.put(entryId, diskDrops);
+                return;
+            }
             requestedIds.add(entryId);
             Services.NETWORK.sendToServer(new RequestLootPacket(entryId));
         }
@@ -131,7 +168,4 @@ public class ClientLootManager {
         return true;
     }
 
-    public Map<Object, List<ItemStack>> getDropCache() {
-        return dropCache;
-    }
 }

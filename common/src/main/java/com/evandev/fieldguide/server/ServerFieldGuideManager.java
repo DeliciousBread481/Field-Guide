@@ -12,6 +12,7 @@ import com.evandev.fieldguide.network.SyncConfigPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.loot.LootTableHelper;
+import com.evandev.fieldguide.server.loot.StaticLootParser;
 import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.entry.EntryResolutionHelper;
 import com.google.gson.JsonArray;
@@ -285,6 +286,31 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                 Services.NETWORK.sendToPlayer(new SyncCategoriesPacket(catChunk, entryChunk, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyMap(), Collections.emptyMap(), false, isLast), player);
             }
         }
+
+        syncLootToPlayer(player);
+    }
+
+    public void syncLootToPlayer(ServerPlayer player) {
+        if (serverLootCache.isEmpty()) return;
+
+        int maxLootChunkSize = 100;
+        Map<ResourceLocation, List<ItemStack>> chunk = new HashMap<>();
+        int count = 0;
+
+        for (Map.Entry<ResourceLocation, List<ItemStack>> entry : serverLootCache.entrySet()) {
+            chunk.put(entry.getKey(), entry.getValue());
+            count++;
+
+            if (count >= maxLootChunkSize) {
+                Services.NETWORK.sendToPlayer(new SyncLootPacket(chunk, false), player);
+                chunk = new HashMap<>();
+                count = 0;
+            }
+        }
+
+        if (!chunk.isEmpty()) {
+            Services.NETWORK.sendToPlayer(new SyncLootPacket(chunk, false), player);
+        }
     }
 
     public void syncLootToPlayer(ServerPlayer player, ResourceLocation entryId) {
@@ -329,6 +355,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
     public void onServerStarted(MinecraftServer server) {
         resolveAllCategories();
+        StaticLootParser.clearCache();
         this.serverLootCache = LootTableHelper.generateLootMap(server.overworld());
         expandBiomeTags(server);
         generateAutoBiomeAdditions(server);
@@ -341,6 +368,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         }
 
         resolveAllCategories();
+        StaticLootParser.clearCache();
         this.serverLootCache = LootTableHelper.generateLootMap(server.overworld());
         expandBiomeTags(server);
         generateAutoBiomeAdditions(server);

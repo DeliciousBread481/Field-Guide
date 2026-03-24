@@ -3,8 +3,9 @@ package com.evandev.fieldguide.server.loot;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.AutoPopulateRegistry;
 import com.evandev.fieldguide.api.GuideEntry;
-import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.entry.EntryResolver;
+import com.evandev.fieldguide.server.ServerFieldGuideManager;
+import com.evandev.fieldguide.server.data.ItemStackKey;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
@@ -91,31 +92,33 @@ public class LootTableHelper {
             ResourceLocation id = AutoPopulateRegistry.getEntryId(entry, true);
             if (id != null) {
                 List<ItemStack> existing = lootMap.computeIfAbsent(id, k -> new ArrayList<>());
+                Map<ItemStackKey, ItemStack> existingMap = new LinkedHashMap<>();
+                for (ItemStack s : existing) {
+                    existingMap.put(new ItemStackKey(s), s);
+                }
+
                 for (ItemStack newStack : formattedDrops) {
-                    boolean found = false;
-                    for (ItemStack s : existing) {
-                        if (ItemStack.isSameItemSameTags(s, newStack)) {
-                            CompoundTag existingTag = s.getOrCreateTag();
-                            CompoundTag newTag = newStack.getOrCreateTag();
+                    ItemStackKey key = new ItemStackKey(newStack);
+                    ItemStack existingStack = existingMap.get(key);
 
-                            float existingChance = existingTag.getFloat("FieldGuideDropChance");
-                            float newChance = newTag.getFloat("FieldGuideDropChance");
-                            existingTag.putFloat("FieldGuideDropChance", Math.min(100.0f, existingChance + newChance));
+                    if (existingStack != null) {
+                        CompoundTag existingTag = existingStack.getOrCreateTag();
+                        CompoundTag newTag = newStack.getOrCreateTag();
 
-                            int existingMin = existingTag.contains("FieldGuideMin") ? existingTag.getInt("FieldGuideMin") : 1;
-                            int newMin = newTag.contains("FieldGuideMin") ? newTag.getInt("FieldGuideMin") : 1;
-                            existingTag.putInt("FieldGuideMin", Math.min(existingMin, newMin));
+                        float existingChance = existingTag.getFloat("FieldGuideDropChance");
+                        float newChance = newTag.getFloat("FieldGuideDropChance");
+                        existingTag.putFloat("FieldGuideDropChance", Math.min(100.0f, existingChance + newChance));
 
-                            int existingMax = existingTag.contains("FieldGuideMax") ? existingTag.getInt("FieldGuideMax") : 1;
-                            int newMax = newTag.contains("FieldGuideMax") ? newTag.getInt("FieldGuideMax") : 1;
-                            existingTag.putInt("FieldGuideMax", Math.max(existingMax, newMax));
+                        int existingMin = existingTag.contains("FieldGuideMin") ? existingTag.getInt("FieldGuideMin") : 1;
+                        int newMin = newTag.contains("FieldGuideMin") ? newTag.getInt("FieldGuideMin") : 1;
+                        existingTag.putInt("FieldGuideMin", Math.min(existingMin, newMin));
 
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
+                        int existingMax = existingTag.contains("FieldGuideMax") ? existingTag.getInt("FieldGuideMax") : 1;
+                        int newMax = newTag.contains("FieldGuideMax") ? newTag.getInt("FieldGuideMax") : 1;
+                        existingTag.putInt("FieldGuideMax", Math.max(existingMax, newMax));
+                    } else {
                         existing.add(newStack);
+                        existingMap.put(key, newStack);
                     }
                 }
             }
@@ -202,4 +205,5 @@ public class LootTableHelper {
         }
         if (added) distinctDrops.sort(Comparator.comparing(s -> s.getHoverName().getString()));
     }
+
 }
