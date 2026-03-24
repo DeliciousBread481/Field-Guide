@@ -32,15 +32,21 @@ You can customize how an entry is unlocked by adding an `unlock` object to its d
 * `kill`: Killing the entity.
 * `scan`: Scanning the entity/block with a Spyglass (or taking a photograph if Exposure is installed).
 * `obtain`: Obtaining the item in your inventory.
+* `eat`: Eating the edible item.
 
-**Note:** For auto-populated entries, default unlocking rules still apply (e.g., entities in the `fieldguide:kill_to_unlock` tag still require a kill) unless overridden by an explicit entry definition with an `unlock` object.
+**Note:** For auto-populated entries, default unlocking rules still apply unless overridden by an explicit entry definition with an `unlock` object:
+* Entities with the `fieldguide:kill_to_unlock` or `fieldguide:bosses` tag require a `kill`.
+* Blocks and plant-like entries require a `scan`.
+* Non-block items require an `obtain`.
+* Edible items (food) require an `eat`.
 
-### Special Entity Tags
+### Special Item & Entity Tags
 
-Field Guide uses specific entity tags to handle default scanning and categorization behaviors. Apply these tags to your mod's entities where appropriate:
+Field Guide uses specific tags to handle default scanning and categorization behaviors. Apply these tags to your mod's entities where appropriate:
 
 * `fieldguide:bosses`: Entities with this tag are excluded from the `monsters` and `animals` auto-populate strategies, and are moved to a special `bosses` category.
 * `fieldguide:kill_to_unlock`: Entities with this tag can't be scanned with a spyglass or the naked eye: the player must kill them to unlock their entry. (Defaults to all bosses). This can be overridden per-entry using the `unlock` object.
+* `fieldguide:eat_to_unlock`: Items with this tag must be eaten to unlock their entry. (Defaults to all edible items). This can be overridden per-entry using the `unlock` object.
 
 ---
 

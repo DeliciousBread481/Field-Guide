@@ -49,6 +49,25 @@ public class AutoPopulateRegistry {
                 .map(Object.class::cast)
                 .toList());
 
+        register("blocks", (params, categoryId) -> BuiltInRegistries.BLOCK.stream()
+                .filter(b -> EntryValidator.isValidBlock(b, categoryId))
+                .sorted(Comparator.comparing(b -> BuiltInRegistries.BLOCK.getKey(b).toString()))
+                .map(Object.class::cast)
+                .toList());
+
+        register("items", (params, categoryId) -> BuiltInRegistries.ITEM.stream()
+                .filter(i -> !(i instanceof BlockItem))
+                .filter(i -> EntryValidator.isValidItem(i, categoryId))
+                .sorted(Comparator.comparing(i -> BuiltInRegistries.ITEM.getKey(i).toString()))
+                .map(Object.class::cast)
+                .toList());
+
+        register("food", (params, categoryId) -> BuiltInRegistries.ITEM.stream()
+                .filter(i -> i.isEdible() && EntryValidator.isValidItem(i, categoryId))
+                .sorted(Comparator.comparing(i -> BuiltInRegistries.ITEM.getKey(i).toString()))
+                .map(Object.class::cast)
+                .toList());
+
         register("plants", (params, categoryId) -> new ArrayList<>(getPlants(id -> true, categoryId)));
         register("mod_plants", (modId, categoryId) -> new ArrayList<>(getPlants(id -> id.getNamespace().equals(modId), categoryId)));
         register("trees", (params, categoryId) -> new ArrayList<>(getAutoTrees(id -> true, categoryId)));
