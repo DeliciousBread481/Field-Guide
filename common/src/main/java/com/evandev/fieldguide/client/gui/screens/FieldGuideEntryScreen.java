@@ -31,6 +31,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -453,7 +454,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
             RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
             guiGraphics.drawString(this.font, getTitleForEntry(entry), titleX, titleY, ClientConfig.get().getTextMutedColorInt(), false);
-            guiGraphics.drawWordWrap(font, lockedMessage, titleX, titleY + 30, textAreaWidth, ClientConfig.get().getTextMutedColorInt());
+            guiGraphics.drawWordWrap(font, lockedMessage, titleX, titleY + 21, textAreaWidth, ClientConfig.get().getTextMutedColorInt());
         } else {
             long discoveryTime = ProgressManager.getInstance().getDiscoveryTime(entry);
             if (discoveryTime > 0 && ClientConfig.get().showUnlockDate) {
@@ -825,6 +826,11 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (this.getFocused() instanceof AbstractWidget widget && widget.isFocused()) {
             if (this.minecraft != null && this.minecraft.options.keyInventory.matches(keyCode, scanCode)) return true;
             if (FieldGuideClient.OPEN_GUIDE_KEY.matches(keyCode, scanCode)) return true;
+        }
+
+        if (this.minecraft != null && this.minecraft.player != null && this.minecraft.options.keyInventory.matches(keyCode, scanCode)) {
+            this.minecraft.setScreen(new InventoryScreen(this.minecraft.player));
+            return true;
         }
 
         return super.keyPressed(keyCode, scanCode, modifiers);

@@ -26,6 +26,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
@@ -400,6 +401,11 @@ public class FieldGuideCategoryScreen extends BookScreen {
                 return true;
             }
             if (this.searchBox.keyPressed(keyCode, scanCode, modifiers)) return true;
+            return true;
+        }
+
+        if (this.minecraft != null && this.minecraft.player != null && this.minecraft.options.keyInventory.matches(keyCode, scanCode)) {
+            this.minecraft.setScreen(new InventoryScreen(this.minecraft.player));
             return true;
         }
 
@@ -840,7 +846,8 @@ public class FieldGuideCategoryScreen extends BookScreen {
         boolean isTutorial = entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "tutorial".equals(ge.virtualData().virtualType());
 
         if (unlocked && Services.PLATFORM.isModLoaded("exposure") && ClientConfig.get().exposureShowPhotographsInGrid) {
-            ItemStack existingPhoto = ProgressManager.getInstance().getPhotograph(entry);
+            String selectedVariant = ProgressManager.getInstance().getSelectedVariant(entry);
+            ItemStack existingPhoto = ProgressManager.getInstance().getPhotograph(entry, selectedVariant);
             if (!existingPhoto.isEmpty()) {
                 ClientExposureCompat.renderPhotographInGrid(guiGraphics, x - (CELL_SIZE / 2), y - (CELL_SIZE / 2), CELL_SIZE, CELL_SIZE, existingPhoto);
                 return;

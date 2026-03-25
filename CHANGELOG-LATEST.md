@@ -29,6 +29,7 @@
 - Improved server join speeds.
 - Moved vanilla spyglass-related advancements to the Field Guide advancement tab.
 - Pressing B when hovering over an item will now open its entry in the Field Guide (if it exists).
+- Pressing E while in the Field Guide will now return you to the inventory screen.
 
 ### Fixed
 
