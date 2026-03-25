@@ -45,11 +45,13 @@ public class Constants {
     public static final ResourceLocation DEFAULT_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/book.png");
     public static final ResourceLocation TOAST_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/book_icon.png");
     public static final ResourceLocation QUILL_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/quill.png");
-    public static final ResourceLocation ATTRIBUTES_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes.png");
+    public static final ResourceLocation ATTRIBUTES_SEPARATOR = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes_separator.png");
     public static final ResourceLocation SCANNING_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/scanning.png");
 
-    // Mob Alignment Icons
-    public static final ResourceLocation HOSTILE_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/hostile.png");
-    public static final ResourceLocation PASSIVE_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/passive.png");
-    public static final ResourceLocation NEUTRAL_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/neutral.png");
+    // Attribute Icons
+    public static final ResourceLocation HEALTH_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes/health.png");
+    public static final ResourceLocation ARMOR_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes/armor.png");
+    public static final ResourceLocation HOSTILE_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes/hostile.png");
+    public static final ResourceLocation PASSIVE_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes/passive.png");
+    public static final ResourceLocation NEUTRAL_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes/neutral.png");
 }

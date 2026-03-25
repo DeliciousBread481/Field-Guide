@@ -285,12 +285,12 @@ public class FieldGuideEntryScreen extends BookScreen {
 
             this.activeAttributes = AttributeRegistry.getAttributes(entry, renderedEntity);
             if (!activeAttributes.isEmpty()) {
-                currentY += (LINE_HEIGHT * 2);
+                currentY += (LINE_HEIGHT * 3);
             } else {
                 currentY += LINE_HEIGHT;
             }
 
-            int textY = currentY + 1;
+            int textY = currentY;
             int textAreaHeight = this.rightPageBounds.bottom() - 29 - textY;
             int maxLines = textAreaHeight / LINE_HEIGHT;
 
@@ -422,6 +422,27 @@ public class FieldGuideEntryScreen extends BookScreen {
         return false;
     }
 
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double deltaX, double deltaY) {
+        if (this.variantOverviewWidget != null && this.variantOverviewWidget.isVisible()) {
+            if (this.variantOverviewWidget.mouseScrolled(mouseX, mouseY, deltaX, deltaY)) return true;
+        }
+
+        if (super.mouseScrolled(mouseX, mouseY, deltaX, deltaY)) return true;
+
+        if (deltaY != 0 && !entityVariants.isEmpty() && this.leftPageBounds != null && this.leftPageBounds.contains((int) mouseX, (int) mouseY)) {
+            int direction = deltaY > 0 ? -1 : 1;
+            int nextIndex = currentVariantIndex + direction;
+
+            if (nextIndex >= 0 && nextIndex < entityVariants.size()) {
+                cycleVariant(direction);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private ResourceLocation getDetailsTexture() {
         if (!ClientFieldGuideManager.isUnlocked(entry)) {
             return Constants.DETAILS_PAGE_TEXTURE;
@@ -496,7 +517,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                 }
 
                 int quillX = this.rightPageBounds.right() - 15;
-                int quillY = this.rightPageBounds.top() + 6;
+                int quillY = this.rightPageBounds.top() + 5;
                 RenderSystem.enableBlend();
                 guiGraphics.blit(Constants.QUILL_ICON, quillX, quillY, 0, 0, 11, 11, 11, 11);
                 RenderSystem.disableBlend();
@@ -878,40 +899,44 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         RenderSystem.setShaderColor(1, 1, 1, 1);
 
-        int iconSize = 10;
+        int iconSize = 9;
         int iconSpacing = 2;
-        int gap = 8;
+        int gap = 1;
+        int horizontalPadding = 4;
+        int barHeight = 15;
 
-        int titleY = this.leftPageBounds.top() + 8;
-        int currentY = titleY + LINE_HEIGHT + 2;
+        int titleHeight = 24;
+        int titleWithVariantHeight = 35;
+
+        int currentY = this.leftPageBounds.top();
         if (!entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) {
-            currentY += LINE_HEIGHT;
+            currentY += titleWithVariantHeight;
+        } else {
+            currentY += titleHeight;
         }
 
-        int startX = this.rightPageBounds.left() + 6;
-        int drawX = startX;
-
-        int iconYOffset = (LINE_HEIGHT * 2 - iconSize) / 2;
+        int drawX = this.rightPageBounds.left() + 6 - horizontalPadding;
+        int iconYOffset = 3;
+        int textYOffset = 4;
 
         for (GuideAttribute attr : activeAttributes) {
             RenderSystem.setShaderTexture(0, attr.icon());
-            guiGraphics.blit(attr.icon(), drawX, currentY + iconYOffset + (iconSize - attr.height()) / 2, attr.u(), attr.v(), attr.width(), attr.height(), attr.textureWidth(), attr.textureHeight());
-
+            guiGraphics.blit(attr.icon(), drawX + horizontalPadding, currentY + iconYOffset + (iconSize - attr.height()) / 2, attr.u(), attr.v(), attr.width(), attr.height(), attr.textureWidth(), attr.textureHeight());
+            int textWidth = 0;
             if (attr.value() != null) {
-                guiGraphics.drawString(this.font, attr.value(), drawX + attr.width() + iconSpacing, currentY + iconYOffset + 1, ClientConfig.get().getTextColorInt(), false);
-                drawX += attr.width() + iconSpacing + font.width(attr.value()) + gap;
-            } else {
-                drawX += attr.width() + gap;
+                textWidth = font.width(attr.value());
+                guiGraphics.drawString(this.font, attr.value(), drawX + horizontalPadding + attr.width() + iconSpacing, currentY + textYOffset, ClientConfig.get().getTextColorInt(), false);
+                textWidth += iconSpacing;
             }
-        }
+            Bounds attrBounds = new Bounds(drawX, currentY, attr.width() + horizontalPadding * 2 + textWidth, barHeight);
 
-        drawX = startX;
-        for (GuideAttribute attr : activeAttributes) {
-            int width = attr.width() + (attr.value() != null ? iconSpacing + font.width(attr.value()) : 0);
-            if (mouseX >= drawX && mouseX <= drawX + width && mouseY >= currentY && mouseY <= currentY + (LINE_HEIGHT * 2)) {
+            drawX += attrBounds.width();
+            guiGraphics.blit(Constants.ATTRIBUTES_SEPARATOR, drawX, currentY, 0, 0, 1, 15, 1, 15);
+            drawX += gap;
+
+            if (attrBounds.contains(mouseX, mouseY)) {
                 this.setTooltipForNextRenderPass(attr.tooltip());
             }
-            drawX += width + gap;
         }
     }
 

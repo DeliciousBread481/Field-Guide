@@ -334,7 +334,7 @@ public class FieldGuideCommand {
                 }
             }
         }
-        source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.category.success", categoryId, targets.size()), true);
+        source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.category.success", categoryId.toString(), targets.size()), true);
         return targets.size();
     }
 

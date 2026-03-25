@@ -127,7 +127,7 @@ public class SearchManager {
 
         List<Object> drops = ClientLootManager.getInstance().getEntriesDropping(dropQuery, exactMatch);
         for (Object entry : drops) {
-            if (entries.contains(entry)) {
+            if (entries.contains(entry) && !results.contains(entry)) {
                 results.add(entry);
             }
         }
