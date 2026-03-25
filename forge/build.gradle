@@ -60,8 +60,9 @@ dependencies {
     // Spyglass Improvements
     modRuntimeOnly "maven.modrinth:spyglass-improvements:${spyglass_improvements_forge_version}+forge"
 
-    // ETF
+    // ETF/EMF
     modCompileOnly "maven.modrinth:entitytexturefeatures:${etf_version}-forge-1.20.1"
+    modCompileOnly "maven.modrinth:entity-model-features:${emf_version}-forge-1.20.1"
 
     // Reliable Remover
     modCompileOnly "maven.modrinth:reliable-remover:${reliable_remover_version}-forge-1.20.1"

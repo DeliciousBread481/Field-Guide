@@ -2,6 +2,7 @@ package com.evandev.fieldguide.client.gui.util;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.AutoPopulateRegistry;
+import com.evandev.fieldguide.compat.emf.EmfCompat;
 import com.evandev.fieldguide.platform.Services;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
@@ -165,7 +166,15 @@ public class IconCacheManager {
         poseStack.translate(RENDER_SIZE / 2.0f, RENDER_SIZE / 2.0f, 1000.0f);
         RenderSystem.applyModelViewMatrix();
 
+        if (Services.PLATFORM.isModLoaded("entity_model_features")) {
+            EmfCompat.setInGui(true);
+        }
+
         renderAction.run();
+
+        if (Services.PLATFORM.isModLoaded("entity_model_features")) {
+            EmfCompat.setInGui(false);
+        }
 
         poseStack.popPose();
         RenderSystem.applyModelViewMatrix();
