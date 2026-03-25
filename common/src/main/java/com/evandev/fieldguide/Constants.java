@@ -14,14 +14,20 @@ public class Constants {
     public static final String MOD_NAME = "FieldGuide";
     public static final Logger LOG = LoggerFactory.getLogger(MOD_NAME);
 
-    public static final Type LIST_STRING_TYPE = new TypeToken<List<String>>() {}.getType();
-    public static final Type MAP_STRING_LIST_STRING_TYPE = new TypeToken<Map<String, List<String>>>() {}.getType();
+    public static final Type LIST_STRING_TYPE = new TypeToken<List<String>>() {
+    }.getType();
+
+    public static final Type MAP_STRING_LIST_STRING_TYPE = new TypeToken<Map<String, List<String>>>() {
+    }.getType();
 
     // Backgrounds
     public static final ResourceLocation BOOK_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/book.png");
     public static final ResourceLocation TITLE_PAGE_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/page_title.png");
     public static final ResourceLocation LIST_PAGE_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/page_list.png");
     public static final ResourceLocation DETAILS_PAGE_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/page_details.png");
+    public static final ResourceLocation DETAILS_PAGE_V_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/page_details_v.png");
+    public static final ResourceLocation DETAILS_PAGE_A_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/page_details_a.png");
+    public static final ResourceLocation DETAILS_PAGE_VA_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/page_details_va.png");
     public static final ResourceLocation TOAST_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/toast.png");
     public static final ResourceLocation JOURNAL_TITLE_PAGE_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/page_journal_title.png");
     public static final ResourceLocation JOURNAL_PAGE_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/page_journal.png");

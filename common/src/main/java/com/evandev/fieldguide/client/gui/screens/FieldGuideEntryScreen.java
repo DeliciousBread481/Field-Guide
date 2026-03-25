@@ -55,6 +55,7 @@ import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 
 public class FieldGuideEntryScreen extends BookScreen {
+    private static final int LINE_HEIGHT = 9;
     private final FieldGuideCategoryScreen parent;
     private final Object entry;
     private final List<ResourceLocation> spawnBiomes = new ArrayList<>();
@@ -253,12 +254,12 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (unlocked) {
             String initialName = ClientFieldGuideManager.getEntryName(entry).getString();
             if (!ServerConfig.get().disableEditingNames) {
-                this.nameWidget = new BookTextFieldWidget(this.font, textX, titleY, textAreaWidth, font.lineHeight, initialName, ClientConfig.get().getTextTitleColorInt(), textAreaWidth, FieldGuideLimits.MAX_ENTRY_NAME_LENGTH,
+                this.nameWidget = new BookTextFieldWidget(this.font, textX, titleY, textAreaWidth, LINE_HEIGHT, initialName, ClientConfig.get().getTextTitleColorInt(), textAreaWidth, FieldGuideLimits.MAX_ENTRY_NAME_LENGTH,
                         newName -> ClientFieldGuideManager.setCustomName(entry, newName));
                 this.addRenderableWidget(this.nameWidget);
             }
 
-            int currentY = titleY + font.lineHeight + 2;
+            int currentY = titleY + LINE_HEIGHT + 3;
 
             if (!entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) {
                 VariantDef variant = entityVariants.get(currentVariantIndex);
@@ -266,7 +267,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                 String customVariantName = ProgressManager.getInstance().getCustomName(ClientFieldGuideManager.getEntryId(entry).toString() + "#" + variantId);
                 String initialVariantName = customVariantName != null ? customVariantName : FieldGuideVariantManager.getVariantDisplayName(variant).getString();
 
-                this.variantWidget = new BookTextFieldWidget(this.font, textX, currentY, textAreaWidth, font.lineHeight, initialVariantName, ClientConfig.get().getTextMutedColorInt(), textAreaWidth, FieldGuideLimits.MAX_ENTRY_NAME_LENGTH,
+                this.variantWidget = new BookTextFieldWidget(this.font, textX, currentY, textAreaWidth, LINE_HEIGHT, initialVariantName, ClientConfig.get().getTextMutedColorInt(), textAreaWidth, FieldGuideLimits.MAX_ENTRY_NAME_LENGTH,
                         newName -> {
                             ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
                             if (entryId != null) {
@@ -274,20 +275,23 @@ public class FieldGuideEntryScreen extends BookScreen {
                             }
                         });
                 this.addRenderableWidget(this.variantWidget);
-                currentY += font.lineHeight + 2;
+                currentY += LINE_HEIGHT;
             }
 
             this.activeAttributes = AttributeRegistry.getAttributes(entry, renderedEntity);
             if (!activeAttributes.isEmpty()) {
-                currentY += 18; // Space for attribute bar
+                currentY += (LINE_HEIGHT * 2);
+            } else {
+                currentY += LINE_HEIGHT;
             }
 
-            int textY = currentY + 4;
-            int textAreaHeight = this.rightPageBounds.bottom() - 38 - textY;
+            int textY = currentY;
+            int textAreaHeight = this.rightPageBounds.bottom() - 29 - textY;
+            int maxLines = textAreaHeight / LINE_HEIGHT;
 
             String initialDesc = ClientFieldGuideManager.getEntryDescription(entry);
             if (!ServerConfig.get().disableEditingDescriptions) {
-                this.descriptionWidget = new BookTextAreaWidget(this.font, textX, textY, textAreaWidth, textAreaHeight, 10, ClientConfig.get().getTextColorInt(), true, FieldGuideLimits.MAX_ENTRY_DESCRIPTION_LENGTH, initialDesc,
+                this.descriptionWidget = new BookTextAreaWidget(this.font, textX, textY, textAreaWidth, textAreaHeight, maxLines, LINE_HEIGHT, ClientConfig.get().getTextColorInt(), true, FieldGuideLimits.MAX_ENTRY_DESCRIPTION_LENGTH, initialDesc,
                         newDesc -> ClientFieldGuideManager.setCustomDescription(entry, newDesc));
                 this.addRenderableWidget(this.descriptionWidget);
             }
@@ -398,12 +402,33 @@ public class FieldGuideEntryScreen extends BookScreen {
         return false;
     }
 
+    private ResourceLocation getDetailsTexture() {
+        if (!ClientFieldGuideManager.isUnlocked(entry)) {
+            return Constants.DETAILS_PAGE_TEXTURE;
+        }
+
+        boolean hasVariants = !entityVariants.isEmpty();
+        boolean hasAttributes = !activeAttributes.isEmpty();
+
+        if (hasVariants && hasAttributes) {
+            return Constants.DETAILS_PAGE_VA_TEXTURE;
+        } else if (hasVariants) {
+            return Constants.DETAILS_PAGE_V_TEXTURE;
+        } else if (hasAttributes) {
+            return Constants.DETAILS_PAGE_A_TEXTURE;
+        } else {
+            return Constants.DETAILS_PAGE_TEXTURE;
+        }
+    }
+
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(guiGraphics);
         RenderSystem.setShaderTexture(0, Constants.BOOK_TEXTURE);
         guiGraphics.blit(Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
-        guiGraphics.blit(Constants.DETAILS_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
+
+        ResourceLocation detailsTexture = getDetailsTexture();
+        guiGraphics.blit(detailsTexture, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
 
         boolean unlocked = ClientFieldGuideManager.isUnlocked(entry);
 
@@ -465,19 +490,21 @@ public class FieldGuideEntryScreen extends BookScreen {
                     String variantId = variant.id();
                     String customVariantName = ProgressManager.getInstance().getCustomName(ClientFieldGuideManager.getEntryId(entry).toString() + "#" + variantId);
                     Component variantName = customVariantName != null ? Component.literal(customVariantName) : FieldGuideVariantManager.getVariantDisplayName(variant);
-                    guiGraphics.drawString(this.font, variantName, titleX, titleY + font.lineHeight + 2, ClientConfig.get().getTextMutedColorInt(), false);
+                    guiGraphics.drawString(this.font, variantName, titleX, titleY + LINE_HEIGHT + 3, ClientConfig.get().getTextMutedColorInt(), false);
                 }
             }
 
             renderDynamicAttributes(guiGraphics, mouseX, mouseY);
 
             if (ServerConfig.get().disableEditingDescriptions) {
-                int textY = titleY + font.lineHeight + 4;
+                int textY = titleY + LINE_HEIGHT + 3; // Name
                 if (!entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) {
-                    textY += font.lineHeight + 2;
+                    textY += LINE_HEIGHT; // Variant
                 }
                 if (!activeAttributes.isEmpty()) {
-                    textY += 18;
+                    textY += (LINE_HEIGHT * 2); // Attributes
+                } else {
+                    textY += LINE_HEIGHT; // Buffer
                 }
                 guiGraphics.drawWordWrap(font, Component.literal(ClientFieldGuideManager.getEntryDescription(entry)), titleX, textY, textAreaWidth, ClientConfig.get().getTextColorInt());
             }
@@ -821,20 +848,22 @@ public class FieldGuideEntryScreen extends BookScreen {
         int gap = 8;
 
         int titleY = this.leftPageBounds.top() + 8;
-        int currentY = titleY + font.lineHeight + 2;
+        int currentY = titleY + LINE_HEIGHT + 3;
         if (!entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) {
-            currentY += font.lineHeight + 2;
+            currentY += LINE_HEIGHT;
         }
 
         int startX = this.rightPageBounds.left() + 6;
         int drawX = startX;
 
+        int iconYOffset = (LINE_HEIGHT * 2 - iconSize) / 2;
+
         for (GuideAttribute attr : activeAttributes) {
             RenderSystem.setShaderTexture(0, attr.icon());
-            guiGraphics.blit(attr.icon(), drawX, currentY + (iconSize - attr.height()) / 2, attr.u(), attr.v(), attr.width(), attr.height(), attr.textureWidth(), attr.textureHeight());
+            guiGraphics.blit(attr.icon(), drawX, currentY + iconYOffset + (iconSize - attr.height()) / 2, attr.u(), attr.v(), attr.width(), attr.height(), attr.textureWidth(), attr.textureHeight());
 
             if (attr.value() != null) {
-                guiGraphics.drawString(this.font, attr.value(), drawX + attr.width() + iconSpacing, currentY + 1, ClientConfig.get().getTextColorInt(), false);
+                guiGraphics.drawString(this.font, attr.value(), drawX + attr.width() + iconSpacing, currentY + iconYOffset + 1, ClientConfig.get().getTextColorInt(), false);
                 drawX += attr.width() + iconSpacing + font.width(attr.value()) + gap;
             } else {
                 drawX += attr.width() + gap;
@@ -844,7 +873,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         drawX = startX;
         for (GuideAttribute attr : activeAttributes) {
             int width = attr.width() + (attr.value() != null ? iconSpacing + font.width(attr.value()) : 0);
-            if (mouseX >= drawX && mouseX <= drawX + width && mouseY >= currentY && mouseY <= currentY + iconSize) {
+            if (mouseX >= drawX && mouseX <= drawX + width && mouseY >= currentY && mouseY <= currentY + (LINE_HEIGHT * 2)) {
                 this.setTooltipForNextRenderPass(attr.tooltip());
             }
             drawX += width + gap;
