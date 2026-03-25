@@ -21,6 +21,7 @@ dependencies {
     compileOnly "dev.emi:emi-xplat-mojmap:${emi_version}"
     compileOnly "maven.modrinth:kubejs:${kubejs_forge_version}"
     compileOnly "maven.modrinth:entitytexturefeatures:${etf_version}-forge-1.20.1"
+    compileOnly "maven.modrinth:entity-model-features:${emf_version}-forge-1.20.1"
     compileOnly "maven.modrinth:reliable-remover:${reliable_remover_version}-forge-1.20.1"
     compileOnly "maven.modrinth:exposure:${exposure_forge_version}"
     compileOnly "com.cobblemon:forge:${cobblemon_version}"

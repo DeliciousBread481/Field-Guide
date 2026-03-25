@@ -29,8 +29,9 @@ dependencies {
     // Spyglass Improvements
     modRuntimeOnly "maven.modrinth:spyglass-improvements:${spyglass_improvements_fabric_version}+fabric"
 
-    // ETF
+    // ETF/EMF
     modCompileOnly "maven.modrinth:entitytexturefeatures:${etf_version}-fabric-1.20.1"
+    modCompileOnly "maven.modrinth:entity-model-features:${emf_version}-fabric-1.20.1"
 
     // Reliable Remover
     modCompileOnly "maven.modrinth:reliable-remover:${reliable_remover_version}-fabric-1.20.1"

@@ -9,6 +9,7 @@ import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
+import com.evandev.fieldguide.compat.emf.EmfCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.mixin.accessor.EntityAccessor;
@@ -246,20 +247,37 @@ public class EntryRenderHelper {
             living.oAttackAnim = 0.0F;
         }
 
-        entity.tickCount = 0;
+        if (Minecraft.getInstance().player != null) {
+            entity.tickCount = Minecraft.getInstance().player.tickCount;
+        } else {
+            entity.tickCount = 1;
+        }
 
         if (entity instanceof WaterAnimal) {
             ((EntityAccessor) entity).fieldguide$setWasTouchingWater(true);
         }
 
+        if (Services.PLATFORM.isModLoaded("entity_model_features")) {
+            try {
+                EmfCompat.setInGui(true);
+            } catch (Throwable ignored) {
+            }
+        }
+
         MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
         try {
-            Minecraft.getInstance().getEntityRenderDispatcher().render(entity, 0, 0, 0, 0.0F, 1.0F, pose, buffers, LightTexture.FULL_BRIGHT);
-            Minecraft.getInstance().getEntityRenderDispatcher().render(entity, 0, 0, 0, 0.0F, 1.0F, pose, buffers, LightTexture.FULL_BRIGHT);
+            float partialTicks = Minecraft.getInstance().getFrameTime();
+            Minecraft.getInstance().getEntityRenderDispatcher().render(entity, 0, 0, 0, 0.0F, partialTicks, pose, buffers, LightTexture.FULL_BRIGHT);
         } catch (Exception e) {
             Constants.LOG.error("Failed to render entity in Field Guide: {}", entrySource, e);
         } finally {
             buffers.endBatch();
+            if (Services.PLATFORM.isModLoaded("entity_model_features")) {
+                try {
+                    EmfCompat.setInGui(false);
+                } catch (Throwable ignored) {
+                }
+            }
         }
     }
 
