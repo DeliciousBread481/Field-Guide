@@ -259,7 +259,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                 this.addRenderableWidget(this.nameWidget);
             }
 
-            int currentY = titleY + LINE_HEIGHT + 3;
+            int currentY = titleY + LINE_HEIGHT + 2;
 
             if (!entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) {
                 VariantDef variant = entityVariants.get(currentVariantIndex);
@@ -285,7 +285,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                 currentY += LINE_HEIGHT;
             }
 
-            int textY = currentY;
+            int textY = currentY + 1;
             int textAreaHeight = this.rightPageBounds.bottom() - 29 - textY;
             int maxLines = textAreaHeight / LINE_HEIGHT;
 
@@ -848,7 +848,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         int gap = 8;
 
         int titleY = this.leftPageBounds.top() + 8;
-        int currentY = titleY + LINE_HEIGHT + 3;
+        int currentY = titleY + LINE_HEIGHT + 2;
         if (!entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) {
             currentY += LINE_HEIGHT;
         }
