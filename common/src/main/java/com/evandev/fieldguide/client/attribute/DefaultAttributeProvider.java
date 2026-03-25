@@ -34,16 +34,16 @@ public class DefaultAttributeProvider implements AttributeProvider {
                 icon = Constants.PASSIVE_ICON;
                 typeComponent = Component.translatable("fieldguide.alignment.passive");
             }
-            attributes.add(GuideAttribute.of(icon, 0, 0, 10, 10, 10, 10, null, typeComponent));
+            attributes.add(GuideAttribute.of(icon, 0, 0, 9, 9, 9, 9, null, typeComponent));
 
             // Health
             String health = String.valueOf((int) living.getMaxHealth() / 2);
-            attributes.add(GuideAttribute.of(Constants.ATTRIBUTES_TEXTURE, 0, 0, 10, 10, 32, 32, health, Component.translatable("fieldguide.attribute.health")));
+            attributes.add(GuideAttribute.of(Constants.HEALTH_ICON, 0, 0, 9, 9, 9, 9, health, Component.translatable("fieldguide.attribute.health")));
 
             // Armor
             int armorValue = living.getArmorValue();
             if (armorValue > 0) {
-                attributes.add(GuideAttribute.of(Constants.ATTRIBUTES_TEXTURE, 0, 10, 10, 10, 32, 32, String.valueOf(armorValue), Component.translatable("fieldguide.attribute.armor")));
+                attributes.add(GuideAttribute.of(Constants.ARMOR_ICON, 0, 0, 9, 9, 9, 9, String.valueOf(armorValue), Component.translatable("fieldguide.attribute.armor")));
             }
         }
 

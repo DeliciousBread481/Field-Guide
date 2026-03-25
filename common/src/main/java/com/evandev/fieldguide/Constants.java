@@ -49,11 +49,13 @@ public class Constants {
     public static final ResourceLocation DEFAULT_ICON = new ResourceLocation(MOD_ID, "textures/gui/icons/book.png");
     public static final ResourceLocation TOAST_ICON = new ResourceLocation(MOD_ID, "textures/gui/book_icon.png");
     public static final ResourceLocation QUILL_ICON = new ResourceLocation(MOD_ID, "textures/gui/icons/quill.png");
-    public static final ResourceLocation ATTRIBUTES_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/attributes.png");
+    public static final ResourceLocation ATTRIBUTES_SEPARATOR = new ResourceLocation(MOD_ID, "textures/gui/attributes_separator.png");
     public static final ResourceLocation SCANNING_ICON_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/scanning.png");
 
-    // Mob Alignment Icons
-    public static final ResourceLocation HOSTILE_ICON = new ResourceLocation(MOD_ID, "textures/gui/icons/hostile.png");
-    public static final ResourceLocation PASSIVE_ICON = new ResourceLocation(MOD_ID, "textures/gui/icons/passive.png");
-    public static final ResourceLocation NEUTRAL_ICON = new ResourceLocation(MOD_ID, "textures/gui/icons/neutral.png");
+    // Attribute Icons
+    public static final ResourceLocation HEALTH_ICON = new ResourceLocation(MOD_ID, "textures/gui/attributes/health.png");
+    public static final ResourceLocation ARMOR_ICON = new ResourceLocation(MOD_ID, "textures/gui/attributes/armor.png");
+    public static final ResourceLocation HOSTILE_ICON = new ResourceLocation(MOD_ID, "textures/gui/attributes/hostile.png");
+    public static final ResourceLocation PASSIVE_ICON = new ResourceLocation(MOD_ID, "textures/gui/attributes/passive.png");
+    public static final ResourceLocation NEUTRAL_ICON = new ResourceLocation(MOD_ID, "textures/gui/attributes/neutral.png");
 }
