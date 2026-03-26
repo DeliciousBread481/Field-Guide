@@ -417,6 +417,27 @@ public class FieldGuideEntryScreen extends BookScreen {
         return false;
     }
 
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (this.variantOverviewWidget != null && this.variantOverviewWidget.isVisible()) {
+            if (this.variantOverviewWidget.mouseScrolled(mouseX, mouseY, delta)) return true;
+        }
+
+        if (super.mouseScrolled(mouseX, mouseY, delta)) return true;
+
+        if (delta != 0 && !entityVariants.isEmpty() && this.leftPageBounds != null && this.leftPageBounds.contains((int) mouseX, (int) mouseY)) {
+            int direction = delta > 0 ? -1 : 1;
+            int nextIndex = currentVariantIndex + direction;
+
+            if (nextIndex >= 0 && nextIndex < entityVariants.size()) {
+                cycleVariant(direction);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private ResourceLocation getDetailsTexture() {
         if (!ClientFieldGuideManager.isUnlocked(entry)) {
             return Constants.DETAILS_PAGE_TEXTURE;
@@ -661,7 +682,13 @@ public class FieldGuideEntryScreen extends BookScreen {
 
     private void cycleVariant(int dir) {
         if (entityVariants.isEmpty() || renderedEntity == null || !(renderedEntity instanceof Mob)) return;
-        currentVariantIndex = (currentVariantIndex + dir + entityVariants.size()) % entityVariants.size();
+
+        int newIndex = currentVariantIndex + dir;
+        if (newIndex < 0 || newIndex >= entityVariants.size()) {
+            return;
+        }
+
+        currentVariantIndex = newIndex;
         this.initialVariant = entityVariants.get(currentVariantIndex).id();
 
         VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(renderedEntity);
