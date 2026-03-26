@@ -69,12 +69,12 @@ public class ClientLootManager {
             }
         }
 
-        List<Object> results = new ArrayList<>();
+        Set<Object> uniqueResults = new LinkedHashSet<>();
         ClientCategoryManager categoryManager = ClientCategoryManager.getInstance();
         for (ResourceLocation id : matchedIds) {
-            results.addAll(categoryManager.getEntriesForTarget(id));
+            uniqueResults.addAll(categoryManager.getEntriesForTarget(id));
         }
-        return results;
+        return new ArrayList<>(uniqueResults);
     }
 
     public void requestLoot(ResourceLocation entryId) {
