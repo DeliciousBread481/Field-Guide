@@ -6,6 +6,8 @@ import com.evandev.fieldguide.api.variant.DatapackVariant;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.config.ServerConfig;
+import com.evandev.fieldguide.entry.EntryResolutionHelper;
+import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncConfigPacket;
@@ -13,8 +15,6 @@ import com.evandev.fieldguide.network.SyncLootPacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.loot.LootTableHelper;
 import com.evandev.fieldguide.server.loot.StaticLootParser;
-import com.evandev.fieldguide.entry.EntryResolver;
-import com.evandev.fieldguide.entry.EntryResolutionHelper;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -134,6 +134,8 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     }
 
     public boolean isEatToUnlock(ResourceLocation entryId) {
+        if ("entity".equals(entryId.getNamespace())) return false;
+
         TagKey<Item> eatToUnlockTag = TagKey.create(Registries.ITEM, new ResourceLocation(Constants.MOD_ID, "eat_to_unlock"));
 
         return BuiltInRegistries.ITEM.getOptional(EntryResolver.getRawId(entryId))
