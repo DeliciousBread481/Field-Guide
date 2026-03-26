@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.item;
 
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.platform.Services;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -22,7 +23,11 @@ public class FieldGuideItem extends Item {
     }
 
     @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(Level level, @NotNull Player player, @NotNull InteractionHand hand) {
+    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
+        if (!ServerConfig.get().enableFieldGuideItem) {
+            return InteractionResultHolder.pass(player.getItemInHand(hand));
+        }
+
         if (level.isClientSide) {
             Services.CLIENT.openFieldGuide();
         }
@@ -30,8 +35,10 @@ public class FieldGuideItem extends Item {
     }
 
     @Override
-    public void appendHoverText(@NotNull ItemStack stack, @Nullable Level level, List<Component> tooltipComponents, @NotNull TooltipFlag isAdvanced) {
-        tooltipComponents.add(Component.translatable("item.fieldguide.field_guide.tooltip").withStyle(ChatFormatting.GRAY));
+    public void appendHoverText(@NotNull ItemStack stack, @Nullable Level level, @NotNull List<Component> tooltipComponents, @NotNull TooltipFlag isAdvanced) {
+        if (ServerConfig.get().enableFieldGuideItem) {
+            tooltipComponents.add(Component.translatable("item.fieldguide.field_guide.tooltip").withStyle(ChatFormatting.GRAY));
+        }
         super.appendHoverText(stack, level, tooltipComponents, isAdvanced);
     }
 }
