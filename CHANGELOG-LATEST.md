@@ -1,3 +1,3 @@
 ### Fixed
 
-- Fixed Field Guide recipe not working on 1.21.
+- Hotfix for Chicken, Cod, and Salmon not being scannable.

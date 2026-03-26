@@ -135,6 +135,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     }
 
     public boolean isEatToUnlock(ResourceLocation entryId) {
+        if ("entity".equals(entryId.getNamespace())) return false;
         TagKey<Item> eatToUnlockTag = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "eat_to_unlock"));
 
         return BuiltInRegistries.ITEM.getOptional(EntryResolver.getRawId(entryId))
