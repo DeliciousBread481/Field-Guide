@@ -1,0 +1,101 @@
+---
+title: Advancements & Triggers
+hide_meta: true
+---
+
+Field Guide provides custom advancement triggers that allow modpack developers and map makers to hook into a player's Field Guide progress. You can use these triggers to grant rewards, unlock recipe stages, or trigger other mods' events when a player interacts with the guide.
+
+All triggers use the `fieldguide` namespace.
+
+## Available Triggers
+
+### 1. Entry Unlocked (`fieldguide:entry_unlocked`)
+Triggers when a player successfully unlocks an entry in their Field Guide.
+
+**Conditions:**
+* `entry` (Optional, String): The specific resource location of the entry. If omitted, it will trigger when *any* entry is unlocked.
+
+**Example:** Trigger when the player unlocks the Pig entry.
+```json
+{
+  "criteria": {
+    "unlocked_pig": {
+      "trigger": "fieldguide:entry_unlocked",
+      "conditions": {
+        "entry": "minecraft:pig"
+      }
+    }
+  }
+}
+
+```
+
+### 2. Category Completed (`fieldguide:category_completed`)
+
+Triggers when a player successfully unlocks every entry within a specific category.
+
+**Conditions:**
+  * `category` (Optional, String): The specific resource location of the category. If omitted, it will trigger when *any* category is fully completed.
+
+**Example:** Trigger when the player completes the default Monsters category.
+
+```json
+{
+  "criteria": {
+    "completed_monsters": {
+      "trigger": "fieldguide:category_completed",
+      "conditions": {
+        "category": "fieldguide:monsters"
+      }
+    }
+  }
+}
+```
+
+### 3. Scan Entity (`fieldguide:scan_entity`)
+
+Triggers when a player successfully scans an entity with their spyglass. This trigger uses standard Minecraft entity predicates, allowing you to check for specific NBT data, tags, or equipment!
+
+**Conditions:**
+  * `entity` (Optional, Object): A standard Minecraft [Entity Predicate](https://minecraft.wiki/w/Predicate).
+
+**Example:** Trigger when the player scans *any* Zombie.
+
+```json
+{
+  "criteria": {
+    "scanned_zombie": {
+      "trigger": "fieldguide:scan_entity",
+      "conditions": {
+        "entity": {
+          "type": "minecraft:zombie"
+        }
+      }
+    }
+  }
+}
+```
+
+### 4. Scan and Kill (`fieldguide:scan_and_kill`)
+
+Triggers when a player completes the criteria for a "Kill to Unlock" entry. Like `scan_entity`, this uses standard entity predicates.
+
+**Conditions:**
+  * `entity` (Optional, Object): A standard Minecraft [Entity Predicate](https://minecraft.wiki/w/Predicate).
+
+**Example:** Trigger when the player kills the Ender Dragon for their Field Guide.
+
+```json
+{
+  "criteria": {
+    "scanned_dragon": {
+      "trigger": "fieldguide:scan_and_kill",
+      "conditions": {
+        "entity": {
+          "type": "minecraft:ender_dragon"
+        }
+      }
+    }
+  }
+}
+```
