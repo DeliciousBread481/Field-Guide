@@ -287,12 +287,6 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> clientConfig.textMutedColor = newValue)
                 .build());
 
-        interfaceCat.addEntry(entryBuilder.startStrField(Component.translatable("option.fieldguide.text_new_color"), clientConfig.textNewColor)
-                .setDefaultValue("#63B40C")
-                .setTooltip(Component.translatable("option.fieldguide.text_new_color.tooltip"))
-                .setSaveConsumer(newValue -> clientConfig.textNewColor = newValue)
-                .build());
-
         interfaceCat.addEntry(entryBuilder.startStrField(Component.translatable("option.fieldguide.text_cursor_color"), clientConfig.textCursorColor)
                 .setDefaultValue("#0xFF704623")
                 .setTooltip(Component.translatable("option.fieldguide.text_cursor_color.tooltip"))
