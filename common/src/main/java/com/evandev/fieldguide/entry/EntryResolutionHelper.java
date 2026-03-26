@@ -79,7 +79,8 @@ public class EntryResolutionHelper {
     private static CompositeDefinition findCompositeFor(ResourceLocation id, List<CompositeDefinition> composites) {
         if (id == null) return null;
         for (CompositeDefinition def : composites) {
-            if (id.equals(def.displayId()) || (def.components() != null && def.components().contains(id))) {
+            ResourceLocation mainId = def.displayId() != null ? def.displayId() : def.id();
+            if (id.equals(mainId) || (def.components() != null && def.components().contains(id))) {
                 return def;
             }
         }

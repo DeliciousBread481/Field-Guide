@@ -22,7 +22,7 @@
   "category.fieldguide.main": "Field Guide",
   "category.fieldguide.general": "General Settings",
   "category.fieldguide.interface": "Interface",
-  "category.fieldguide.content": "Content",
+  "category.fieldguide.commands": "Commands",
 
   "option.fieldguide.show_inventory_button": "Show Inventory Button",
   "option.fieldguide.show_inventory_button.tooltip": "If enabled, a button to open the Field Guide will appear in the player inventory.",
@@ -319,7 +319,7 @@
   "advancements.fieldguide.root.title": "Field Guide",
   "advancements.fieldguide.root.description": "Obtain a Spyglass to begin your journey",
   "advancements.fieldguide.first_discovery.title": "Aha!",
-  "advancements.fieldguide.first_discovery.description": "Make your first discovery using a Spyglass",
+  "advancements.fieldguide.first_discovery.description": "Make your first discovery",
   "advancements.fieldguide.mushroom_collector.title": "Mushroom for Improvement",
   "advancements.fieldguide.mushroom_collector.description": "Discover all four types of huge mushrooms",
   "advancements.fieldguide.animal_expert.title": "Fantastic Beasts",

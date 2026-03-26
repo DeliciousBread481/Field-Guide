@@ -46,12 +46,14 @@ public class AutoPopulateRegistry {
         register("mod_blocks", (modId, categoryId) -> BuiltInRegistries.BLOCK.stream()
                 .filter(b -> BuiltInRegistries.BLOCK.getKey(b).getNamespace().equals(modId))
                 .filter(b -> EntryValidator.isValidBlock(b, categoryId))
+                .filter(b -> !BuiltInRegistries.BLOCK.getKey(b).getPath().endsWith("_sapling"))
                 .sorted(Comparator.comparing(b -> BuiltInRegistries.BLOCK.getKey(b).toString()))
                 .map(Object.class::cast)
                 .toList());
 
         register("blocks", (params, categoryId) -> BuiltInRegistries.BLOCK.stream()
                 .filter(b -> EntryValidator.isValidBlock(b, categoryId))
+                .filter(b -> !BuiltInRegistries.BLOCK.getKey(b).getPath().endsWith("_sapling"))
                 .sorted(Comparator.comparing(b -> BuiltInRegistries.BLOCK.getKey(b).toString()))
                 .map(Object.class::cast)
                 .toList());

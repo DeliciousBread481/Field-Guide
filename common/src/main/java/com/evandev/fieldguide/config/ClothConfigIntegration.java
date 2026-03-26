@@ -357,22 +357,22 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> clientConfig.detailsUnlockedSilhouetteAlpha = newValue)
                 .build());
 
-        // Content
-        ConfigCategory contentCat = builder.getOrCreateCategory(Component.translatable("category.fieldguide.content"));
+        // Commands
+        ConfigCategory commandCat = builder.getOrCreateCategory(Component.translatable("category.fieldguide.commands"));
 
-        contentCat.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.global_scan_commands"), serverConfig.globalScanCommands)
+        commandCat.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.global_scan_commands"), serverConfig.globalScanCommands)
                 .setDefaultValue(new ArrayList<>())
                 .setTooltip(Component.translatable("option.fieldguide.global_scan_commands.tooltip"))
                 .setSaveConsumer(newValue -> serverConfig.globalScanCommands = newValue)
                 .build());
 
-        contentCat.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.category_scan_commands"), convertMapToList(serverConfig.categoryScanCommands))
+        commandCat.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.category_scan_commands"), convertMapToList(serverConfig.categoryScanCommands))
                 .setDefaultValue(new ArrayList<>())
                 .setTooltip(Component.translatable("option.fieldguide.category_scan_commands.tooltip"))
                 .setSaveConsumer(newValue -> serverConfig.categoryScanCommands = convertListToMap(newValue))
                 .build());
 
-        contentCat.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.entry_scan_commands"), convertMapToList(serverConfig.entryScanCommands))
+        commandCat.addEntry(entryBuilder.startStrList(Component.translatable("option.fieldguide.entry_scan_commands"), convertMapToList(serverConfig.entryScanCommands))
                 .setDefaultValue(new ArrayList<>())
                 .setTooltip(Component.translatable("option.fieldguide.entry_scan_commands.tooltip"))
                 .setSaveConsumer(newValue -> serverConfig.entryScanCommands = convertListToMap(newValue))

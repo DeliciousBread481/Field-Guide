@@ -1,5 +1,8 @@
+### Changed
+
+- Changed description of the "Aha!" description to not specifically mention spyglasses.
+- Renamed "content" tab in Cloth Config screen to "commands" for clarity.
+
 ### Fixed
 
-- Fixed Environmental NBT (@Proxillus).
-- Fixed recipe error in logs.
-- Removed unused config option on 1.21.1.
+- Removed trees from block autopopulates.
