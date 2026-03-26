@@ -47,7 +47,6 @@ public class ModConfig {
             if (json.has("textColor")) client.textColor = json.get("textColor").getAsString();
             if (json.has("textTitleColor")) client.textTitleColor = json.get("textTitleColor").getAsString();
             if (json.has("textMutedColor")) client.textMutedColor = json.get("textMutedColor").getAsString();
-            if (json.has("textNewColor")) client.textNewColor = json.get("textNewColor").getAsString();
             if (json.has("textCursorColor")) client.textCursorColor = json.get("textCursorColor").getAsString();
             if (json.has("pageNumberColor")) client.pageNumberColor = json.get("pageNumberColor").getAsString();
             if (json.has("listSilhouetteColor")) client.listSilhouetteColor = json.get("listSilhouetteColor").getAsString();
@@ -99,10 +98,5 @@ public class ModConfig {
         } catch (Exception e) {
             Constants.LOG.error("Failed to migrate fieldguide.json", e);
         }
-    }
-
-    public static void save() {
-        ClientConfig.save();
-        ServerConfig.save();
     }
 }
