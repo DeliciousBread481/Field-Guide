@@ -4,12 +4,12 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.api.variant.VariantDef;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
+import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
-import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -334,7 +334,7 @@ public class FieldGuideCommand {
                 }
             }
         }
-        source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.category.success", categoryId, targets.size()), true);
+        source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.category.success", categoryId.toString(), targets.size()), true);
         return targets.size();
     }
 
