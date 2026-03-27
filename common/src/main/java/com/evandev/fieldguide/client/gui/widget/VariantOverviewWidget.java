@@ -8,6 +8,9 @@ import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
+import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
+import com.evandev.fieldguide.config.ClientConfig;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
@@ -20,12 +23,12 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class VariantOverviewWidget extends AbstractWidget {
 
@@ -153,7 +156,34 @@ public class VariantOverviewWidget extends AbstractWidget {
                 hoverScales[gridIndex] = targetScale;
             }
 
-            EntryRenderHelper.renderEntityNormalized(graphics, renderEntity, bounds.x_center(), bounds.y_center(), bounds.width(), bounds.height(), isUnlocked, false, hoverScales[gridIndex], false);
+            boolean renderedPhoto = false;
+            if (isUnlocked && Services.PLATFORM.isModLoaded("exposure") && ClientConfig.get().exposureShowPhotographsInGrid) {
+                ItemStack existingPhoto = ProgressManager.getInstance().getPhotograph(entry, variant.id());
+
+                if (!existingPhoto.isEmpty() || ServerConfig.get().keepSilhouetteWhenUnlocked) {
+                    graphics.pose().pushPose();
+                    int centerX = bounds.x_center();
+                    int centerY = bounds.y_center();
+
+                    graphics.pose().translate(centerX, centerY, 0);
+                    float currentScale = hoverScales[gridIndex];
+                    graphics.pose().scale(currentScale, currentScale, currentScale);
+                    graphics.pose().translate(-centerX, -centerY, 0);
+
+                    if (!existingPhoto.isEmpty()) {
+                        ClientExposureCompat.renderPhotographInGrid(graphics, centerX - (bounds.width() / 2), centerY - (bounds.height() / 2), bounds.width(), bounds.height(), existingPhoto);
+                        renderedPhoto = true;
+                    } else if (ServerConfig.get().keepSilhouetteWhenUnlocked) {
+                        ClientExposureCompat.renderMissingPhotoBackground(graphics, centerX - (bounds.width() / 2), centerY - (bounds.height() / 2), bounds.width(), bounds.height());
+                    }
+
+                    graphics.pose().popPose();
+                }
+            }
+
+            if (!renderedPhoto) {
+                EntryRenderHelper.renderEntityNormalized(graphics, renderEntity, bounds.x_center(), bounds.y_center(), bounds.width(), bounds.height(), isUnlocked, false, hoverScales[gridIndex], false);
+            }
 
             if (hovered) {
                 if (isUnlocked) {
