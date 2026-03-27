@@ -265,13 +265,20 @@ public class EntryRenderHelper {
         }
 
         MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
+        var entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
+
+        boolean previousHitboxState = entityRenderDispatcher.shouldRenderHitBoxes();
+        entityRenderDispatcher.setRenderHitBoxes(false);
+
         try {
             float partialTicks = Minecraft.getInstance().getFrameTimeNs();
-            Minecraft.getInstance().getEntityRenderDispatcher().render(entity, 0, 0, 0, 0.0F, partialTicks, pose, buffers, LightTexture.FULL_BRIGHT);
+            entityRenderDispatcher.render(entity, 0, 0, 0, 0.0F, partialTicks, pose, buffers, LightTexture.FULL_BRIGHT);
         } catch (Exception e) {
             Constants.LOG.error("Failed to render entity in Field Guide: {}", entrySource, e);
         } finally {
+            entityRenderDispatcher.setRenderHitBoxes(previousHitboxState);
             buffers.endBatch();
+
             if (Services.PLATFORM.isModLoaded("entity_model_features")) {
                 try {
                     EmfCompat.setInGui(false);
