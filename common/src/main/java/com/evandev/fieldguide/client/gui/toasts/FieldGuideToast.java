@@ -6,7 +6,7 @@ import com.evandev.fieldguide.api.variant.VariantDef;
 import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
-import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
+import com.evandev.fieldguide.compat.cobblemon.ClientFieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.platform.Services;
@@ -59,9 +59,9 @@ public class FieldGuideToast implements Toast {
             if (Services.PLATFORM.isModLoaded("cobblemon") && isCobblemon) {
                 ResourceLocation id = ((GuideEntry) this.entry).id();
                 if (variantId != null) {
-                    cachedEntity = FieldGuideCobblemonCompat.getDummyVariant(id, variantId, Minecraft.getInstance().level);
+                    cachedEntity = ClientFieldGuideCobblemonCompat.getDummyVariant(id, variantId, Minecraft.getInstance().level);
                 } else {
-                    cachedEntity = FieldGuideCobblemonCompat.getDummyPokemon(id, Minecraft.getInstance().level);
+                    cachedEntity = ClientFieldGuideCobblemonCompat.getDummyPokemon(id, Minecraft.getInstance().level);
                 }
             } else if (coreEntry instanceof EntityType<?> type) {
                 cachedEntity = type.create(Minecraft.getInstance().level);

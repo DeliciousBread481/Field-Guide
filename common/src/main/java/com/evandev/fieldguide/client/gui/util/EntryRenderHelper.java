@@ -8,6 +8,7 @@ import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.progress.ProgressManager;
+import com.evandev.fieldguide.compat.cobblemon.ClientFieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.emf.EmfCompat;
 import com.evandev.fieldguide.config.ClientConfig;
@@ -59,7 +60,7 @@ public class EntryRenderHelper {
         OVERRIDE_CACHE.clear();
         IconCacheManager.clearCache();
         if (Services.PLATFORM.isModLoaded("cobblemon")) {
-            FieldGuideCobblemonCompat.clearCache();
+            ClientFieldGuideCobblemonCompat.clearCache();
         }
     }
 
@@ -150,7 +151,7 @@ public class EntryRenderHelper {
         String finalVariantId = variantId;
         if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
             if (finalVariantId.isEmpty()) {
-                finalVariantId = FieldGuideCobblemonCompat.getFormForEntry(baseId);
+                finalVariantId = ClientFieldGuideCobblemonCompat.getFormForEntry(baseId);
             }
         }
         Object cacheKey = finalVariantId.isEmpty() ? baseId : baseId.toString() + "#" + finalVariantId;
@@ -181,16 +182,16 @@ public class EntryRenderHelper {
     public static void renderCobblemon(GuiGraphics guiGraphics, GuideEntry entry, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale, boolean syncWithProgress) {
         String formName;
         if (syncWithProgress) {
-            formName = FieldGuideCobblemonCompat.getFormForEntry(entry.id());
+            formName = ClientFieldGuideCobblemonCompat.getFormForEntry(entry.id());
         } else {
-            LivingEntity dummy = FieldGuideCobblemonCompat.getDummyPokemon(entry.id(), Minecraft.getInstance().level);
+            LivingEntity dummy = ClientFieldGuideCobblemonCompat.getDummyPokemon(entry.id(), Minecraft.getInstance().level);
             formName = FieldGuideCobblemonCompat.getCurrentForm(dummy);
         }
         Object cacheKey = formName.equalsIgnoreCase("standard") ? entry : entry.id().toString() + "#" + formName;
 
         renderWithCache(entry, cacheKey, guiGraphics, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, () -> {
             ResourceLocation id = entry.id();
-            LivingEntity dummy = FieldGuideCobblemonCompat.getDummyPokemon(id, Minecraft.getInstance().level);
+            LivingEntity dummy = ClientFieldGuideCobblemonCompat.getDummyPokemon(id, Minecraft.getInstance().level);
             if (dummy != null) {
                 renderEntity(dummy, id, isPage, -30.0F);
             }

@@ -17,7 +17,7 @@ import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.gui.widget.*;
 import com.evandev.fieldguide.client.progress.ProgressManager;
-import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
+import com.evandev.fieldguide.compat.cobblemon.ClientFieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.config.ServerConfig;
@@ -309,7 +309,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         if (isCobblemon(entry)) {
             ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-            this.renderedEntity = FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
+            this.renderedEntity = ClientFieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
         } else if (renderEntry instanceof EntityType<?> type) {
             try {
                 this.renderedEntity = type.create(this.minecraft.level);
@@ -340,7 +340,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                             this.currentVariantIndex = i;
                             if (isCobblemon(entry) && this.minecraft != null) {
                                 ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-                                this.renderedEntity = FieldGuideCobblemonCompat.getDummyVariant(id, this.initialVariant, this.minecraft.level);
+                                this.renderedEntity = ClientFieldGuideCobblemonCompat.getDummyVariant(id, this.initialVariant, this.minecraft.level);
                             } else {
                                 provider.apply((Mob) this.renderedEntity, this.entityVariants.get(i));
                             }
@@ -687,7 +687,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (provider != null) {
             if (isCobblemon(entry) && this.minecraft != null) {
                 ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-                this.renderedEntity = FieldGuideCobblemonCompat.getDummyVariant(id, this.initialVariant, this.minecraft.level);
+                this.renderedEntity = ClientFieldGuideCobblemonCompat.getDummyVariant(id, this.initialVariant, this.minecraft.level);
             } else {
                 provider.apply((Mob) renderedEntity, entityVariants.get(currentVariantIndex));
             }
@@ -714,7 +714,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             if (provider != null) {
                 if (isCobblemon(entry) && this.minecraft != null) {
                     ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-                    this.renderedEntity = FieldGuideCobblemonCompat.getDummyVariant(id, this.initialVariant, this.minecraft.level);
+                    this.renderedEntity = ClientFieldGuideCobblemonCompat.getDummyVariant(id, this.initialVariant, this.minecraft.level);
                 } else {
                     provider.apply((Mob) renderedEntity, entityVariants.get(currentVariantIndex));
                 }
@@ -791,7 +791,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         List<ItemStack> drops = loadedDrops;
 
         if (unlocked && drops.isEmpty() && isCobblemon(entry)) {
-            drops = FieldGuideCobblemonCompat.getCobblemonDrops(entry);
+            drops = ClientFieldGuideCobblemonCompat.getCobblemonDrops(entry);
         }
 
         if (!drops.isEmpty()) {
