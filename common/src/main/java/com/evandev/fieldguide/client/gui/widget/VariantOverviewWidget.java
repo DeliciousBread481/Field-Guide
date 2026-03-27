@@ -8,6 +8,7 @@ import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.progress.ProgressManager;
+import com.evandev.fieldguide.compat.cobblemon.ClientFieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
 import com.evandev.fieldguide.config.ClientConfig;
@@ -141,7 +142,7 @@ public class VariantOverviewWidget extends AbstractWidget {
                 if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(renderedEntity)) {
                     ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
                     if (id != null && Minecraft.getInstance().level != null) {
-                        renderEntity = FieldGuideCobblemonCompat.getDummyVariant(id, variant.id(), Minecraft.getInstance().level);
+                        renderEntity = ClientFieldGuideCobblemonCompat.getDummyVariant(id, variant.id(), Minecraft.getInstance().level);
                     }
                 } else {
                     provider.apply(mob, variant);

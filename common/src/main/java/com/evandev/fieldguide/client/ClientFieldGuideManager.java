@@ -12,7 +12,7 @@ import com.evandev.fieldguide.client.manager.*;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.client.scan.FieldGuideScanner;
 import com.evandev.fieldguide.client.search.SearchManager;
-import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
+import com.evandev.fieldguide.compat.cobblemon.ClientFieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.entry.EntryResolver;
@@ -30,7 +30,6 @@ import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ClientFieldGuideManager implements ResourceManagerReloadListener {
@@ -286,7 +285,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         }
 
         if (isCobblemon && Services.PLATFORM.isModLoaded("cobblemon")) {
-            biomes.addAll(FieldGuideCobblemonCompat.getCobblemonBiomes(entry));
+            biomes.addAll(ClientFieldGuideCobblemonCompat.getCobblemonBiomes(entry));
         }
 
         ClientCategoryManager categoryManager = ClientCategoryManager.getInstance();
@@ -302,4 +301,4 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     public void applyServerUpdate(ProgressUpdatePacket packet) {
         ProgressManager.getInstance().applyServerUpdate(packet);
     }
-    }
+}

@@ -15,7 +15,7 @@ import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.gui.widget.FieldGuideSearchBox;
 import com.evandev.fieldguide.client.gui.widget.PageTurnButton;
 import com.evandev.fieldguide.client.progress.ProgressManager;
-import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
+import com.evandev.fieldguide.compat.cobblemon.ClientFieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.config.ServerConfig;
@@ -510,7 +510,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
                             List<ItemStack> drops = ClientFieldGuideManager.getInstance().getDrops(entry);
 
                             if (drops.isEmpty() && entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "cobblemon".equals(ge.virtualData().virtualType())) {
-                                drops = FieldGuideCobblemonCompat.getCobblemonDrops(entry);
+                                drops = ClientFieldGuideCobblemonCompat.getCobblemonDrops(entry);
                             }
 
                             for (ItemStack stack : drops) {
@@ -736,7 +736,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
             if (this.minecraft == null || this.minecraft.level == null) return null;
 
             if (entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "cobblemon".equals(ge.virtualData().virtualType())) {
-                entity = FieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
+                entity = ClientFieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
             } else {
                 Object coreEntry = EntryResolver.resolveCoreEntry(entry);
                 if (coreEntry instanceof EntityType<?> type) {

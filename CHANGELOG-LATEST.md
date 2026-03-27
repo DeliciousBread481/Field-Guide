@@ -1,3 +1,3 @@
 ### Fixed
 
-- Fixed issues with some modded bosses not being unlockable.
+- Fixed Cobblemon-related server crash.

@@ -9,6 +9,7 @@ import com.evandev.fieldguide.client.gui.screens.FieldGuideCategoryScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.client.scan.FieldGuideScanner;
 import com.evandev.fieldguide.compat.SeasonsCompat;
+import com.evandev.fieldguide.compat.cobblemon.ClientFieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.mixin.accessor.MobAccessor;
@@ -51,7 +52,7 @@ public class FieldGuideClient {
 
     public static void playMobCry(Entity entity) {
         if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
-            FieldGuideCobblemonCompat.playPokemonCry(entity);
+            ClientFieldGuideCobblemonCompat.playPokemonCry(entity);
             return;
         }
 
