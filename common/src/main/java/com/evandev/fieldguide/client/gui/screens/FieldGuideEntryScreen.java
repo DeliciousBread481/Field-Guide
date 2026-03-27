@@ -635,9 +635,6 @@ public class FieldGuideEntryScreen extends BookScreen {
         int startX = x - (totalWidth / 2);
         int startY = y + 42;
 
-        boolean ssLoaded = Services.PLATFORM.isModLoaded("sereneseasons");
-        ResourceLocation ssTexture = new ResourceLocation("sereneseasons", "textures/item/ss_icon.png");
-
         for (int i = 0; i < seasons.size(); i++) {
             Season season = seasons.get(i);
             int drawX = startX + (i * (iconSize + spacing));
@@ -652,22 +649,17 @@ public class FieldGuideEntryScreen extends BookScreen {
                 guiGraphics.pose().translate(-(drawX + iconSize / 2.0), -(startY + iconSize / 2.0), 0);
             }
 
-            if (ssLoaded) {
-                int u = 0;
-                int v = 0;
-                switch (season) {
-                    case SUMMER -> u = 8;
-                    case AUTUMN -> v = 8;
-                    case WINTER -> {
-                        u = 8;
-                        v = 8;
-                    }
+            int u = 0;
+            int v = 0;
+            switch (season) {
+                case SUMMER -> u = 8;
+                case AUTUMN -> v = 8;
+                case WINTER -> {
+                    u = 8;
+                    v = 8;
                 }
-                guiGraphics.blit(ssTexture, drawX, startY, iconSize, iconSize, u, v, 8, 8, 16, 16);
-            } else {
-                ResourceLocation texture = new ResourceLocation(Constants.MOD_ID, "textures/gui/icons/" + season.getId() + ".png");
-                guiGraphics.blit(texture, drawX, startY, 0, 0, iconSize, iconSize, iconSize, iconSize);
             }
+            guiGraphics.blit(Constants.SEASONS_TEXTURE, drawX, startY, iconSize, iconSize, u, v, 8, 8, 16, 16);
 
             if (hovered) {
                 guiGraphics.pose().popPose();

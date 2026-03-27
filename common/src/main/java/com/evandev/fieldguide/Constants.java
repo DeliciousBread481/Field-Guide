@@ -51,6 +51,7 @@ public class Constants {
     public static final ResourceLocation QUILL_ICON = new ResourceLocation(MOD_ID, "textures/gui/icons/quill.png");
     public static final ResourceLocation ATTRIBUTES_SEPARATOR = new ResourceLocation(MOD_ID, "textures/gui/attributes_separator.png");
     public static final ResourceLocation SCANNING_ICON_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/scanning.png");
+    public static final ResourceLocation SEASONS_TEXTURE = new ResourceLocation(MOD_ID, "textures/gui/seasons.png");
 
     // Attribute Icons
     public static final ResourceLocation HEALTH_ICON = new ResourceLocation(MOD_ID, "textures/gui/attributes/health.png");

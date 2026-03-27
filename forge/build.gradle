@@ -78,8 +78,12 @@ dependencies {
     modCompileOnly "maven.modrinth:kubejs:${kubejs_forge_version}"
 
     // Serene Seasons
-    modImplementation "maven.modrinth:serene-seasons:${serene_seasons_forge_version}"
+    modCompileOnly "maven.modrinth:serene-seasons:${serene_seasons_forge_version}"
+    //modRuntimeOnly "maven.modrinth:serene-seasons:${serene_seasons_forge_version}"
     modRuntimeOnly "maven.modrinth:glitchcore:0.0.1.1"
+
+    // Ecliptic Seasons
+    modRuntimeOnly "maven.modrinth:ecliptic-seasons:${ecliptic_seasons_version}"
 
     compileOnly project(":common")
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
