@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.4] - 2026-03-26
+
+### Changed
+
+- Changed description of the "Aha!" description to not specifically mention spyglasses.
+- Renamed "content" tab in Cloth Config screen to "commands" for clarity.
+
+### Fixed
+
+- Removed trees from block autopopulates.
+- Fixed invisible Environmental trees on 1.20.1 this time.
+
 ## [1.5.3] - 2026-03-26
 
 ### Fixed
