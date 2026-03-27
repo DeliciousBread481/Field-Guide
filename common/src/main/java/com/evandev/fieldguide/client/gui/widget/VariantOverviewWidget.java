@@ -9,6 +9,9 @@ import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
+import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
+import com.evandev.fieldguide.config.ClientConfig;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
@@ -21,6 +24,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -154,7 +158,20 @@ public class VariantOverviewWidget extends AbstractWidget {
 
             graphics.pose().translate(-centerX, -centerY, 0);
 
-            EntryRenderHelper.renderEntityNormalized(graphics, renderEntity, centerX, centerY, bounds.width(), bounds.height(), isUnlocked, false, 1.0f, false);
+            boolean renderedPhoto = false;
+            if (isUnlocked && Services.PLATFORM.isModLoaded("exposure") && ClientConfig.get().exposureShowPhotographsInGrid) {
+                ItemStack existingPhoto = ProgressManager.getInstance().getPhotograph(entry, variant.id());
+                if (!existingPhoto.isEmpty()) {
+                    ClientExposureCompat.renderPhotographInGrid(graphics, centerX - (bounds.width() / 2), centerY - (bounds.height() / 2), bounds.width(), bounds.height(), existingPhoto);
+                    renderedPhoto = true;
+                } else if (ServerConfig.get().keepSilhouetteWhenUnlocked) {
+                    ClientExposureCompat.renderMissingPhotoBackground(graphics, centerX - (bounds.width() / 2), centerY - (bounds.height() / 2), bounds.width(), bounds.height());
+                }
+            }
+
+            if (!renderedPhoto) {
+                EntryRenderHelper.renderEntityNormalized(graphics, renderEntity, centerX, centerY, bounds.width(), bounds.height(), isUnlocked, false, 1.0f, false);
+            }
 
             float targetScale = (hovered && isUnlocked) ? 1.05f : 1.0f;
             if (deltaTime > 0) {
