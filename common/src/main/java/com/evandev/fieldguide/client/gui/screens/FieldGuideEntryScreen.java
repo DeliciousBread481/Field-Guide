@@ -467,7 +467,6 @@ public class FieldGuideEntryScreen extends BookScreen {
         this.renderFieldGuideBackground(guiGraphics, mouseX, mouseY, partialTick);
 
         guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(0, 0, 50);
 
         guiGraphics.blit(Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
 
