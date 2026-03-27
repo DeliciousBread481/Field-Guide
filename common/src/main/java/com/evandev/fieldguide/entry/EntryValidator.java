@@ -16,7 +16,6 @@ import net.minecraft.world.level.block.Block;
 public class EntryValidator {
 
     public static boolean isValidEntity(EntityType<?> type, ResourceLocation categoryId) {
-        if (!type.canSummon()) return false;
         return BuiltInRegistries.ENTITY_TYPE.getResourceKey(type).flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder).map(h -> {
             if (h.is(ModTags.EntityTypes.BLACKLISTED)) return false;
             if (categoryId != null) {
