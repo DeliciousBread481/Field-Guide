@@ -125,12 +125,11 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
     public boolean isKillToUnlock(ResourceLocation entryId) {
         TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "kill_to_unlock"));
-        TagKey<EntityType<?>> bossesTag = TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "bosses"));
 
         return BuiltInRegistries.ENTITY_TYPE.getOptional(EntryResolver.getRawId(entryId))
                 .flatMap(BuiltInRegistries.ENTITY_TYPE::getResourceKey)
                 .flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder)
-                .map(h -> h.is(killToUnlockTag) || h.is(bossesTag))
+                .map(h -> h.is(killToUnlockTag))
                 .orElse(false);
     }
 
