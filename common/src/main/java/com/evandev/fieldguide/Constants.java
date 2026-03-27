@@ -47,6 +47,7 @@ public class Constants {
     public static final ResourceLocation QUILL_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/quill.png");
     public static final ResourceLocation ATTRIBUTES_SEPARATOR = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes_separator.png");
     public static final ResourceLocation SCANNING_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/scanning.png");
+    public static final ResourceLocation SEASONS_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/seasons.png");
 
     // Attribute Icons
     public static final ResourceLocation HEALTH_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes/health.png");

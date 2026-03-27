@@ -73,8 +73,12 @@ dependencies {
     compileOnly "maven.modrinth:kubejs:${kubejs_version}"
 
     // Serene Seasons
-    implementation "maven.modrinth:serene-seasons:${serene_seasons_neoforge_version}"
+    compileOnly "maven.modrinth:serene-seasons:${serene_seasons_neoforge_version}"
+    //runtimeOnly "maven.modrinth:serene-seasons:${serene_seasons_neoforge_version}"
     runtimeOnly "maven.modrinth:glitchcore:8wmCpbQ2"
+
+    // Ecliptic Seasons
+    //runtimeOnly "maven.modrinth:ecliptic-seasons:${ecliptic_seasons_version}"
 }
 
 publishMods {

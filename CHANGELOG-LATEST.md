@@ -1,3 +1,3 @@
-### Fixed
+### Added
 
-- Fixed issues with Immediately Fast on 1.21.1.
+- Added Ecliptic Seasons and Fabric Seasons integration.

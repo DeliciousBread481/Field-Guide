@@ -1,15 +1,17 @@
 package com.evandev.fieldguide;
 
+import com.evandev.fieldguide.api.seasons.SeasonsAPI;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.ModRenderTypes;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
+import com.evandev.fieldguide.compat.fabricseasons.FabricSeasonsProvider;
 import com.evandev.fieldguide.config.ServerConfig;
-import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.network.SyncCategoriesPacket;
 import com.evandev.fieldguide.network.SyncConfigPacket;
 import com.evandev.fieldguide.network.SyncLootPacket;
+import com.evandev.fieldguide.platform.Services;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -32,6 +34,10 @@ public class FieldGuideFabricClient implements ClientModInitializer {
         FieldGuideClient.init();
         KeyBindingHelper.registerKeyBinding(FieldGuideClient.OPEN_GUIDE_KEY);
         KeyBindingHelper.registerKeyBinding(FieldGuideClient.SCAN_KEY);
+
+        if (Services.PLATFORM.isModLoaded("seasons")) {
+            SeasonsAPI.registerProvider(new FabricSeasonsProvider());
+        }
 
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
             @Override
