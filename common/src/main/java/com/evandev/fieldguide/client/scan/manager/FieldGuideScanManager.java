@@ -140,7 +140,7 @@ public class FieldGuideScanManager {
             state.setScanningPos((state.getScanningTarget() instanceof Block) ? blockHit.getBlockPos() : null);
 
             if (ClientConfig.get().playScanningSound) {
-                Objects.requireNonNull(minecraft.player).playSound(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 0.5F, 1.0F);
+                Objects.requireNonNull(minecraft.player).playSound(SoundEvents.VILLAGER_WORK_CARTOGRAPHER, 0.4F, 1.0F);
             }
             state.setScanTicks(0);
         }
@@ -172,7 +172,7 @@ public class FieldGuideScanManager {
             }
         }
 
-        Objects.requireNonNull(minecraft.player).playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 1.0F);
+        Objects.requireNonNull(minecraft.player).playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 0.25F, 1.0F);
 
         ResourceLocation entryId = ClientFieldGuideManager.getEntryId(targetKey);
         if (entryId != null) {
