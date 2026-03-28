@@ -48,8 +48,8 @@ public class UpdateEntryDataPacket {
         return new UpdateEntryDataPacket(Action.SET_NAME, entryId, variantId != null ? variantId : "", new NameData(name));
     }
 
-    public static UpdateEntryDataPacket setDescription(ResourceLocation entryId, String description) {
-        return new UpdateEntryDataPacket(Action.SET_DESCRIPTION, entryId, "", new DescriptionData(description));
+    public static UpdateEntryDataPacket setDescription(ResourceLocation entryId, String variantId, String description) {
+        return new UpdateEntryDataPacket(Action.SET_DESCRIPTION, entryId, variantId != null ? variantId : "", new DescriptionData(description));
     }
 
     public static UpdateEntryDataPacket setPhotograph(ResourceLocation entryId, int slot, String variantId) {

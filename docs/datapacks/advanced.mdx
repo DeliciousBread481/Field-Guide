@@ -5,7 +5,8 @@ hide_meta: true
 
 ## Discovery Redirects
 
-Sometimes you may want scanning one entity to unlock the entry for a different one. This is useful for entities that have multiple variations or distinct parts (like multi-part bosses) where scanning any part should unlock the main entry.
+Sometimes you may want scanning one entity to unlock the entry for a different one.
+This is useful for entities that have multiple variations or distinct parts (like multi-part bosses) where scanning any part should unlock the main entry.
 
 The redirected block/entity will automatically be removed from categories and will no longer appear as its own entry.
 
@@ -61,7 +62,9 @@ You can define composites by creating a JSON file at:
 
 ## Variants
 
-You can manually define variants for entities using NBT. This is useful for mods that use custom variant systems that Field Guide can't automatically detect.
+You can manually define variants for entities using NBT.
+
+This is useful for mods that use custom variant systems that Field Guide can't automatically detect.
 
 `data/<namespace>/fieldguide/variants/<filename>.json`
 
@@ -87,17 +90,39 @@ You can manually define variants for entities using NBT. This is useful for mods
 ## Biome & Loot Modifiers
 
 Field Guide uses datapacks to modify which biomes and loot drops appear on an entry's page.
+You can target base entities, or specific variants by appending `#variant_id` to the entry identifier.
 
 * **Biome Modifiers:** `data/<namespace>/fieldguide/biome_modifiers/<filename>.json`
 * **Loot Modifiers:** `data/<namespace>/fieldguide/loot_modifiers/<filename>.json`
 
-**Example:**
+**Example: Targeting a Base Entity**
 ```json
 {
   "additions": [
     {
       "entry": "minecraft:cow",
       "value": "minecraft:milk_bucket"
+    }
+  ]
+}
+```
+
+**Example: Targeting Specific Variants**
+
+If you want to isolate specific biomes or drops to a specific variant (like a Desert Villager only showing the Desert biome), use the `#` symbol.
+
+```json
+{
+  "additions": [
+    {
+      "entry": "minecraft:villager#minecraft:desert",
+      "value": "minecraft:desert"
+    }
+  ],
+  "removals": [
+    {
+      "entry": "minecraft:villager#minecraft:desert",
+      "value": "minecraft:plains"
     }
   ]
 }

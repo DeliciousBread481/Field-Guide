@@ -183,11 +183,12 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (ClientFieldGuideManager.isNew(entry)) {
             ClientFieldGuideManager.markAsSeen(entry);
         }
-        setupTextWidgets(unlocked);
+
         setupEntityPreview();
+        setupTextWidgets(unlocked);
 
         if (unlocked) {
-            this.loadedDrops = ClientFieldGuideManager.getInstance().getDrops(entry);
+            this.loadedDrops = ClientFieldGuideManager.getInstance().getDrops(entry, this.initialVariant);
         }
 
         if (!dataLoaded && !isLoadingData) {
@@ -195,7 +196,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             CompletableFuture.runAsync(() -> {
                 loadSpawnBiomes();
                 if (unlocked) {
-                    this.loadedDrops = ClientFieldGuideManager.getInstance().getDrops(entry);
+                    this.loadedDrops = ClientFieldGuideManager.getInstance().getDrops(entry, this.initialVariant);
                 }
                 if (this.minecraft != null) {
                     this.minecraft.execute(() -> {
@@ -293,10 +294,10 @@ public class FieldGuideEntryScreen extends BookScreen {
             int textAreaHeight = this.rightPageBounds.bottom() - 29 - textY;
             int maxLines = textAreaHeight / LINE_HEIGHT;
 
-            String initialDesc = ClientFieldGuideManager.getEntryDescription(entry);
+            String initialDesc = ClientFieldGuideManager.getEntryDescription(entry, this.initialVariant);
             if (!ServerConfig.get().disableEditingDescriptions) {
                 this.descriptionWidget = new BookTextAreaWidget(this.font, textX, textY, textAreaWidth, textAreaHeight, maxLines, LINE_HEIGHT, ClientConfig.get().getTextColorInt(), true, FieldGuideLimits.MAX_ENTRY_DESCRIPTION_LENGTH, initialDesc,
-                        newDesc -> ClientFieldGuideManager.setCustomDescription(entry, newDesc));
+                        newDesc -> ClientFieldGuideManager.setCustomDescription(entry, this.initialVariant, newDesc));
                 this.addRenderableWidget(this.descriptionWidget);
             }
         }
@@ -683,25 +684,14 @@ public class FieldGuideEntryScreen extends BookScreen {
         currentVariantIndex = newIndex;
         this.initialVariant = entityVariants.get(currentVariantIndex).id();
 
-        VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(renderedEntity);
-        if (provider != null) {
-            if (isCobblemon(entry) && this.minecraft != null) {
-                ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-                this.renderedEntity = ClientFieldGuideCobblemonCompat.getDummyVariant(id, this.initialVariant, this.minecraft.level);
-            } else {
-                provider.apply((Mob) renderedEntity, entityVariants.get(currentVariantIndex));
-            }
-        }
-
         if (ServerConfig.get().unlockAllVariants || ClientFieldGuideManager.isVariantUnlocked(entry, this.initialVariant)) {
             ProgressManager.getInstance().setSelectedVariant(entry, this.initialVariant);
         }
 
-        this.activeAttributes = AttributeRegistry.getAttributes(entry, renderedEntity);
-        refreshExposureWidgets();
-        updateVariantTextWidget();
+        this.dataLoaded = false;
+        this.isLoadingData = false;
+        this.refresh();
         this.lastClickTime = System.currentTimeMillis();
-        this.updateWidgetVisibility();
     }
 
     private void setVariantIndex(int index) {
@@ -710,48 +700,20 @@ public class FieldGuideEntryScreen extends BookScreen {
             currentVariantIndex = index;
             this.initialVariant = entityVariants.get(currentVariantIndex).id();
 
-            VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(renderedEntity);
-            if (provider != null) {
-                if (isCobblemon(entry) && this.minecraft != null) {
-                    ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-                    this.renderedEntity = ClientFieldGuideCobblemonCompat.getDummyVariant(id, this.initialVariant, this.minecraft.level);
-                } else {
-                    provider.apply((Mob) renderedEntity, entityVariants.get(currentVariantIndex));
-                }
-            }
-
             if (ServerConfig.get().unlockAllVariants || ClientFieldGuideManager.isVariantUnlocked(entry, this.initialVariant)) {
                 ProgressManager.getInstance().setSelectedVariant(entry, this.initialVariant);
             }
 
-            this.activeAttributes = AttributeRegistry.getAttributes(entry, renderedEntity);
-            refreshExposureWidgets();
-            updateVariantTextWidget();
+            this.dataLoaded = false;
+            this.isLoadingData = false;
+            this.refresh();
             this.lastClickTime = System.currentTimeMillis();
-        }
-    }
-
-    private void updateVariantTextWidget() {
-        if (this.variantWidget != null && !entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) {
-            VariantDef variant = entityVariants.get(currentVariantIndex);
-            String variantId = variant.id();
-            boolean variantUnlocked = ServerConfig.get().unlockAllVariants || ClientFieldGuideManager.isVariantUnlocked(entry, variantId);
-
-            if (!variantUnlocked) {
-                this.variantWidget.setValue("???");
-                this.variantWidget.setEditable(false);
-            } else {
-                String customVariantName = ProgressManager.getInstance().getCustomName(ClientFieldGuideManager.getEntryId(entry).toString() + "#" + variantId);
-                String name = customVariantName != null ? customVariantName : FieldGuideVariantManager.getVariantDisplayName(variant).getString();
-                this.variantWidget.setValue(name);
-                this.variantWidget.setEditable(!ServerConfig.get().disableEditingNames);
-            }
         }
     }
 
     private void loadSpawnBiomes() {
         spawnBiomes.clear();
-        spawnBiomes.addAll(ClientFieldGuideManager.getInstance().getResolvedBiomes(entry));
+        spawnBiomes.addAll(ClientFieldGuideManager.getInstance().getResolvedBiomes(entry, this.initialVariant));
     }
 
     private void setupBiomeWidget(boolean unlocked) {

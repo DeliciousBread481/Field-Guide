@@ -1,9 +1,8 @@
-### Added
-
-- Added support for Alex's Mobs variants.
-
 ### Changed
 
-- Tweaked default configuration for Alex's Mobs.
-- Reduced volume of discovery sound.
-- Reworked scaling algorithm to be more uniform.
+- Variants now support unique descriptions, loot, and biomes.
+    - See the wiki for more information on this.
+
+### Fixed
+
+- Fixed variant attributes not updating when cycling variants.
