@@ -278,46 +278,53 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         if (entryId == null) return Collections.emptyList();
 
         String cacheKey = entryId.toString();
-        if (variantId != null && !variantId.isEmpty()) cacheKey += "#" + variantId;
+        boolean isVariant = variantId != null && !variantId.isEmpty();
+        if (isVariant) cacheKey += "#" + variantId;
 
         if (biomeCache.containsKey(cacheKey)) {
             return biomeCache.get(cacheKey);
         }
 
         List<ResourceLocation> diskBiomes = ClientCacheManager.loadBiomes(entryId);
-        if (diskBiomes != null && (variantId == null || variantId.isEmpty())) {
+
+        if (!isVariant && diskBiomes != null) {
             biomeCache.put(cacheKey, diskBiomes);
             return diskBiomes;
         }
 
-        Object coreEntry = EntryResolver.resolveCoreEntry(entry);
-        boolean isCobblemon = entryId.getNamespace().equals("cobblemon");
-        if (!(coreEntry instanceof EntityType<?>) && !(coreEntry instanceof Block) && !isCobblemon) {
-            return Collections.emptyList();
-        }
-
-        EntryVisual visual = getEntryVisual(entry);
         Set<ResourceLocation> biomes = new LinkedHashSet<>();
 
-        if (visual != null && visual.spawnBiomes != null) {
-            biomes.addAll(visual.spawnBiomes);
-        }
+        if (diskBiomes != null) {
+            biomes.addAll(diskBiomes);
+        } else {
+            Object coreEntry = EntryResolver.resolveCoreEntry(entry);
+            boolean isCobblemon = entryId.getNamespace().equals("cobblemon");
+            if (!(coreEntry instanceof EntityType<?>) && !(coreEntry instanceof Block) && !isCobblemon) {
+                return Collections.emptyList();
+            }
 
-        if (isCobblemon && Services.PLATFORM.isModLoaded("cobblemon")) {
-            biomes.addAll(ClientFieldGuideCobblemonCompat.getCobblemonBiomes(entry));
+            EntryVisual visual = getEntryVisual(entry);
+            if (visual != null && visual.spawnBiomes != null) {
+                biomes.addAll(visual.spawnBiomes);
+            }
+
+            if (isCobblemon && Services.PLATFORM.isModLoaded("cobblemon")) {
+                biomes.addAll(ClientFieldGuideCobblemonCompat.getCobblemonBiomes(entry));
+            }
         }
 
         ClientCategoryManager categoryManager = ClientCategoryManager.getInstance();
 
-        categoryManager.getBiomeRemovals(entry, variantId).forEach(biomes::remove);
         biomes.addAll(categoryManager.getBiomeAdditions(entry, variantId));
+        categoryManager.getBiomeRemovals(entry, variantId).forEach(biomes::remove);
 
         List<ResourceLocation> result = new ArrayList<>(biomes);
         biomeCache.put(cacheKey, result);
 
-        if (variantId == null || variantId.isEmpty()) {
+        if (!isVariant) {
             ClientCacheManager.saveBiomes(entryId, result);
         }
+
         return result;
     }
 

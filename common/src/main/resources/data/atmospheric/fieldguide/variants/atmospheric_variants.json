@@ -1,0 +1,46 @@
+{
+  "entries": [
+    {
+      "id": "minecraft:wolf",
+      "variants": [
+        {
+          "id": "cream",
+          "nbt": "{variant: \"atmospheric:cream\"}"
+        },
+        {
+          "id": "bush",
+          "nbt": "{variant: \"atmospheric:bush\"}"
+        },
+        {
+          "id": "golden",
+          "nbt": "{variant: \"atmospheric:golden\"}"
+        },
+        {
+          "id": "maned",
+          "nbt": "{variant: \"atmospheric:maned\"}"
+        },
+        {
+          "id": "masked",
+          "nbt": "{variant: \"atmospheric:masked\"}"
+        }
+      ]
+    },
+    {
+      "id": "minecraft:camel",
+      "variants": [
+        {
+          "id": "desert",
+          "nbt": "{variant: \"atmospheric:desert\"}"
+        },
+        {
+          "id": "arid",
+          "nbt": "{variant: \"atmospheric:arid\"}"
+        },
+        {
+          "id": "hybrid",
+          "nbt": "{variant: \"atmospheric:hybrid\"}"
+        }
+      ]
+    }
+  ]
+}

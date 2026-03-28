@@ -65,6 +65,159 @@
           "nbt": "{variant: \"minecraft:all_black\"}"
         }
       ]
+    },
+    {
+      "id": "minecraft:wolf",
+      "variants": [
+        {
+          "id": "ashen",
+          "nbt": "{variant: \"minecraft:ashen\"}"
+        },
+        {
+          "id": "black",
+          "nbt": "{variant: \"minecraft:black\"}"
+        },
+        {
+          "id": "chestnut",
+          "nbt": "{variant: \"minecraft:chestnut\"}"
+        },
+        {
+          "id": "pale",
+          "nbt": "{variant: \"minecraft:pale\"}"
+        },
+        {
+          "id": "rusty",
+          "nbt": "{variant: \"minecraft:rusty\"}"
+        },
+        {
+          "id": "snowy",
+          "nbt": "{variant: \"minecraft:snowy\"}"
+        },
+        {
+          "id": "spotted",
+          "nbt": "{variant: \"minecraft:spotted\"}"
+        },
+        {
+          "id": "striped",
+          "nbt": "{variant: \"minecraft:striped\"}"
+        },
+        {
+          "id": "woods",
+          "nbt": "{variant: \"minecraft:woods\"}"
+        },
+        {
+          "id": "gray",
+          "nbt": "{variant: \"environmental:gray\"}"
+        },
+        {
+          "id": "horizon",
+          "nbt": "{variant: \"environmental:horizon\"}"
+        },
+        {
+          "id": "ombre",
+          "nbt": "{variant: \"environmental:ombre\"}"
+        },
+        {
+          "id": "tawny",
+          "nbt": "{variant: \"environmental:tawny\"}"
+        },
+        {
+          "id": "timber",
+          "nbt": "{variant: \"environmental:timber\"}"
+        }
+      ]
+    },
+    {
+      "id": "minecraft:rabbit",
+      "variants": [
+        {
+          "id": "brown",
+          "nbt": "{RabbitType:0}"
+        },
+        {
+          "id": "white",
+          "nbt": "{RabbitType:1}"
+        },
+        {
+          "id": "black",
+          "nbt": "{RabbitType:2}"
+        },
+        {
+          "id": "white_splotched",
+          "nbt": "{RabbitType:3}"
+        },
+        {
+          "id": "gold",
+          "nbt": "{RabbitType:4}"
+        },
+        {
+          "id": "salt_and_pepper",
+          "nbt": "{RabbitType:5}"
+        },
+        {
+          "id": "yellow",
+          "nbt": "{RabbitType:1337}"
+        },
+        {
+          "id": "gray",
+          "nbt": "{RabbitType:9416}"
+        },
+        {
+          "id": "muddy",
+          "nbt": "{RabbitType:9415}"
+        }
+      ]
+    },
+    {
+      "id": "minecraft:cow",
+      "variants": [
+        {
+          "id": "temperate",
+          "nbt": "{variant: \"minecraft:temperate\"}"
+        },
+        {
+          "id": "warm",
+          "nbt": "{variant: \"minecraft:warm\"}"
+        },
+        {
+          "id": "cold",
+          "nbt": "{variant: \"minecraft:cold\"}"
+        }
+      ]
+    },
+    {
+      "id": "minecraft:chicken",
+      "variants": [
+        {
+          "id": "temperate",
+          "nbt": "{variant: \"minecraft:temperate\"}"
+        },
+        {
+          "id": "warm",
+          "nbt": "{variant: \"minecraft:warm\"}"
+        },
+        {
+          "id": "cold",
+          "nbt": "{variant: \"minecraft:cold\"}"
+        }
+      ]
+    },
+    {
+      "id": "minecraft:pig",
+      "variants": [
+        {
+          "id": "temperate",
+          "nbt": "{variant: \"minecraft:temperate\"}"
+        },
+        {
+          "id": "warm",
+          "nbt": "{variant: \"minecraft:warm\"}"
+        },
+        {
+          "id": "cold",
+          "nbt": "{variant: \"minecraft:cold\"}"
+        }
+      ]
     }
   ]
 }
