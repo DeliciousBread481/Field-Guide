@@ -426,7 +426,8 @@ public class FieldGuideEntryScreen extends BookScreen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double deltaX, double deltaY) {
         if (this.variantOverviewWidget != null && this.variantOverviewWidget.isVisible()) {
-            if (this.variantOverviewWidget.mouseScrolled(mouseX, mouseY, deltaX, deltaY)) return true;
+            this.variantOverviewWidget.mouseScrolled(mouseX, mouseY, delta);
+            return true;
         }
 
         if (super.mouseScrolled(mouseX, mouseY, deltaX, deltaY)) return true;
