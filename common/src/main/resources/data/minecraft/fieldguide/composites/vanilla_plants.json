@@ -2,7 +2,7 @@
   "values": [
     {
       "id": "minecraft:oak_sapling",
-      "structure_nbt": "fieldguide:oak",
+      "structure_nbt": "minecraft:oak",
       "components": [
         "minecraft:oak_log",
         "minecraft:oak_leaves"
@@ -10,7 +10,7 @@
     },
     {
       "id": "minecraft:spruce_sapling",
-      "structure_nbt": "fieldguide:spruce",
+      "structure_nbt": "minecraft:spruce",
       "components": [
         "minecraft:spruce_log",
         "minecraft:spruce_leaves"
@@ -18,7 +18,7 @@
     },
     {
       "id": "minecraft:birch_sapling",
-      "structure_nbt": "fieldguide:birch",
+      "structure_nbt": "minecraft:birch",
       "components": [
         "minecraft:birch_log",
         "minecraft:birch_leaves"
@@ -26,7 +26,7 @@
     },
     {
       "id": "minecraft:jungle_sapling",
-      "structure_nbt": "fieldguide:jungle_tree_no_vine",
+      "structure_nbt": "minecraft:jungle_tree_no_vine",
       "components": [
         "minecraft:jungle_log",
         "minecraft:jungle_leaves"
@@ -34,7 +34,7 @@
     },
     {
       "id": "minecraft:acacia_sapling",
-      "structure_nbt": "fieldguide:acacia",
+      "structure_nbt": "minecraft:acacia",
       "components": [
         "minecraft:acacia_log",
         "minecraft:acacia_leaves"
@@ -42,7 +42,7 @@
     },
     {
       "id": "minecraft:dark_oak_sapling",
-      "structure_nbt": "fieldguide:dark_oak",
+      "structure_nbt": "minecraft:dark_oak",
       "components": [
         "minecraft:dark_oak_log",
         "minecraft:dark_oak_leaves"
@@ -50,7 +50,7 @@
     },
     {
       "id": "minecraft:mangrove_propagule",
-      "structure_nbt": "fieldguide:mangrove",
+      "structure_nbt": "minecraft:mangrove",
       "components": [
         "minecraft:mangrove_log",
         "minecraft:mangrove_leaves",
@@ -60,7 +60,7 @@
     },
     {
       "id": "minecraft:cherry_sapling",
-      "structure_nbt": "fieldguide:cherry",
+      "structure_nbt": "minecraft:cherry",
       "components": [
         "minecraft:cherry_log",
         "minecraft:cherry_leaves"
@@ -68,7 +68,7 @@
     },
     {
       "id": "minecraft:azalea_leaves",
-      "structure_nbt": "fieldguide:azalea_tree",
+      "structure_nbt": "minecraft:azalea_tree",
       "components": [
         "minecraft:oak_log",
         "minecraft:azalea_leaves",
@@ -78,7 +78,7 @@
     {
       "id": "fieldguide:huge_crimson_fungus",
       "display": "minecraft:crimson_stem",
-      "structure_nbt": "fieldguide:crimson_fungus",
+      "structure_nbt": "minecraft:crimson_fungus",
       "components": [
         "minecraft:crimson_stem",
         "minecraft:nether_wart_block",
@@ -88,7 +88,7 @@
     {
       "id": "fieldguide:huge_warped_fungus",
       "display": "minecraft:warped_stem",
-      "structure_nbt": "fieldguide:warped_fungus",
+      "structure_nbt": "minecraft:warped_fungus",
       "components": [
         "minecraft:warped_stem",
         "minecraft:warped_wart_block",
@@ -98,7 +98,7 @@
     {
       "id": "fieldguide:huge_brown_mushroom",
       "display": "minecraft:brown_mushroom_block",
-      "structure_nbt": "fieldguide:huge_brown_mushroom",
+      "structure_nbt": "minecraft:huge_brown_mushroom",
       "components": [
         "minecraft:brown_mushroom_block",
         "minecraft:mushroom_stem"
@@ -107,7 +107,7 @@
     {
       "id": "fieldguide:huge_red_mushroom",
       "display": "minecraft:red_mushroom_block",
-      "structure_nbt": "fieldguide:huge_red_mushroom",
+      "structure_nbt": "minecraft:huge_red_mushroom",
       "components": [
         "minecraft:red_mushroom_block",
         "minecraft:mushroom_stem"
@@ -155,7 +155,7 @@
     },
     {
       "id": "minecraft:chorus_plant",
-      "structure_nbt": "fieldguide:chorus_plant",
+      "structure_nbt": "minecraft:chorus_plant",
       "components": [
         "minecraft:chorus_plant",
         "minecraft:chorus_flower"

@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.11] - 2026-03-28
+
+### Added
+
+- Added variant support for additional vanilla variants, Vanilla Backport, Atmospheric, and Environmental (@proxillus).
+
+### Fixed
+
+- Fixed variants cycling while the selector is open, sometimes leading to a crash.
+- Fixed biome removals for variants not working.
+
+## [1.5.10] - 2026-03-27
+
+### Changed
+
+- Variants now support unique descriptions, loot, and biomes.
+    - See the wiki for more information on this.
+
+### Fixed
+
+- Fixed variant attributes not updating when cycling variants.
+
 ## [1.5.9] - 2026-03-27
 
 ### Added
