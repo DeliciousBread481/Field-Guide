@@ -273,7 +273,7 @@ public class FieldGuideVariantManager {
                     (name.contains("Variant") || name.contains("Type") || name.contains("Color")) &&
                     !name.equals("getCollarColor")) {
 
-                if (!m.getReturnType().isEnum()) {
+                if (!m.getReturnType().isEnum() || m.getReturnType().getSimpleName().equals("DyeColor")) {
                     continue;
                 }
 

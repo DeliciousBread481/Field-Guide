@@ -449,22 +449,18 @@ public class EntryRenderHelper {
             float height = entity.getBbHeight();
             float referenceSize = Math.max(width, height);
 
-            float scaleFactor = 1.0F / (referenceSize * referenceSize);
-            float calibrationFactor = 2.0F;
-            scaleFactor *= calibrationFactor;
-
-            float minScale = 0.1F;
-            float maxScale = 0.35F;
-
-            if (referenceSize >= 3.0F) {
-                float extraScaleFactor = 30.0F / referenceSize;
-                scaleFactor *= extraScaleFactor;
-                return Math.min(Math.max(scaleFactor, minScale * extraScaleFactor), maxScale);
-            } else {
-                return Math.min(Math.max(scaleFactor, minScale), maxScale) * 3.5F;
+            if (referenceSize <= 0.01F) {
+                return 1.0F;
             }
+
+            float scaleFactor = (float) Math.sqrt(1.8F / referenceSize);
+            float minScale = 0.2F;
+            float maxScale = 3.5F;
+
+            return Math.max(minScale, Math.min(scaleFactor, maxScale));
+
         } catch (Exception e) {
-            return 0.35F;
+            return 1.0F;
         }
     }
 

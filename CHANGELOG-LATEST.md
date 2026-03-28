@@ -1,6 +1,9 @@
+### Added
+
+- Added support for Alex's Mobs variants.
+
 ### Changed
-- Reduced volume of discovery sound
 
-### Fixed
-
-- Fixed Cobblemon-related server crash.
+- Tweaked default configuration for Alex's Mobs.
+- Reduced volume of discovery sound.
+- Reworked scaling algorithm to be more uniform.

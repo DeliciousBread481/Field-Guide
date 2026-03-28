@@ -25,6 +25,18 @@
       "required": false
     },
     {
+      "id": "alexsmobs:bone_serpent_part",
+      "required": false
+    },
+    {
+      "id": "alexsmobs:murmur_head",
+      "required": false
+    },
+    {
+      "id": "alexsmobs:void_worm_part",
+      "required": false
+    },
+    {
       "id": "alshanex_familiars:blue_bird",
       "required": false
     },
@@ -50,6 +62,14 @@
     },
     {
       "id": "buzzier_bees:grizzly_bear",
+      "required": false
+    },
+    {
+      "id": "cobblemon:pokemon",
+      "required": false
+    },
+    {
+      "id": "cobblemon:npc",
       "required": false
     },
     {
@@ -650,14 +670,6 @@
     },
     {
       "id": "vital_herbs:pedestal_ring",
-      "required": false
-    },
-    {
-      "id": "cobblemon:pokemon",
-      "required": false
-    },
-    {
-      "id": "cobblemon:npc",
       "required": false
     }
   ]

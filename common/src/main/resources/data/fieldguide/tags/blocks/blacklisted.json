@@ -4,6 +4,10 @@
     {
       "id": "environmental:hibiscus_leaves",
       "required": false
+    },
+    {
+      "id": "alexsmobs:banana_peel",
+      "required": false
     }
   ]
 }
