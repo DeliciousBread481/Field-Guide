@@ -1,0 +1,21 @@
+{
+  "entries": [
+    {
+      "id": "environmental:deer",
+      "variants": [
+        {
+          "id": "gray",
+          "nbt": "{variant: \"environmental:gray\"}"
+        },
+        {
+          "id": "chestnut",
+          "nbt": "{variant: \"environmental:chestnut\"}"
+        },
+        {
+          "id": "creamy",
+          "nbt": "{variant: \"environmental:creamy\"}"
+        }
+      ]
+    }
+  ]
+}
