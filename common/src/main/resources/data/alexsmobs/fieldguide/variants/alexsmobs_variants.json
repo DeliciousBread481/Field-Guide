@@ -1,0 +1,381 @@
+{
+  "entries": [
+    {
+      "id": "alexsmobs:lobster",
+      "variants": [
+        {
+          "id": "red",
+          "nbt": "{Variant: 0}"
+        },
+        {
+          "id": "blue",
+          "nbt": "{Variant: 1}"
+        },
+        {
+          "id": "yellow",
+          "nbt": "{Variant: 2}"
+        },
+        {
+          "id": "redblue",
+          "nbt": "{Variant: 3}"
+        },
+        {
+          "id": "black",
+          "nbt": "{Variant: 4}"
+        },
+        {
+          "id": "white",
+          "nbt": "{Variant: 5}"
+        }
+      ]
+    },
+    {
+      "id": "alexsmobs:comb_jelly",
+      "variants": [
+        {
+          "id": "blue",
+          "nbt": "{Variant: 0}"
+        },
+        {
+          "id": "green",
+          "nbt": "{Variant: 1}"
+        },
+        {
+          "id": "red",
+          "nbt": "{Variant: 2}"
+        }
+      ]
+    },
+    {
+      "id": "alexsmobs:toucan",
+      "variants": [
+        {
+          "id": "toco",
+          "nbt": "{Variant: 0}"
+        },
+        {
+          "id": "keel_billed",
+          "nbt": "{Variant: 1}"
+        },
+        {
+          "id": "chestnut_mandibled",
+          "nbt": "{Variant: 2}"
+        },
+        {
+          "id": "yellow_ridged",
+          "nbt": "{Variant: 3}"
+        }
+      ]
+    },
+    {
+      "id": "alexsmobs:seal",
+      "variants": [
+        {
+          "id": "default",
+          "nbt": "{Variant: 0}"
+        },
+        {
+          "id": "spotted",
+          "nbt": "{Variant: 1}"
+        }
+      ]
+    },
+    {
+      "id": "alexsmobs:rain_frog",
+      "variants": [
+        {
+          "id": "default",
+          "nbt": "{Variant: 0}"
+        },
+        {
+          "id": "desert",
+          "nbt": "{Variant: 1}"
+        },
+        {
+          "id": "rainforest",
+          "nbt": "{Variant: 2}"
+        }
+      ]
+    },
+    {
+      "id": "alexsmobs:mantis_shrimp",
+      "variants": [
+        {
+          "id": "peacock",
+          "nbt": "{Variant: 0}"
+        },
+        {
+          "id": "giant",
+          "nbt": "{Variant: 1}"
+        },
+        {
+          "id": "zebra",
+          "nbt": "{Variant: 2}"
+        }
+      ]
+    },
+    {
+      "id": "alexsmobs:hummingbird",
+      "variants": [
+        {
+          "id": "green",
+          "nbt": "{Variant: 0}"
+        },
+        {
+          "id": "blue",
+          "nbt": "{Variant: 1}"
+        },
+        {
+          "id": "purple",
+          "nbt": "{Variant: 2}"
+        }
+      ]
+    },
+    {
+      "id": "alexsmobs:guster",
+      "variants": [
+        {
+          "id": "default",
+          "nbt": "{Variant: 0}"
+        },
+        {
+          "id": "red",
+          "nbt": "{Variant: 1}"
+        },
+        {
+          "id": "soul",
+          "nbt": "{Variant: 2}"
+        }
+      ]
+    },
+    {
+      "id": "alexsmobs:flying_fish",
+      "variants": [
+        {
+          "id": "default",
+          "nbt": "{Variant: 0}"
+        },
+        {
+          "id": "gliding",
+          "nbt": "{Variant: 1}"
+        },
+        {
+          "id": "tropical",
+          "nbt": "{Variant: 2}"
+        }
+      ]
+    },
+    {
+      "id": "alexsmobs:enderiophage",
+      "variants": [
+        {
+          "id": "default",
+          "nbt": "{Variant: 0}"
+        },
+        {
+          "id": "pink",
+          "nbt": "{Variant: 1}"
+        },
+        {
+          "id": "blue",
+          "nbt": "{Variant: 2}"
+        }
+      ]
+    },
+    {
+      "id": "alexsmobs:emu",
+      "variants": [
+        {
+          "id": "default",
+          "nbt": "{Variant: 0}"
+        },
+        {
+          "id": "white",
+          "nbt": "{Variant: 1}"
+        },
+        {
+          "id": "cassowary",
+          "nbt": "{Variant: 2}"
+        }
+      ]
+    },
+    {
+      "id": "alexsmobs:capuchin_monkey",
+      "variants": [
+        {
+          "id": "default",
+          "nbt": "{Variant: 0}"
+        },
+        {
+          "id": "brown",
+          "nbt": "{Variant: 1}"
+        },
+        {
+          "id": "black",
+          "nbt": "{Variant: 2}"
+        },
+        {
+          "id": "white",
+          "nbt": "{Variant: 3}"
+        }
+      ]
+    },
+    {
+      "id": "alexsmobs:banana_slug",
+      "variants": [
+        {
+          "id": "default",
+          "nbt": "{Variant: 0}"
+        },
+        {
+          "id": "green",
+          "nbt": "{Variant: 1}"
+        },
+        {
+          "id": "brown",
+          "nbt": "{Variant: 2}"
+        },
+        {
+          "id": "black",
+          "nbt": "{Variant: 3}"
+        }
+      ]
+    },
+    {
+      "id": "alexsmobs:orca",
+      "variants": [
+        {
+          "id": "default",
+          "nbt": "{Variant: 0}"
+        },
+        {
+          "id": "arctic",
+          "nbt": "{Variant: 1}"
+        }
+      ]
+    },
+    {
+      "id": "alexsmobs:skelewag",
+      "variants": [
+        {
+          "id": "default",
+          "nbt": "{Variant: 0}"
+        },
+        {
+          "id": "novelty_hat",
+          "nbt": "{Variant: 1}"
+        }
+      ]
+    },
+    {
+      "id": "alexsmobs:terrapin",
+      "variants": [
+        {
+          "id": "green",
+          "nbt": "{TurtleType: 0}"
+        },
+        {
+          "id": "black",
+          "nbt": "{TurtleType: 1}"
+        },
+        {
+          "id": "brown",
+          "nbt": "{TurtleType: 2}"
+        },
+        {
+          "id": "painted",
+          "nbt": "{TurtleType: 3}"
+        },
+        {
+          "id": "red_eared",
+          "nbt": "{TurtleType: 4}"
+        },
+        {
+          "id": "overlay",
+          "nbt": "{TurtleType: 5}"
+        },
+        {
+          "id": "koopa",
+          "nbt": "{TurtleType: 6}"
+        }
+      ]
+    },
+    {
+      "id": "alexsmobs:tiger",
+      "variants": [
+        {
+          "id": "default",
+          "nbt": "{White: false}"
+        },
+        {
+          "id": "white",
+          "nbt": "{White: true}"
+        }
+      ]
+    },
+    {
+      "id": "alexsmobs:elephant",
+      "variants": [
+        {
+          "id": "default",
+          "nbt": "{Tusked: false}"
+        },
+        {
+          "id": "tusked",
+          "nbt": "{Tusked: true}"
+        }
+      ]
+    },
+    {
+      "id": "alexsmobs:mimic_octopus",
+      "variants": [
+        {
+          "id": "default",
+          "nbt": "{MimicState: 0}"
+        },
+        {
+          "id": "creeper",
+          "nbt": "{MimicState: 1}"
+        },
+        {
+          "id": "guardian",
+          "nbt": "{MimicState: 2}"
+        },
+        {
+          "id": "pufferfish",
+          "nbt": "{MimicState: 3}"
+        },
+        {
+          "id": "mimicube",
+          "nbt": "{MimicState: 4}"
+        }
+      ]
+    },
+    {
+      "id": "alexsmobs:grizzly_bear",
+      "variants": [
+        {
+          "id": "default",
+          "nbt": "{Snowy: false}"
+        },
+        {
+          "id": "snowy",
+          "nbt": "{Snowy: true}"
+        }
+      ]
+    },
+    {
+      "id": "alexsmobs:tarantula_hawk",
+      "variants": [
+        {
+          "id": "default",
+          "nbt": "{Nether: false}"
+        },
+        {
+          "id": "nether",
+          "nbt": "{Nether: true}"
+        }
+      ]
+    }
+  ]
+}
