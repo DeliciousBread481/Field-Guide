@@ -68,47 +68,6 @@
       ]
     },
     {
-      "id": "minecraft:wolf",
-      "variants": [
-        {
-          "id": "ashen",
-          "nbt": "{variant: \"minecraft:ashen\"}"
-        },
-        {
-          "id": "black",
-          "nbt": "{variant: \"minecraft:black\"}"
-        },
-        {
-          "id": "chestnut",
-          "nbt": "{variant: \"minecraft:chestnut\"}"
-        },
-        {
-          "id": "pale",
-          "nbt": "{variant: \"minecraft:pale\"}"
-        },
-        {
-          "id": "rusty",
-          "nbt": "{variant: \"minecraft:rusty\"}"
-        },
-        {
-          "id": "snowy",
-          "nbt": "{variant: \"minecraft:snowy\"}"
-        },
-        {
-          "id": "spotted",
-          "nbt": "{variant: \"minecraft:spotted\"}"
-        },
-        {
-          "id": "striped",
-          "nbt": "{variant: \"minecraft:striped\"}"
-        },
-        {
-          "id": "woods",
-          "nbt": "{variant: \"minecraft:woods\"}"
-        }
-      ]
-    },
-    {
       "id": "minecraft:rabbit",
       "variants": [
         {
@@ -134,57 +93,6 @@
         {
           "id": "salt_and_pepper",
           "nbt": "{RabbitType:5}"
-        }
-      ]
-    },
-    {
-      "id": "minecraft:cow",
-      "variants": [
-        {
-          "id": "temperate",
-          "nbt": "{variant: \"minecraft:temperate\"}"
-        },
-        {
-          "id": "warm",
-          "nbt": "{variant: \"minecraft:warm\"}"
-        },
-        {
-          "id": "cold",
-          "nbt": "{variant: \"minecraft:cold\"}"
-        }
-      ]
-    },
-    {
-      "id": "minecraft:chicken",
-      "variants": [
-        {
-          "id": "temperate",
-          "nbt": "{variant: \"minecraft:temperate\"}"
-        },
-        {
-          "id": "warm",
-          "nbt": "{variant: \"minecraft:warm\"}"
-        },
-        {
-          "id": "cold",
-          "nbt": "{variant: \"minecraft:cold\"}"
-        }
-      ]
-    },
-    {
-      "id": "minecraft:pig",
-      "variants": [
-        {
-          "id": "temperate",
-          "nbt": "{variant: \"minecraft:temperate\"}"
-        },
-        {
-          "id": "warm",
-          "nbt": "{variant: \"minecraft:warm\"}"
-        },
-        {
-          "id": "cold",
-          "nbt": "{variant: \"minecraft:cold\"}"
         }
       ]
     }
