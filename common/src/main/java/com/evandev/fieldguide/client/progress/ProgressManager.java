@@ -241,15 +241,32 @@ public class ProgressManager {
     }
 
     public String getCustomDescription(Object entry) {
+        return getCustomDescription(entry, null);
+    }
+
+    public String getCustomDescription(Object entry, String variantId) {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
-        return id != null ? customDescriptions.get(id.toString()) : null;
+        if (id == null) return null;
+        String key = id.toString();
+        if (variantId != null && !variantId.isEmpty()) {
+            key += "#" + variantId;
+        }
+        return customDescriptions.get(key);
     }
 
     public void setCustomDescription(Object entry, String desc) {
+        setCustomDescription(entry, null, desc);
+    }
+
+    public void setCustomDescription(Object entry, String variantId, String desc) {
         ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
         if (id != null) {
-            customDescriptions.put(id.toString(), desc);
-            Services.NETWORK.sendToServer(UpdateEntryDataPacket.setDescription(id, desc));
+            String key = id.toString();
+            if (variantId != null && !variantId.isEmpty()) {
+                key += "#" + variantId;
+            }
+            customDescriptions.put(key, desc);
+            Services.NETWORK.sendToServer(UpdateEntryDataPacket.setDescription(id, variantId, desc));
         }
     }
 

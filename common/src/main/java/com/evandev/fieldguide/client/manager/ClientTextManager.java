@@ -21,9 +21,13 @@ public class ClientTextManager {
     }
 
     public String getEntryDescription(Object entry) {
+        return getEntryDescription(entry, null);
+    }
+
+    public String getEntryDescription(Object entry, String variantId) {
         ResourceLocation id = EntryResolver.getEntryId(entry, false);
         if (id == null) return "";
-        String custom = ProgressManager.getInstance().getCustomDescription(entry);
+        String custom = ProgressManager.getInstance().getCustomDescription(entry, variantId);
         if (custom != null) return custom;
 
         if (id.getNamespace().equals("fieldguide") && id.getPath().startsWith("cobblemon/")) {
@@ -35,14 +39,19 @@ public class ClientTextManager {
             if (I18n.exists(descKey)) return I18n.get(descKey);
         }
 
+        if (variantId != null && !variantId.isEmpty()) {
+            String variantKey = "fieldguide." + id.getNamespace() + "." + id.getPath() + "." + variantId + ".description";
+            if (I18n.exists(variantKey)) return I18n.get(variantKey);
+        }
+
         String overrideKey = "fieldguide." + id.getNamespace() + "." + id.getPath() + ".description";
         if (I18n.exists(overrideKey)) return I18n.get(overrideKey);
 
         Object coreEntry = EntryResolver.resolveCoreEntry(entry);
 
         // Entity Descriptions
+        String entityKey = "entity." + id.getNamespace() + "." + id.getPath() + ".description";
         if (coreEntry instanceof EntityType) {
-            String entityKey = "entity." + id.getNamespace() + "." + id.getPath() + ".description";
             if (I18n.exists(entityKey)) return I18n.get(entityKey);
         }
 
@@ -56,7 +65,7 @@ public class ClientTextManager {
         String loreKey = "lore." + id.getNamespace() + "." + id.getPath();
         if (I18n.exists(loreKey)) return I18n.get(loreKey);
 
-        String fallbackKey = (coreEntry instanceof EntityType) ? "entity." + id.getNamespace() + "." + id.getPath() + ".description" : "lore." + id.getNamespace() + "." + id.getPath();
+        String fallbackKey = (coreEntry instanceof EntityType) ? entityKey : loreKey;
         if (coreEntry instanceof Item) {
             fallbackKey = "item." + id.getNamespace() + "." + id.getPath() + ".description";
         }
@@ -100,7 +109,11 @@ public class ClientTextManager {
     }
 
     public void setCustomDescription(Object entry, String desc) {
-        ProgressManager.getInstance().setCustomDescription(entry, desc);
+        ProgressManager.getInstance().setCustomDescription(entry, null, desc);
+    }
+
+    public void setCustomDescription(Object entry, String variantId, String desc) {
+        ProgressManager.getInstance().setCustomDescription(entry, variantId, desc);
     }
 
     public void setCustomName(Object entry, String name) {

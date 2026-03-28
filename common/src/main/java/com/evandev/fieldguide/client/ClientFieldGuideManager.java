@@ -34,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     private static final ClientFieldGuideManager INSTANCE = new ClientFieldGuideManager();
-    private final Map<ResourceLocation, List<ResourceLocation>> biomeCache = new ConcurrentHashMap<>();
+    private final Map<String, List<ResourceLocation>> biomeCache = new ConcurrentHashMap<>();
 
     private ClientFieldGuideManager() {
     }
@@ -78,11 +78,19 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public static String getEntryDescription(Object entry) {
-        return ClientTextManager.getInstance().getEntryDescription(entry);
+        return ClientTextManager.getInstance().getEntryDescription(entry, null);
+    }
+
+    public static String getEntryDescription(Object entry, String variantId) {
+        return ClientTextManager.getInstance().getEntryDescription(entry, variantId);
     }
 
     public static void setCustomDescription(Object entry, String desc) {
-        ClientTextManager.getInstance().setCustomDescription(entry, desc);
+        ClientTextManager.getInstance().setCustomDescription(entry, null, desc);
+    }
+
+    public static void setCustomDescription(Object entry, String variantId, String desc) {
+        ClientTextManager.getInstance().setCustomDescription(entry, variantId, desc);
     }
 
     public static void setCustomName(Object entry, String name) {
@@ -223,7 +231,11 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public List<ItemStack> getDrops(Object entry) {
-        return ClientLootManager.getInstance().getDrops(entry);
+        return ClientLootManager.getInstance().getDrops(entry, null);
+    }
+
+    public List<ItemStack> getDrops(Object entry, String variantId) {
+        return ClientLootManager.getInstance().getDrops(entry, variantId);
     }
 
     public void onClientTick(Minecraft minecraft) {
@@ -258,16 +270,23 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public List<ResourceLocation> getResolvedBiomes(Object entry) {
+        return getResolvedBiomes(entry, null);
+    }
+
+    public List<ResourceLocation> getResolvedBiomes(Object entry, String variantId) {
         ResourceLocation entryId = getEntryId(entry);
         if (entryId == null) return Collections.emptyList();
 
-        if (biomeCache.containsKey(entryId)) {
-            return biomeCache.get(entryId);
+        String cacheKey = entryId.toString();
+        if (variantId != null && !variantId.isEmpty()) cacheKey += "#" + variantId;
+
+        if (biomeCache.containsKey(cacheKey)) {
+            return biomeCache.get(cacheKey);
         }
 
         List<ResourceLocation> diskBiomes = ClientCacheManager.loadBiomes(entryId);
-        if (diskBiomes != null) {
-            biomeCache.put(entryId, diskBiomes);
+        if (diskBiomes != null && (variantId == null || variantId.isEmpty())) {
+            biomeCache.put(cacheKey, diskBiomes);
             return diskBiomes;
         }
 
@@ -289,12 +308,16 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         }
 
         ClientCategoryManager categoryManager = ClientCategoryManager.getInstance();
-        categoryManager.getBiomeRemovals(entry).forEach(biomes::remove);
-        biomes.addAll(categoryManager.getBiomeAdditions(entry));
+
+        categoryManager.getBiomeRemovals(entry, variantId).forEach(biomes::remove);
+        biomes.addAll(categoryManager.getBiomeAdditions(entry, variantId));
 
         List<ResourceLocation> result = new ArrayList<>(biomes);
-        biomeCache.put(entryId, result);
-        ClientCacheManager.saveBiomes(entryId, result);
+        biomeCache.put(cacheKey, result);
+
+        if (variantId == null || variantId.isEmpty()) {
+            ClientCacheManager.saveBiomes(entryId, result);
+        }
         return result;
     }
 

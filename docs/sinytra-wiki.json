@@ -1,0 +1,11 @@
+{
+  "id": "field-guide",
+  "platforms": {
+    "curseforge": "field-guide",
+    "modrinth": "field-guide"
+  },
+  "versions": {
+    "1.20.1": "1.20.1",
+    "1.21.1": "1.21.1"
+  }
+}

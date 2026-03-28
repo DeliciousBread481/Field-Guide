@@ -1,0 +1,41 @@
+---
+title: Troubleshooting
+hide_meta: true
+---
+
+Having issues with the Field Guide? Here are some common problems and their solutions.
+
+### Scanning doesn't work
+
+If you can't scan entities or blocks, check the following:
+* **Scanning Mode:** By default, you must use a **Spyglass** to scan from a distance. You can enable "Naked Eye" scanning in the config.
+* **Scan Key:** Check your keybinds. The scan key must be held down while looking at a target.
+* **Kill to Unlock:** Some entities (like bosses) **cannot** be scanned. You must kill them to unlock their entry.
+* **Blacklist:** Check if the entity/block is blacklisted in the mod's tags (`fieldguide:blacklisted`).
+* **Client-Only Mods:** Some client-side only mods that modify rendering or raytracing might interfere with the scanning mechanic.
+
+### Category is missing
+
+Field Guide automatically hides empty categories. If a category you added is not showing up:
+* **Datapack Path:** Ensure your category JSON is at `data/<namespace>/fieldguide/categories/<name>.json`.
+* **JSON Syntax:** Check for syntax errors (commas, quotes) in your JSON files. [This](https://jsonlint.com/) is a useful site for JSON linting.
+* **Valid Entries:** A category will only show up if at least one of its entries is valid and not blacklisted.
+* **Mod Compatibility:** Some strategies (like `mod:<mod_id>`) will result in an empty list if the target mod is not loaded.
+
+### Loot or Biomes are missing
+
+* **Auto-Detection:** Biomes are auto-detected from mob spawn settings. Loot is auto-detected from loot tables.
+* **Custom Modifiers:** If auto-detection fails, you can manually add biomes or loot using [Modifiers](/project/field-guide/docs/field-guide/datapacks#biome--loot-modifiers).
+* **Sync Issues:** If you're on a server, biome and loot data is synced when you join. If the server is very laggy, it might take a moment to appear.
+
+### Performance issues on server reload
+
+In very large modpacks, the `/reload` command or starting the server might take longer due to Field Guide's data-driven nature.
+* **Biome Expansion:** Using many biome tags (`#minecraft:is_forest`) in modifiers can slow down the initial load.
+* **Auto-Populate Strategies:** Strategies like `mod_items` for mods with thousands of items can be resource-intensive during the initial resolution.
+
+---
+
+### Still having issues?
+
+If you've found a bug or need more help, please report it on our [Issue Tracker](https://github.com/evandev/field-guide/issues).

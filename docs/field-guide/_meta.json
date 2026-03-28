@@ -1,0 +1,10 @@
+{
+  "usage.mdx": "Gameplay & Usage",
+  "configuration.mdx": "Configuration",
+  "commands.mdx": "Commands",
+  "searching.mdx": "Searching",
+  "kubejs.mdx": "KubeJS Integration",
+  "advanced_rendering.mdx": "Advanced Composite Rendering",
+  "resource_packs.mdx": "Resource Packs (Customizing Visuals)",
+  "troubleshooting.mdx": "Troubleshooting"
+}

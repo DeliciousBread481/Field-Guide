@@ -1,0 +1,21 @@
+---
+title: Configuration
+hide_meta: true
+---
+Configuration for the mod is split into two files located in your config folder: `.minecraft/config/fieldguide-client.json` and `.minecraft/config/fieldguide-server.json`.
+
+We highly recommend installing **Cloth Config**.
+The in-game configuration menu provides detailed tooltips for every UI, color, and gameplay option!
+
+### General & UI Settings
+Through the config files or the in-game Cloth Config menu, you can fully customize:
+* **Menu Integrations:** Toggle the Field Guide button in your inventory or pause menus.
+* **Scanning Behavior:** Adjust the required items (e.g., Spyglass), scan duration, max distance, and XP rewards.
+* **Visibility:** Choose whether to hide undiscovered entries, or disable the display of loot and biomes on entry pages.
+* **Colors:** Customize the hex colors of the UI, text, and scanning overlays.
+
+### Scan Commands
+You can configure the server to automatically execute commands when a player successfully scans an entry.
+* `globalScanCommands`: A list of commands run whenever *any* entry is scanned.
+* `categoryScanCommands`: Commands run when entries from a specific category are scanned (Format: `"namespace:category_id": ["/command1", "/command2"]`).
+* `entryScanCommands`: Commands run when a specific entry is scanned (Format: `"namespace:entity_id": ["/command"]`).

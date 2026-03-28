@@ -1,0 +1,104 @@
+---
+title: Datapacks (Customizing Content)
+hide_meta: true
+---
+
+You can add new categories, reorganize existing ones, or add modded entities to the Field Guide using standard Minecraft **Datapacks**.
+
+## Defining Categories
+
+Category files are JSON files located at:
+`data/<namespace>/fieldguide/categories/<filename>.json`
+
+The filename becomes the ID of the category (e.g., `wetlands.json` becomes `<namespace>:wetlands`).
+
+### JSON Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `sort_index` | Integer | Determines the tab order (lower numbers are first). |
+| `icon` | String | (Optional) The Resource Location for the category's tab icon. |
+| `replace` | Boolean | (Optional) If true, clears existing entries in this category before adding new ones. |
+| `contents` | Array | A list of entry objects. |
+
+### Removing Default Categories
+
+To remove a category provided by the mod (or another datapack), create a file with the **same ID** and use `"replace": true` with an empty contents list.
+The Field Guide automatically hides empty categories.
+
+**Example:** Removing the default `monsters` category:
+
+`data/fieldguide/fieldguide/categories/monsters.json`
+
+```json
+{
+  "replace": true,
+  "contents": []
+}
+
+```
+
+### Content Types
+
+1. **Manual Entry:** Adds a specific Entity, Block, or Item.
+
+```json
+{
+  "type": "entry",
+  "id": "minecraft:pig"
+}
+
+```
+
+2. **Auto-Populate:** Automatically adds entries based on a preset strategy.
+
+```json
+{
+  "type": "auto_populate",
+  "strategy": "monsters"
+}
+
+```
+
+*Available Strategies*:
+
+* `animals`: All animals.
+* `monsters`: All monsters.
+* `blocks`: All blocks.
+* `items`: All items (excluding block items).
+* `food`: All edible items.
+* `plants`: All vanilla-like plants.
+* `trees`: Automatically generates tree composites for all saplings in a mod.
+* `mod:<mod_id>`: All entities from a specific mod.
+* `mod_plants:<mod_id>`: All plant-like blocks from a specific mod.
+* `mod_trees:<mod_id>`: All dynamically generated tree structures from a specific mod.
+* `mod_items:<mod_id>`: All items from a specific mod.
+* `mod_blocks:<mod_id>`: All blocks from a specific mod.
+* `tag:<tag_id>`: All entities, blocks and items with a specific tag.
+* `cobblemon`: Automatically populates entries for Cobblemon, if the mod is installed.
+
+3. **Virtual Entry:** Adds an entry that doesn't correspond to a single Entity, Block, or Item.
+
+```json
+{
+  "type": "virtual_entry",
+  "id": "my_mod:my_custom_entry",
+  "virtual_type": "tutorial",
+  "icon": "fieldguide:textures/gui/scanning.png"
+}
+```
+
+### Content Grouping
+
+By default entries in the list appear in the order they were defined in `content: []`. However, if you want similar entries to be grouped together, a list of ['search queries'](/field-guide/searching) can be provided in `group_by`.
+
+```json
+{
+  "replace": false,
+  "group_by": [
+        "tree",
+        "#minecraft:flowers"
+  ],
+  "contents": [...]
+}
+```

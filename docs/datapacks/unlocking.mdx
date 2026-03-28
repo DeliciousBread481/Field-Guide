@@ -1,0 +1,84 @@
+---
+title: Entry Unlocking
+hide_meta: true
+---
+
+By default, most entries are unlocked by scanning them with a Spyglass. Bosses and certain entities are set to "Kill to Unlock" (requiring the player to kill them).
+
+You can customize how an entry is unlocked by adding an `unlock` object to its definition in a category.
+
+```json
+{
+  "type": "entry",
+  "id": "minecraft:cow",
+  "unlock": {
+    "unlocked_by_default": false,
+    "prerequisites": ["minecraft:pig"],
+    "triggers": ["kill", "scan", "obtain"]
+  }
+}
+```
+
+### JSON Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `unlocked_by_default` | Boolean | (Optional) If true, the entry is unlocked automatically as soon as its prerequisites are met. |
+| `prerequisites` | Array | (Optional) A list of entry IDs that must be unlocked before this one can be. |
+| `triggers` | Array | (Optional) A list of event types that can trigger the unlock. If empty or omitted, any supported event will trigger it. |
+| `trigger_on` | Array / String | (Optional) A list of external resource IDs (e.g. `minecraft:warden`, `minecraft:nether_star`) that trigger this entry's unlock. If omitted, the entry's own ID is used as the trigger target. |
+
+### Available Triggers
+* `kill`: Killing the entity.
+* `scan`: Scanning the entity/block with a Spyglass (or taking a photograph if Exposure is installed).
+* `obtain`: Obtaining the item in your inventory.
+* `eat`: Eating the edible item.
+
+**Note:** For auto-populated entries, default unlocking rules still apply unless overridden by an explicit entry definition with an `unlock` object:
+* Entities with the `fieldguide:kill_to_unlock` or `fieldguide:bosses` tag require a `kill`.
+* Blocks and plant-like entries require a `scan`.
+* Non-block items require an `obtain`.
+* Edible items (food) require an `eat`.
+
+### Special Item & Entity Tags
+
+Field Guide uses specific tags to handle default scanning and categorization behaviors. Apply these tags to your mod's entities where appropriate:
+
+* `fieldguide:bosses`: Entities with this tag are excluded from the `monsters` and `animals` auto-populate strategies, and are moved to a special `bosses` category.
+* `fieldguide:kill_to_unlock`: Entities with this tag can't be scanned with a spyglass or the naked eye: the player must kill them to unlock their entry. (Defaults to all bosses). This can be overridden per-entry using the `unlock` object.
+* `fieldguide:eat_to_unlock`: Items with this tag must be eaten to unlock their entry. (Defaults to all edible items). This can be overridden per-entry using the `unlock` object.
+
+---
+
+### Advanced Unlocking
+
+You can use the `trigger_on` field to unlock an entry based on an external action. This is particularly useful for **Virtual Entries** or entries that represent concepts rather than specific objects.
+
+**Example: Unlocking a "Combat Master" virtual entry when killing a Warden:**
+
+```json
+{
+  "type": "virtual_entry",
+  "id": "my_mod:combat_mastery",
+  "virtual_type": "tutorial",
+  "unlock": {
+    "triggers": ["kill"],
+    "trigger_on": "minecraft:warden"
+  }
+}
+```
+
+**Example: Unlocking an entry when obtaining a specific item:**
+
+```json
+{
+  "type": "virtual_entry",
+  "id": "my_mod:nether_expert",
+  "virtual_type": "lore",
+  "unlock": {
+    "triggers": ["obtain"],
+    "trigger_on": "minecraft:nether_star"
+  }
+}
+```
+

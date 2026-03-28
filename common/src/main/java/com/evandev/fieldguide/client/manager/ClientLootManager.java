@@ -4,7 +4,6 @@ import com.evandev.fieldguide.ModDataComponents;
 import com.evandev.fieldguide.api.AutoPopulateRegistry;
 import com.evandev.fieldguide.api.GuideEntry;
 import com.evandev.fieldguide.compat.cobblemon.ClientFieldGuideCobblemonCompat;
-import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.network.RequestLootPacket;
 import com.evandev.fieldguide.platform.Services;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -90,6 +89,10 @@ public class ClientLootManager {
     }
 
     public List<ItemStack> getDrops(Object entry) {
+        return getDrops(entry, null);
+    }
+
+    public List<ItemStack> getDrops(Object entry, String variantId) {
         List<ItemStack> rawDrops = new ArrayList<>();
         if (entry instanceof GuideEntry ge && ge.isComposite()) {
             Set<Object> uniqueComponents = new HashSet<>();

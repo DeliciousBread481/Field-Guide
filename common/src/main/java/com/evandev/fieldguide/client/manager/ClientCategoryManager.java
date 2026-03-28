@@ -203,21 +203,35 @@ public class ClientCategoryManager {
         return lootAdditions;
     }
 
-    public List<ResourceLocation> getBiomeAdditions(Object entry) {
+    public List<ResourceLocation> getBiomeAdditions(Object entry, String variantId) {
         String key = AutoPopulateRegistry.getEntryKey(entry);
-        String baseId = AutoPopulateRegistry.getEntryId(entry, false).toString();
+        String baseId = Objects.requireNonNull(AutoPopulateRegistry.getEntryId(entry, false)).toString();
         List<ResourceLocation> additions = new ArrayList<>();
+
+        if (variantId != null && !variantId.isEmpty()) {
+            if (indexedBiomeAdditions.containsKey(key + "#" + variantId)) additions.addAll(indexedBiomeAdditions.get(key + "#" + variantId));
+            if (indexedBiomeAdditions.containsKey(baseId + "#" + variantId)) additions.addAll(indexedBiomeAdditions.get(baseId + "#" + variantId));
+        }
+
         if (indexedBiomeAdditions.containsKey(key)) additions.addAll(indexedBiomeAdditions.get(key));
         if (indexedBiomeAdditions.containsKey(baseId)) additions.addAll(indexedBiomeAdditions.get(baseId));
+
         return additions;
     }
 
-    public List<ResourceLocation> getBiomeRemovals(Object entry) {
+    public List<ResourceLocation> getBiomeRemovals(Object entry, String variantId) {
         String key = AutoPopulateRegistry.getEntryKey(entry);
-        String baseId = AutoPopulateRegistry.getEntryId(entry, false).toString();
+        String baseId = Objects.requireNonNull(AutoPopulateRegistry.getEntryId(entry, false)).toString();
         List<ResourceLocation> removals = new ArrayList<>();
+
+        if (variantId != null && !variantId.isEmpty()) {
+            if (indexedBiomeRemovals.containsKey(key + "#" + variantId)) removals.addAll(indexedBiomeRemovals.get(key + "#" + variantId));
+            if (indexedBiomeRemovals.containsKey(baseId + "#" + variantId)) removals.addAll(indexedBiomeRemovals.get(baseId + "#" + variantId));
+        }
+
         if (indexedBiomeRemovals.containsKey(key)) removals.addAll(indexedBiomeRemovals.get(key));
         if (indexedBiomeRemovals.containsKey(baseId)) removals.addAll(indexedBiomeRemovals.get(baseId));
+
         return removals;
     }
 
