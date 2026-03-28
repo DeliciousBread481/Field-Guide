@@ -1,0 +1,128 @@
+{
+  "replace": false,
+  "removals": [
+    {
+      "entry": "minecraft:rabbit#gold",
+      "value": [
+        "minecraft:meadow",
+        "minecraft:snowy_plains",
+        "minecraft:snowy_taiga",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:grove",
+        "minecraft:ice_spikes",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:cherry_grove",
+        "minecraft:flower_forest",
+        "minecraft:taiga",
+        "minecraft:snowy_slopes"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#white",
+      "value": [
+        "minecraft:meadow",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:desert",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:cherry_grove",
+        "minecraft:flower_forest",
+        "minecraft:taiga"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#white_splotched",
+      "value": [
+        "minecraft:meadow",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:desert",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:cherry_grove",
+        "minecraft:flower_forest",
+        "minecraft:taiga"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#black",
+      "value": [
+        "minecraft:snowy_plains",
+        "minecraft:snowy_taiga",
+        "minecraft:desert",
+        "minecraft:grove",
+        "minecraft:ice_spikes",
+        "minecraft:snowy_slopes"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#brown",
+      "value": [
+        "minecraft:snowy_plains",
+        "minecraft:snowy_taiga",
+        "minecraft:desert",
+        "minecraft:grove",
+        "minecraft:ice_spikes",
+        "minecraft:snowy_slopes"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#salt_and_pepper",
+      "value": [
+        "minecraft:snowy_plains",
+        "minecraft:snowy_taiga",
+        "minecraft:desert",
+        "minecraft:grove",
+        "minecraft:ice_spikes",
+        "minecraft:snowy_slopes"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#yellow",
+      "value": [
+        "minecraft:meadow",
+        "minecraft:snowy_plains",
+        "minecraft:snowy_taiga",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:desert",
+        "minecraft:grove",
+        "minecraft:ice_spikes",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:cherry_grove",
+        "minecraft:flower_forest",
+        "minecraft:taiga",
+        "minecraft:snowy_slopes"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#gray",
+      "value": [
+        "minecraft:meadow",
+        "minecraft:snowy_plains",
+        "minecraft:snowy_taiga",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:desert",
+        "minecraft:grove",
+        "minecraft:ice_spikes",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:cherry_grove",
+        "minecraft:flower_forest",
+        "minecraft:taiga"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#muddy",
+      "value": [
+        "minecraft:meadow",
+        "minecraft:snowy_plains",
+        "minecraft:snowy_taiga",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:desert",
+        "minecraft:grove",
+        "minecraft:ice_spikes",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:cherry_grove",
+        "minecraft:flower_forest",
+        "minecraft:taiga",
+        "minecraft:snowy_slopes"
+      ]
+    }
+  ]
+}

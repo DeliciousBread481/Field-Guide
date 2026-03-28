@@ -1,0 +1,67 @@
+{
+  "replace": false,
+  "removals": [
+    {
+      "entry": "minecraft:rabbit#gold",
+      "value": [
+        "atmospheric:hot_springs",
+        "atmospheric:aspen_parkland"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#white",
+      "value": [
+        "atmospheric:hot_springs",
+        "atmospheric:aspen_parkland"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#white_splotched",
+      "value": [
+        "atmospheric:hot_springs",
+        "atmospheric:aspen_parkland"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#black",
+      "value": [
+        "atmospheric:hot_springs",
+        "atmospheric:aspen_parkland"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#brown",
+      "value": [
+        "atmospheric:hot_springs",
+        "atmospheric:aspen_parkland"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#salt_and_pepper",
+      "value": [
+        "atmospheric:hot_springs",
+        "atmospheric:aspen_parkland"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#yellow",
+      "value": [
+        "atmospheric:hot_springs"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#gray",
+      "value": [
+        "atmospheric:hot_springs",
+        "atmospheric:aspen_parkland"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#muddy",
+      "value": [
+        "atmospheric:hot_springs",
+        "atmospheric:aspen_parkland"
+      ]
+    }
+  ]
+}

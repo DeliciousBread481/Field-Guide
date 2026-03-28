@@ -1,0 +1,247 @@
+{
+  "replace": false,
+  "removals": [
+    {
+      "entry": "minecraft:wolf#ashen",
+      "value": [
+        "atmospheric:sparse_rainforest",
+        "atmospheric:hot_springs",
+        "atmospheric:sparse_rainforest_basin",
+        "atmospheric:kousa_jungle",
+        "atmospheric:aspen_parkland",
+        "atmospheric:rainforest_basin",
+        "atmospheric:rainforest",
+        "atmospheric:laurel_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#black",
+      "value": [
+        "atmospheric:sparse_rainforest",
+        "atmospheric:hot_springs",
+        "atmospheric:sparse_rainforest_basin",
+        "atmospheric:kousa_jungle",
+        "atmospheric:aspen_parkland",
+        "atmospheric:rainforest_basin",
+        "atmospheric:rainforest",
+        "atmospheric:laurel_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#chestnut",
+      "value": [
+        "atmospheric:sparse_rainforest",
+        "atmospheric:hot_springs",
+        "atmospheric:sparse_rainforest_basin",
+        "atmospheric:kousa_jungle",
+        "atmospheric:aspen_parkland",
+        "atmospheric:rainforest_basin",
+        "atmospheric:rainforest",
+        "atmospheric:laurel_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#pale",
+      "value": [
+        "atmospheric:sparse_rainforest",
+        "atmospheric:hot_springs",
+        "atmospheric:sparse_rainforest_basin",
+        "atmospheric:kousa_jungle",
+        "atmospheric:aspen_parkland",
+        "atmospheric:rainforest_basin",
+        "atmospheric:rainforest",
+        "atmospheric:laurel_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#rusty",
+      "value": [
+        "atmospheric:sparse_rainforest",
+        "atmospheric:hot_springs",
+        "atmospheric:sparse_rainforest_basin",
+        "atmospheric:kousa_jungle",
+        "atmospheric:aspen_parkland",
+        "atmospheric:rainforest_basin",
+        "atmospheric:rainforest",
+        "atmospheric:laurel_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#snowy",
+      "value": [
+        "atmospheric:sparse_rainforest",
+        "atmospheric:hot_springs",
+        "atmospheric:sparse_rainforest_basin",
+        "atmospheric:kousa_jungle",
+        "atmospheric:aspen_parkland",
+        "atmospheric:rainforest_basin",
+        "atmospheric:rainforest",
+        "atmospheric:laurel_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#spotted",
+      "value": [
+        "atmospheric:sparse_rainforest",
+        "atmospheric:hot_springs",
+        "atmospheric:sparse_rainforest_basin",
+        "atmospheric:kousa_jungle",
+        "atmospheric:aspen_parkland",
+        "atmospheric:rainforest_basin",
+        "atmospheric:rainforest",
+        "atmospheric:laurel_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#striped",
+      "value": [
+        "atmospheric:sparse_rainforest",
+        "atmospheric:hot_springs",
+        "atmospheric:sparse_rainforest_basin",
+        "atmospheric:kousa_jungle",
+        "atmospheric:aspen_parkland",
+        "atmospheric:rainforest_basin",
+        "atmospheric:rainforest",
+        "atmospheric:laurel_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#woods",
+      "value": [
+        "atmospheric:sparse_rainforest",
+        "atmospheric:hot_springs",
+        "atmospheric:sparse_rainforest_basin",
+        "atmospheric:kousa_jungle",
+        "atmospheric:aspen_parkland",
+        "atmospheric:rainforest_basin",
+        "atmospheric:rainforest",
+        "atmospheric:laurel_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#gray",
+      "value": [
+        "atmospheric:sparse_rainforest",
+        "atmospheric:hot_springs",
+        "atmospheric:sparse_rainforest_basin",
+        "atmospheric:kousa_jungle",
+        "atmospheric:aspen_parkland",
+        "atmospheric:rainforest_basin",
+        "atmospheric:rainforest",
+        "atmospheric:laurel_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#horizon",
+      "value": [
+        "atmospheric:sparse_rainforest",
+        "atmospheric:hot_springs",
+        "atmospheric:sparse_rainforest_basin",
+        "atmospheric:kousa_jungle",
+        "atmospheric:aspen_parkland",
+        "atmospheric:rainforest_basin",
+        "atmospheric:rainforest",
+        "atmospheric:laurel_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#ombre",
+      "value": [
+        "atmospheric:sparse_rainforest",
+        "atmospheric:hot_springs",
+        "atmospheric:sparse_rainforest_basin",
+        "atmospheric:kousa_jungle",
+        "atmospheric:aspen_parkland",
+        "atmospheric:rainforest_basin",
+        "atmospheric:rainforest",
+        "atmospheric:laurel_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#tawny",
+      "value": [
+        "atmospheric:sparse_rainforest",
+        "atmospheric:hot_springs",
+        "atmospheric:sparse_rainforest_basin",
+        "atmospheric:kousa_jungle",
+        "atmospheric:aspen_parkland",
+        "atmospheric:rainforest_basin",
+        "atmospheric:rainforest",
+        "atmospheric:laurel_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#timber",
+      "value": [
+        "atmospheric:sparse_rainforest",
+        "atmospheric:hot_springs",
+        "atmospheric:sparse_rainforest_basin",
+        "atmospheric:kousa_jungle",
+        "atmospheric:aspen_parkland",
+        "atmospheric:rainforest_basin",
+        "atmospheric:rainforest",
+        "atmospheric:laurel_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#bush",
+      "value": [
+        "atmospheric:sparse_rainforest",
+        "atmospheric:hot_springs",
+        "atmospheric:sparse_rainforest_basin",
+        "atmospheric:kousa_jungle",
+        "atmospheric:aspen_parkland",
+        "atmospheric:rainforest_basin",
+        "atmospheric:laurel_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#cream",
+      "value": [
+        "atmospheric:sparse_rainforest",
+        "atmospheric:hot_springs",
+        "atmospheric:sparse_rainforest_basin",
+        "atmospheric:kousa_jungle",
+        "atmospheric:aspen_parkland",
+        "atmospheric:rainforest_basin",
+        "atmospheric:rainforest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#golden",
+      "value": [
+        "atmospheric:sparse_rainforest",
+        "atmospheric:hot_springs",
+        "atmospheric:sparse_rainforest_basin",
+        "atmospheric:kousa_jungle",
+        "atmospheric:rainforest_basin",
+        "atmospheric:rainforest",
+        "atmospheric:laurel_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#maned",
+      "value": [
+        "atmospheric:hot_springs",
+        "atmospheric:sparse_rainforest_basin",
+        "atmospheric:kousa_jungle",
+        "atmospheric:aspen_parkland",
+        "atmospheric:rainforest_basin",
+        "atmospheric:rainforest",
+        "atmospheric:laurel_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#masked",
+      "value": [
+        "atmospheric:sparse_rainforest",
+        "atmospheric:hot_springs",
+        "atmospheric:sparse_rainforest_basin",
+        "atmospheric:aspen_parkland",
+        "atmospheric:rainforest_basin",
+        "atmospheric:rainforest",
+        "atmospheric:laurel_forest"
+      ]
+    }
+  ]
+}

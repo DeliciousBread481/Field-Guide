@@ -1,0 +1,262 @@
+{
+  "replace": false,
+  "removals": [
+    {
+      "entry": "minecraft:wolf#ashen",
+      "value": [
+        "minecraft:forest",
+        "minecraft:sparse_jungle",
+        "minecraft:wooded_badlands",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:savanna_plateau",
+        "minecraft:taiga",
+        "minecraft:grove"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#black",
+      "value": [
+        "minecraft:forest",
+        "minecraft:sparse_jungle",
+        "minecraft:wooded_badlands",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:savanna_plateau",
+        "minecraft:taiga",
+        "minecraft:grove",
+        "minecraft:snowy_taiga"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#chestnut",
+      "value": [
+        "minecraft:forest",
+        "minecraft:sparse_jungle",
+        "minecraft:wooded_badlands",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:savanna_plateau",
+        "minecraft:taiga",
+        "minecraft:grove",
+        "minecraft:snowy_taiga"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#pale",
+      "value": [
+        "minecraft:forest",
+        "minecraft:sparse_jungle",
+        "minecraft:wooded_badlands",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:savanna_plateau",
+        "minecraft:grove",
+        "minecraft:snowy_taiga"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#rusty",
+      "value": [
+        "minecraft:forest",
+        "minecraft:wooded_badlands",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:savanna_plateau",
+        "minecraft:taiga",
+        "minecraft:grove",
+        "minecraft:snowy_taiga"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#snowy",
+      "value": [
+        "minecraft:forest",
+        "minecraft:sparse_jungle",
+        "minecraft:wooded_badlands",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:savanna_plateau",
+        "minecraft:taiga",
+        "minecraft:snowy_taiga"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#spotted",
+      "value": [
+        "minecraft:forest",
+        "minecraft:sparse_jungle",
+        "minecraft:wooded_badlands",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:taiga",
+        "minecraft:grove",
+        "minecraft:snowy_taiga"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#striped",
+      "value": [
+        "minecraft:forest",
+        "minecraft:sparse_jungle",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:savanna_plateau",
+        "minecraft:taiga",
+        "minecraft:grove",
+        "minecraft:snowy_taiga"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#woods",
+      "value": [
+        "minecraft:sparse_jungle",
+        "minecraft:wooded_badlands",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:savanna_plateau",
+        "minecraft:taiga",
+        "minecraft:grove",
+        "minecraft:snowy_taiga"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#gray",
+      "value": [
+        "minecraft:forest",
+        "minecraft:sparse_jungle",
+        "minecraft:wooded_badlands",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:savanna_plateau",
+        "minecraft:taiga",
+        "minecraft:grove",
+        "minecraft:snowy_taiga"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#horizon",
+      "value": [
+        "minecraft:forest",
+        "minecraft:sparse_jungle",
+        "minecraft:wooded_badlands",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:savanna_plateau",
+        "minecraft:taiga",
+        "minecraft:grove",
+        "minecraft:snowy_taiga"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#ombre",
+      "value": [
+        "minecraft:forest",
+        "minecraft:sparse_jungle",
+        "minecraft:wooded_badlands",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:savanna_plateau",
+        "minecraft:taiga",
+        "minecraft:grove",
+        "minecraft:snowy_taiga"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#tawny",
+      "value": [
+        "minecraft:forest",
+        "minecraft:sparse_jungle",
+        "minecraft:wooded_badlands",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:savanna_plateau",
+        "minecraft:taiga",
+        "minecraft:grove",
+        "minecraft:snowy_taiga"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#timber",
+      "value": [
+        "minecraft:forest",
+        "minecraft:sparse_jungle",
+        "minecraft:wooded_badlands",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:savanna_plateau",
+        "minecraft:taiga",
+        "minecraft:grove",
+        "minecraft:snowy_taiga"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#bush",
+      "value": [
+        "minecraft:forest",
+        "minecraft:sparse_jungle",
+        "minecraft:wooded_badlands",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:savanna_plateau",
+        "minecraft:taiga",
+        "minecraft:grove",
+        "minecraft:snowy_taiga"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#cream",
+      "value": [
+        "minecraft:forest",
+        "minecraft:sparse_jungle",
+        "minecraft:wooded_badlands",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:savanna_plateau",
+        "minecraft:taiga",
+        "minecraft:grove",
+        "minecraft:snowy_taiga"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#golden",
+      "value": [
+        "minecraft:forest",
+        "minecraft:sparse_jungle",
+        "minecraft:wooded_badlands",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:savanna_plateau",
+        "minecraft:taiga",
+        "minecraft:grove",
+        "minecraft:snowy_taiga"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#maned",
+      "value": [
+        "minecraft:forest",
+        "minecraft:sparse_jungle",
+        "minecraft:wooded_badlands",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:savanna_plateau",
+        "minecraft:taiga",
+        "minecraft:grove",
+        "minecraft:snowy_taiga"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#masked",
+      "value": [
+        "minecraft:forest",
+        "minecraft:sparse_jungle",
+        "minecraft:wooded_badlands",
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:old_growth_spruce_taiga",
+        "minecraft:savanna_plateau",
+        "minecraft:taiga",
+        "minecraft:grove",
+        "minecraft:snowy_taiga"
+      ]
+    }
+  ]
+}
