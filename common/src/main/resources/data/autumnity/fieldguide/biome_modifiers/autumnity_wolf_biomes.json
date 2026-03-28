@@ -1,0 +1,119 @@
+{
+  "replace": false,
+  "removals": [
+    {
+      "entry": "minecraft:wolf#ashen",
+      "value": [
+        "autumnity:maple_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#black",
+      "value": [
+        "autumnity:maple_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#chestnut",
+      "value": [
+        "autumnity:maple_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#pale",
+      "value": [
+        "autumnity:maple_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#rusty",
+      "value": [
+        "autumnity:maple_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#snowy",
+      "value": [
+        "autumnity:maple_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#spotted",
+      "value": [
+        "autumnity:maple_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#striped",
+      "value": [
+        "autumnity:maple_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#woods",
+      "value": [
+        "autumnity:maple_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#gray",
+      "value": [
+        "autumnity:maple_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#horizon",
+      "value": [
+        "autumnity:maple_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#ombre",
+      "value": [
+        "autumnity:maple_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#tawny",
+      "value": [
+        "autumnity:maple_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#timber",
+      "value": [
+        "autumnity:maple_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#bush",
+      "value": [
+        "autumnity:maple_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#cream",
+      "value": [
+        "autumnity:maple_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#golden",
+      "value": [
+        "autumnity:maple_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#maned",
+      "value": [
+        "autumnity:maple_forest"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#masked",
+      "value": [
+        "autumnity:maple_forest"
+      ]
+    }
+  ]
+}

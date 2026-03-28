@@ -1,0 +1,190 @@
+{
+  "replace": false,
+  "removals": [
+    {
+      "entry": "minecraft:wolf#ashen",
+      "value": [
+        "environmental:snowy_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_slopes",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#black",
+      "value": [
+        "environmental:snowy_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_slopes",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#chestnut",
+      "value": [
+        "environmental:snowy_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_slopes",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#pale",
+      "value": [
+        "environmental:snowy_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_slopes",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#rusty",
+      "value": [
+        "environmental:snowy_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_slopes",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#snowy",
+      "value": [
+        "environmental:snowy_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_slopes",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#spotted",
+      "value": [
+        "environmental:snowy_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_slopes",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#striped",
+      "value": [
+        "environmental:snowy_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_slopes",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#woods",
+      "value": [
+        "environmental:snowy_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_slopes",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#gray",
+      "value": [
+        "environmental:snowy_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:pine_slopes",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#horizon",
+      "value": [
+        "environmental:pine_barrens",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_slopes",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#ombre",
+      "value": [
+        "environmental:snowy_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:old_growth_pine_barrens",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#tawny",
+      "value": [
+        "environmental:snowy_pine_barrens",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_slopes",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#timber",
+      "value": [
+        "environmental:snowy_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_slopes"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#bush",
+      "value": [
+        "environmental:snowy_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_slopes",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#cream",
+      "value": [
+        "environmental:snowy_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_slopes",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#golden",
+      "value": [
+        "environmental:snowy_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_slopes",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#maned",
+      "value": [
+        "environmental:snowy_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_slopes",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:wolf#masked",
+      "value": [
+        "environmental:snowy_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_slopes",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    }
+  ]
+}

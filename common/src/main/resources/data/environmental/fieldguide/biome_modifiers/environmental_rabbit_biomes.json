@@ -1,0 +1,103 @@
+{
+  "replace": false,
+  "removals": [
+    {
+      "entry": "minecraft:rabbit#gold",
+      "value": [
+        "environmental:marsh",
+        "environmental:pine_slopes",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:snowy_pine_barrens",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#white",
+      "value": [
+        "environmental:marsh",
+        "environmental:pine_slopes",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:snowy_pine_barrens",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#white_splotched",
+      "value": [
+        "environmental:marsh",
+        "environmental:pine_slopes",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:snowy_pine_barrens",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#black",
+      "value": [
+        "environmental:marsh",
+        "environmental:pine_slopes",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:snowy_pine_barrens",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#brown",
+      "value": [
+        "environmental:marsh",
+        "environmental:pine_slopes",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:snowy_pine_barrens",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#salt_and_pepper",
+      "value": [
+        "environmental:marsh",
+        "environmental:pine_slopes",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:snowy_pine_barrens",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#yellow",
+      "value": [
+        "environmental:marsh",
+        "environmental:pine_slopes",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:snowy_pine_barrens",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#gray",
+      "value": [
+        "environmental:marsh",
+        "environmental:pine_slopes",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:snowy_pine_barrens",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    },
+    {
+      "entry": "minecraft:rabbit#muddy",
+      "value": [
+        "environmental:pine_slopes",
+        "environmental:old_growth_pine_barrens",
+        "environmental:pine_barrens",
+        "environmental:snowy_pine_barrens",
+        "environmental:snowy_old_growth_pine_barrens"
+      ]
+    }
+  ]
+}
