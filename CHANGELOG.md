@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.12] - 2026-03-28
+
+### Added
+
+- Added default configurations and variant support for No Man's Land.
+
+### Fixed
+
+- Fixed No Man's Land Deer rendering.
+- Fixed overlapping tooltip on the Seasons icons.
+
 ## [1.5.11] - 2026-03-28
 
 ### Added

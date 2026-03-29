@@ -637,6 +637,8 @@ public class FieldGuideEntryScreen extends BookScreen {
         int startX = x - (totalWidth / 2);
         int startY = y + 42;
 
+        Season hoveredSeason = null;
+
         for (int i = 0; i < seasons.size(); i++) {
             Season season = seasons.get(i);
             int drawX = startX + (i * (iconSize + spacing));
@@ -669,8 +671,12 @@ public class FieldGuideEntryScreen extends BookScreen {
             RenderSystem.disableBlend();
 
             if (hovered) {
-                guiGraphics.renderTooltip(this.font, season.getDisplayName(), mouseX, mouseY);
+                hoveredSeason = season;
             }
+        }
+
+        if (hoveredSeason != null) {
+            guiGraphics.renderTooltip(this.font, hoveredSeason.getDisplayName(), mouseX, mouseY);
         }
     }
 
