@@ -85,6 +85,10 @@ dependencies {
     // Ecliptic Seasons
     modRuntimeOnly "maven.modrinth:ecliptic-seasons:${ecliptic_seasons_version}"
 
+    // Dawn Era
+    modCompileOnly "maven.modrinth:the-dawn-era:0.642"
+    modCompileOnly "maven.modrinth:astemirlib:1.25"
+
     compileOnly project(":common")
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
 }

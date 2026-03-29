@@ -1,3 +1,3 @@
-### Fixed
+### Added
 
-- Fixed overlapping tooltip on the Seasons icons.
+- Added support for The Dawn Era (Legacy).

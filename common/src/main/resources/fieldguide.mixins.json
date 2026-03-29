@@ -13,6 +13,7 @@
     "accessor.ConstantValueAccessor",
     "accessor.CriteriaTriggersAccessor",
     "accessor.EntityAccessor",
+    "accessor.EntityRenderDispatcherAccessor",
     "accessor.LootItemAccessor",
     "accessor.LootPoolAccessor",
     "accessor.LootPoolEntryContainerAccessor",

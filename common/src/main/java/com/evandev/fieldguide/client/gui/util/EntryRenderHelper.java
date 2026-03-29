@@ -207,6 +207,7 @@ public class EntryRenderHelper {
 
     private static void renderEntity(Entity entity, Object entrySource, boolean isPage, float yRotation) {
         setupFieldGuideEntityLighting();
+        Services.CLIENT.preRenderEntity(entity);
         EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(entrySource);
 
         float visualScale = getVisualScale(visual, isPage);
@@ -273,12 +274,16 @@ public class EntryRenderHelper {
 
         try {
             float partialTicks = Minecraft.getInstance().getFrameTime();
-            entityRenderDispatcher.render(entity, 0, 0, 0, 0.0F, partialTicks, pose, buffers, LightTexture.FULL_BRIGHT);
+            if (!Services.CLIENT.renderEntity(entity, 0, 0, 0, 0.0F, partialTicks, pose, buffers, LightTexture.FULL_BRIGHT)) {
+                entityRenderDispatcher.render(entity, 0, 0, 0, 0.0F, partialTicks, pose, buffers, LightTexture.FULL_BRIGHT);
+            }
         } catch (Exception e) {
             Constants.LOG.error("Failed to render entity in Field Guide: {}", entrySource, e);
         } finally {
             entityRenderDispatcher.setRenderHitBoxes(previousHitboxState);
             buffers.endBatch();
+
+            Services.CLIENT.postRenderEntity(entity);
 
             if (Services.PLATFORM.isModLoaded("entity_model_features")) {
                 try {
