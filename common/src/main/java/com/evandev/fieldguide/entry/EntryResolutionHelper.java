@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -23,7 +24,7 @@ public class EntryResolutionHelper {
             GuideEntry entry = allEntries.get(entryId);
             if (entry == null) continue;
 
-            if (entry.isAutoPopulate()) {
+            if (entry.isAutoPopulate() && entry.strategy() != null) {
                 for (Object obj : AutoPopulateRegistry.getEntries(entry.strategy(), categoryId)) {
                     String key = AutoPopulateRegistry.getEntryKey(obj);
                     if (!key.isEmpty() && !addedKeys.contains(key)) {
@@ -67,12 +68,24 @@ public class EntryResolutionHelper {
             foundEntries.addAll(groupedEntries);
         }
 
+        return getResolvedEntries(redirects, foundEntries);
+    }
+
+    private static @NotNull List<Object> getResolvedEntries(Map<ResourceLocation, ResourceLocation> redirects, Set<Object> foundEntries) {
         List<Object> resolved = new ArrayList<>(foundEntries);
         resolved.removeIf(e -> {
             ResourceLocation id = getEntryId(e);
-            return id != null && redirects.containsKey(id);
+            if (id != null && redirects.containsKey(id)) {
+                ResourceLocation targetId = redirects.get(id);
+                if (targetId != null) {
+                    ResourceLocation rawTargetId = EntryResolver.getRawId(targetId);
+                    return BuiltInRegistries.ITEM.containsKey(rawTargetId) ||
+                            BuiltInRegistries.BLOCK.containsKey(rawTargetId) ||
+                            BuiltInRegistries.ENTITY_TYPE.containsKey(rawTargetId);
+                }
+            }
+            return false;
         });
-
         return resolved;
     }
 

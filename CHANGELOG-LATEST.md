@@ -1,3 +1,7 @@
-### Added
+### Changed
 
-- Added support for The Dawn Era (Legacy).
+- Redirects are now gracefully ignored if the target mod is missing.
+
+### Fixed
+
+- Fixed redirects not working properly.
