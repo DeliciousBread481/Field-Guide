@@ -93,7 +93,9 @@ public class PlayerFieldGuideProgress {
         if (!canUnlock(entryId)) return;
 
         EntryUnlockData unlockData = ServerFieldGuideManager.getInstance().getUnlockData(entryId);
-        if (unlockData.triggers().isEmpty() || unlockData.triggers().contains(trigger)) {
+        boolean isDefaultScan = unlockData.triggers().isEmpty() && trigger == EntryUnlockData.UnlockTrigger.SCAN;
+
+        if (isDefaultScan || unlockData.triggers().contains(trigger)) {
             unlock(player, entryId, variantId, true);
         }
     }
