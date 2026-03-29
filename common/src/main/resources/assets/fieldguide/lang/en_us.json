@@ -44,7 +44,7 @@
   "option.fieldguide.hide_undiscovered_from_search.tooltip": "If enabled, undiscovered entries will be hidden from search results.",
 
   "option.fieldguide.disable_scanning": "Disable Scanning",
-  "option.fieldguide.disable_scanning.tooltip": "If enabled, you will no longer be able to scan blocks or entities with spyglasses.",
+  "option.fieldguide.disable_scanning.tooltip": "If enabled, you will no longer be able to scan entries with spyglasses.",
 
   "option.fieldguide.scan_speed": "Scanning Speed",
   "option.fieldguide.scan_speed.tooltip": "The time in seconds it takes to scan an entry.",
@@ -131,7 +131,10 @@
   "option.fieldguide.use_real_world_date.tooltip": "If true, discovery dates are shown using the real-world date instead of the in-game day.",
 
   "option.fieldguide.play_scanning_sound": "Play Scanning Sound",
-  "option.fieldguide.play_scanning_sound.tooltip": "If false, the scribbling noise played when scanning entities will be disabled.",
+  "option.fieldguide.play_scanning_sound.tooltip": "If false, the scribbling noise played when scanning entries will be disabled.",
+
+  "option.fieldguide.play_unlock_sound": "Play Unlock Sound",
+  "option.fieldguide.play_unlock_sound.tooltip": "If false, the ding sound when unlocking a new entry will be disabled.",
 
   "option.fieldguide.disable_loot_display": "Disable Loot Display",
   "option.fieldguide.disable_loot_display.tooltip": "Hides the drops grid in Field Guide entries.",
@@ -164,10 +167,10 @@
   "option.fieldguide.show_toasts.tooltip": "Whether to show a toast notification when a new entry is discovered.",
 
   "option.fieldguide.keep_silhouette": "Keep Silhouette When Unlocked",
-  "option.fieldguide.keep_silhouette.tooltip": "If enabled, entities and blocks will still be displayed as silhouettes even after they've been discovered.",
+  "option.fieldguide.keep_silhouette.tooltip": "If enabled, entries will still be displayed as silhouettes even after they've been discovered.",
 
   "option.fieldguide.unlock_variants": "Unlock All Variants",
-  "option.fieldguide.unlock_variants.tooltip": "If enabled, all variants of an entity will be unlocked after they've been discovered.",
+  "option.fieldguide.unlock_variants.tooltip": "If enabled, all variants of an entry will be unlocked after they've been discovered.",
 
   "category.fieldguide.exposure": "Exposure Integration",
 
@@ -183,7 +186,7 @@
   "option.fieldguide.exposure.add_photograph_button.tooltip": "If enabled, a button will appear in the entry screen allowing you to attach an existing photograph from your inventory.",
 
   "option.fieldguide.exposure.unlock_via_photograph": "Unlock Entries via Photos",
-  "option.fieldguide.exposure.unlock_via_photograph.tooltip": "If enabled, taking or developing a photo of entities or blocks will automatically unlock its entry in the Field Guide.",
+  "option.fieldguide.exposure.unlock_via_photograph.tooltip": "If enabled, taking or developing a photo of entries will automatically unlock its entry in the Field Guide.",
 
   "option.fieldguide.exposure.show_photographs_in_grid": "Show Photos in Category Grid",
   "option.fieldguide.exposure.show_photographs_in_grid.tooltip": "If enabled, the category grid will display a photograph instead of the standard model.",

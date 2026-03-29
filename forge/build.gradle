@@ -80,7 +80,7 @@ dependencies {
     // Serene Seasons
     modCompileOnly "maven.modrinth:serene-seasons:${serene_seasons_forge_version}"
     //modRuntimeOnly "maven.modrinth:serene-seasons:${serene_seasons_forge_version}"
-    modRuntimeOnly "maven.modrinth:glitchcore:0.0.1.1"
+    //modRuntimeOnly "maven.modrinth:glitchcore:0.0.1.1"
 
     // Ecliptic Seasons
     modRuntimeOnly "maven.modrinth:ecliptic-seasons:${ecliptic_seasons_version}"

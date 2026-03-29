@@ -169,7 +169,9 @@ public class FieldGuideScanManager {
             }
         }
 
-        Objects.requireNonNull(minecraft.player).playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 0.25F, 1.0F);
+        if (ClientConfig.get().playUnlockSound) {
+            Objects.requireNonNull(minecraft.player).playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 0.25F, 1.0F);
+        }
 
         ResourceLocation entryId = ClientFieldGuideManager.getEntryId(targetKey);
         if (entryId != null) {
