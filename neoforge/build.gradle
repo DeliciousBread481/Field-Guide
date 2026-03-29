@@ -74,7 +74,7 @@ dependencies {
 
     // Serene Seasons
     compileOnly "maven.modrinth:serene-seasons:${serene_seasons_neoforge_version}"
-    //runtimeOnly "maven.modrinth:serene-seasons:${serene_seasons_neoforge_version}"
+    runtimeOnly "maven.modrinth:serene-seasons:${serene_seasons_neoforge_version}"
     runtimeOnly "maven.modrinth:glitchcore:8wmCpbQ2"
 
     // Ecliptic Seasons

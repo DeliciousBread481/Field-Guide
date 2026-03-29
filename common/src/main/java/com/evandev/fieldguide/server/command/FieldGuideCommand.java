@@ -4,12 +4,12 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.api.variant.VariantDef;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
+import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
-import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -104,8 +104,9 @@ public class FieldGuideCommand {
                                                             if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
                                                                 variants.addAll(FieldGuideCobblemonCompat.getVariantIds(entryId));
                                                             } else {
-                                                                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(EntryResolver.getRawId(entryId));
-                                                                if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
+                                                                ResourceLocation rawId = EntryResolver.getRawId(entryId);
+                                                                if (BuiltInRegistries.ENTITY_TYPE.containsKey(rawId)) {
+                                                                    EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(rawId);
                                                                     variants.addAll(FieldGuideVariantManager.getVariantIds(type, ctx.getSource().getLevel()));
                                                                 }
                                                             }
@@ -150,8 +151,9 @@ public class FieldGuideCommand {
                                                             if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
                                                                 variants.addAll(FieldGuideCobblemonCompat.getVariantIds(entryId));
                                                             } else {
-                                                                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(EntryResolver.getRawId(entryId));
-                                                                if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
+                                                                ResourceLocation rawId = EntryResolver.getRawId(entryId);
+                                                                if (BuiltInRegistries.ENTITY_TYPE.containsKey(rawId)) {
+                                                                    EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(rawId);
                                                                     variants.addAll(FieldGuideVariantManager.getVariantIds(type, ctx.getSource().getLevel()));
                                                                 }
                                                             }
@@ -185,8 +187,9 @@ public class FieldGuideCommand {
                     return targets.size();
                 }
             } else {
-                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(EntryResolver.getRawId(entryId));
-                if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
+                ResourceLocation rawId = EntryResolver.getRawId(entryId);
+                if (BuiltInRegistries.ENTITY_TYPE.containsKey(rawId)) {
+                    EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(rawId);
                     List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, source.getLevel());
                     if (!variants.isEmpty()) {
                         for (ServerPlayer player : targets) {
@@ -233,8 +236,9 @@ public class FieldGuideCommand {
                     return targets.size();
                 }
             } else {
-                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(EntryResolver.getRawId(entryId));
-                if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
+                ResourceLocation rawId = EntryResolver.getRawId(entryId);
+                if (BuiltInRegistries.ENTITY_TYPE.containsKey(rawId)) {
+                    EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(rawId);
                     List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, source.getLevel());
                     if (!variants.isEmpty()) {
                         for (ServerPlayer player : targets) {
@@ -288,8 +292,9 @@ public class FieldGuideCommand {
                 progress.unlock(player, entryId, variantId, true);
             }
         } else {
-            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(EntryResolver.getRawId(entryId));
-            if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
+            ResourceLocation rawId = EntryResolver.getRawId(entryId);
+            if (BuiltInRegistries.ENTITY_TYPE.containsKey(rawId)) {
+                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(rawId);
                 List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, level);
                 for (VariantDef variant : variants) {
                     progress.unlock(player, entryId, variant.id(), true);
@@ -307,8 +312,9 @@ public class FieldGuideCommand {
                 progress.revoke(entryId + "#" + variantId);
             }
         } else {
-            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(EntryResolver.getRawId(entryId));
-            if (type != BuiltInRegistries.ENTITY_TYPE.get(BuiltInRegistries.ENTITY_TYPE.getDefaultKey())) {
+            ResourceLocation rawId = EntryResolver.getRawId(entryId);
+            if (BuiltInRegistries.ENTITY_TYPE.containsKey(rawId)) {
+                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(rawId);
                 List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, level);
                 for (VariantDef variant : variants) {
                     progress.revoke(entryId + "#" + variant.id());

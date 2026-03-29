@@ -5,3 +5,4 @@
 ### Fixed
 
 - Fixed No Man's Land Deer rendering.
+- Fixed overlapping tooltip on the Seasons icons.

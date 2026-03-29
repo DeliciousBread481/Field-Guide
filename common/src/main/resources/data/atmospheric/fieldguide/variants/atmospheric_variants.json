@@ -5,23 +5,23 @@
       "id": "minecraft:wolf",
       "variants": [
         {
-          "id": "cream",
+          "id": "atmospheric:cream",
           "nbt": "{variant: \"atmospheric:cream\"}"
         },
         {
-          "id": "bush",
+          "id": "atmospheric:bush",
           "nbt": "{variant: \"atmospheric:bush\"}"
         },
         {
-          "id": "golden",
+          "id": "atmospheric:golden",
           "nbt": "{variant: \"atmospheric:golden\"}"
         },
         {
-          "id": "maned",
+          "id": "atmospheric:maned",
           "nbt": "{variant: \"atmospheric:maned\"}"
         },
         {
-          "id": "masked",
+          "id": "atmospheric:masked",
           "nbt": "{variant: \"atmospheric:masked\"}"
         }
       ]
@@ -30,15 +30,15 @@
       "id": "minecraft:camel",
       "variants": [
         {
-          "id": "desert",
+          "id": "atmospheric:desert",
           "nbt": "{variant: \"atmospheric:desert\"}"
         },
         {
-          "id": "arid",
+          "id": "atmospheric:arid",
           "nbt": "{variant: \"atmospheric:arid\"}"
         },
         {
-          "id": "hybrid",
+          "id": "atmospheric:hybrid",
           "nbt": "{variant: \"atmospheric:hybrid\"}"
         }
       ]
@@ -47,7 +47,7 @@
       "id": "minecraft:rabbit",
       "variants": [
         {
-          "id": "yellow",
+          "id": "atmospheric:yellow",
           "nbt": "{RabbitType:1337}"
         }
       ]

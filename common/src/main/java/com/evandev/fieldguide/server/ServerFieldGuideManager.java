@@ -3,6 +3,7 @@ package com.evandev.fieldguide.server;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.*;
 import com.evandev.fieldguide.api.variant.DatapackVariant;
+import com.evandev.fieldguide.api.variant.VariantConditionEvaluator;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.config.ServerConfig;
@@ -610,6 +611,14 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                     if (json.has("entries")) {
                         for (JsonElement el : GsonHelper.getAsJsonArray(json, "entries")) {
                             JsonObject obj = el.getAsJsonObject();
+
+                            if (obj.has("conditions")) {
+                                JsonArray conditions = GsonHelper.getAsJsonArray(obj, "conditions");
+                                if (!VariantConditionEvaluator.evaluateAll(conditions)) {
+                                    continue;
+                                }
+                            }
+
                             ResourceLocation entityId = ResourceLocation.parse(GsonHelper.getAsString(obj, "id"));
 
                             List<DatapackVariant> variantList = data.variants.computeIfAbsent(entityId, k -> new ArrayList<>());

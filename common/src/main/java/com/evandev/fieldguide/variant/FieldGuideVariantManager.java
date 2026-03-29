@@ -3,6 +3,7 @@ package com.evandev.fieldguide.variant;
 import com.evandev.fieldguide.api.variant.DatapackVariant;
 import com.evandev.fieldguide.api.variant.VariantDef;
 import com.evandev.fieldguide.api.variant.VariantProvider;
+import com.evandev.fieldguide.platform.Services;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
@@ -116,50 +117,27 @@ public class FieldGuideVariantManager {
         }
     }
 
-    private static class CompositeVariantProvider<T extends Mob> implements VariantProvider<T> {
-        private final List<VariantProvider<T>> providers = new ArrayList<>();
-
-        public CompositeVariantProvider(VariantProvider<T> first) {
-            providers.add(first);
-        }
-
-        public void addProvider(VariantProvider<T> provider) {
-            providers.add(provider);
-        }
-
-        @Override
-        public List<VariantDef> getVariants(T entity) {
-            return providers.stream()
-                    .flatMap(p -> p.getVariants(entity).stream())
-                    .distinct()
-                    .toList();
-        }
-
-        @Override
-        public void apply(T entity, VariantDef def) {
-            for (VariantProvider<T> p : providers) {
-                p.apply(entity, def);
-            }
-        }
-
-        @Override
-        public VariantDef getCurrent(T entity) {
-            for (VariantProvider<T> p : providers) {
-                VariantDef current = p.getCurrent(entity);
-                if (current != null && !current.id().equals("default")) return current;
-            }
-            return new VariantDef("default", null);
-        }
-
-        @Override
-        public String getCacheKey(T entity) {
-            return providers.stream().map(p -> p.getCacheKey(entity)).collect(Collectors.joining("_"));
-        }
-    }
-
     public static void setDatapackVariants(Map<ResourceLocation, List<DatapackVariant>> variants) {
         DATAPACK_VARIANTS.clear();
-        DATAPACK_VARIANTS.putAll(variants);
+
+        variants.forEach((entityId, datapackVariants) -> {
+            if (!entityId.getNamespace().equals("minecraft") && !Services.PLATFORM.isModLoaded(entityId.getNamespace())) {
+                return;
+            }
+
+            List<DatapackVariant> validVariants = datapackVariants.stream().filter(variant -> {
+                if (variant.id().contains(":")) {
+                    String modId = variant.id().substring(0, variant.id().indexOf(':'));
+                    return modId.equals("minecraft") || Services.PLATFORM.isModLoaded(modId);
+                }
+                return true;
+            }).toList();
+
+            if (!validVariants.isEmpty()) {
+                DATAPACK_VARIANTS.put(entityId, validVariants);
+            }
+        });
+
         VARIANT_CACHE.clear();
         ENTITY_TYPE_VARIANT_CACHE.clear();
     }
@@ -169,37 +147,56 @@ public class FieldGuideVariantManager {
         if (!(entity instanceof Mob mob)) return null;
 
         ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
+        VariantProvider<T> datapackProvider = null;
         if (DATAPACK_VARIANTS.containsKey(entityId)) {
-            return (VariantProvider<T>) getDatapackProvider(entityId);
+            datapackProvider = (VariantProvider<T>) getDatapackProvider(entityId);
         }
 
-        VariantProvider<T> provider = getProvider((Class<T>) mob.getClass());
-        if (provider == null && !FAILED_REFLECTION.contains(mob.getClass())) {
-            provider = (VariantProvider<T>) getReflectionProvider(mob);
-            if (provider != null) {
-                registerProvider((Class<T>) mob.getClass(), provider);
+        VariantProvider<T> classProvider = getProvider((Class<T>) mob.getClass());
+        if (classProvider == null && !FAILED_REFLECTION.contains(mob.getClass())) {
+            classProvider = (VariantProvider<T>) getReflectionProvider(mob);
+            if (classProvider != null) {
+                registerProvider((Class<T>) mob.getClass(), classProvider);
             } else {
                 FAILED_REFLECTION.add(mob.getClass());
             }
         }
-        return provider;
+
+        if (datapackProvider != null && classProvider != null) {
+            CompositeVariantProvider<T> composite = new CompositeVariantProvider<>(datapackProvider);
+            composite.addProvider(classProvider);
+            return composite;
+        }
+
+        return datapackProvider != null ? datapackProvider : classProvider;
     }
 
     @SuppressWarnings("unchecked")
     public static <T extends Mob> VariantProvider<T> getProvider(Class<T> entityClass) {
-        if (VillagerDataHolder.class.isAssignableFrom(entityClass)) {
-            return (VariantProvider<T>) getVillagerProvider();
-        }
-
+        List<VariantProvider<T>> matching = new ArrayList<>();
         Class<?> clazz = entityClass;
-        while (clazz != null && clazz != Mob.class && clazz != Object.class) {
+        while (clazz != null && clazz != Object.class) {
             if (PROVIDERS.containsKey(clazz)) {
-                return (VariantProvider<T>) PROVIDERS.get(clazz);
+                matching.add((VariantProvider<T>) PROVIDERS.get(clazz));
             }
+            if (clazz == Mob.class) break;
             clazz = clazz.getSuperclass();
         }
 
-        return null;
+        if (matching.isEmpty()) {
+            if (VillagerDataHolder.class.isAssignableFrom(entityClass)) {
+                return (VariantProvider<T>) getVillagerProvider();
+            }
+            return null;
+        }
+
+        if (matching.size() == 1) return matching.getFirst();
+
+        CompositeVariantProvider<T> composite = new CompositeVariantProvider<>(matching.getFirst());
+        for (int i = 1; i < matching.size(); i++) {
+            composite.addProvider(matching.get(i));
+        }
+        return composite;
     }
 
     public static List<VariantDef> getVariants(Entity entity) {
@@ -291,6 +288,11 @@ public class FieldGuideVariantManager {
                 }
                 return new VariantDef("default", null);
             }
+
+            @Override
+            public String getCacheKey(Mob entity) {
+                return BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()) + "_datapack";
+            }
         };
     }
 
@@ -374,5 +376,46 @@ public class FieldGuideVariantManager {
             }
         }
         return null;
+    }
+
+    private static class CompositeVariantProvider<T extends Mob> implements VariantProvider<T> {
+        private final List<VariantProvider<T>> providers = new ArrayList<>();
+
+        public CompositeVariantProvider(VariantProvider<T> first) {
+            providers.add(first);
+        }
+
+        public void addProvider(VariantProvider<T> provider) {
+            providers.add(provider);
+        }
+
+        @Override
+        public List<VariantDef> getVariants(T entity) {
+            return providers.stream()
+                    .flatMap(p -> p.getVariants(entity).stream())
+                    .distinct()
+                    .toList();
+        }
+
+        @Override
+        public void apply(T entity, VariantDef def) {
+            for (VariantProvider<T> p : providers) {
+                p.apply(entity, def);
+            }
+        }
+
+        @Override
+        public VariantDef getCurrent(T entity) {
+            for (VariantProvider<T> p : providers) {
+                VariantDef current = p.getCurrent(entity);
+                if (current != null && !current.id().equals("default")) return current;
+            }
+            return new VariantDef("default", null);
+        }
+
+        @Override
+        public String getCacheKey(T entity) {
+            return providers.stream().map(p -> p.getCacheKey(entity)).collect(Collectors.joining("_"));
+        }
     }
 }

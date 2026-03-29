@@ -5,15 +5,15 @@
       "id": "environmental:deer",
       "variants": [
         {
-          "id": "gray",
+          "id": "environmental:gray",
           "nbt": "{variant: \"environmental:gray\"}"
         },
         {
-          "id": "chestnut",
+          "id": "environmental:chestnut",
           "nbt": "{variant: \"environmental:chestnut\"}"
         },
         {
-          "id": "creamy",
+          "id": "environmental:creamy",
           "nbt": "{variant: \"environmental:creamy\"}"
         }
       ]
@@ -22,23 +22,23 @@
       "id": "minecraft:wolf",
       "variants": [
         {
-          "id": "gray",
+          "id": "environmental:gray",
           "nbt": "{variant: \"environmental:gray\"}"
         },
         {
-          "id": "horizon",
+          "id": "environmental:horizon",
           "nbt": "{variant: \"environmental:horizon\"}"
         },
         {
-          "id": "ombre",
+          "id": "environmental:ombre",
           "nbt": "{variant: \"environmental:ombre\"}"
         },
         {
-          "id": "tawny",
+          "id": "environmental:tawny",
           "nbt": "{variant: \"environmental:tawny\"}"
         },
         {
-          "id": "timber",
+          "id": "environmental:timber",
           "nbt": "{variant: \"environmental:timber\"}"
         }
       ]
@@ -47,11 +47,11 @@
       "id": "minecraft:rabbit",
       "variants": [
         {
-          "id": "gray",
+          "id": "environmental:gray",
           "nbt": "{RabbitType:9416}"
         },
         {
-          "id": "muddy",
+          "id": "environmental:muddy",
           "nbt": "{RabbitType:9415}"
         }
       ]

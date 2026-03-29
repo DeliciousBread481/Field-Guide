@@ -174,6 +174,13 @@ public class VariantOverviewWidget extends AbstractWidget {
                 EntryRenderHelper.renderEntityNormalized(graphics, renderEntity, centerX, centerY, bounds.width(), bounds.height(), isUnlocked, false, 1.0f, false);
             }
 
+            if (provider != null && renderedEntity instanceof Mob mob && originalVariant != null) {
+                boolean isCobblemon = Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(renderedEntity);
+                if (!isCobblemon) {
+                    provider.apply(mob, originalVariant);
+                }
+            }
+
             float targetScale = (hovered && isUnlocked) ? 1.05f : 1.0f;
             if (deltaTime > 0) {
                 float speed = 10.0f;
