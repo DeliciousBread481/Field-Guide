@@ -17,7 +17,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -25,7 +24,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.BlockHitResult;
 
 import java.util.Objects;
-import java.util.Optional;
 
 public class FieldGuideScanManager {
     public static final int FADE_DURATION = 10;
@@ -157,17 +155,16 @@ public class FieldGuideScanManager {
             ResourceLocation redirectId = ClientFieldGuideManager.getInstance().getRedirect(targetId);
             if (redirectId != null) {
                 ResourceLocation rawRedirectId = EntryResolver.getRawId(redirectId);
-                Optional<EntityType<?>> entityType = BuiltInRegistries.ENTITY_TYPE.getOptional(rawRedirectId);
-                if (entityType.isPresent()) {
-                    targetKey = entityType.get();
-                } else {
-                    Optional<Block> block = BuiltInRegistries.BLOCK.getOptional(rawRedirectId);
-                    if (block.isPresent()) targetKey = block.get();
-                }
 
-                Object resolvedTarget = ClientFieldGuideManager.getInstance().getEntryForTarget(targetKey);
-                if (resolvedTarget != null) {
-                    targetKey = resolvedTarget;
+                Object newTargetKey = BuiltInRegistries.ENTITY_TYPE.getOptional(rawRedirectId)
+                        .map(Object.class::cast)
+                        .or(() -> BuiltInRegistries.ITEM.getOptional(rawRedirectId))
+                        .or(() -> BuiltInRegistries.BLOCK.getOptional(rawRedirectId))
+                        .orElse(null);
+
+                if (newTargetKey != null) {
+                    Object resolvedTarget = ClientFieldGuideManager.getInstance().getEntryForTarget(newTargetKey);
+                    targetKey = Objects.requireNonNullElse(resolvedTarget, newTargetKey);
                 }
             }
         }

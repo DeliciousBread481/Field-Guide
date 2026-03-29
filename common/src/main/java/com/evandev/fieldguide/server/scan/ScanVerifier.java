@@ -1,11 +1,11 @@
 package com.evandev.fieldguide.server.scan;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.ModTags;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ServerConfig;
-import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.entry.EntryResolver;
-import com.evandev.fieldguide.ModTags;
+import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
@@ -130,8 +130,21 @@ public class ScanVerifier {
     private static boolean targetBelongsToEntry(ResourceLocation scannedTargetId, ResourceLocation entryId) {
         if (scannedTargetId.equals(entryId)) return true;
 
+        ResourceLocation rawScannedId = EntryResolver.getRawId(scannedTargetId);
+        ResourceLocation rawEntryId = EntryResolver.getRawId(entryId);
+
+        if (rawScannedId != null && rawScannedId.equals(rawEntryId)) return true;
         ResourceLocation redirected = ServerFieldGuideManager.getInstance().getRedirects().get(scannedTargetId);
-        if (redirected != null && redirected.equals(entryId)) return true;
+
+        if (redirected == null && rawScannedId != null) {
+            redirected = ServerFieldGuideManager.getInstance().getRedirects().get(rawScannedId);
+        }
+
+        if (redirected != null) {
+            if (redirected.equals(entryId) || EntryResolver.getRawId(redirected).equals(rawEntryId)) {
+                return true;
+            }
+        }
 
         return ServerFieldGuideManager.getInstance().isTargetInEntry(scannedTargetId, entryId);
     }

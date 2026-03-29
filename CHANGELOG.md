@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.14] - 2026-03-29
+
+### Changed
+
+- Redirects are now gracefully ignored if the target mod is missing.
+
+### Fixed
+
+- Fixed redirects not working properly.
+- Fixed `/fieldguide export` for JSONs not working properly on Fabric 1.21.
+
+## [1.5.13] - 2026-03-29
+
+### Added
+
+- Added support for The Dawn Era (Legacy).
+
 ## [1.5.12] - 2026-03-28
 
 ### Added

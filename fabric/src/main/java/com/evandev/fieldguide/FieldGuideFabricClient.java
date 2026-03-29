@@ -7,10 +7,7 @@ import com.evandev.fieldguide.client.ModRenderTypes;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.compat.fabricseasons.FabricSeasonsProvider;
 import com.evandev.fieldguide.config.ServerConfig;
-import com.evandev.fieldguide.network.ProgressUpdatePacket;
-import com.evandev.fieldguide.network.SyncCategoriesPacket;
-import com.evandev.fieldguide.network.SyncConfigPacket;
-import com.evandev.fieldguide.network.SyncLootPacket;
+import com.evandev.fieldguide.network.*;
 import com.evandev.fieldguide.platform.Services;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.fabricmc.api.ClientModInitializer;
@@ -99,6 +96,10 @@ public class FieldGuideFabricClient implements ClientModInitializer {
                 ServerConfig synced = ServerConfig.fromJson(packet.configJson());
                 ServerConfig.setSyncedConfig(synced);
             });
+        });
+
+        ClientPlayNetworking.registerGlobalReceiver(ExportContentPacket.TYPE, (payload, context) -> {
+            context.client().execute(payload::handleClient);
         });
 
         CoreShaderRegistrationCallback.EVENT.register(context -> {

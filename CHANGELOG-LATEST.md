@@ -1,8 +1,8 @@
-### Added
+### Changed
 
-- Added default configurations and variant support for No Man's Land.
+- Redirects are now gracefully ignored if the target mod is missing.
 
 ### Fixed
 
-- Fixed No Man's Land Deer rendering.
-- Fixed overlapping tooltip on the Seasons icons.
+- Fixed redirects not working properly.
+- Fixed `/fieldguide export` for JSONs not working properly on Fabric 1.21.
