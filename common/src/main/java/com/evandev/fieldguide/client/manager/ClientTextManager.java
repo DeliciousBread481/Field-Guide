@@ -40,7 +40,7 @@ public class ClientTextManager {
         }
 
         if (variantId != null && !variantId.isEmpty()) {
-            String variantKey = "fieldguide." + id.getNamespace() + "." + id.getPath() + "." + variantId + ".description";
+            String variantKey = "fieldguide." + id.getNamespace() + "." + id.getPath() + "." + variantId.toLowerCase(java.util.Locale.ROOT) + ".description";
             if (I18n.exists(variantKey)) return I18n.get(variantKey);
         }
 
@@ -72,7 +72,7 @@ public class ClientTextManager {
         return I18n.exists(fallbackKey) ? I18n.get(fallbackKey) : I18n.get("fieldguide.description.missing");
     }
 
-    public Component getDefaultNameComponent(Object entry) {
+    public Component getDefaultNameComponent(Object entry, String variantId) {
         ResourceLocation id = EntryResolver.getEntryId(entry, false);
         if (id != null) {
             if (id.getNamespace().equals("fieldguide") && id.getPath().startsWith("cobblemon/")) {
@@ -83,6 +83,13 @@ public class ClientTextManager {
                 String nameKey = "cobblemon.species." + species + ".name";
                 if (I18n.exists(nameKey)) {
                     return Component.translatable(nameKey);
+                }
+            }
+
+            if (variantId != null && !variantId.isEmpty()) {
+                String variantKey = "fieldguide.name." + id.getNamespace() + "." + id.getPath() + "." + variantId.toLowerCase(java.util.Locale.ROOT);
+                if (I18n.exists(variantKey)) {
+                    return Component.translatable(variantKey);
                 }
             }
 
@@ -108,6 +115,17 @@ public class ClientTextManager {
         return Component.translatable("fieldguide.unknown");
     }
 
+    public Component getDefaultNameComponent(Object entry) {
+        return getDefaultNameComponent(entry, null);
+    }
+
+    public Component getEntryName(Object entry, String variantId) {
+        String custom = ProgressManager.getInstance().getCustomName(entry.toString() + (variantId != null ? "#" + variantId : ""));
+        if (custom != null) return Component.literal(custom);
+
+        return getDefaultNameComponent(entry, variantId);
+    }
+
     public void setCustomDescription(Object entry, String desc) {
         ProgressManager.getInstance().setCustomDescription(entry, null, desc);
     }
@@ -121,10 +139,7 @@ public class ClientTextManager {
     }
 
     public Component getEntryName(Object entry) {
-        String custom = ProgressManager.getInstance().getCustomName(entry);
-        if (custom != null) return Component.literal(custom);
-
-        return getDefaultNameComponent(entry);
+        return getEntryName(entry, null);
     }
 
     public String getDefaultName(Object entry) {

@@ -1,8 +1,7 @@
-### Changed
+### Added
 
-- Redirects are now gracefully ignored if the target mod is missing.
+- Added a config option to disable the scanning ding sound.
 
 ### Fixed
 
-- Fixed redirects not working properly.
-- Fixed `/fieldguide export` for JSONs not working properly on Fabric 1.21.
+- Fixed export format for entries with variants.

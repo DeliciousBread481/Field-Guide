@@ -30,6 +30,7 @@ public class ClientConfig {
     public int scanIconXOffset = 30;
     public boolean showScanIcon = true;
     public boolean playScanningSound = true;
+    public boolean playUnlockSound = true;
 
     public String scanOverlayColor = "#F9EED0";
     public double scanOverlayAlpha = 0.5D;

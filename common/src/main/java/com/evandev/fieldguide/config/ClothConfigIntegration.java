@@ -200,6 +200,12 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> clientConfig.playScanningSound = newValue)
                 .build());
 
+        interfaceCat.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.play_unlock_sound"), clientConfig.playUnlockSound)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.fieldguide.play_unlock_sound.tooltip"))
+                .setSaveConsumer(newValue -> clientConfig.playUnlockSound = newValue)
+                .build());
+
         interfaceCat.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.show_scan_icon"), clientConfig.showScanIcon)
                 .setDefaultValue(true)
                 .setTooltip(Component.translatable("option.fieldguide.show_scan_icon.tooltip"))

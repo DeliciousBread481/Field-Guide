@@ -412,15 +412,25 @@ public class ProgressManager {
 
             if (exportNames) {
                 for (Map.Entry<String, String> entry : customNames.entrySet()) {
-                    ResourceLocation id = ResourceLocation.parse(entry.getKey());
-                    String key = BuiltInRegistries.ENTITY_TYPE.containsKey(id) ? "entity." + id.getNamespace() + "." + id.getPath() : "block." + id.getNamespace() + "." + id.getPath();
-                    langJson.addProperty(key, entry.getValue());
+                    String[] parts = entry.getKey().split("#", 2);
+                    ResourceLocation id = ResourceLocation.parse(parts[0]);
+
+                    if (parts.length > 1) { // variant
+                        String variantSuffix = parts[1].toLowerCase(Locale.ROOT);
+                        langJson.addProperty("fieldguide.name." + id.getNamespace() + "." + id.getPath() + "." + variantSuffix, entry.getValue());
+                    } else { // base entity
+                        String key = BuiltInRegistries.ENTITY_TYPE.containsKey(id) ? "entity." + id.getNamespace() + "." + id.getPath() : "block." + id.getNamespace() + "." + id.getPath();
+                        langJson.addProperty(key, entry.getValue());
+                    }
                 }
             }
             if (exportDesc) {
                 for (Map.Entry<String, String> entry : customDescriptions.entrySet()) {
-                    ResourceLocation id = ResourceLocation.parse(entry.getKey());
-                    langJson.addProperty("fieldguide." + id.getNamespace() + "." + id.getPath() + ".description", entry.getValue());
+                    String[] parts = entry.getKey().split("#", 2);
+                    ResourceLocation id = ResourceLocation.parse(parts[0]);
+
+                    String variantSuffix = parts.length > 1 ? "." + parts[1].toLowerCase(Locale.ROOT) : "";
+                    langJson.addProperty("fieldguide." + id.getNamespace() + "." + id.getPath() + variantSuffix + ".description", entry.getValue());
                 }
             }
 
