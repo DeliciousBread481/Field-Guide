@@ -10,6 +10,7 @@ import dev.tazer.mixed_litter.variants.VariantGroup;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.Entity;
@@ -20,6 +21,21 @@ import java.util.Collections;
 import java.util.List;
 
 public class MixedLitterCompat {
+
+    private static boolean isForEntity(ResourceLocation id, String entityPath) {
+        if (id == null) return false;
+        String path = id.getPath().toLowerCase();
+
+        if (path.startsWith(entityPath + "/")) {
+            return true;
+        }
+
+        if (path.equals(entityPath)) {
+            return true;
+        }
+
+        return path.equals("remodeled_" + entityPath) || path.equals(entityPath + "_variants");
+    }
 
     public static void applyDummyVariant(Entity entity) {
         if (entity instanceof AgeableMob ageable) {
@@ -41,7 +57,7 @@ public class MixedLitterCompat {
                 for (ResourceLocation id : variantRegistry.keySet()) {
                     Variant variant = variantRegistry.get(id);
                     if (variant != null && variant.group().isPresent() && variant.group().get().equals(groupId)) {
-                        if (id.getPath().toLowerCase().contains(entityPath) || groupId.getPath().toLowerCase().contains(entityPath)) {
+                        if (isForEntity(id, entityPath) || isForEntity(groupId, entityPath)) {
                             matching.add(variant);
                         }
                     }
@@ -55,7 +71,7 @@ public class MixedLitterCompat {
             for (ResourceLocation id : variantRegistry.keySet()) {
                 Variant variant = variantRegistry.get(id);
                 if (variant != null && variant.group().isEmpty()) {
-                    if (id.getPath().toLowerCase().contains(entityPath)) {
+                    if (isForEntity(id, entityPath)) {
                         selected.add(variant);
                     }
                 }
@@ -82,9 +98,9 @@ public class MixedLitterCompat {
                 Variant variant = variantRegistry.get(id);
                 if (variant == null) continue;
 
-                boolean matches = id.getPath().toLowerCase().contains(entityPath);
+                boolean matches = isForEntity(id, entityPath);
                 if (!matches && variant.group().isPresent()) {
-                    matches = variant.group().get().getPath().toLowerCase().contains(entityPath);
+                    matches = isForEntity(variant.group().get(), entityPath);
                 }
 
                 if (matches) {
@@ -97,39 +113,45 @@ public class MixedLitterCompat {
     }
 
     public static void applyVariant(Entity entity, VariantDef def) {
-        if (def.value() instanceof ResourceLocation newVariantId) {
-            try {
-                Registry<Variant> variantRegistry = entity.registryAccess().registryOrThrow(MLRegistries.VARIANT_KEY);
-                Variant newVariant = variantRegistry.get(newVariantId);
-                if (newVariant == null) return;
+        switch (def.value()) {
+            case ResourceLocation newVariantId -> {
+                try {
+                    Registry<Variant> variantRegistry = entity.registryAccess().registryOrThrow(MLRegistries.VARIANT_KEY);
+                    Variant newVariant = variantRegistry.get(newVariantId);
+                    if (newVariant == null) return;
 
-                List<ResourceLocation> currentIds = new ArrayList<>(entity.getData(MLDataAttachmentTypes.VARIANTS.get()));
+                    List<ResourceLocation> currentIds = new ArrayList<>(entity.getData(MLDataAttachmentTypes.VARIANTS.get()));
 
-                if (newVariant.group().isPresent()) {
-                    ResourceLocation newGroup = newVariant.group().get();
-                    currentIds.removeIf(id -> {
-                        Variant v = variantRegistry.get(id);
-                        return v != null && v.group().isPresent() && v.group().get().equals(newGroup);
-                    });
+                    if (newVariant.group().isPresent()) {
+                        ResourceLocation newGroup = newVariant.group().get();
+                        currentIds.removeIf(id -> {
+                            Variant v = variantRegistry.get(id);
+                            return v != null && v.group().isPresent() && v.group().get().equals(newGroup);
+                        });
+                    }
+
+                    if (!currentIds.contains(newVariantId)) {
+                        currentIds.add(newVariantId);
+                    }
+
+                    entity.setData(MLDataAttachmentTypes.VARIANTS.get(), currentIds);
+                } catch (Exception ignored) {
                 }
-
-                if (!currentIds.contains(newVariantId)) {
-                    currentIds.add(newVariantId);
+            }
+            case CompoundTag compoundTag -> {
+                try {
+                    entity.setData(MLDataAttachmentTypes.VARIANTS.get(), new ArrayList<>());
+                } catch (Exception ignored) {
                 }
-
-                entity.setData(MLDataAttachmentTypes.VARIANTS.get(), currentIds);
-            } catch (Exception ignored) {
             }
-        } else if (def.value() instanceof net.minecraft.nbt.CompoundTag) {
-            try {
-                entity.setData(MLDataAttachmentTypes.VARIANTS.get(), new ArrayList<>());
-            } catch (Exception ignored) {
+            case null -> {
+                try {
+                    entity.setData(MLDataAttachmentTypes.VARIANTS.get(), new ArrayList<>());
+                    applyDummyVariant(entity);
+                } catch (Exception ignored) {
+                }
             }
-        } else if (def.value() == null) {
-            try {
-                entity.setData(MLDataAttachmentTypes.VARIANTS.get(), new ArrayList<>());
-                applyDummyVariant(entity);
-            } catch (Exception ignored) {
+            default -> {
             }
         }
     }
