@@ -1,0 +1,77 @@
+{
+  "values": [
+    {
+      "id": "nomansland:pine_sapling",
+      "structure_nbt": "nomansland:pine_tree",
+      "components": [
+        "nomansland:pine_log",
+        "nomansland:pine_leaves"
+      ]
+    },
+    {
+      "id": "nomansland:maple_sapling",
+      "structure_nbt": "nomansland:maple_tree",
+      "components": [
+        "nomansland:maple_log",
+        "nomansland:maple_leaves"
+      ]
+    },
+    {
+      "id": "nomansland:red_maple_sapling",
+      "structure_nbt": "nomansland:red_maple_tree",
+      "components": [
+        "nomansland:maple_log",
+        "nomansland:red_maple_leaves"
+      ]
+    },
+    {
+      "id": "nomansland:walnut_sapling",
+      "structure_nbt": "nomansland:walnut_tree",
+      "components": [
+        "nomansland:walnut_log",
+        "nomansland:walnut_leaves"
+      ]
+    },
+    {
+      "id": "nomansland:willow_sapling",
+      "structure_nbt": "nomansland:willow_tree",
+      "components": [
+        "nomansland:willow_log",
+        "nomansland:willow_leaves"
+      ]
+    },
+    {
+      "id": "nomansland:autumnal_oak_sapling",
+      "structure_nbt": "nomansland:autumnal_oak_tree",
+      "components": [
+        "minecraft:oak_log",
+        "nomansland:autumnal_oak_leaves"
+      ]
+    },
+    {
+      "id": "nomansland:yellow_birch_sapling",
+      "structure_nbt": "nomansland:yellow_birch_tree",
+      "components": [
+        "minecraft:birch_log",
+        "nomansland:yellow_birch_leaves"
+      ]
+    },
+    {
+      "id": "nomansland:pale_cherry_sapling",
+      "structure_nbt": "nomansland:pale_cherry_tree",
+      "components": [
+        "minecraft:cherry_log",
+        "nomansland:pale_cherry_leaves"
+      ]
+    },
+    {
+      "id": "nomansland:huge_field_mushroom",
+      "display": "nomansland:field_mushroom",
+      "structure_nbt": "nomansland:huge_field_mushroom",
+      "components": [
+        "nomansland:field_mushroom",
+        "nomansland:field_mushroom_block"
+      ]
+    }
+  ]
+}

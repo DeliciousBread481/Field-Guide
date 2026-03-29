@@ -15,6 +15,7 @@ import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SpawnEggItem;
+import net.minecraft.world.level.block.BaseCoralWallFanBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.BushBlock;
@@ -25,6 +26,7 @@ import java.util.function.Predicate;
 
 public class AutoPopulateRegistry {
     private static final Map<String, BiFunction<String, ResourceLocation, List<Object>>> STRATEGIES = new HashMap<>();
+    private static final Set<ResourceLocation> HANDLED_SAPLINGS = new HashSet<>();
 
     static {
         register("mod_entities", (modId, categoryId) -> BuiltInRegistries.ENTITY_TYPE.stream()
@@ -46,14 +48,14 @@ public class AutoPopulateRegistry {
         register("mod_blocks", (modId, categoryId) -> BuiltInRegistries.BLOCK.stream()
                 .filter(b -> BuiltInRegistries.BLOCK.getKey(b).getNamespace().equals(modId))
                 .filter(b -> EntryValidator.isValidBlock(b, categoryId))
-                .filter(b -> !BuiltInRegistries.BLOCK.getKey(b).getPath().endsWith("_sapling"))
+                .filter(b -> !BuiltInRegistries.BLOCK.getKey(b).getPath().endsWith("_sapling") && !BuiltInRegistries.BLOCK.getKey(b).getPath().endsWith("_leaves"))
                 .sorted(Comparator.comparing(b -> BuiltInRegistries.BLOCK.getKey(b).toString()))
                 .map(Object.class::cast)
                 .toList());
 
         register("blocks", (params, categoryId) -> BuiltInRegistries.BLOCK.stream()
                 .filter(b -> EntryValidator.isValidBlock(b, categoryId))
-                .filter(b -> !BuiltInRegistries.BLOCK.getKey(b).getPath().endsWith("_sapling"))
+                .filter(b -> !BuiltInRegistries.BLOCK.getKey(b).getPath().endsWith("_sapling") && !BuiltInRegistries.BLOCK.getKey(b).getPath().endsWith("_leaves"))
                 .sorted(Comparator.comparing(b -> BuiltInRegistries.BLOCK.getKey(b).toString()))
                 .map(Object.class::cast)
                 .toList());
@@ -189,6 +191,7 @@ public class AutoPopulateRegistry {
 
     public static List<Object> getAutoTrees(Predicate<ResourceLocation> namespaceFilter, ResourceLocation categoryId) {
         List<Object> results = new ArrayList<>();
+        HANDLED_SAPLINGS.clear();
 
         for (Block block : BuiltInRegistries.BLOCK) {
             ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
@@ -202,12 +205,20 @@ public class AutoPopulateRegistry {
 
                 Block log = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(id.getNamespace(), baseName + "_log"));
                 if (log == Blocks.AIR) {
+                    log = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("minecraft", baseName + "_log"));
+                }
+                if (log == Blocks.AIR) {
                     String[] parts = baseName.split("_", 2);
                     if (parts.length > 1) {
                         log = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(id.getNamespace(), parts[1] + "_log"));
+                        if (log == Blocks.AIR) {
+                            log = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("minecraft", parts[1] + "_log"));
+                        }
                     }
                 }
                 if (log == Blocks.AIR) continue;
+
+                HANDLED_SAPLINGS.add(id);
 
                 String logId = BuiltInRegistries.BLOCK.getKey(log).toString();
                 String leavesId = BuiltInRegistries.BLOCK.getKey(leaves).toString();
@@ -231,7 +242,7 @@ public class AutoPopulateRegistry {
 
                 results.add(new GuideEntry(
                         ResourceLocation.fromNamespaceAndPath(id.getNamespace(), baseName + "_tree"),
-                        id, // display sapling block
+                        id,
                         null,
                         EntryKind.STRUCTURE,
                         false,
@@ -251,7 +262,11 @@ public class AutoPopulateRegistry {
         return BuiltInRegistries.BLOCK.stream()
                 .filter(b -> namespaceFilter.test(BuiltInRegistries.BLOCK.getKey(b)))
                 .filter(b -> EntryValidator.isValidBlock(b, categoryId))
-                .filter(b -> b.defaultBlockState().is(ModTags.Blocks.PLANTS) || b instanceof BushBlock)
+                .filter(b -> {
+                    ResourceLocation id = BuiltInRegistries.BLOCK.getKey(b);
+                    if (HANDLED_SAPLINGS.contains(id)) return false;
+                    return b.defaultBlockState().is(ModTags.Blocks.PLANTS) || b instanceof BushBlock;
+                })
                 .sorted(Comparator.comparing(b -> BuiltInRegistries.BLOCK.getKey(b).toString()))
                 .map(Object.class::cast)
                 .toList();

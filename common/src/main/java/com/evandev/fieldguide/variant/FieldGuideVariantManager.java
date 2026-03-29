@@ -45,7 +45,9 @@ public class FieldGuideVariantManager {
 
             @Override
             public void apply(Sheep entity, VariantDef def) {
-                entity.setColor((DyeColor) def.value());
+                if (def.value() instanceof DyeColor color) {
+                    entity.setColor(color);
+                }
             }
 
             @Override
@@ -65,7 +67,9 @@ public class FieldGuideVariantManager {
 
             @Override
             public void apply(Horse entity, VariantDef def) {
-                entity.setVariant((Variant) def.value());
+                if (def.value() instanceof Variant variant) {
+                    entity.setVariant(variant);
+                }
             }
 
             @Override
@@ -85,7 +89,9 @@ public class FieldGuideVariantManager {
 
             @Override
             public void apply(Llama entity, VariantDef def) {
-                entity.setVariant((Llama.Variant) def.value());
+                if (def.value() instanceof Llama.Variant variant) {
+                    entity.setVariant(variant);
+                }
             }
 
             @Override
@@ -96,7 +102,59 @@ public class FieldGuideVariantManager {
     }
 
     public static <T extends Mob> void registerProvider(Class<T> entityClass, VariantProvider<T> provider) {
-        PROVIDERS.put(entityClass, provider);
+        if (PROVIDERS.containsKey(entityClass)) {
+            VariantProvider<T> existing = (VariantProvider<T>) PROVIDERS.get(entityClass);
+            if (existing instanceof CompositeVariantProvider) {
+                ((CompositeVariantProvider<T>) existing).addProvider(provider);
+            } else {
+                CompositeVariantProvider<T> composite = new CompositeVariantProvider<>(existing);
+                composite.addProvider(provider);
+                PROVIDERS.put(entityClass, composite);
+            }
+        } else {
+            PROVIDERS.put(entityClass, provider);
+        }
+    }
+
+    private static class CompositeVariantProvider<T extends Mob> implements VariantProvider<T> {
+        private final List<VariantProvider<T>> providers = new ArrayList<>();
+
+        public CompositeVariantProvider(VariantProvider<T> first) {
+            providers.add(first);
+        }
+
+        public void addProvider(VariantProvider<T> provider) {
+            providers.add(provider);
+        }
+
+        @Override
+        public List<VariantDef> getVariants(T entity) {
+            return providers.stream()
+                    .flatMap(p -> p.getVariants(entity).stream())
+                    .distinct()
+                    .toList();
+        }
+
+        @Override
+        public void apply(T entity, VariantDef def) {
+            for (VariantProvider<T> p : providers) {
+                p.apply(entity, def);
+            }
+        }
+
+        @Override
+        public VariantDef getCurrent(T entity) {
+            for (VariantProvider<T> p : providers) {
+                VariantDef current = p.getCurrent(entity);
+                if (current != null && !current.id().equals("default")) return current;
+            }
+            return new VariantDef("default", null);
+        }
+
+        @Override
+        public String getCacheKey(T entity) {
+            return providers.stream().map(p -> p.getCacheKey(entity)).collect(Collectors.joining("_"));
+        }
     }
 
     public static void setDatapackVariants(Map<ResourceLocation, List<DatapackVariant>> variants) {
@@ -193,6 +251,7 @@ public class FieldGuideVariantManager {
     public static Component getVariantDisplayName(VariantDef variant) {
         String name = variant.id();
         if (name.contains(":")) name = name.substring(name.indexOf(':') + 1);
+        if (name.contains("/")) name = name.substring(name.lastIndexOf('/') + 1);
 
         name = Arrays.stream(name.split("_"))
                 .map(s -> s.isEmpty() ? s : s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase())

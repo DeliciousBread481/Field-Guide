@@ -1,8 +1,7 @@
 ### Added
 
-- Added variant support for additional vanilla variants, Vanilla Backport, Atmospheric, and Environmental (@proxillus).
+- Added default configurations and variant support for No Man's Land.
 
 ### Fixed
 
-- Fixed variants cycling while the selector is open, sometimes leading to a crash.
-- Fixed biome removals for variants not working.
+- Fixed No Man's Land Deer rendering.

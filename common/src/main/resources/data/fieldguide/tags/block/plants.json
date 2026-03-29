@@ -39,6 +39,18 @@
     "minecraft:pumpkin",
     "minecraft:cocoa",
     {
+      "id": "nomansland:shelf_mushroom",
+      "required": false
+    },
+    {
+      "id": "nomansland:field_mushroom",
+      "required": false
+    },
+    {
+      "id": "nomansland:field_mushroom_block",
+      "required": false
+    },
+    {
       "id": "autumnity:large_pumpkin_slice",
       "required": false
     },

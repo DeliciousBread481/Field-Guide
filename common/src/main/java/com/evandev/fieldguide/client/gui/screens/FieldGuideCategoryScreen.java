@@ -742,6 +742,9 @@ public class FieldGuideCategoryScreen extends BookScreen {
                 if (coreEntry instanceof EntityType<?> type) {
                     try {
                         entity = type.create(this.minecraft.level);
+                        if (Services.PLATFORM.isModLoaded("mixed_litter")) {
+                            Services.PLATFORM.applyMixedLitterCompat(entity);
+                        }
                     } catch (Exception e) {
                         Constants.LOG.error("Failed to create entity for guide: {}", type.getDescription().getString());
                     }
