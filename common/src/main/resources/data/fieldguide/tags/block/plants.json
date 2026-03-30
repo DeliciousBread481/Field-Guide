@@ -2,11 +2,9 @@
   "replace": false,
   "values": [
     "#minecraft:flowers",
-    "#minecraft:saplings",
     "#minecraft:crops",
     "#minecraft:corals",
     "#minecraft:tall_flowers",
-    "#minecraft:leaves",
     "minecraft:brown_mushroom",
     "minecraft:red_mushroom",
     "minecraft:crimson_fungus",
@@ -39,34 +37,6 @@
     "minecraft:pumpkin",
     "minecraft:cocoa",
     {
-      "id": "nomansland:shelf_mushroom",
-      "required": false
-    },
-    {
-      "id": "nomansland:field_mushroom",
-      "required": false
-    },
-    {
-      "id": "nomansland:field_mushroom_block",
-      "required": false
-    },
-    {
-      "id": "autumnity:large_pumpkin_slice",
-      "required": false
-    },
-    {
-      "id": "farmersdelight:tomatoes",
-      "required": false
-    },
-    {
-      "id": "farmersdelight:brown_mushroom_colony",
-      "required": false
-    },
-    {
-      "id": "farmersdelight:red_mushroom_colony",
-      "required": false
-    },
-    {
       "id": "atmospheric:golden_growth",
       "required": false
     },
@@ -88,6 +58,62 @@
     },
     {
       "id": "atmospheric:aloe_vera",
+      "required": false
+    },
+    {
+      "id": "autumnity:large_pumpkin_slice",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:brimstone_bud",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:blackstone_bulb",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:bramble",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:glowshroom_block",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:hair",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:high_grass",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:huge_clover_petal",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:tomatoes",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:brown_mushroom_colony",
+      "required": false
+    },
+    {
+      "id": "farmersdelight:red_mushroom_colony",
+      "required": false
+    },
+    {
+      "id": "nomansland:shelf_mushroom",
+      "required": false
+    },
+    {
+      "id": "nomansland:field_mushroom",
+      "required": false
+    },
+    {
+      "id": "nomansland:field_mushroom_block",
       "required": false
     },
     {

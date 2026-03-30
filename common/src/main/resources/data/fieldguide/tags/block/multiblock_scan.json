@@ -38,7 +38,27 @@
     "minecraft:big_dripleaf_stem",
     "minecraft:tall_seagrass",
     {
+      "id": "autumnity:tall_foul_berry_bush",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:huge_clover_petal",
+      "required": false
+    },
+    {
+      "id": "biomesoplenty:huge_lily_pad",
+      "required": false
+    },
+    {
+      "id": "environmental:giant_tall_grass",
+      "required": false
+    },
+    {
       "id": "farmersdelight:tomatoes",
+      "required": false
+    },
+    {
+      "id": "regions_unexplored:giant_lily_pad",
       "required": false
     },
     {
@@ -47,14 +67,6 @@
     },
     {
       "id": "supplementaries:rope_tomatoes",
-      "required": false
-    },
-    {
-      "id": "autumnity:tall_foul_berry_bush",
-      "required": false
-    },
-    {
-      "id": "environmental:giant_tall_grass",
       "required": false
     }
   ]

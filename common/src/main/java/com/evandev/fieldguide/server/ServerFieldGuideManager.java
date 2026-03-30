@@ -69,8 +69,9 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     }
 
     public EntryUnlockData getUnlockData(ResourceLocation entryId) {
-        if (entryUnlockDataMap.containsKey(entryId)) {
-            return entryUnlockDataMap.get(entryId);
+        EntryUnlockData mapData = entryUnlockDataMap.get(entryId);
+        if (mapData != null && !EntryUnlockData.DEFAULT.equals(mapData)) {
+            return mapData;
         }
 
         if (isKillToUnlock(entryId)) {

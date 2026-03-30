@@ -79,6 +79,9 @@ dependencies {
 
     // Ecliptic Seasons
     //runtimeOnly "maven.modrinth:ecliptic-seasons:${ecliptic_seasons_version}"
+
+    // Scholar
+    implementation "maven.modrinth:scholar:t5aJhKGV"
 }
 
 publishMods {

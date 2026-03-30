@@ -1,5 +1,6 @@
 package com.evandev.fieldguide;
 
+import com.evandev.fieldguide.api.EntryUnlockData;
 import com.evandev.fieldguide.api.variant.VariantDef;
 import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.compat.exposure.ExposureFabricEventHandler;
@@ -22,14 +23,11 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.tags.TagKey;
 import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import org.jetbrains.annotations.NotNull;
 
@@ -136,27 +134,20 @@ public class FieldGuideMod implements ModInitializer {
                     FieldGuideTriggers.SCAN_AND_KILL.get().trigger(player, killedEntity);
                 }
 
-                TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "kill_to_unlock"));
+                ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(killedEntity.getType());
+                PlayerFieldGuideProgress progress = manager.getProgress(player);
 
-                var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(killedEntity.getType());
-                if (key.isPresent()) {
-                    var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
-                    if (holder.isPresent() && holder.get().is(killToUnlockTag)) {
-                        ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(killedEntity.getType());
-                        PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
-                        if (progress != null) {
-                            String variantId = "";
-                            List<VariantDef> variants = FieldGuideVariantManager.getVariants(killedEntity);
-                            if (!variants.isEmpty()) {
-                                VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(killedEntity);
-                                if (provider != null) {
-                                    VariantDef current = provider.getCurrent((Mob) killedEntity);
-                                    if (current != null) variantId = current.id();
-                                }
-                            }
-                            progress.unlock(player, entityId, variantId, false);
+                if (progress != null) {
+                    String variantId = "";
+                    List<VariantDef> variants = FieldGuideVariantManager.getVariants(killedEntity);
+                    if (!variants.isEmpty()) {
+                        VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(killedEntity);
+                        if (provider != null) {
+                            VariantDef current = provider.getCurrent((Mob) killedEntity);
+                            if (current != null) variantId = current.id();
                         }
                     }
+                    progress.tryUnlock(player, entityId, variantId, EntryUnlockData.UnlockTrigger.KILL);
                 }
             }
         });

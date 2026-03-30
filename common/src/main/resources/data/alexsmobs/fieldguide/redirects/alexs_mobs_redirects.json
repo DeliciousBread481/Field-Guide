@@ -1,0 +1,16 @@
+{
+  "entries": [
+    {
+      "source": "alexsmobs:void_worm_part",
+      "target": "alexsmobs:void_worm"
+    },
+    {
+      "source": "alexsmobs:murmur_head",
+      "target": "alexsmobs:murmur"
+    },
+    {
+      "source": "alexsmobs:bone_serpent_part",
+      "target": "alexsmobs:bone_serpent"
+    }
+  ]
+}

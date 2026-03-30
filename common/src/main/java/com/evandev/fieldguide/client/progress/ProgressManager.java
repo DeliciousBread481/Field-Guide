@@ -23,7 +23,9 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.TagParser;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
@@ -442,7 +444,13 @@ public class ProgressManager {
                 GSON.toJson(langJson, writer);
             }
             if (Minecraft.getInstance().player != null) {
-                Minecraft.getInstance().player.displayClientMessage(Component.literal("§aExported Field Guide data to " + exportFile.getAbsolutePath()), false);
+                Component message = Component.literal("§aExported Field Guide data to ")
+                        .append(Component.literal(exportFile.getName())
+                                .withStyle(style -> style
+                                        .withUnderlined(true)
+                                        .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, exportDir.toFile().getAbsolutePath()))
+                                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("Click to open folder")))));
+                Minecraft.getInstance().player.displayClientMessage(message, false);
             }
         } catch (Exception e) {
             Constants.LOG.error("Failed to export lang file", e);

@@ -1,0 +1,237 @@
+{
+  "values": [
+    {
+      "id": "biomesoplenty:toadstool_block",
+      "structure_nbt": "biomesoplenty:huge_toadstool",
+      "components": [
+        "biomesoplenty:toadstool_block",
+        "minecraft:mushroom_stem"
+      ]
+    },
+    {
+      "id": "biomesoplenty:glowshroom_block",
+      "structure_nbt": "biomesoplenty:huge_glowshroom",
+      "components": [
+        "biomesoplenty:glowshroom_block",
+        "minecraft:mushroom_stem"
+      ]
+    },
+    {
+      "id": "biomesoplenty:glowing_moss_block",
+      "display_id": "biomesoplenty:glowing_moss_block",
+      "components": [
+        "biomesoplenty:glowing_moss_block",
+        "biomesoplenty:glowing_moss_carpet"
+      ]
+    },
+    {
+      "id": "biomesoplenty:origin_sapling",
+      "structure_nbt": "biomesoplenty:origin",
+      "components": [
+        "biomesoplenty:origin_sapling",
+        "minecraft:oak_log",
+        "biomesoplenty:origin_leaves"
+      ]
+    },
+    {
+      "id": "biomesoplenty:flowering_oak_sapling",
+      "structure_nbt": "biomesoplenty:flowering_oak",
+      "components": [
+        "biomesoplenty:flowering_oak_sapling",
+        "minecraft:oak_log",
+        "biomesoplenty:flowering_oak_leaves"
+      ]
+    },
+    {
+      "id": "biomesoplenty:snowblossom_sapling",
+      "structure_nbt": "biomesoplenty:snowblossom",
+      "components": [
+        "biomesoplenty:snowblossom_sapling",
+        "minecraft:cherry_log",
+        "biomesoplenty:snowblossom_leaves"
+      ]
+    },
+    {
+      "id": "biomesoplenty:rainbow_birch_sapling",
+      "structure_nbt": "biomesoplenty:rainbow_birch",
+      "components": [
+        "biomesoplenty:rainbow_birch_sapling",
+        "minecraft:birch_log",
+        "biomesoplenty:rainbow_birch_leaves"
+      ]
+    },
+    {
+      "id": "biomesoplenty:yellow_autumn_sapling",
+      "structure_nbt": "biomesoplenty:yellow_autumn",
+      "components": [
+        "biomesoplenty:yellow_autumn_sapling",
+        "minecraft:birch_log",
+        "biomesoplenty:yellow_autumn_leaves"
+      ]
+    },
+    {
+      "id": "biomesoplenty:orange_autumn_sapling",
+      "structure_nbt": "biomesoplenty:orange_autumn",
+      "components": [
+        "biomesoplenty:orange_autumn_sapling",
+        "minecraft:dark_oak_log",
+        "biomesoplenty:orange_autumn_leaves"
+      ]
+    },
+    {
+      "id": "biomesoplenty:maple_sapling",
+      "structure_nbt": "biomesoplenty:maple",
+      "components": [
+        "biomesoplenty:maple_sapling",
+        "minecraft:oak_log",
+        "biomesoplenty:maple_leaves"
+      ]
+    },
+    {
+      "id": "biomesoplenty:fir_sapling",
+      "structure_nbt": "biomesoplenty:fir",
+      "components": [
+        "biomesoplenty:fir_sapling",
+        "biomesoplenty:fir_log",
+        "biomesoplenty:fir_leaves"
+      ]
+    },
+    {
+      "id": "biomesoplenty:redwood_sapling",
+      "structure_nbt": "biomesoplenty:redwood",
+      "components": [
+        "biomesoplenty:redwood_sapling",
+        "biomesoplenty:redwood_log",
+        "biomesoplenty:redwood_leaves"
+      ]
+    },
+    {
+      "id": "biomesoplenty:mahogany_sapling",
+      "structure_nbt": "biomesoplenty:mahogany",
+      "components": [
+        "biomesoplenty:mahogany_sapling",
+        "biomesoplenty:mahogany_log",
+        "biomesoplenty:mahogany_leaves"
+      ]
+    },
+    {
+      "id": "biomesoplenty:jacaranda_sapling",
+      "structure_nbt": "biomesoplenty:jacaranda",
+      "components": [
+        "biomesoplenty:jacaranda_sapling",
+        "biomesoplenty:jacaranda_log",
+        "biomesoplenty:jacaranda_leaves"
+      ]
+    },
+    {
+      "id": "biomesoplenty:palm_sapling",
+      "structure_nbt": "biomesoplenty:palm",
+      "components": [
+        "biomesoplenty:palm_sapling",
+        "biomesoplenty:palm_log",
+        "biomesoplenty:palm_leaves"
+      ]
+    },
+    {
+      "id": "biomesoplenty:willow_sapling",
+      "structure_nbt": "biomesoplenty:willow",
+      "components": [
+        "biomesoplenty:willow_sapling",
+        "biomesoplenty:willow_log",
+        "biomesoplenty:willow_leaves",
+        "biomesoplenty:willow_vine"
+      ]
+    },
+    {
+      "id": "biomesoplenty:spanish_moss",
+      "render": [
+        "0,1,0|biomesoplenty:spanish_moss_plant",
+        "0,0,0|biomesoplenty:spanish_moss"
+      ],
+      "components": [
+        "biomesoplenty:spanish_moss",
+        "biomesoplenty:spanish_moss_plant"
+      ]
+    },
+    {
+      "id": "biomesoplenty:dead_sapling",
+      "structure_nbt": "biomesoplenty:dead_twiglet",
+      "components": [
+        "biomesoplenty:dead_sapling",
+        "biomesoplenty:dead_log",
+        "biomesoplenty:dead_leaves",
+        "biomesoplenty:dead_branch"
+      ]
+    },
+    {
+      "id": "biomesoplenty:magic_sapling",
+      "structure_nbt": "biomesoplenty:magic",
+      "components": [
+        "biomesoplenty:magic_sapling",
+        "biomesoplenty:magic_log",
+        "biomesoplenty:magic_leaves"
+      ]
+    },
+    {
+      "id": "biomesoplenty:umbran_sapling",
+      "structure_nbt": "biomesoplenty:umbran",
+      "components": [
+        "biomesoplenty:umbran_sapling",
+        "biomesoplenty:umbran_log",
+        "biomesoplenty:umbran_leaves"
+      ]
+    },
+    {
+      "id": "biomesoplenty:hellbark_sapling",
+      "structure_nbt": "biomesoplenty:hellbark",
+      "components": [
+        "biomesoplenty:hellbark_sapling",
+        "biomesoplenty:hellbark_log",
+        "biomesoplenty:hellbark_leaves"
+      ]
+    },
+    {
+      "id": "biomesoplenty:high_grass",
+      "render": [
+        "0,0,0|biomesoplenty:high_grass_plant",
+        "0,1,0|biomesoplenty:high_grass"
+      ],
+      "components": [
+        "biomesoplenty:high_grass",
+        "biomesoplenty:high_grass_plant"
+      ]
+    },
+    {
+      "id": "biomesoplenty:bramble",
+      "structure_nbt": "biomesoplenty:bramble",
+      "components": [
+        "biomesoplenty:bramble",
+        "biomesoplenty:bramble_leaves"
+      ]
+    },
+    {
+      "id": "biomesoplenty:huge_clover_petal",
+      "render": [
+        "0,0,0|biomesoplenty:huge_clover_petal|facing=north",
+        "1,0,0|biomesoplenty:huge_clover_petal|facing=east",
+        "0,0,1|biomesoplenty:huge_clover_petal|facing=west",
+        "1,0,1|biomesoplenty:huge_clover_petal|facing=south"
+      ],
+      "components": [
+        "biomesoplenty:huge_clover_petal"
+      ]
+    },
+    {
+      "id": "biomesoplenty:huge_lily_pad",
+      "render": [
+        "0,0,1|biomesoplenty:huge_lily_pad|facing=south,quarter=north_east",
+        "1,0,1|biomesoplenty:huge_lily_pad|facing=south,quarter=north_west",
+        "0,0,0|biomesoplenty:huge_lily_pad|facing=south,quarter=south_east",
+        "1,0,0|biomesoplenty:huge_lily_pad|facing=south,quarter=south_west"
+      ],
+      "components": [
+        "biomesoplenty:huge_lily_pad"
+      ]
+    }
+  ]
+}

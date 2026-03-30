@@ -1,5 +1,6 @@
 package com.evandev.fieldguide;
 
+import com.evandev.fieldguide.api.EntryUnlockData;
 import com.evandev.fieldguide.api.variant.VariantDef;
 import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.compat.exposure.ExposureNeoForgeEventHandler;
@@ -155,7 +156,7 @@ public class FieldGuideMod {
                         if (current != null) variantId = current.id();
                     }
                 }
-                progress.unlock(player, entityId, variantId, false);
+                progress.tryUnlock(player, entityId, variantId, EntryUnlockData.UnlockTrigger.KILL);
             }
         }
     }

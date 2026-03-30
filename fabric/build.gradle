@@ -49,6 +49,9 @@ dependencies {
     modCompileOnly "maven.modrinth:fabric-seasons:${fabric_seasons_version}"
     modRuntimeOnly "maven.modrinth:fabric-seasons:${fabric_seasons_version}"
 
+    // Scholar
+    modImplementation "maven.modrinth:scholar:MpMbLKGR"
+
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
 }
