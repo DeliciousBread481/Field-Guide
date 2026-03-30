@@ -2,15 +2,14 @@ package com.evandev.fieldguide.client.gui.screens;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.FieldGuideLimits;
+import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.data.JournalPage;
-import com.evandev.fieldguide.client.gui.widget.BookTextAreaWidget;
-import com.evandev.fieldguide.client.gui.widget.BookTextFieldWidget;
 import com.evandev.fieldguide.client.gui.widget.FieldGuideSearchBox;
 import com.evandev.fieldguide.client.gui.widget.PageTurnButton;
+import com.evandev.fieldguide.compat.scholar.ScholarCompat;
 import com.evandev.fieldguide.config.ClientConfig;
-import com.evandev.fieldguide.api.Category;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -58,21 +57,20 @@ public class FieldGuideJournalScreen extends BookScreen {
         if (currentSpread == 0) {
             String jTitle = manager.getJournalTitle();
             int jtWidth = Math.max(100, this.font.width(jTitle.isEmpty() ? "Journal" : jTitle));
-            BookTextFieldWidget journalTitleWidget = new BookTextFieldWidget(this.font, this.leftPageBounds.x_center() - jtWidth / 2, this.leftPageBounds.top() + 36, jtWidth, font.lineHeight, jTitle, ClientConfig.get().getTextTitleColorInt(), 100, FieldGuideLimits.MAX_JOURNAL_TITLE_LENGTH, manager::setJournalTitle).setCentered(true);
+            AbstractWidget journalTitleWidget = ScholarCompat.createTextField(this.font, this.leftPageBounds.x_center() - jtWidth / 2, this.leftPageBounds.top() + 36, jtWidth, font.lineHeight, jTitle, ClientConfig.get().getTextTitleColorInt(), 100, FieldGuideLimits.MAX_JOURNAL_TITLE_LENGTH, manager::setJournalTitle, true);
             this.addRenderableWidget(journalTitleWidget);
         } else {
             JournalPage lPage = pages.get(currentSpread * 2 - 1);
 
-            BookTextFieldWidget leftTitleWidget = new BookTextFieldWidget(this.font, textXLeft, titleY, textAreaWidth, font.lineHeight, lPage.title, ClientConfig.get().getTextTitleColorInt(), textAreaWidth, FieldGuideLimits.MAX_JOURNAL_PAGE_TITLE_LENGTH, text -> {
+            AbstractWidget leftTitleWidget = ScholarCompat.createTextField(this.font, textXLeft, titleY, textAreaWidth, font.lineHeight, lPage.title, ClientConfig.get().getTextTitleColorInt(), textAreaWidth, FieldGuideLimits.MAX_JOURNAL_PAGE_TITLE_LENGTH, text -> {
                 lPage.title = text;
                 manager.saveJournal();
-            });
+            }, false);
 
-            BookTextAreaWidget leftContentWidget = new BookTextAreaWidget(this.font, textXLeft, textY, textAreaWidth, textAreaHeight, 12, ClientConfig.get().getTextColorInt(), false, FieldGuideLimits.MAX_JOURNAL_PAGE_CONTENT_LENGTH, lPage.content, text -> {
+            AbstractWidget leftContentWidget = ScholarCompat.createTextArea(this.font, textXLeft, textY, textAreaWidth, textAreaHeight, 12, 9, ClientConfig.get().getTextColorInt(), false, FieldGuideLimits.MAX_JOURNAL_PAGE_CONTENT_LENGTH, lPage.content, text -> {
                 lPage.content = text;
                 manager.saveJournal();
-            });
-            leftContentWidget.setOnSpillover(spill -> handleSpillover(spill, currentSpread * 2));
+            }, spill -> handleSpillover(spill, currentSpread * 2));
             this.addRenderableWidget(leftTitleWidget);
             this.addRenderableWidget(leftContentWidget);
         }
@@ -80,16 +78,15 @@ public class FieldGuideJournalScreen extends BookScreen {
         // Right Page
         JournalPage rPage = pages.get(currentSpread == 0 ? 0 : currentSpread * 2);
 
-        BookTextFieldWidget rightTitleWidget = new BookTextFieldWidget(this.font, textXRight, titleY, textAreaWidth, font.lineHeight, rPage.title, ClientConfig.get().getTextTitleColorInt(), textAreaWidth, FieldGuideLimits.MAX_JOURNAL_PAGE_TITLE_LENGTH, text -> {
+        AbstractWidget rightTitleWidget = ScholarCompat.createTextField(this.font, textXRight, titleY, textAreaWidth, font.lineHeight, rPage.title, ClientConfig.get().getTextTitleColorInt(), textAreaWidth, FieldGuideLimits.MAX_JOURNAL_PAGE_TITLE_LENGTH, text -> {
             rPage.title = text;
             manager.saveJournal();
-        });
+        }, false);
 
-        BookTextAreaWidget rightContentWidget = new BookTextAreaWidget(this.font, textXRight, textY, textAreaWidth, textAreaHeight, 12, ClientConfig.get().getTextColorInt(), false, FieldGuideLimits.MAX_JOURNAL_PAGE_CONTENT_LENGTH, rPage.content, text -> {
+        AbstractWidget rightContentWidget = ScholarCompat.createTextArea(this.font, textXRight, textY, textAreaWidth, textAreaHeight, 12, 9, ClientConfig.get().getTextColorInt(), false, FieldGuideLimits.MAX_JOURNAL_PAGE_CONTENT_LENGTH, rPage.content, text -> {
             rPage.content = text;
             manager.saveJournal();
-        });
-        rightContentWidget.setOnSpillover(spill -> handleSpillover(spill, (currentSpread == 0 ? 0 : currentSpread * 2) + 1));
+        }, spill -> handleSpillover(spill, (currentSpread == 0 ? 0 : currentSpread * 2) + 1));
 
         this.addRenderableWidget(rightTitleWidget);
         this.addRenderableWidget(rightContentWidget);
@@ -179,6 +176,24 @@ public class FieldGuideJournalScreen extends BookScreen {
         if (category.getId().getPath().equals("intro")) return;
         cleanupEmptyPages();
         Objects.requireNonNull(this.minecraft).setScreen(new FieldGuideCategoryScreen(category, 0));
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (super.mouseScrolled(mouseX, mouseY, delta)) {
+            return true;
+        }
+        if (delta > 0 && currentSpread > 0) {
+            changeSpread(-1);
+            return true;
+        } else if (delta < 0) {
+            int nextSpreadPageCount = (currentSpread + 1) * 2 + 1;
+            if (nextSpreadPageCount <= FieldGuideLimits.MAX_JOURNAL_PAGES) {
+                changeSpread(1);
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

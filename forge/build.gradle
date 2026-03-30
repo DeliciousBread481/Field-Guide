@@ -89,6 +89,9 @@ dependencies {
     modCompileOnly "maven.modrinth:the-dawn-era:0.642"
     modCompileOnly "maven.modrinth:astemirlib:1.25"
 
+    // Scholar
+    modImplementation "maven.modrinth:scholar:yxQA51K6"
+
     compileOnly project(":common")
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
 }

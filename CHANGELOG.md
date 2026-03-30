@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-03-29
+
+### Added
+
+- Added integration with Scholar for text editing.
+- Added a Journal tab for keeping general notes on your discoveries.
+- Added better Biomes o' Plenty integration.
+
+### Changed
+
+- Changed default description of Chorus Plant.
+- When exporting data, you'll now be able to click on the link to open the folder in your system's file browser.
+- Adjusted default renders for Dark Oak Trees and Chorus Plants.
+
+### Fixed
+
+- Fixed killing any entities causing them to be unlocked.
+
 ## [1.5.15] - 2026-03-29
 
 ### Added

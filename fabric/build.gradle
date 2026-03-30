@@ -54,6 +54,9 @@ dependencies {
     // Fabric Seasons
     modCompileOnly "maven.modrinth:fabric-seasons:${fabric_seasons_version}"
     modRuntimeOnly "maven.modrinth:fabric-seasons:${fabric_seasons_version}"
+
+    // Scholar
+    modImplementation "maven.modrinth:scholar:FKPdCnvI"
 }
 
 loom {

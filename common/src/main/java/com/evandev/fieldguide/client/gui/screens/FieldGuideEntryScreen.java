@@ -15,10 +15,14 @@ import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
-import com.evandev.fieldguide.client.gui.widget.*;
+import com.evandev.fieldguide.client.gui.widget.FieldGuideSearchBox;
+import com.evandev.fieldguide.client.gui.widget.PageTurnButton;
+import com.evandev.fieldguide.client.gui.widget.PaginatedGridWidget;
+import com.evandev.fieldguide.client.gui.widget.VariantOverviewWidget;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.ClientFieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
+import com.evandev.fieldguide.compat.scholar.ScholarCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.entry.EntryResolver;
@@ -79,9 +83,9 @@ public class FieldGuideEntryScreen extends BookScreen {
     private float hoverScale = 1.0f;
     private long lastRenderTime = 0;
 
-    private BookTextFieldWidget nameWidget;
-    private BookTextFieldWidget variantWidget;
-    private BookTextAreaWidget descriptionWidget;
+    private AbstractWidget nameWidget;
+    private AbstractWidget variantWidget;
+    private AbstractWidget descriptionWidget;
     private List<GuideAttribute> activeAttributes = new ArrayList<>();
 
     public FieldGuideEntryScreen(FieldGuideCategoryScreen parent, Object entry) {
@@ -259,8 +263,8 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (unlocked) {
             String initialName = ClientFieldGuideManager.getEntryName(entry).getString();
             if (!ServerConfig.get().disableEditingNames) {
-                this.nameWidget = new BookTextFieldWidget(this.font, textX, titleY, textAreaWidth, LINE_HEIGHT, initialName, ClientConfig.get().getTextTitleColorInt(), textAreaWidth, FieldGuideLimits.MAX_ENTRY_NAME_LENGTH,
-                        newName -> ClientFieldGuideManager.setCustomName(entry, newName));
+                this.nameWidget = ScholarCompat.createTextField(this.font, textX, titleY, textAreaWidth, LINE_HEIGHT, initialName, ClientConfig.get().getTextTitleColorInt(), textAreaWidth, FieldGuideLimits.MAX_ENTRY_NAME_LENGTH,
+                        newName -> ClientFieldGuideManager.setCustomName(entry, newName), false);
                 this.addRenderableWidget(this.nameWidget);
             }
 
@@ -272,13 +276,13 @@ public class FieldGuideEntryScreen extends BookScreen {
                 String customVariantName = ProgressManager.getInstance().getCustomName(ClientFieldGuideManager.getEntryId(entry).toString() + "#" + variantId);
                 String initialVariantName = customVariantName != null ? customVariantName : FieldGuideVariantManager.getVariantDisplayName(variant).getString();
 
-                this.variantWidget = new BookTextFieldWidget(this.font, textX, currentY, textAreaWidth, LINE_HEIGHT, initialVariantName, ClientConfig.get().getTextMutedColorInt(), textAreaWidth, FieldGuideLimits.MAX_ENTRY_NAME_LENGTH,
+                this.variantWidget = ScholarCompat.createTextField(this.font, textX, currentY, textAreaWidth, LINE_HEIGHT, initialVariantName, ClientConfig.get().getTextMutedColorInt(), textAreaWidth, FieldGuideLimits.MAX_ENTRY_NAME_LENGTH,
                         newName -> {
                             ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
                             if (entryId != null) {
                                 ProgressManager.getInstance().setCustomVariantName(entryId, variantId, newName);
                             }
-                        });
+                        }, false);
                 this.addRenderableWidget(this.variantWidget);
                 currentY += LINE_HEIGHT;
             }
@@ -296,7 +300,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
             String initialDesc = ClientFieldGuideManager.getEntryDescription(entry, this.initialVariant);
             if (!ServerConfig.get().disableEditingDescriptions) {
-                this.descriptionWidget = new BookTextAreaWidget(this.font, textX, textY, textAreaWidth, textAreaHeight, maxLines, LINE_HEIGHT, ClientConfig.get().getTextColorInt(), true, FieldGuideLimits.MAX_ENTRY_DESCRIPTION_LENGTH, initialDesc,
+                this.descriptionWidget = ScholarCompat.createTextArea(this.font, textX, textY, textAreaWidth, textAreaHeight, maxLines, LINE_HEIGHT, ClientConfig.get().getTextColorInt(), true, FieldGuideLimits.MAX_ENTRY_DESCRIPTION_LENGTH, initialDesc,
                         newDesc -> ClientFieldGuideManager.setCustomDescription(entry, this.initialVariant, newDesc));
                 this.addRenderableWidget(this.descriptionWidget);
             }
