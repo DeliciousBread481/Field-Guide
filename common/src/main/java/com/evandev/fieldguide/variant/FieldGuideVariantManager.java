@@ -111,20 +111,22 @@ public class FieldGuideVariantManager {
         if (!(entity instanceof Mob mob)) return null;
 
         ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
+
         if (DATAPACK_VARIANTS.containsKey(entityId)) {
             return (VariantProvider<T>) getDatapackProvider(entityId);
         }
 
-        VariantProvider<T> provider = getProvider((Class<T>) mob.getClass());
-        if (provider == null && !FAILED_REFLECTION.contains(mob.getClass())) {
-            provider = (VariantProvider<T>) getReflectionProvider(mob);
-            if (provider != null) {
-                registerProvider((Class<T>) mob.getClass(), provider);
+        VariantProvider<T> classProvider = getProvider((Class<T>) mob.getClass());
+        if (classProvider == null && !FAILED_REFLECTION.contains(mob.getClass())) {
+            classProvider = (VariantProvider<T>) getReflectionProvider(mob);
+            if (classProvider != null) {
+                registerProvider((Class<T>) mob.getClass(), classProvider);
             } else {
                 FAILED_REFLECTION.add(mob.getClass());
             }
         }
-        return provider;
+
+        return classProvider;
     }
 
     @SuppressWarnings("unchecked")
