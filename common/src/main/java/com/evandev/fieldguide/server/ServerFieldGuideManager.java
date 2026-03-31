@@ -428,6 +428,11 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
                     Category category = data.categories.computeIfAbsent(categoryId, Category::new);
 
+                    if (GsonHelper.getAsBoolean(json, "hidden", false)) {
+                        data.categories.remove(categoryId);
+                        continue;
+                    }
+
                     if (GsonHelper.getAsBoolean(json, "replace", false)) {
                         category.getEntryIds().clear();
                     }
