@@ -92,7 +92,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#gray",
+      "entry": "minecraft:wolf#environmental:gray",
       "value": [
         "environmental:snowy_pine_barrens",
         "environmental:pine_barrens",
@@ -101,7 +101,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#horizon",
+      "entry": "minecraft:wolf#environmental:horizon",
       "value": [
         "environmental:pine_barrens",
         "environmental:old_growth_pine_barrens",
@@ -110,7 +110,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#ombre",
+      "entry": "minecraft:wolf#environmental:ombre",
       "value": [
         "environmental:snowy_pine_barrens",
         "environmental:pine_barrens",
@@ -119,7 +119,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#tawny",
+      "entry": "minecraft:wolf#environmental:tawny",
       "value": [
         "environmental:snowy_pine_barrens",
         "environmental:old_growth_pine_barrens",
@@ -128,7 +128,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#timber",
+      "entry": "minecraft:wolf#environmental:timber",
       "value": [
         "environmental:snowy_pine_barrens",
         "environmental:pine_barrens",
@@ -137,7 +137,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#bush",
+      "entry": "minecraft:wolf#atmospheric:bush",
       "value": [
         "environmental:snowy_pine_barrens",
         "environmental:pine_barrens",
@@ -147,7 +147,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#cream",
+      "entry": "minecraft:wolf#atmospheric:cream",
       "value": [
         "environmental:snowy_pine_barrens",
         "environmental:pine_barrens",
@@ -157,7 +157,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#golden",
+      "entry": "minecraft:wolf#atmospheric:golden",
       "value": [
         "environmental:snowy_pine_barrens",
         "environmental:pine_barrens",
@@ -167,7 +167,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#maned",
+      "entry": "minecraft:wolf#atmospheric:maned",
       "value": [
         "environmental:snowy_pine_barrens",
         "environmental:pine_barrens",
@@ -177,7 +177,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#masked",
+      "entry": "minecraft:wolf#atmospheric:masked",
       "value": [
         "environmental:snowy_pine_barrens",
         "environmental:pine_barrens",

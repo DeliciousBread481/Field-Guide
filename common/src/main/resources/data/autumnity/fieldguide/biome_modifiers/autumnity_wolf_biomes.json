@@ -56,61 +56,61 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#gray",
+      "entry": "minecraft:wolf#environmental:gray",
       "value": [
         "autumnity:maple_forest"
       ]
     },
     {
-      "entry": "minecraft:wolf#horizon",
+      "entry": "minecraft:wolf#environmental:horizon",
       "value": [
         "autumnity:maple_forest"
       ]
     },
     {
-      "entry": "minecraft:wolf#ombre",
+      "entry": "minecraft:wolf#environmental:ombre",
       "value": [
         "autumnity:maple_forest"
       ]
     },
     {
-      "entry": "minecraft:wolf#tawny",
+      "entry": "minecraft:wolf#environmental:tawny",
       "value": [
         "autumnity:maple_forest"
       ]
     },
     {
-      "entry": "minecraft:wolf#timber",
+      "entry": "minecraft:wolf#environmental:timber",
       "value": [
         "autumnity:maple_forest"
       ]
     },
     {
-      "entry": "minecraft:wolf#bush",
+      "entry": "minecraft:wolf#atmospheric:bush",
       "value": [
         "autumnity:maple_forest"
       ]
     },
     {
-      "entry": "minecraft:wolf#cream",
+      "entry": "minecraft:wolf#atmospheric:cream",
       "value": [
         "autumnity:maple_forest"
       ]
     },
     {
-      "entry": "minecraft:wolf#golden",
+      "entry": "minecraft:wolf#atmospheric:golden",
       "value": [
         "autumnity:maple_forest"
       ]
     },
     {
-      "entry": "minecraft:wolf#maned",
+      "entry": "minecraft:wolf#atmospheric:maned",
       "value": [
         "autumnity:maple_forest"
       ]
     },
     {
-      "entry": "minecraft:wolf#masked",
+      "entry": "minecraft:wolf#atmospheric:masked",
       "value": [
         "autumnity:maple_forest"
       ]

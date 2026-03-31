@@ -44,20 +44,20 @@
       ]
     },
     {
-      "entry": "minecraft:rabbit#yellow",
+      "entry": "minecraft:rabbit#atmospheric:yellow",
       "value": [
         "atmospheric:hot_springs"
       ]
     },
     {
-      "entry": "minecraft:rabbit#gray",
+      "entry": "minecraft:rabbit#environmental:gray",
       "value": [
         "atmospheric:hot_springs",
         "atmospheric:aspen_parkland"
       ]
     },
     {
-      "entry": "minecraft:rabbit#muddy",
+      "entry": "minecraft:rabbit#environmental:muddy",
       "value": [
         "atmospheric:hot_springs",
         "atmospheric:aspen_parkland"

@@ -147,9 +147,9 @@ public class FieldGuideVariantManager {
         if (!(entity instanceof Mob mob)) return null;
 
         ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
-        VariantProvider<T> datapackProvider = null;
+
         if (DATAPACK_VARIANTS.containsKey(entityId)) {
-            datapackProvider = (VariantProvider<T>) getDatapackProvider(entityId);
+            return (VariantProvider<T>) getDatapackProvider(entityId);
         }
 
         VariantProvider<T> classProvider = getProvider((Class<T>) mob.getClass());
@@ -162,13 +162,7 @@ public class FieldGuideVariantManager {
             }
         }
 
-        if (datapackProvider != null && classProvider != null) {
-            CompositeVariantProvider<T> composite = new CompositeVariantProvider<>(datapackProvider);
-            composite.addProvider(classProvider);
-            return composite;
-        }
-
-        return datapackProvider != null ? datapackProvider : classProvider;
+        return classProvider;
     }
 
     @SuppressWarnings("unchecked")

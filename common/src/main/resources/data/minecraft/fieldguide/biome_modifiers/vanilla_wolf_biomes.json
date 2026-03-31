@@ -119,7 +119,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#gray",
+      "entry": "minecraft:wolf#environmental:gray",
       "value": [
         "minecraft:forest",
         "minecraft:sparse_jungle",
@@ -133,7 +133,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#horizon",
+      "entry": "minecraft:wolf#environmental:horizon",
       "value": [
         "minecraft:forest",
         "minecraft:sparse_jungle",
@@ -147,7 +147,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#ombre",
+      "entry": "minecraft:wolf#environmental:ombre",
       "value": [
         "minecraft:forest",
         "minecraft:sparse_jungle",
@@ -161,7 +161,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#tawny",
+      "entry": "minecraft:wolf#environmental:tawny",
       "value": [
         "minecraft:forest",
         "minecraft:sparse_jungle",
@@ -175,7 +175,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#timber",
+      "entry": "minecraft:wolf#environmental:timber",
       "value": [
         "minecraft:forest",
         "minecraft:sparse_jungle",
@@ -189,7 +189,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#bush",
+      "entry": "minecraft:wolf#atmospheric:bush",
       "value": [
         "minecraft:forest",
         "minecraft:sparse_jungle",
@@ -203,7 +203,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#cream",
+      "entry": "minecraft:wolf#atmospheric:cream",
       "value": [
         "minecraft:forest",
         "minecraft:sparse_jungle",
@@ -217,7 +217,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#golden",
+      "entry": "minecraft:wolf#atmospheric:golden",
       "value": [
         "minecraft:forest",
         "minecraft:sparse_jungle",
@@ -231,7 +231,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#maned",
+      "entry": "minecraft:wolf#atmospheric:maned",
       "value": [
         "minecraft:forest",
         "minecraft:sparse_jungle",
@@ -245,7 +245,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#masked",
+      "entry": "minecraft:wolf#atmospheric:masked",
       "value": [
         "minecraft:forest",
         "minecraft:sparse_jungle",

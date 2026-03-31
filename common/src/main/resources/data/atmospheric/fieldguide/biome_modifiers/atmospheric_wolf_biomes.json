@@ -119,7 +119,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#gray",
+      "entry": "minecraft:wolf#environmental:gray",
       "value": [
         "atmospheric:sparse_rainforest",
         "atmospheric:hot_springs",
@@ -132,7 +132,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#horizon",
+      "entry": "minecraft:wolf#environmental:horizon",
       "value": [
         "atmospheric:sparse_rainforest",
         "atmospheric:hot_springs",
@@ -145,7 +145,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#ombre",
+      "entry": "minecraft:wolf#environmental:ombre",
       "value": [
         "atmospheric:sparse_rainforest",
         "atmospheric:hot_springs",
@@ -158,7 +158,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#tawny",
+      "entry": "minecraft:wolf#environmental:tawny",
       "value": [
         "atmospheric:sparse_rainforest",
         "atmospheric:hot_springs",
@@ -171,7 +171,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#timber",
+      "entry": "minecraft:wolf#environmental:timber",
       "value": [
         "atmospheric:sparse_rainforest",
         "atmospheric:hot_springs",
@@ -184,7 +184,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#bush",
+      "entry": "minecraft:wolf#atmospheric:bush",
       "value": [
         "atmospheric:sparse_rainforest",
         "atmospheric:hot_springs",
@@ -196,7 +196,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#cream",
+      "entry": "minecraft:wolf#atmospheric:cream",
       "value": [
         "atmospheric:sparse_rainforest",
         "atmospheric:hot_springs",
@@ -208,7 +208,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#golden",
+      "entry": "minecraft:wolf#atmospheric:golden",
       "value": [
         "atmospheric:sparse_rainforest",
         "atmospheric:hot_springs",
@@ -220,7 +220,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#maned",
+      "entry": "minecraft:wolf#atmospheric:maned",
       "value": [
         "atmospheric:hot_springs",
         "atmospheric:sparse_rainforest_basin",
@@ -232,7 +232,7 @@
       ]
     },
     {
-      "entry": "minecraft:wolf#masked",
+      "entry": "minecraft:wolf#atmospheric:masked",
       "value": [
         "atmospheric:sparse_rainforest",
         "atmospheric:hot_springs",

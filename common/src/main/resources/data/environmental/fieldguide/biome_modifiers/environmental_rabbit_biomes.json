@@ -68,7 +68,7 @@
       ]
     },
     {
-      "entry": "minecraft:rabbit#yellow",
+      "entry": "minecraft:rabbit#atmospheric:yellow",
       "value": [
         "environmental:marsh",
         "environmental:pine_slopes",
@@ -79,7 +79,7 @@
       ]
     },
     {
-      "entry": "minecraft:rabbit#gray",
+      "entry": "minecraft:rabbit#environmental:gray",
       "value": [
         "environmental:marsh",
         "environmental:pine_slopes",
@@ -90,7 +90,7 @@
       ]
     },
     {
-      "entry": "minecraft:rabbit#muddy",
+      "entry": "minecraft:rabbit#environmental:muddy",
       "value": [
         "environmental:pine_slopes",
         "environmental:old_growth_pine_barrens",
