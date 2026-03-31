@@ -12,6 +12,8 @@ import com.evandev.fieldguide.compat.SeasonsCompat;
 import com.evandev.fieldguide.compat.cobblemon.ClientFieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ClientConfig;
+import com.evandev.fieldguide.config.ServerConfig;
+import com.evandev.fieldguide.item.ModItems;
 import com.evandev.fieldguide.mixin.accessor.MobAccessor;
 import com.evandev.fieldguide.platform.Services;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -70,9 +72,27 @@ public class FieldGuideClient {
         }
     }
 
+    public static boolean canOpenGuide() {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.player == null) return false;
+
+        if (ServerConfig.get().requireItemToOpen) {
+            boolean hasItem = false;
+            for (int i = 0; i < minecraft.player.getInventory().getContainerSize(); i++) {
+                if (minecraft.player.getInventory().getItem(i).getItem() == ModItems.FIELD_GUIDE.get()) {
+                    hasItem = true;
+                    break;
+                }
+            }
+            return hasItem;
+        }
+        return true;
+    }
+
     public static void openGuide() {
         Minecraft minecraft = Minecraft.getInstance();
         if (minecraft.screen == null && minecraft.player != null) {
+            if (!canOpenGuide()) return;
             minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1.0F, 1.0F));
             ClientFieldGuideManager manager = ClientFieldGuideManager.getInstance();
             long lastTime = manager.getLastUnlockTime();

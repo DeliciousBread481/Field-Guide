@@ -207,9 +207,8 @@ public class BookTextAreaWidget extends AbstractWidget {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (!scrollable || !this.isMouseOver(mouseX, mouseY)) return false;
-        List<FormattedCharSequence> lines = this.font.split(Component.literal(text), this.width);
-        if (lines.size() > maxVisibleLines) {
-            scrollOffset = Math.max(0, Math.min(scrollOffset - (int) Math.signum(scrollY), lines.size() - maxVisibleLines));
+        if (lineStarts.size() > maxVisibleLines) {
+            scrollOffset = Math.max(0, Math.min(scrollOffset - (int) Math.signum(scrollY), lineStarts.size() - maxVisibleLines));
             return true;
         }
         return false;
@@ -365,11 +364,10 @@ public class BookTextAreaWidget extends AbstractWidget {
     private void moveCursorLine(int dir) {
         int[] currentCoords = getCoordsForIndex(cursorPos);
         int targetLine = currentCoords[2] + dir;
-        List<FormattedCharSequence> allLines = this.font.split(Component.literal(text), this.width);
 
         if (targetLine < 0) {
             cursorPos = 0;
-        } else if (targetLine >= allLines.size()) {
+        } else if (targetLine >= lineStarts.size()) {
             cursorPos = text.length();
         } else {
             int bestPos = 0;
@@ -395,8 +393,7 @@ public class BookTextAreaWidget extends AbstractWidget {
         int targetLine = (relativeY / this.lineHeight) + scrollOffset;
         targetLine = Math.max(0, targetLine);
 
-        List<FormattedCharSequence> allLines = this.font.split(Component.literal(text), this.width);
-        if (targetLine >= allLines.size()) {
+        if (targetLine >= lineStarts.size()) {
             cursorPos = text.length();
             if (!Screen.hasShiftDown()) selectionPos = cursorPos;
             return;
@@ -426,8 +423,7 @@ public class BookTextAreaWidget extends AbstractWidget {
     }
 
     private boolean isScrollbarHovered(double mouseX, double mouseY) {
-        List<FormattedCharSequence> lines = this.font.split(Component.literal(text), this.width);
-        if (lines.size() <= maxVisibleLines) return false;
+        if (lineStarts.size() <= maxVisibleLines) return false;
         int scrollbarX = this.getX() + this.width + 2;
         int scrollbarHeight = (maxVisibleLines * this.lineHeight) - 2;
         int hitPadding = 4;
@@ -435,8 +431,7 @@ public class BookTextAreaWidget extends AbstractWidget {
     }
 
     private void updateScrollFromMouse(double mouseY) {
-        List<FormattedCharSequence> lines = this.font.split(Component.literal(text), this.width);
-        int totalLines = lines.size();
+        int totalLines = lineStarts.size();
         if (totalLines > maxVisibleLines) {
             int scrollbarHeight = (maxVisibleLines * this.lineHeight) - 2;
             int thumbHeight = Math.max(4, (int) ((float) maxVisibleLines / totalLines * scrollbarHeight));
@@ -449,11 +444,13 @@ public class BookTextAreaWidget extends AbstractWidget {
     @Override
     public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         List<FormattedCharSequence> lines = this.font.split(Component.literal(text), this.width);
-        int totalLines = lines.size();
+        int totalLines = lineStarts.size();
         scrollOffset = Math.max(0, Math.min(scrollOffset, Math.max(0, totalLines - maxVisibleLines)));
 
         for (int i = 0; i < maxVisibleLines && (i + scrollOffset) < totalLines; i++) {
-            guiGraphics.drawString(this.font, lines.get(i + scrollOffset), this.getX(), this.getY() + i * this.lineHeight, textColor, false);
+            if (i + scrollOffset < lines.size()) {
+                guiGraphics.drawString(this.font, lines.get(i + scrollOffset), this.getX(), this.getY() + i * this.lineHeight, textColor, false);
+            }
         }
 
         if (this.isFocused()) {
@@ -467,7 +464,7 @@ public class BookTextAreaWidget extends AbstractWidget {
                     if (scrollable && (line < scrollOffset || line >= scrollOffset + maxVisibleLines)) continue;
                     int visibleLine = line - scrollOffset;
                     int lineStartX = (line == startCoords[2]) ? startCoords[0] : this.getX();
-                    int lineEndX = (line == endCoords[2]) ? endCoords[0] : this.getX() + this.font.width(lines.get(line));
+                    int lineEndX = (line == endCoords[2]) ? endCoords[0] : this.getX() + (line < lines.size() ? this.font.width(lines.get(line)) : 0);
                     guiGraphics.fill(lineStartX, this.getY() + visibleLine * this.lineHeight, lineEndX, this.getY() + (visibleLine + 1) * this.lineHeight, 0x550000FF);
                 }
             }

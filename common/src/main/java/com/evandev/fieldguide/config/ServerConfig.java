@@ -29,6 +29,7 @@ public class ServerConfig {
     public boolean keepSilhouetteWhenUnlocked = false;
     public boolean unlockAllVariants = false;
     public boolean enableFieldGuideItem = false;
+    public boolean requireItemToOpen = false;
     public boolean enableCopyingPages = true;
 
     public boolean hideTabsUntilUnlocked = false;
