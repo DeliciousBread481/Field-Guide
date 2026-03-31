@@ -19,7 +19,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.ClickEvent;
@@ -27,6 +26,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -408,33 +408,7 @@ public class ProgressManager {
 
     public void exportToLang(String type) {
         try {
-            JsonObject langJson = new JsonObject();
-            boolean exportNames = type.equals("names") || type.equals("all");
-            boolean exportDesc = type.equals("descriptions") || type.equals("all");
-
-            if (exportNames) {
-                for (Map.Entry<String, String> entry : customNames.entrySet()) {
-                    String[] parts = entry.getKey().split("#", 2);
-                    ResourceLocation id = new ResourceLocation(parts[0]);
-
-                    if (parts.length > 1) { // variant
-                        String variantSuffix = parts[1].toLowerCase(Locale.ROOT);
-                        langJson.addProperty("fieldguide.name." + id.getNamespace() + "." + id.getPath() + "." + variantSuffix, entry.getValue());
-                    } else { // base entity
-                        String key = BuiltInRegistries.ENTITY_TYPE.containsKey(id) ? "entity." + id.getNamespace() + "." + id.getPath() : "block." + id.getNamespace() + "." + id.getPath();
-                        langJson.addProperty(key, entry.getValue());
-                    }
-                }
-            }
-            if (exportDesc) {
-                for (Map.Entry<String, String> entry : customDescriptions.entrySet()) {
-                    String[] parts = entry.getKey().split("#", 2);
-                    ResourceLocation id = new ResourceLocation(parts[0]);
-
-                    String variantSuffix = parts.length > 1 ? "." + parts[1].toLowerCase(Locale.ROOT) : "";
-                    langJson.addProperty("fieldguide." + id.getNamespace() + "." + id.getPath() + variantSuffix + ".description", entry.getValue());
-                }
-            }
+            JsonObject langJson = getLangJson(type);
 
             Path exportDir = Minecraft.getInstance().gameDirectory.toPath().resolve("fieldguide_exports");
             Files.createDirectories(exportDir);
@@ -457,5 +431,35 @@ public class ProgressManager {
             if (Minecraft.getInstance().player != null)
                 Minecraft.getInstance().player.displayClientMessage(Component.literal("§cFailed to export: " + e.getMessage()), false);
         }
+    }
+
+    private @NotNull JsonObject getLangJson(String type) {
+        JsonObject langJson = new JsonObject();
+        boolean exportNames = type.equals("names") || type.equals("all");
+        boolean exportDesc = type.equals("descriptions") || type.equals("all");
+
+        if (exportNames) {
+            for (Map.Entry<String, String> entry : customNames.entrySet()) {
+                String[] parts = entry.getKey().split("#", 2);
+                ResourceLocation id = EntryResolver.getRawId(new ResourceLocation(parts[0]));
+
+                if (parts.length > 1) { // variant
+                    String variantSuffix = parts[1].toLowerCase(Locale.ROOT);
+                    langJson.addProperty("fieldguide.name." + id.getNamespace() + "." + id.getPath() + "." + variantSuffix, entry.getValue());
+                } else { // base entity
+                    langJson.addProperty("fieldguide.name." + id.getNamespace() + "." + id.getPath(), entry.getValue());
+                }
+            }
+        }
+        if (exportDesc) {
+            for (Map.Entry<String, String> entry : customDescriptions.entrySet()) {
+                String[] parts = entry.getKey().split("#", 2);
+                ResourceLocation id = EntryResolver.getRawId(new ResourceLocation(parts[0]));
+
+                String variantSuffix = parts.length > 1 ? "." + parts[1].toLowerCase(Locale.ROOT) : "";
+                langJson.addProperty("fieldguide." + id.getNamespace() + "." + id.getPath() + variantSuffix + ".description", entry.getValue());
+            }
+        }
+        return langJson;
     }
 }

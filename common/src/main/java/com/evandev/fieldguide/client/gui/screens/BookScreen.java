@@ -1,12 +1,12 @@
 package com.evandev.fieldguide.client.gui.screens;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.widget.TabButton;
 import com.evandev.fieldguide.config.ServerConfig;
-import com.evandev.fieldguide.api.Category;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ImageButton;
@@ -33,6 +33,7 @@ public abstract class BookScreen extends Screen {
     private static final int TAB_GAP = -1;
     private static final int TAB_Y_OFFSET = 32;
     private static final int MAX_TABS = 6;
+    public static BookScreen lastOpenedScreen;
     private static int tabStartIndex = 0;
     private final List<TabButton> tabButtons = new ArrayList<>();
     private final List<Category> sortedCategories = new ArrayList<>();
@@ -42,7 +43,6 @@ public abstract class BookScreen extends Screen {
     private Button tabUpButton;
     private Button tabDownButton;
     private Category selectedCategory;
-    public static BookScreen lastOpenedScreen;
 
     protected BookScreen(Component title) {
         super(title);
