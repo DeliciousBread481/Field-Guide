@@ -45,6 +45,12 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> serverConfig.enableFieldGuideItem = newValue)
                 .build());
 
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.require_item_to_open"), serverConfig.requireItemToOpen)
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("option.fieldguide.require_item_to_open.tooltip"))
+                .setSaveConsumer(newValue -> serverConfig.requireItemToOpen = newValue)
+                .build());
+
         general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.enable_copying_pages"), serverConfig.enableCopyingPages)
                 .setDefaultValue(true)
                 .setTooltip(Component.translatable("option.fieldguide.enable_copying_pages.tooltip"))

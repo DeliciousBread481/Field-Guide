@@ -1,7 +1,6 @@
 package com.evandev.fieldguide.server.scan;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.ModTags;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.entry.EntryResolver;
@@ -24,8 +23,7 @@ public class ScanVerifier {
 
         if (config.disableScanning) return false;
 
-        boolean hasSpyglass = player.isScoping() ||
-                player.isHolding(s -> s.is(ModTags.Items.SPYGLASSES));
+        boolean hasSpyglass = player.isScoping(); // TODO: actually check curios here
 
         double activeScanDist;
         if (hasSpyglass && config.enableSpyglassScanning) {

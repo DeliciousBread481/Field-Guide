@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.mixin.client;
 
 import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.gui.screens.BookScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideCategoryScreen;
 import com.evandev.fieldguide.config.ClientConfig;
@@ -49,6 +50,7 @@ public abstract class InventoryScreenMixin extends EffectRenderingInventoryScree
                 36,
                 (button) -> {
                     if (this.minecraft != null) {
+                        if (!FieldGuideClient.canOpenGuide()) return;
                         String defaultMode = ClientConfig.get().defaultScreen;
                         if ("last_opened_screen".equals(defaultMode) && BookScreen.lastOpenedScreen != null) {
                             this.minecraft.setScreen(BookScreen.lastOpenedScreen);

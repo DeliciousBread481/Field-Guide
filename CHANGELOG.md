@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.3] - 2026-03-31
+
+### Added
+
+- Added config option to restrict opening the Field Guide to players with the item in their inventory.
+
+### Fixed
+
+- Fixed scans rejecting when spyglasses are in the Curios slot.
+- Fixed Scholar integration causing scrollbars to not show up in long descriptions.
+- Fixed max Journal page length being one line too short.
+
 ## [1.6.2] - 2026-03-30
 
 ### Fixed
