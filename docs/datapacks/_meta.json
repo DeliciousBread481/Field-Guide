@@ -1,6 +1,8 @@
 {
   "overview.mdx": "Overview & Categories",
   "unlocking.mdx": "Entry Unlocking",
+  "blacklisting.mdx": "Blacklisting Entries",
+  "biome_loot_modifiers.mdx": "Biome & Loot Modifiers",
   "advancements.mdx": "Advancements",
   "advanced.mdx": "Advanced Features"
 }

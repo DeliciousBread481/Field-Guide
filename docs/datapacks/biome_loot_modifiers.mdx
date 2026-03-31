@@ -1,0 +1,43 @@
+---
+title: Biome & Loot Modifiers
+hide_meta: true
+---
+
+Field Guide uses datapacks to modify which biomes and loot drops appear on an entry's page.
+You can target base entities, or specific variants by appending `#variant_id` to the entry identifier.
+
+* **Biome Modifiers:** `data/<namespace>/fieldguide/biome_modifiers/<filename>.json`
+* **Loot Modifiers:** `data/<namespace>/fieldguide/loot_modifiers/<filename>.json`
+
+**Example: Targeting a Base Entity**
+```json
+{
+  "additions": [
+    {
+      "entry": "minecraft:cow",
+      "value": "minecraft:milk_bucket"
+    }
+  ]
+}
+```
+
+**Example: Targeting Specific Variants**
+
+If you want to isolate specific biomes or drops to a specific variant (like a Desert Villager only showing the Desert biome), use the `#` symbol.
+
+```json
+{
+  "additions": [
+    {
+      "entry": "minecraft:villager#minecraft:desert",
+      "value": "minecraft:desert"
+    }
+  ],
+  "removals": [
+    {
+      "entry": "minecraft:villager#minecraft:desert",
+      "value": "minecraft:plains"
+    }
+  ]
+}
+```
