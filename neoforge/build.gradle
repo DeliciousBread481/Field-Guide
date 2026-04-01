@@ -39,7 +39,7 @@ sourceSets.main.resources.srcDir 'src/generated/resources'
 
 dependencies {
     // Item Descriptions
-    runtimeOnly "maven.modrinth:item-descriptions:${item_descriptions_version}-neoforge"
+    implementation "maven.modrinth:item-descriptions:${item_descriptions_version}-neoforge"
 
     // EMI
     implementation "dev.emi:emi-neoforge:${emi_version}"

@@ -11,6 +11,7 @@ import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.ClientFieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.emf.EmfCompat;
+import com.evandev.fieldguide.compat.tide.ClientTideCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.mixin.accessor.EntityAccessor;
@@ -256,6 +257,10 @@ public class EntryRenderHelper {
 
         if (entity instanceof WaterAnimal) {
             ((EntityAccessor) entity).fieldguide$setWasTouchingWater(true);
+        }
+
+        if (Services.PLATFORM.isModLoaded("tide")) {
+            ClientTideCompat.applyLavaFishFix(entity);
         }
 
         if (Services.PLATFORM.isModLoaded("entity_model_features")) {

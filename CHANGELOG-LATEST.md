@@ -1,9 +1,9 @@
-### Added
+### Changed
 
-- Added config option to restrict opening the Field Guide to players with the item in their inventory.
+- Improved Item Descriptions integration to automatically use tag descriptions and polymer item descriptions, if
+  applicable.
 
 ### Fixed
 
-- Fixed scans rejecting when spyglasses are in the Curios slot.
-- Fixed Scholar integration causing scrollbars to not show up in long descriptions.
-- Fixed max Journal page length being one line too short.
+- Fixed "obtain" triggers not applying to food.
+- Fixed Tide lava fish rendering sideways.

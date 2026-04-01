@@ -20,7 +20,7 @@ dependencies {
 
     // Item Descriptions
     modRuntimeOnly "folk.sisby:kaleido-config:${kaleido_config_version}"
-    modRuntimeOnly "maven.modrinth:item-descriptions:${item_descriptions_version}-fabric"
+    modImplementation "maven.modrinth:item-descriptions:${item_descriptions_version}-fabric"
 
     // Immersive Overlays
     modRuntimeOnly "maven.modrinth:immersive-overlays:${immersive_overlays_version}-fabric"
