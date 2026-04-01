@@ -2,7 +2,9 @@ package com.evandev.fieldguide.client.manager;
 
 import com.evandev.fieldguide.api.GuideEntry;
 import com.evandev.fieldguide.client.progress.ProgressManager;
+import com.evandev.fieldguide.compat.itemdescriptions.ItemDescriptionsCompat;
 import com.evandev.fieldguide.entry.EntryResolver;
+import com.evandev.fieldguide.platform.Services;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -48,6 +50,14 @@ public class ClientTextManager {
         if (I18n.exists(overrideKey)) return I18n.get(overrideKey);
 
         Object coreEntry = EntryResolver.resolveCoreEntry(entry);
+
+        // Item Descriptions
+        if (Services.PLATFORM.isModLoaded("item_descriptions")) {
+            String compatKey = ItemDescriptionsCompat.tryGetDescriptionKey(coreEntry);
+            if (compatKey != null && I18n.exists(compatKey)) {
+                return I18n.get(compatKey);
+            }
+        }
 
         // Entity Descriptions
         String entityKey = "entity." + id.getNamespace() + "." + id.getPath() + ".description";

@@ -72,6 +72,14 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             return mapData;
         }
 
+        ResourceLocation rawId = EntryResolver.getRawId(entryId);
+        if (rawId != null && !rawId.equals(entryId)) {
+            EntryUnlockData rawMapData = entryUnlockDataMap.get(rawId);
+            if (rawMapData != null && !EntryUnlockData.DEFAULT.equals(rawMapData)) {
+                return rawMapData;
+            }
+        }
+
         if (isKillToUnlock(entryId)) {
             return new EntryUnlockData(false, Collections.emptyList(), List.of(EntryUnlockData.UnlockTrigger.KILL), Collections.emptyList());
         }

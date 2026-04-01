@@ -27,6 +27,7 @@ dependencies {
     compileOnly "com.cobblemon:forge:${cobblemon_version}"
     compileOnly "maven.modrinth:serene-seasons:${serene_seasons_forge_version}"
     compileOnly "maven.modrinth:scholar:yxQA51K6"
+    compileOnly "maven.modrinth:item-descriptions:${item_descriptions_version}-forge"
 
     compileOnly 'org.jetbrains:annotations:26.0.2-1'
     compileOnly group: 'org.spongepowered', name: 'mixin', version: '0.8.5'
