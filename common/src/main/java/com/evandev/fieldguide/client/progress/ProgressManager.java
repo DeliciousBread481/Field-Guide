@@ -49,6 +49,7 @@ public class ProgressManager {
     private final Map<String, String> selectedVariants = new HashMap<>();
     private final Set<String> killedOnly = new HashSet<>();
     private final Set<String> eatenOnly = new HashSet<>();
+    private final Map<String, List<String>> entryTriggers = new HashMap<>();
     private final List<JournalPage> journalPages = new ArrayList<>();
     private String lastUnlockedVariant = null;
 
@@ -86,6 +87,20 @@ public class ProgressManager {
         return eatenOnly.contains(entryId.toString());
     }
 
+    public boolean canScanToUnlock(ResourceLocation entryId) {
+        String idStr = entryId.toString();
+        if (isKillToUnlock(entryId) || isEatToUnlock(entryId)) {
+            return false;
+        }
+
+        if (entryTriggers.containsKey(idStr)) {
+            List<String> triggers = entryTriggers.get(idStr);
+            return triggers.isEmpty() || triggers.contains("SCAN");
+        }
+
+        return true;
+    }
+
     public void applyServerUpdate(ProgressUpdatePacket packet) {
         if (packet.isReset()) {
             unlockedEntries.clear();
@@ -98,6 +113,7 @@ public class ProgressManager {
             selectedVariants.clear();
             killedOnly.clear();
             eatenOnly.clear();
+            entryTriggers.clear();
         }
 
         for (String id : packet.getRevoked()) {
@@ -148,6 +164,10 @@ public class ProgressManager {
 
         eatenOnly.clear();
         eatenOnly.addAll(packet.getEatenOnly());
+
+        if (!packet.getEntryTriggers().isEmpty()) {
+            entryTriggers.putAll(packet.getEntryTriggers());
+        }
 
         packet.getJournalTitle().ifPresent(title -> journalTitle = title);
         packet.getJournalPages().ifPresent(pages -> {
@@ -339,6 +359,14 @@ public class ProgressManager {
         }
     }
 
+    public boolean hasTrigger(ResourceLocation entryId, String triggerName) {
+        String idStr = entryId.toString();
+        if (entryTriggers.containsKey(idStr)) {
+            return entryTriggers.get(idStr).contains(triggerName);
+        }
+        return false;
+    }
+
     public String getJournalTitle() {
         return journalTitle;
     }
@@ -379,6 +407,7 @@ public class ProgressManager {
         customNames.clear();
         entryPhotographs.clear();
         selectedVariants.clear();
+        entryTriggers.clear();
         journalPages.clear();
         journalTitle = "My Field Guide";
         lastUnlockTime = 0;
@@ -395,6 +424,7 @@ public class ProgressManager {
         customNames.clear();
         entryPhotographs.clear();
         selectedVariants.clear();
+        entryTriggers.clear();
         journalPages.clear();
         journalTitle = "My Field Guide";
         lastUnlockTime = 0;
@@ -441,23 +471,29 @@ public class ProgressManager {
         if (exportNames) {
             for (Map.Entry<String, String> entry : customNames.entrySet()) {
                 String[] parts = entry.getKey().split("#", 2);
-                ResourceLocation id = EntryResolver.getRawId(ResourceLocation.parse(parts[0]));
+                ResourceLocation prefixedId = ResourceLocation.parse(parts[0]);
+
+                String entryType = prefixedId.getNamespace();
+                String path = prefixedId.getPath().replace('/', '.');
 
                 if (parts.length > 1) { // variant
                     String variantSuffix = parts[1].toLowerCase(Locale.ROOT);
-                    langJson.addProperty("fieldguide.name." + id.getNamespace() + "." + id.getPath() + "." + variantSuffix, entry.getValue());
+                    langJson.addProperty("fieldguide.name." + entryType + "." + path + "." + variantSuffix, entry.getValue());
                 } else { // base entity
-                    langJson.addProperty("fieldguide.name." + id.getNamespace() + "." + id.getPath(), entry.getValue());
+                    langJson.addProperty("fieldguide.name." + entryType + "." + path, entry.getValue());
                 }
             }
         }
         if (exportDesc) {
             for (Map.Entry<String, String> entry : customDescriptions.entrySet()) {
                 String[] parts = entry.getKey().split("#", 2);
-                ResourceLocation id = EntryResolver.getRawId(ResourceLocation.parse(parts[0]));
+                ResourceLocation prefixedId = ResourceLocation.parse(parts[0]);
+
+                String entryType = prefixedId.getNamespace();
+                String path = prefixedId.getPath().replace('/', '.');
 
                 String variantSuffix = parts.length > 1 ? "." + parts[1].toLowerCase(Locale.ROOT) : "";
-                langJson.addProperty("fieldguide." + id.getNamespace() + "." + id.getPath() + variantSuffix + ".description", entry.getValue());
+                langJson.addProperty("fieldguide." + entryType + "." + path + variantSuffix + ".description", entry.getValue());
             }
         }
         return langJson;

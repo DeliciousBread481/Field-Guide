@@ -3,6 +3,7 @@ package com.evandev.fieldguide.client.manager;
 import com.evandev.fieldguide.api.GuideEntry;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.itemdescriptions.ItemDescriptionsCompat;
+import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.platform.Services;
 import net.minecraft.client.resources.language.I18n;
@@ -22,13 +23,64 @@ public class ClientTextManager {
         return INSTANCE;
     }
 
+    public String getLockedHint(Object entry) {
+        return getLockedHint(entry, null);
+    }
+
+    public String getLockedHint(Object entry, String variantId) {
+        ResourceLocation id = EntryResolver.getEntryId(entry, false);
+        ResourceLocation prefixedId = EntryResolver.getEntryId(entry, true);
+        if (id == null || prefixedId == null) return I18n.get("fieldguide.hint.default");
+
+        String entryType = prefixedId.getNamespace();
+        String path = prefixedId.getPath().replace('/', '.');
+
+        // 1. custom variant hint
+        if (variantId != null && !variantId.isEmpty()) {
+            String variantStr = variantId.toLowerCase(java.util.Locale.ROOT);
+
+            String newVariantKey = "fieldguide." + entryType + "." + path + "." + variantStr + ".hint";
+            if (I18n.exists(newVariantKey)) return I18n.get(newVariantKey);
+
+            String oldVariantKey = "fieldguide." + id.getNamespace() + "." + id.getPath() + "." + variantStr + ".hint";
+            if (I18n.exists(oldVariantKey)) return I18n.get(oldVariantKey);
+        }
+
+        // 2. custom base hint
+        String newOverrideKey = "fieldguide." + entryType + "." + path + ".hint";
+        if (I18n.exists(newOverrideKey)) return I18n.get(newOverrideKey);
+
+        String oldOverrideKey = "fieldguide." + id.getNamespace() + "." + id.getPath() + ".hint";
+        if (I18n.exists(oldOverrideKey)) return I18n.get(oldOverrideKey);
+
+        // 3. defaults based on known triggers
+        ProgressManager progress = ProgressManager.getInstance();
+        if (progress.isKillToUnlock(prefixedId) || progress.hasTrigger(prefixedId, "KILL")) {
+            return I18n.get("fieldguide.hint.kill");
+        }
+        if (progress.isEatToUnlock(prefixedId) || progress.hasTrigger(prefixedId, "EAT")) {
+            return I18n.get("fieldguide.hint.eat");
+        }
+        if (progress.hasTrigger(prefixedId, "OBTAIN")) {
+            return I18n.get("fieldguide.hint.obtain");
+        }
+
+        // fallback default
+        if (ServerConfig.get().enableNakedEyeScanning) {
+            return I18n.get("fieldguide.hint.no_spyglass");
+        }
+        return I18n.get("fieldguide.hint.default");
+    }
+
     public String getEntryDescription(Object entry) {
         return getEntryDescription(entry, null);
     }
 
     public String getEntryDescription(Object entry, String variantId) {
         ResourceLocation id = EntryResolver.getEntryId(entry, false);
-        if (id == null) return "";
+        ResourceLocation prefixedId = EntryResolver.getEntryId(entry, true);
+        if (id == null || prefixedId == null) return "";
+
         String custom = ProgressManager.getInstance().getCustomDescription(entry, variantId);
         if (custom != null) return custom;
 
@@ -41,17 +93,28 @@ public class ClientTextManager {
             if (I18n.exists(descKey)) return I18n.get(descKey);
         }
 
+        String entryType = prefixedId.getNamespace();
+        String path = prefixedId.getPath().replace('/', '.');
+
         if (variantId != null && !variantId.isEmpty()) {
-            String variantKey = "fieldguide." + id.getNamespace() + "." + id.getPath() + "." + variantId.toLowerCase(java.util.Locale.ROOT) + ".description";
-            if (I18n.exists(variantKey)) return I18n.get(variantKey);
+            String variantStr = variantId.toLowerCase(java.util.Locale.ROOT);
+
+            String newVariantKey = "fieldguide." + entryType + "." + path + "." + variantStr + ".description";
+            if (I18n.exists(newVariantKey)) return I18n.get(newVariantKey);
+
+            String oldVariantKey = "fieldguide." + id.getNamespace() + "." + id.getPath() + "." + variantStr + ".description";
+            if (I18n.exists(oldVariantKey)) return I18n.get(oldVariantKey);
         }
 
-        String overrideKey = "fieldguide." + id.getNamespace() + "." + id.getPath() + ".description";
-        if (I18n.exists(overrideKey)) return I18n.get(overrideKey);
+        String newOverrideKey = "fieldguide." + entryType + "." + path + ".description";
+        if (I18n.exists(newOverrideKey)) return I18n.get(newOverrideKey);
+
+        String oldOverrideKey = "fieldguide." + id.getNamespace() + "." + id.getPath() + ".description";
+        if (I18n.exists(oldOverrideKey)) return I18n.get(oldOverrideKey);
 
         Object coreEntry = EntryResolver.resolveCoreEntry(entry);
 
-        // Item Descriptions
+        // Item Descriptions Compat
         if (Services.PLATFORM.isModLoaded("item_descriptions")) {
             String compatKey = ItemDescriptionsCompat.tryGetDescriptionKey(coreEntry);
             if (compatKey != null && I18n.exists(compatKey)) {
@@ -59,7 +122,7 @@ public class ClientTextManager {
             }
         }
 
-        // Entity Descriptions
+        // Entity Descriptions Compat
         String entityKey = "entity." + id.getNamespace() + "." + id.getPath() + ".description";
         if (coreEntry instanceof EntityType) {
             if (I18n.exists(entityKey)) return I18n.get(entityKey);
@@ -71,7 +134,7 @@ public class ClientTextManager {
             return I18n.get(quarkJeiKey);
         }
 
-        // Item Descriptions
+        // Lore & Item Fallbacks
         String loreKey = "lore." + id.getNamespace() + "." + id.getPath();
         if (I18n.exists(loreKey)) return I18n.get(loreKey);
 
@@ -84,7 +147,9 @@ public class ClientTextManager {
 
     public Component getDefaultNameComponent(Object entry, String variantId) {
         ResourceLocation id = EntryResolver.getEntryId(entry, false);
-        if (id != null) {
+        ResourceLocation prefixedId = EntryResolver.getEntryId(entry, true);
+
+        if (id != null && prefixedId != null) {
             if (id.getNamespace().equals("fieldguide") && id.getPath().startsWith("cobblemon/")) {
                 String species = id.getPath().substring("cobblemon/".length());
                 int underscore = species.lastIndexOf('_');
@@ -96,17 +161,24 @@ public class ClientTextManager {
                 }
             }
 
+            String entryType = prefixedId.getNamespace();
+            String path = prefixedId.getPath().replace('/', '.');
+
             if (variantId != null && !variantId.isEmpty()) {
-                String variantKey = "fieldguide.name." + id.getNamespace() + "." + id.getPath() + "." + variantId.toLowerCase(java.util.Locale.ROOT);
-                if (I18n.exists(variantKey)) {
-                    return Component.translatable(variantKey);
-                }
+                String variantStr = variantId.toLowerCase(java.util.Locale.ROOT);
+
+                String newVariantKey = "fieldguide.name." + entryType + "." + path + "." + variantStr;
+                if (I18n.exists(newVariantKey)) return Component.translatable(newVariantKey);
+
+                String oldVariantKey = "fieldguide.name." + id.getNamespace() + "." + id.getPath() + "." + variantStr;
+                if (I18n.exists(oldVariantKey)) return Component.translatable(oldVariantKey);
             }
 
-            String overrideKey = "fieldguide.name." + id.getNamespace() + "." + id.getPath();
-            if (I18n.exists(overrideKey)) {
-                return Component.translatable(overrideKey);
-            }
+            String newOverrideKey = "fieldguide.name." + entryType + "." + path;
+            if (I18n.exists(newOverrideKey)) return Component.translatable(newOverrideKey);
+
+            String oldOverrideKey = "fieldguide.name." + id.getNamespace() + "." + id.getPath();
+            if (I18n.exists(oldOverrideKey)) return Component.translatable(oldOverrideKey);
         }
 
         Object coreEntry = EntryResolver.resolveCoreEntry(entry);

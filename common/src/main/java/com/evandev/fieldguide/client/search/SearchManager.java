@@ -223,7 +223,9 @@ public class SearchManager {
         for (Object entry : entries) {
             ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
             if (id != null) {
-                String namespace = id.getNamespace().toLowerCase(Locale.ROOT);
+                ResourceLocation rawId = EntryResolver.getRawId(id);
+
+                String namespace = rawId.getNamespace().toLowerCase(Locale.ROOT);
                 if (exactMatch ? namespace.equals(modQuery) : namespace.contains(modQuery)) results.add(entry);
             }
         }

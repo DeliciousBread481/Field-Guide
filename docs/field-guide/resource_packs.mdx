@@ -55,3 +55,29 @@ The mod looks for textures in this specific order:
 
 *Example:* To override the specific rendering of a pig in `minecraft`, place a file at
 `assets/minecraft/textures/fieldguide/entries/pig.png`.
+
+---
+
+### Customizing the "Locked" Hint Text
+
+When a player views an entry they haven't unlocked yet, the Field Guide tries to give them a dynamic hint based on the required triggers (e.g., *"Defeat this creature to discover"*, *"Eat this item to discover"*).
+
+Modpack makers can override this default text to provide highly specific instructions (like *"Obtain a diamond to discover"*) by using a Resource Pack and defining custom language keys in `en_us.json`.
+
+The language key format follows the same structure as custom descriptions, but uses `.hint` instead:
+
+* **Base Entities:** `fieldguide.<namespace>.<path>.hint`
+* **Variants:** `fieldguide.<namespace>.<path>.<variant_id>.hint`
+
+**Example `en_us.json`:**
+```json
+{
+  "fieldguide.minecraft.creeper.hint": "A creepy creature that comes out at night...",
+  "fieldguide.my_mod.combat_mastery.hint": "Prove your worth by slaying the Warden.",
+  "fieldguide.cobblemon.pikachu.hint": "Find this electric mouse in a Forest.",
+  "fieldguide.cobblemon.rattata.alolan.hint": "A rare variant of a Rattata. Scan to learn more."
+}
+
+```
+
+If a `.hint` key is not found, the hint will automatically fallback to the text based on the entry's unlock triggers.

@@ -71,10 +71,7 @@ public class PlayerFieldGuideProgress {
     }
 
     public void tryUnlock(ServerPlayer player, ResourceLocation triggeredId, String variantId, EntryUnlockData.UnlockTrigger trigger) {
-        // unlock the thing that was triggered directly
         tryUnlockDirect(player, triggeredId, variantId, trigger);
-
-        // unlock other entries that have this triggeredId as 'triggerOn'
         for (ResourceLocation entryId : ServerFieldGuideManager.getInstance().getEntriesTriggeredBy(triggeredId)) {
             tryUnlockDirect(player, entryId, null, trigger);
         }
@@ -343,6 +340,18 @@ public class PlayerFieldGuideProgress {
         List<String> allUnlocked = new ArrayList<>(unlockedEntries);
         int iterations = Math.max(1, allUnlocked.size());
 
+        Map<String, List<String>> allTriggers = new HashMap<>();
+        for (ResourceLocation resId : ServerFieldGuideManager.getInstance().getAllEntryIds()) {
+            EntryUnlockData unlockData = ServerFieldGuideManager.getInstance().getUnlockData(resId);
+            List<String> triggers = unlockData.triggers().stream()
+                    .map(Enum::name)
+                    .toList();
+
+            if (!triggers.isEmpty()) {
+                allTriggers.put(resId.toString(), triggers);
+            }
+        }
+
         boolean first = true;
         for (int i = 0; i < iterations; i += chunkSize) {
             List<String> unlockedChunk = chunkAt(allUnlocked, i, chunkSize);
@@ -383,6 +392,7 @@ public class PlayerFieldGuideProgress {
                                     .filter(id -> ServerFieldGuideManager.getInstance().getUnlockData(id).triggers().contains(EntryUnlockData.UnlockTrigger.EAT))
                                     .map(ResourceLocation::toString)
                                     .toList())
+                            .entryTriggers(first ? allTriggers : Collections.emptyMap())
                             .build(),
                     player
             );

@@ -21,6 +21,7 @@ import com.evandev.fieldguide.client.gui.widget.FieldGuideSearchBox;
 import com.evandev.fieldguide.client.gui.widget.PageTurnButton;
 import com.evandev.fieldguide.client.gui.widget.PaginatedGridWidget;
 import com.evandev.fieldguide.client.gui.widget.VariantOverviewWidget;
+import com.evandev.fieldguide.client.manager.ClientTextManager;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.compat.cobblemon.ClientFieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
@@ -486,23 +487,12 @@ public class FieldGuideEntryScreen extends BookScreen {
         int textAreaWidth = this.rightPageBounds.width() - 10;
 
         if (!unlocked) {
-            ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
-            Component lockedMessage = Component.translatable("fieldguide.description.locked");
-            if (entryId != null) {
-                if (ClientFieldGuideManager.getInstance().isKillToUnlock(entryId)) {
-                    lockedMessage = Component.translatable("fieldguide.description.locked.kill");
-                } else if (ClientFieldGuideManager.getInstance().isEatToUnlock(entryId)) {
-                    lockedMessage = Component.translatable("fieldguide.description.locked.eat");
-                } else if (ServerConfig.get().enableNakedEyeScanning) {
-                    lockedMessage = Component.translatable("fieldguide.description.locked.no_spyglass");
-                } else {
-                    lockedMessage = Component.translatable("fieldguide.description.locked");
-                }
-            }
+            String currentVariantId = (!entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) ? entityVariants.get(currentVariantIndex).id() : null;
+            String hintText = ClientTextManager.getInstance().getLockedHint(entry, currentVariantId);
 
             RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
             guiGraphics.drawString(this.font, getTitleForEntry(entry), titleX, titleY, ClientConfig.get().getTextMutedColorInt(), false);
-            guiGraphics.drawWordWrap(font, lockedMessage, titleX, titleY + 21, textAreaWidth, ClientConfig.get().getTextMutedColorInt());
+            guiGraphics.drawWordWrap(font, Component.literal(hintText), titleX, titleY + 21, textAreaWidth, ClientConfig.get().getTextMutedColorInt());
         } else {
             long discoveryTime = ProgressManager.getInstance().getDiscoveryTime(entry);
             if (discoveryTime > 0 && ClientConfig.get().showUnlockDate) {
