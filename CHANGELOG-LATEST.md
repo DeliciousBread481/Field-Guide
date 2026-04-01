@@ -1,9 +1,14 @@
+### Added
+
+- Added support for modifying the locked entry descriptions (see the Resource Packs page in the docs for information on
+  this).
+
 ### Changed
 
-- Improved Item Descriptions integration to automatically use tag descriptions and polymer item descriptions, if
-  applicable.
+- Improved the default locked entry descriptions to be smarter.
 
 ### Fixed
 
-- Fixed "obtain" triggers not applying to food.
-- Fixed Tide lava fish rendering sideways.
+- Fixed alternate unlock strategies (eat, obtain) causing entities to still be scannable.
+- Fixed searching by mod id not working.
+- Fixed some exported items and entities sharing a description.

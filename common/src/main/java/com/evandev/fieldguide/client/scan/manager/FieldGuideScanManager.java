@@ -111,10 +111,18 @@ public class FieldGuideScanManager {
         }
 
         ResourceLocation entryId = ClientFieldGuideManager.getEntryId(targetKey);
-        if (entryId != null && (ClientFieldGuideManager.getInstance().isKillToUnlock(entryId) || ClientFieldGuideManager.getInstance().isEatToUnlock(entryId))) {
-            state.setOutOfRangeTarget(foundTarget);
+
+        if (entryId != null && !ProgressManager.getInstance().canScanToUnlock(entryId)) {
+            state.setOutOfRangeTarget(null);
             state.setOutOfRangePos(null);
-            state.resetScanTicks();
+
+            if (state.getScanTicks() > 0) {
+                state.setPrevScanTicks(state.getScanTicks());
+                state.setScanTicks(state.getScanTicks() - 2);
+                if (state.getScanTicks() <= 0) state.resetScanTicks();
+            } else {
+                state.resetScanTicks();
+            }
             return;
         }
 

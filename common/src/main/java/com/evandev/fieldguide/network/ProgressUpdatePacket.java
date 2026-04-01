@@ -24,6 +24,7 @@ public class ProgressUpdatePacket {
     private final Map<String, String> selectedVariants;
     private final List<String> killedOnly;
     private final List<String> eatenOnly;
+    private final Map<String, List<String>> entryTriggers;
     private final Optional<String> journalTitle;
     private final Optional<List<PlayerFieldGuideProgress.JournalPageData>> journalPages;
 
@@ -41,6 +42,7 @@ public class ProgressUpdatePacket {
         this.selectedVariants = builder.selectedVariants;
         this.killedOnly = builder.killedOnly;
         this.eatenOnly = builder.eatenOnly;
+        this.entryTriggers = builder.entryTriggers;
         this.journalTitle = builder.journalTitle;
         this.journalPages = builder.journalPages;
     }
@@ -59,6 +61,7 @@ public class ProgressUpdatePacket {
         this.selectedVariants = buf.readMap(FriendlyByteBuf::readUtf, FriendlyByteBuf::readUtf);
         this.killedOnly = buf.readList(FriendlyByteBuf::readUtf);
         this.eatenOnly = buf.readList(FriendlyByteBuf::readUtf);
+        this.entryTriggers = buf.readMap(FriendlyByteBuf::readUtf, b -> b.readList(FriendlyByteBuf::readUtf));
         this.journalTitle = buf.readOptional(FriendlyByteBuf::readUtf);
         this.journalPages = buf.readOptional(b -> b.readList(b2 ->
                 new PlayerFieldGuideProgress.JournalPageData(b2.readUtf(), b2.readUtf(), b2.readLong())));
@@ -78,6 +81,7 @@ public class ProgressUpdatePacket {
         buf.writeMap(selectedVariants, FriendlyByteBuf::writeUtf, FriendlyByteBuf::writeUtf);
         buf.writeCollection(killedOnly, FriendlyByteBuf::writeUtf);
         buf.writeCollection(eatenOnly, FriendlyByteBuf::writeUtf);
+        buf.writeMap(entryTriggers, FriendlyByteBuf::writeUtf, (b, list) -> b.writeCollection(list, FriendlyByteBuf::writeUtf));
         buf.writeOptional(journalTitle, FriendlyByteBuf::writeUtf);
         buf.writeOptional(journalPages, (b, pages) ->
                 b.writeCollection(pages, (b2, page) -> {
@@ -139,6 +143,10 @@ public class ProgressUpdatePacket {
         return eatenOnly;
     }
 
+    public Map<String, List<String>> getEntryTriggers() {
+        return entryTriggers;
+    }
+
     public Optional<String> getJournalTitle() {
         return journalTitle;
     }
@@ -161,6 +169,7 @@ public class ProgressUpdatePacket {
         private Map<String, String> selectedVariants = Collections.emptyMap();
         private List<String> killedOnly = Collections.emptyList();
         private List<String> eatenOnly = Collections.emptyList();
+        private Map<String, List<String>> entryTriggers = Collections.emptyMap();
         private Optional<String> journalTitle = Optional.empty();
         private Optional<List<PlayerFieldGuideProgress.JournalPageData>> journalPages = Optional.empty();
 
@@ -226,6 +235,11 @@ public class ProgressUpdatePacket {
 
         public Builder eatenOnly(List<String> eatenOnly) {
             this.eatenOnly = eatenOnly;
+            return this;
+        }
+
+        public Builder entryTriggers(Map<String, List<String>> triggers) {
+            this.entryTriggers = triggers;
             return this;
         }
 

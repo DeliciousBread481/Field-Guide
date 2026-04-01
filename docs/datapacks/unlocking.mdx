@@ -3,17 +3,20 @@ title: Entry Unlocking
 hide_meta: true
 ---
 
-By default, most entries are unlocked by scanning them with a Spyglass. Bosses and certain entities are set to "Kill to Unlock" (requiring the player to kill them).
+By default, most entries are unlocked by scanning them with a Spyglass. Bosses and certain entities are set to "Kill to Unlock" (requiring the player to kill them). You can customize how an entry is unlocked by adding an `unlock` object to its definition in a category.
 
-You can customize how an entry is unlocked by adding an `unlock` object to its definition in a category.
+> **Important Note on IDs:** > Field Guide uses prefixes to categorize entries. When specifying an `id` or a `trigger_on` target, you must prefix standard registries to ensure they match:
+> * Entities: `entity:namespace/path` (e.g., `entity:minecraft/cow`)
+> * Items: `item:namespace/path` (e.g., `item:minecraft/beef`)
+> * Blocks: `block:namespace/path` (e.g., `block:minecraft/grass_block`)
 
 ```json
 {
   "type": "entry",
-  "id": "minecraft:cow",
+  "id": "entity:minecraft/cow",
   "unlock": {
     "unlocked_by_default": false,
-    "prerequisites": ["minecraft:pig"],
+    "prerequisites": ["entity:minecraft/pig"],
     "triggers": ["kill", "scan", "obtain"]
   }
 }
@@ -26,7 +29,7 @@ You can customize how an entry is unlocked by adding an `unlock` object to its d
 | `unlocked_by_default` | Boolean | (Optional) If true, the entry is unlocked automatically as soon as its prerequisites are met. |
 | `prerequisites` | Array | (Optional) A list of entry IDs that must be unlocked before this one can be. |
 | `triggers` | Array | (Optional) A list of event types that can trigger the unlock. If empty or omitted, any supported event will trigger it. |
-| `trigger_on` | Array / String | (Optional) A list of external resource IDs (e.g. `minecraft:warden`, `minecraft:nether_star`) that trigger this entry's unlock. If omitted, the entry's own ID is used as the trigger target. |
+| `trigger_on` | Array / String | (Optional) A list of external resource IDs (e.g., `["entity:minecraft/warden"]`, `["item:minecraft/nether_star"]`) that trigger this entry's unlock. If omitted, the entry's own ID is used as the trigger target. **Note: This should be formatted as a JSON array `["..."]`**. |
 
 ### Available Triggers
 * `kill`: Killing the entity.
@@ -63,7 +66,7 @@ You can use the `trigger_on` field to unlock an entry based on an external actio
   "virtual_type": "tutorial",
   "unlock": {
     "triggers": ["kill"],
-    "trigger_on": "minecraft:warden"
+    "trigger_on": ["entity:minecraft/warden"]
   }
 }
 ```
@@ -77,7 +80,7 @@ You can use the `trigger_on` field to unlock an entry based on an external actio
   "virtual_type": "lore",
   "unlock": {
     "triggers": ["obtain"],
-    "trigger_on": "minecraft:nether_star"
+    "trigger_on": ["item:minecraft/nether_star"]
   }
 }
 ```
