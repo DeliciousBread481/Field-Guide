@@ -32,6 +32,7 @@ public class ClientConfig {
     public boolean playScanningSound = true;
     public boolean playUnlockSound = true;
 
+    public boolean showOutOfRangeOverlay = true;
     public String scanOverlayColor = "#F9EED0";
     public double scanOverlayAlpha = 0.5D;
 

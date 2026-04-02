@@ -50,6 +50,9 @@
   "option.fieldguide.scan_speed": "Scanning Speed",
   "option.fieldguide.scan_speed.tooltip": "The time in seconds it takes to scan an entry.",
 
+  "option.fieldguide.show_out_of_range_overlay": "Show Out of Range Overlay",
+  "option.fieldguide.show_out_of_range_overlay.tooltip": "Displays a red pulsing outline when aiming at targets that are too far away to scan.",
+
   "option.fieldguide.scan_overlay_color": "Scan Overlay Color",
   "option.fieldguide.scan_overlay_color.tooltip": "The hex color code for the scanning overlay (e.g. #FFFFFF).",
 

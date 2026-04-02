@@ -230,6 +230,11 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> clientConfig.scanIconXOffset = newValue)
                 .build());
 
+        interfaceCat.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.show_out_of_range_overlay"), clientConfig.showOutOfRangeOverlay)
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("option.fieldguide.show_out_of_range_overlay.tooltip"))
+                .setSaveConsumer(newValue -> clientConfig.showOutOfRangeOverlay = newValue)
+                .build());
 
         interfaceCat.addEntry(entryBuilder.startStrField(Component.translatable("option.fieldguide.scan_overlay_color"), clientConfig.scanOverlayColor)
                 .setDefaultValue("#F9EED0")
