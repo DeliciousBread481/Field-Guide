@@ -61,6 +61,10 @@ public class ScanOverlayRenderer {
         float red, green, blue, alpha;
 
         if ((outOfRangeEntity != null && targetEntity == outOfRangeEntity) || (outOfRangePos != null && targetBlock == outOfRangePos)) {
+            if (!ClientConfig.get().showOutOfRangeOverlay) {
+                return;
+            }
+
             red = 1.0F;
             green = 0.0F;
             blue = 0.0F;
