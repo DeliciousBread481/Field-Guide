@@ -1,3 +1,3 @@
-### Added
+### Fixed
 
-- Added config option to disable the red out of range overlay.
+- Hotfix for invisible Biomes o' Plenty trees on 1.20.
