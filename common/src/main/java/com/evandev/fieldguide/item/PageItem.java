@@ -5,7 +5,7 @@ import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -30,7 +30,7 @@ public class PageItem extends Item {
     @Override
     public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        ResourceLocation entryId = stack.get(ModDataComponents.ENTRY_ID.get());
+        Identifier entryId = stack.get(ModDataComponents.ENTRY_ID.get());
 
         if (entryId != null) {
             if (!level.isClientSide && player instanceof ServerPlayer serverPlayer) {

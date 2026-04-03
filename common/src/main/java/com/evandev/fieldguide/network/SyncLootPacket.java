@@ -5,7 +5,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -13,15 +13,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public record SyncLootPacket(Map<ResourceLocation, List<ItemStack>> lootCache,
+public record SyncLootPacket(Map<Identifier, List<ItemStack>> lootCache,
                              boolean clearCache) implements CustomPacketPayload {
 
-    public static final Type<SyncLootPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "sync_loot"));
+    public static final Type<SyncLootPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "sync_loot"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, SyncLootPacket> CODEC = StreamCodec.composite(
-            ByteBufCodecs.<RegistryFriendlyByteBuf, ResourceLocation, List<ItemStack>, Map<ResourceLocation, List<ItemStack>>>map(
+            ByteBufCodecs.<RegistryFriendlyByteBuf, Identifier, List<ItemStack>, Map<Identifier, List<ItemStack>>>map(
                     HashMap::new,
-                    ResourceLocation.STREAM_CODEC,
+                    Identifier.STREAM_CODEC,
                     ItemStack.LIST_STREAM_CODEC
             ),
             SyncLootPacket::lootCache,

@@ -8,20 +8,16 @@ import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.progress.ProgressManager;
-import com.evandev.fieldguide.compat.cobblemon.ClientFieldGuideCobblemonCompat;
-import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
-import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -102,7 +98,7 @@ public class VariantOverviewWidget extends AbstractWidget {
     }
 
     @Override
-    public void renderWidget(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
         if (!this.visible) return;
 
         graphics.pose().pushPose();
@@ -139,14 +135,12 @@ public class VariantOverviewWidget extends AbstractWidget {
             LivingEntity renderEntity = renderedEntity;
 
             if (provider != null && renderedEntity instanceof Mob mob) {
-                if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(renderedEntity)) {
-                    ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+                /*if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(renderedEntity)) {
+                    Identifier id = ClientFieldGuideManager.getEntryId(entry);
                     if (id != null && Minecraft.getInstance().level != null) {
                         renderEntity = ClientFieldGuideCobblemonCompat.getDummyVariant(id, variant.id(), Minecraft.getInstance().level);
-                    }
-                } else {
-                    provider.apply(mob, variant);
-                }
+                    }*/
+                provider.apply(mob, variant);
             }
 
             graphics.pose().pushPose();
@@ -160,7 +154,7 @@ public class VariantOverviewWidget extends AbstractWidget {
             graphics.pose().translate(-centerX, -centerY, 0);
 
             boolean renderedPhoto = false;
-            if (isUnlocked && Services.PLATFORM.isModLoaded("exposure") && ClientConfig.get().exposureShowPhotographsInGrid) {
+            /* if (isUnlocked && Services.PLATFORM.isModLoaded("exposure") && ClientConfig.get().exposureShowPhotographsInGrid) {
                 ItemStack existingPhoto = ProgressManager.getInstance().getPhotograph(entry, variant.id());
                 if (!existingPhoto.isEmpty()) {
                     ClientExposureCompat.renderPhotographInGrid(graphics, centerX - (bounds.width() / 2), centerY - (bounds.height() / 2), bounds.width(), bounds.height(), existingPhoto);
@@ -168,17 +162,17 @@ public class VariantOverviewWidget extends AbstractWidget {
                 } else if (ServerConfig.get().keepSilhouetteWhenUnlocked) {
                     ClientExposureCompat.renderMissingPhotoBackground(graphics, centerX - (bounds.width() / 2), centerY - (bounds.height() / 2), bounds.width(), bounds.height());
                 }
-            }
+            }*/
 
             if (!renderedPhoto) {
                 EntryRenderHelper.renderEntityNormalized(graphics, renderEntity, centerX, centerY, bounds.width(), bounds.height(), isUnlocked, false, 1.0f, false);
             }
 
             if (provider != null && renderedEntity instanceof Mob mob && originalVariant != null) {
-                boolean isCobblemon = Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(renderedEntity);
-                if (!isCobblemon) {
-                    provider.apply(mob, originalVariant);
-                }
+                //boolean isCobblemon = Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(renderedEntity);
+                //if (!isCobblemon) {
+                provider.apply(mob, originalVariant);
+                //}
             }
 
             float targetScale = (hovered && isUnlocked) ? 1.05f : 1.0f;
@@ -203,10 +197,10 @@ public class VariantOverviewWidget extends AbstractWidget {
         }
 
         if (provider != null && renderedEntity instanceof Mob mob && originalVariant != null) {
-            boolean isCobblemon = Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(renderedEntity);
-            if (!isCobblemon) {
-                provider.apply(mob, originalVariant);
-            }
+            //boolean isCobblemon = Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(renderedEntity);
+            //if (!isCobblemon) {
+            provider.apply(mob, originalVariant);
+            //}
         }
 
         if (tooltipText != null) {

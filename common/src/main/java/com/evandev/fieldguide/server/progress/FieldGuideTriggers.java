@@ -4,7 +4,7 @@ import com.evandev.fieldguide.platform.Services;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.advancements.critereon.*;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.storage.loot.LootContext;
@@ -32,17 +32,17 @@ public class FieldGuideTriggers {
             return TriggerInstance.CODEC;
         }
 
-        public void trigger(ServerPlayer player, ResourceLocation entryId) {
+        public void trigger(ServerPlayer player, Identifier entryId) {
             this.trigger(player, instance -> instance.matches(entryId));
         }
 
-        public record TriggerInstance(Optional<ContextAwarePredicate> player, Optional<ResourceLocation> entryId) implements SimpleCriterionTrigger.SimpleInstance {
+        public record TriggerInstance(Optional<ContextAwarePredicate> player, Optional<Identifier> entryId) implements SimpleCriterionTrigger.SimpleInstance {
             public static final Codec<TriggerInstance> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                     EntityPredicate.ADVANCEMENT_CODEC.optionalFieldOf("player").forGetter(TriggerInstance::player),
-                    ResourceLocation.CODEC.optionalFieldOf("entry").forGetter(TriggerInstance::entryId)
+                    Identifier.CODEC.optionalFieldOf("entry").forGetter(TriggerInstance::entryId)
             ).apply(instance, TriggerInstance::new));
 
-            public boolean matches(ResourceLocation entryId) {
+            public boolean matches(Identifier entryId) {
                 return this.entryId.isEmpty() || this.entryId.get().equals(entryId);
             }
         }
@@ -54,17 +54,17 @@ public class FieldGuideTriggers {
             return TriggerInstance.CODEC;
         }
 
-        public void trigger(ServerPlayer player, ResourceLocation categoryId) {
+        public void trigger(ServerPlayer player, Identifier categoryId) {
             this.trigger(player, instance -> instance.matches(categoryId));
         }
 
-        public record TriggerInstance(Optional<ContextAwarePredicate> player, Optional<ResourceLocation> categoryId) implements SimpleCriterionTrigger.SimpleInstance {
+        public record TriggerInstance(Optional<ContextAwarePredicate> player, Optional<Identifier> categoryId) implements SimpleCriterionTrigger.SimpleInstance {
             public static final Codec<TriggerInstance> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                     EntityPredicate.ADVANCEMENT_CODEC.optionalFieldOf("player").forGetter(TriggerInstance::player),
-                    ResourceLocation.CODEC.optionalFieldOf("category").forGetter(TriggerInstance::categoryId)
+                    Identifier.CODEC.optionalFieldOf("category").forGetter(TriggerInstance::categoryId)
             ).apply(instance, TriggerInstance::new));
 
-            public boolean matches(ResourceLocation categoryId) {
+            public boolean matches(Identifier categoryId) {
                 return this.categoryId.isEmpty() || this.categoryId.get().equals(categoryId);
             }
         }

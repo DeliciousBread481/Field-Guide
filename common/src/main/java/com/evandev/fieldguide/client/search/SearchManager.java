@@ -4,13 +4,12 @@ import com.evandev.fieldguide.api.seasons.Season;
 import com.evandev.fieldguide.api.seasons.SeasonsAPI;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.manager.ClientLootManager;
-import com.evandev.fieldguide.compat.cobblemon.ClientFieldGuideCobblemonCompat;
 import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.platform.Services;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.Item;
@@ -151,7 +150,7 @@ public class SearchManager {
                             for (var spawn : biome.getMobSettings().getMobs(cat).unwrap()) {
 
                                 Object entry = ClientFieldGuideManager.getInstance().getEntryForTarget(spawn.type);
-                                ResourceLocation categoryId = null;
+                                Identifier categoryId = null;
 
                                 if (entry != null) {
                                     var category = ClientFieldGuideManager.getInstance().getCategoryForEntry(entry);
@@ -168,7 +167,7 @@ public class SearchManager {
                             }
                         }
 
-                        if (Services.PLATFORM.isModLoaded("cobblemon")) {
+                        /*if (Services.PLATFORM.isModLoaded("cobblemon")) {
                             for (Object entry : entries) {
                                 if (ClientFieldGuideCobblemonCompat.isCobblemonBiomeMatch(entry, biomeEntry.getKey().location(), biomeRegistry.getHolderOrThrow(biomeEntry.getKey()))) {
                                     if (!results.contains(entry)) {
@@ -176,7 +175,7 @@ public class SearchManager {
                                     }
                                 }
                             }
-                        }
+                        }*/
                     } catch (Exception ignored) {
                     }
                 }
@@ -184,12 +183,12 @@ public class SearchManager {
         }
 
         for (Object entry : entries) {
-            ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
+            Identifier entryId = ClientFieldGuideManager.getEntryId(entry);
             if (entryId != null) {
                 for (String addition : ClientFieldGuideManager.getInstance().getBiomeAdditions()) {
                     String[] parts = addition.split("\\|");
                     if (parts.length == 2 && parts[0].equals(entryId.toString())) {
-                        ResourceLocation biomeId = ResourceLocation.parse(parts[1]);
+                        Identifier biomeId = Identifier.parse(parts[1]);
                         if (matchLocation(biomeId, biomeQuery, exactMatch)) {
                             if (!results.contains(entry)) results.add(entry);
                         }
@@ -199,12 +198,12 @@ public class SearchManager {
         }
 
         for (Object entry : new ArrayList<>(results)) {
-            ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
+            Identifier entryId = ClientFieldGuideManager.getEntryId(entry);
             if (entryId != null) {
                 for (String removal : ClientFieldGuideManager.getInstance().getBiomeRemovals()) {
                     String[] parts = removal.split("\\|");
                     if (parts.length == 2 && parts[0].equals(entryId.toString())) {
-                        ResourceLocation biomeId = ResourceLocation.parse(parts[1]);
+                        Identifier biomeId = Identifier.parse(parts[1]);
                         if (matchLocation(biomeId, biomeQuery, exactMatch)) {
                             results.remove(entry);
                         }
@@ -221,9 +220,9 @@ public class SearchManager {
         if (modQuery.isEmpty()) return results;
 
         for (Object entry : entries) {
-            ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+            Identifier id = ClientFieldGuideManager.getEntryId(entry);
             if (id != null) {
-                ResourceLocation rawId = EntryResolver.getRawId(id);
+                Identifier rawId = EntryResolver.getRawId(id);
 
                 String namespace = rawId.getNamespace().toLowerCase(Locale.ROOT);
                 if (exactMatch ? namespace.equals(modQuery) : namespace.contains(modQuery)) results.add(entry);
@@ -235,7 +234,7 @@ public class SearchManager {
     private static List<Object> matchByNameOrId(String query, List<Object> entries, boolean exactMatch) {
         List<Object> results = new ArrayList<>();
         for (Object entry : entries) {
-            ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+            Identifier id = ClientFieldGuideManager.getEntryId(entry);
             if (id == null) continue;
 
             String name = ClientFieldGuideManager.getDefaultName(entry).toLowerCase(Locale.ROOT);
@@ -249,7 +248,7 @@ public class SearchManager {
         return results;
     }
 
-    private static boolean matchLocation(ResourceLocation loc, String query, boolean exactMatch) {
+    private static boolean matchLocation(Identifier loc, String query, boolean exactMatch) {
         String full = loc.toString().toLowerCase(Locale.ROOT);
         String path = loc.getPath().toLowerCase(Locale.ROOT);
         return exactMatch ? (full.equals(query) || path.equals(query)) : (full.contains(query) || path.contains(query));

@@ -8,7 +8,7 @@ import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.platform.Services;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -28,8 +28,8 @@ public class ClientTextManager {
     }
 
     public String getLockedHint(Object entry, String variantId) {
-        ResourceLocation id = EntryResolver.getEntryId(entry, false);
-        ResourceLocation prefixedId = EntryResolver.getEntryId(entry, true);
+        Identifier id = EntryResolver.getEntryId(entry, false);
+        Identifier prefixedId = EntryResolver.getEntryId(entry, true);
         if (id == null || prefixedId == null) return I18n.get("fieldguide.hint.default");
 
         String entryType = prefixedId.getNamespace();
@@ -77,8 +77,8 @@ public class ClientTextManager {
     }
 
     public String getEntryDescription(Object entry, String variantId) {
-        ResourceLocation id = EntryResolver.getEntryId(entry, false);
-        ResourceLocation prefixedId = EntryResolver.getEntryId(entry, true);
+        Identifier id = EntryResolver.getEntryId(entry, false);
+        Identifier prefixedId = EntryResolver.getEntryId(entry, true);
         if (id == null || prefixedId == null) return "";
 
         String custom = ProgressManager.getInstance().getCustomDescription(entry, variantId);
@@ -146,8 +146,8 @@ public class ClientTextManager {
     }
 
     public Component getDefaultNameComponent(Object entry, String variantId) {
-        ResourceLocation id = EntryResolver.getEntryId(entry, false);
-        ResourceLocation prefixedId = EntryResolver.getEntryId(entry, true);
+        Identifier id = EntryResolver.getEntryId(entry, false);
+        Identifier prefixedId = EntryResolver.getEntryId(entry, true);
 
         if (id != null && prefixedId != null) {
             if (id.getNamespace().equals("fieldguide") && id.getPath().startsWith("cobblemon/")) {

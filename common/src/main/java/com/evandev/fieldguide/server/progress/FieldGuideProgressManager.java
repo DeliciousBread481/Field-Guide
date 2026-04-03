@@ -3,7 +3,7 @@ package com.evandev.fieldguide.server.progress;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.mojang.authlib.GameProfile;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.storage.LevelResource;
@@ -128,15 +128,15 @@ public class FieldGuideProgressManager {
         return playerProgress.get(uuid);
     }
 
-    public boolean isValidEntry(ResourceLocation entryId) {
+    public boolean isValidEntry(Identifier entryId) {
         return ServerFieldGuideManager.getInstance().hasEntry(entryId);
     }
 
-    public boolean isKillToUnlock(ResourceLocation entryId) {
+    public boolean isKillToUnlock(Identifier entryId) {
         return ServerFieldGuideManager.getInstance().isKillToUnlock(entryId);
     }
 
-    public boolean isEatToUnlock(ResourceLocation entryId) {
+    public boolean isEatToUnlock(Identifier entryId) {
         return ServerFieldGuideManager.getInstance().isEatToUnlock(entryId);
     }
 }

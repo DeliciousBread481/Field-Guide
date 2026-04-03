@@ -4,12 +4,12 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.config.ClientConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
@@ -442,7 +442,7 @@ public class BookTextAreaWidget extends AbstractWidget {
     }
 
     @Override
-    public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void renderWidget(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         List<FormattedCharSequence> lines = this.font.split(Component.literal(text), this.width);
         int totalLines = lineStarts.size();
         scrollOffset = Math.max(0, Math.min(scrollOffset, Math.max(0, totalLines - maxVisibleLines)));
@@ -485,15 +485,15 @@ public class BookTextAreaWidget extends AbstractWidget {
             int thumbHeight = Math.max(4, (int) ((float) maxVisibleLines / totalLines * scrollbarHeight));
             int thumbY = scrollbarY + (int) (progress * (scrollbarHeight - thumbHeight));
 
-            ResourceLocation trackSprite = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/scrollbar_track");
-            ResourceLocation thumbSprite = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/scrollbar_thumb" + (isDraggingScrollbar || isScrollbarHovered(mouseX, mouseY) ? "_hovered" : ""));
+            Identifier trackSprite = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/scrollbar_track");
+            Identifier thumbSprite = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/scrollbar_thumb" + (isDraggingScrollbar || isScrollbarHovered(mouseX, mouseY) ? "_hovered" : ""));
 
             guiGraphics.blitSprite(trackSprite, scrollbarX, scrollbarY, 4, scrollbarHeight);
             guiGraphics.blitSprite(thumbSprite, scrollbarX, thumbY, 4, thumbHeight);
         }
     }
 
-    private void renderCursor(GuiGraphics guiGraphics, int x, int y) {
+    private void renderCursor(GuiGraphicsExtractor guiGraphics, int x, int y) {
         if ((System.currentTimeMillis() / 400) % 2 == 0) {
             if (cursorPos == text.length()) {
                 guiGraphics.drawString(this.font, "_", x, y, ClientConfig.get().getTextCursorColorInt(), false);

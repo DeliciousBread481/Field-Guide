@@ -3,7 +3,7 @@ package com.evandev.fieldguide.client.gui.widget;
 import com.evandev.fieldguide.config.ClientConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 
@@ -31,7 +31,7 @@ public class FieldGuideSearchBox extends EditBox {
     }
 
     @Override
-    public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void renderWidget(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         int boxX = this.getX() - 2;
         int boxY = this.getY() - 2;
         int boxW = this.width + 4;

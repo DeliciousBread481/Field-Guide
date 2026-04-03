@@ -1,42 +1,41 @@
 {
-    "schemaVersion": 1,
-    "id": "${mod_id}",
-    "version": "${version}",
-    "name": "${mod_name}",
-    "description": "${description}",
-    "authors": [
-        "${mod_author}"
+  "schemaVersion": 1,
+  "id": "${mod_id}",
+  "version": "${version}",
+  "name": "${mod_name}",
+  "description": "${description}",
+  "authors": [
+    "${mod_author}"
+  ],
+  "contact": {
+    "homepage": "https://github.com/evanbones/FieldGuide",
+    "sources": "https://github.com/evanbones/FieldGuide"
+  },
+  "license": "${license}",
+  "icon": "${mod_id}.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.evandev.fieldguide.FieldGuideMod"
     ],
-    "contact": {
-        "homepage": "https://github.com/evanbones/FieldGuide",
-        "sources": "https://github.com/evanbones/FieldGuide"
-    },
-    "license": "${license}",
-    "icon": "${mod_id}.png",
-    "environment": "*",
-    "entrypoints": {
-        "main": [
-            "com.evandev.fieldguide.FieldGuideMod"
-        ],
-        "modmenu": [
-            "com.evandev.fieldguide.compat.ModMenuIntegration"
-        ],
-        "client": [
-            "com.evandev.fieldguide.FieldGuideFabricClient"
-        ]
-    },
-    "mixins": [
-        "${mod_id}.mixins.json",
-        "${mod_id}.fabric.mixins.json"
+    "modmenu": [
+      "com.evandev.fieldguide.compat.ModMenuIntegration"
     ],
-    "depends": {
-        "fabricloader": ">=0.14",
-        "fabric": "*",
-        "minecraft": "${minecraft_version}",
-        "java": ">=21"
-    },
-    "suggests": {
-        "cloth-config": "*"
-    }
+    "client": [
+      "com.evandev.fieldguide.FieldGuideFabricClient"
+    ]
+  },
+  "mixins": [
+    "${mod_id}.mixins.json",
+    "${mod_id}.fabric.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${fabric_loader_version}",
+    "fabric-api": "*",
+    "minecraft": "~${minecraft_version}",
+    "java": ">=${java_version}"
+  },
+  "suggests": {
+    "cloth-config": "*"
+  }
 }
-  

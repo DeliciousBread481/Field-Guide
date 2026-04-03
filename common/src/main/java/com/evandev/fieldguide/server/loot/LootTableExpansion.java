@@ -4,7 +4,7 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.mixin.accessor.*;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
@@ -24,8 +24,8 @@ import java.util.List;
 
 public class LootTableExpansion {
 
-    public static List<ResourceLocation> getItemsFromLootTable(LootTable table) {
-        List<ResourceLocation> items = new ArrayList<>();
+    public static List<Identifier> getItemsFromLootTable(LootTable table) {
+        List<Identifier> items = new ArrayList<>();
         if (table == null) return items;
 
         List<LootPool> pools = ((LootTableAccessor) table).fieldguide$getPools();
@@ -38,7 +38,7 @@ public class LootTableExpansion {
         return items;
     }
 
-    private static void gatherItems(LootPoolEntryContainer entry, List<ResourceLocation> items) {
+    private static void gatherItems(LootPoolEntryContainer entry, List<Identifier> items) {
         if (entry instanceof LootItem lootItem) {
             items.add(BuiltInRegistries.ITEM.getKey(((LootItemAccessor) lootItem).fieldguide$getItem().value()));
         } else if (entry instanceof NestedLootTable nested) {

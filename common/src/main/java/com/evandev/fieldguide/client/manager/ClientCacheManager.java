@@ -10,7 +10,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 import java.io.IOException;
@@ -68,14 +68,14 @@ public class ClientCacheManager {
         throw new IllegalStateException("Registry access is not available yet!");
     }
 
-    public static void saveAllDrops(Map<ResourceLocation, List<ItemStack>> allDrops) {
+    public static void saveAllDrops(Map<Identifier, List<ItemStack>> allDrops) {
         if (allDrops == null || allDrops.isEmpty()) return;
 
         HolderLookup.Provider provider = getRegistryAccess();
         Path dropFile = getSessionDir().resolve("drops.nbt");
         CompoundTag root = loadNbt(dropFile);
 
-        for (Map.Entry<ResourceLocation, List<ItemStack>> entry : allDrops.entrySet()) {
+        for (Map.Entry<Identifier, List<ItemStack>> entry : allDrops.entrySet()) {
             ListTag list = new ListTag();
             for (ItemStack stack : entry.getValue()) {
                 list.add(stack.saveOptional(provider));
@@ -85,7 +85,7 @@ public class ClientCacheManager {
         saveNbt(dropFile, root);
     }
 
-    public static List<ItemStack> loadDrops(ResourceLocation entryId) {
+    public static List<ItemStack> loadDrops(Identifier entryId) {
         Path dropFile = getSessionDir().resolve("drops.nbt");
         CompoundTag root = loadNbt(dropFile);
 
@@ -101,13 +101,13 @@ public class ClientCacheManager {
         return null;
     }
 
-    public static void saveBiomes(ResourceLocation entryId, List<ResourceLocation> biomes) {
+    public static void saveBiomes(Identifier entryId, List<Identifier> biomes) {
         if (biomes == null) return;
 
         Path biomeFile = getSessionDir().resolve("biomes.nbt");
         CompoundTag root = loadNbt(biomeFile);
         ListTag list = new ListTag();
-        for (ResourceLocation biome : biomes) {
+        for (Identifier biome : biomes) {
             CompoundTag tag = new CompoundTag();
             tag.putString("id", biome.toString());
             list.add(tag);
@@ -116,14 +116,14 @@ public class ClientCacheManager {
         saveNbt(biomeFile, root);
     }
 
-    public static List<ResourceLocation> loadBiomes(ResourceLocation entryId) {
+    public static List<Identifier> loadBiomes(Identifier entryId) {
         Path biomeFile = getSessionDir().resolve("biomes.nbt");
         CompoundTag root = loadNbt(biomeFile);
         if (root.contains(entryId.toString(), Tag.TAG_LIST)) {
             ListTag list = root.getList(entryId.toString(), Tag.TAG_COMPOUND);
-            List<ResourceLocation> biomes = new ArrayList<>();
+            List<Identifier> biomes = new ArrayList<>();
             for (int i = 0; i < list.size(); i++) {
-                biomes.add(ResourceLocation.parse(list.getCompound(i).getString("id")));
+                biomes.add(Identifier.parse(list.getCompound(i).getString("id")));
             }
             return biomes;
         }

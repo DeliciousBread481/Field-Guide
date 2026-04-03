@@ -1,3 +1,4 @@
+/*
 package com.evandev.fieldguide.compat.exposure;
 
 import com.evandev.fieldguide.Constants;
@@ -15,7 +16,7 @@ import io.github.mortuusars.exposure.world.item.PhotographItem;
 import io.github.mortuusars.exposure.world.item.util.ItemAndStack;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.WidgetSprites;
@@ -24,7 +25,7 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
@@ -35,8 +36,8 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 public class ClientExposureCompat {
-    private static final WidgetSprites ADD_PHOTO_SPRITES = new WidgetSprites(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/exposure/add_photo"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/exposure/add_photo_highlighted"));
-    private static final ResourceLocation MISSING_PHOTOGRAPH_BACKGROUND = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/exposure/missing_photograph.png");
+    private static final WidgetSprites ADD_PHOTO_SPRITES = new WidgetSprites(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/exposure/add_photo"), Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/exposure/add_photo_highlighted"));
+    private static final Identifier MISSING_PHOTOGRAPH_BACKGROUND = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/exposure/missing_photograph.png");
 
     public static void setupExposureWidgets(FieldGuideEntryScreen screen, Object entry, String variantId) {
         if (!ClientFieldGuideManager.isUnlocked(entry)) return;
@@ -103,11 +104,11 @@ public class ClientExposureCompat {
         }
     }
 
-    public static void renderMissingPhotoBackground(GuiGraphics guiGraphics, int x, int y, int width, int height) {
+    public static void renderMissingPhotoBackground(GuiGraphicsExtractor guiGraphics, int x, int y, int width, int height) {
         guiGraphics.blit(MISSING_PHOTOGRAPH_BACKGROUND, x, y, 0, 0, width, height, width, height);
     }
 
-    public static void renderPhotographInGrid(GuiGraphics guiGraphics, int x, int y, int width, int height, ItemStack photograph) {
+    public static void renderPhotographInGrid(GuiGraphicsExtractor guiGraphics, int x, int y, int width, int height, ItemStack photograph) {
         if (photograph.getItem() instanceof PhotographItem) {
             PhotographStyle style = PhotographStyle.of(photograph);
             Rect2i exposureArea = new Rect2i(x + 4, y + 4, width - 8, height - 8);
@@ -190,3 +191,4 @@ public class ClientExposureCompat {
         }
     }
 }
+*/

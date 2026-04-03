@@ -12,7 +12,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexSorting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fStack;
 import org.lwjgl.opengl.GL11;
@@ -29,7 +29,7 @@ public class IconCacheManager {
     private static final Path CACHE_DIR = Services.PLATFORM.getConfigDirectory().resolve("../fieldguide_cache");
     private static final int RENDER_SIZE = 256;
 
-    private static final Map<String, ResourceLocation> TEXTURE_CACHE = new ConcurrentHashMap<>();
+    private static final Map<String, Identifier> TEXTURE_CACHE = new ConcurrentHashMap<>();
     private static final Set<String> PENDING_GENERATIONS = ConcurrentHashMap.newKeySet();
     private static final Deque<Runnable> MAIN_THREAD_TASKS = new ConcurrentLinkedDeque<>();
 
@@ -65,7 +65,7 @@ public class IconCacheManager {
 
     public static void clearCache() {
         Minecraft mc = Minecraft.getInstance();
-        for (ResourceLocation id : TEXTURE_CACHE.values()) {
+        for (Identifier id : TEXTURE_CACHE.values()) {
             mc.getTextureManager().release(id);
         }
         TEXTURE_CACHE.clear();
@@ -85,7 +85,7 @@ public class IconCacheManager {
         }, IO_EXECUTOR);
     }
 
-    public static Optional<ResourceLocation> getOrGenerateIcon(Object baseEntry, Object cacheKey, boolean isPage, Runnable renderAction) {
+    public static Optional<Identifier> getOrGenerateIcon(Object baseEntry, Object cacheKey, boolean isPage, Runnable renderAction) {
         String entryKey = AutoPopulateRegistry.getEntryKey(baseEntry);
         if (entryKey.isEmpty()) return Optional.empty();
 
@@ -108,7 +108,7 @@ public class IconCacheManager {
 
         CompletableFuture.supplyAsync(() -> {
             if (!Files.exists(CACHE_DIR)) init();
-            ResourceLocation id = AutoPopulateRegistry.getEntryId(baseEntry);
+            Identifier id = AutoPopulateRegistry.getEntryId(baseEntry);
             Path cachedFilePath = CACHE_DIR.resolve(id.getNamespace()).resolve("textures/fieldguide/entries").resolve(fileName);
             File cachedFile = cachedFilePath.toFile();
 
@@ -123,12 +123,12 @@ public class IconCacheManager {
         }, IO_EXECUTOR).thenAcceptAsync(image -> {
             if (image != null) {
                 DynamicTexture texture = new DynamicTexture(image);
-                ResourceLocation texLoc = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "generated_icon/" + key);
+                Identifier texLoc = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "generated_icon/" + key);
                 Minecraft.getInstance().getTextureManager().register(texLoc, texture);
                 TEXTURE_CACHE.put(key, texLoc);
                 PENDING_GENERATIONS.remove(key);
             } else {
-                ResourceLocation id = AutoPopulateRegistry.getEntryId(baseEntry);
+                Identifier id = AutoPopulateRegistry.getEntryId(baseEntry);
                 MAIN_THREAD_TASKS.addFirst(() -> generateAndSaveIcon(id.getNamespace(), fileName, key, renderAction));
             }
         }, Minecraft.getInstance());
@@ -193,7 +193,7 @@ public class IconCacheManager {
             nativeImage.flipY();
 
             DynamicTexture texture = new DynamicTexture(nativeImage);
-            ResourceLocation texLoc = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "generated_icon/" + key);
+            Identifier texLoc = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "generated_icon/" + key);
             mc.getTextureManager().register(texLoc, texture);
             TEXTURE_CACHE.put(key, texLoc);
 

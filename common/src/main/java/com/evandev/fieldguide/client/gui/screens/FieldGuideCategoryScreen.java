@@ -15,8 +15,6 @@ import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.gui.widget.FieldGuideSearchBox;
 import com.evandev.fieldguide.client.gui.widget.PageTurnButton;
 import com.evandev.fieldguide.client.progress.ProgressManager;
-import com.evandev.fieldguide.compat.cobblemon.ClientFieldGuideCobblemonCompat;
-import com.evandev.fieldguide.compat.exposure.ClientExposureCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.entry.EntryResolver;
@@ -24,14 +22,14 @@ import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.FormattedCharSequence;
@@ -59,8 +57,8 @@ public class FieldGuideCategoryScreen extends BookScreen {
     private static final int SEARCH_HEIGHT = 20;
     public static int lastOpenedJournalPage = 0;
     private static Registry<Biome> biomeRegistry;
-    private static ResourceLocation lastOpenedCategory = null;
-    private final Map<ResourceLocation, Entity> entryCache = new HashMap<>();
+    private static Identifier lastOpenedCategory = null;
+    private final Map<Identifier, Entity> entryCache = new HashMap<>();
     public boolean isSearching = false;
     private boolean initialSearchFocus = false;
     private ItemStack searchItemStack;
@@ -117,11 +115,11 @@ public class FieldGuideCategoryScreen extends BookScreen {
     protected void init() {
         if (this.getSelectedCategory() == null && this.searchQuery.isEmpty()) {
             String defaultMode = ClientConfig.get().defaultScreen;
-            if ("current_biome".equals(defaultMode) && this.minecraft != null && this.minecraft.level != null && this.minecraft.player != null) {
+            if ("current_biome".equals(defaultMode) && this.minecraft.level != null && this.minecraft.player != null) {
                 var biomeOpt = this.minecraft.level.getBiome(this.minecraft.player.blockPosition()).unwrapKey();
-                biomeOpt.ifPresent(biomeResourceKey -> this.searchQuery = "=!" + biomeResourceKey.location());
+                biomeOpt.ifPresent(biomeResourceKey -> this.searchQuery = "=!" + biomeResourceKey.registryKey());
             } else if (!"last_opened_category".equals(defaultMode) && !defaultMode.isEmpty()) {
-                ResourceLocation catId = ResourceLocation.tryParse(defaultMode);
+                Identifier catId = Identifier.tryParse(defaultMode);
                 if (catId != null) {
                     Category cat = ClientFieldGuideManager.getCategories().get(catId);
                     if (cat != null) {
@@ -133,8 +131,8 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
         super.init();
 
-        if (this.minecraft != null && this.minecraft.level != null) {
-            biomeRegistry = this.minecraft.level.registryAccess().registryOrThrow(Registries.BIOME);
+        if (this.minecraft.level != null) {
+            biomeRegistry = this.minecraft.level.registryAccess().lookupOrThrow(Registries.BIOME);
         }
 
         if (this.getSelectedCategory() == null && this.searchQuery.isEmpty()) {
@@ -404,7 +402,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
             return true;
         }
 
-        if (this.minecraft != null && this.minecraft.player != null && this.minecraft.options.keyInventory.matches(keyCode, scanCode)) {
+        if (this.minecraft.player != null && this.minecraft.options.keyInventory.matches(keyCode, scanCode)) {
             this.minecraft.setScreen(new InventoryScreen(this.minecraft.player));
             return true;
         }
@@ -430,7 +428,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void render(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         this.renderFieldGuideBackground(guiGraphics, mouseX, mouseY, partialTick);
 
         guiGraphics.pose().pushPose();
@@ -458,13 +456,13 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
                 // Biome Title
                 if (searchQuery.startsWith("=!")) {
-                    ResourceLocation biomeId = ResourceLocation.tryParse(searchQuery.substring(2));
+                    Identifier biomeId = Identifier.tryParse(searchQuery.substring(2));
                     if (biomeId != null && biomeRegistry.containsKey(biomeId)) {
                         int titleColor = ClientConfig.get().getTextColorInt();
                         int iconOffset = 0;
 
                         if (Services.PLATFORM.isModLoaded("immersiveoverlays")) {
-                            ResourceLocation texture = ResourceLocation.fromNamespaceAndPath(biomeId.getNamespace(), "textures/immersiveoverlays/" + biomeId.getPath() + ".png");
+                            Identifier texture = Identifier.fromNamespaceAndPath(biomeId.getNamespace(), "textures/immersiveoverlays/" + biomeId.getPath() + ".png");
                             if (Minecraft.getInstance().getResourceManager().getResource(texture).isPresent()) {
                                 int iconSize = 16;
                                 int iconY = titleY - 5;
@@ -509,9 +507,9 @@ public class FieldGuideCategoryScreen extends BookScreen {
                         for (Object entry : currentEntries) {
                             List<ItemStack> drops = ClientFieldGuideManager.getInstance().getDrops(entry);
 
-                            if (drops.isEmpty() && entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "cobblemon".equals(ge.virtualData().virtualType())) {
+/*                            if (drops.isEmpty() && entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "cobblemon".equals(ge.virtualData().virtualType())) {
                                 drops = ClientFieldGuideCobblemonCompat.getCobblemonDrops(entry);
-                            }
+                            }*/
 
                             for (ItemStack stack : drops) {
                                 if (stack.getHoverName().getString().toLowerCase(Locale.ROOT).equals(dropQuery)) {
@@ -584,11 +582,11 @@ public class FieldGuideCategoryScreen extends BookScreen {
         return title;
     }
 
-    private void renderTitle(GuiGraphics guiGraphics, Component text) {
+    private void renderTitle(GuiGraphicsExtractor guiGraphics, Component text) {
         renderTitle(guiGraphics, text, 0, ClientConfig.get().getTextMutedColorInt());
     }
 
-    private void renderTitle(GuiGraphics guiGraphics, Component text, int offset, int color) {
+    private void renderTitle(GuiGraphicsExtractor guiGraphics, Component text, int offset, int color) {
         int titleY = this.rightPageBounds.top() + 8;
 
         int maxWidth = this.leftPageBounds.width() - 12 - offset;
@@ -599,7 +597,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
         guiGraphics.drawString(this.font, title, this.leftPageBounds.left() + 6 + offset, titleY, color, false);
     }
 
-    private void renderCategoryInfo(GuiGraphics guiGraphics) {
+    private void renderCategoryInfo(GuiGraphicsExtractor guiGraphics) {
         guiGraphics.blit(Constants.TITLE_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
 
         Category category = this.getSelectedCategory();
@@ -640,12 +638,12 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
                 int progressWidth = (int) ((float) unlocked / total * barWidth);
                 progressWidth = Math.max(progressWidth, 6);
-                guiGraphics.blitSprite(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/progress_bar_fill"), barX, barY, progressWidth, barHeight);
+                guiGraphics.blitSprite(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/progress_bar_fill"), barX, barY, progressWidth, barHeight);
             }
         }
     }
 
-    private void renderRecentDiscoveries(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+    private void renderRecentDiscoveries(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY) {
         // Title
         Component title = Component.translatable("gui.fieldguide.main.default");
         int titleY = this.rightPageBounds.top() + 8;
@@ -691,7 +689,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
         return startItemIndex + slotIndex;
     }
 
-    private void renderGrid(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+    private void renderGrid(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY) {
         for (int i = 0; i < ITEMS_PER_VIEW; i++) {
             int itemIndex = getItemIndexForSlot(i);
             if (itemIndex >= 0 && itemIndex < currentEntries.size()) {
@@ -728,28 +726,28 @@ public class FieldGuideCategoryScreen extends BookScreen {
     }
 
     private Entity getCachedEntity(Object entry) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        Identifier id = ClientFieldGuideManager.getEntryId(entry);
         if (id == null) return null;
 
         Entity entity = entryCache.get(id);
         if (entity == null) {
-            if (this.minecraft == null || this.minecraft.level == null) return null;
+            if (this.minecraft.level == null) return null;
 
-            if (entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "cobblemon".equals(ge.virtualData().virtualType())) {
+            /*if (entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "cobblemon".equals(ge.virtualData().virtualType())) {
                 entity = ClientFieldGuideCobblemonCompat.getDummyPokemon(id, this.minecraft.level);
-            } else {
-                Object coreEntry = EntryResolver.resolveCoreEntry(entry);
-                if (coreEntry instanceof EntityType<?> type) {
-                    try {
-                        entity = type.create(this.minecraft.level);
-                        if (Services.PLATFORM.isModLoaded("mixed_litter")) {
-                            Services.PLATFORM.applyMixedLitterCompat(entity);
-                        }
-                    } catch (Exception e) {
-                        Constants.LOG.error("Failed to create entity for guide: {}", type.getDescription().getString());
+            }*/
+            Object coreEntry = EntryResolver.resolveCoreEntry(entry);
+            if (coreEntry instanceof EntityType<?> type) {
+                try {
+                    entity = type.create(this.minecraft.level);
+                    if (Services.PLATFORM.isModLoaded("mixed_litter")) {
+                        Services.PLATFORM.applyMixedLitterCompat(entity);
                     }
+                } catch (Exception e) {
+                    Constants.LOG.error("Failed to create entity for guide: {}", type.getDescription().getString());
                 }
             }
+
             if (entity != null) entryCache.put(id, entity);
         }
 
@@ -775,14 +773,14 @@ public class FieldGuideCategoryScreen extends BookScreen {
         return entity;
     }
 
-    private void renderNewLabel(GuiGraphics guiGraphics, Bounds bounds) {
+    private void renderNewLabel(GuiGraphicsExtractor guiGraphics, Bounds bounds) {
         guiGraphics.pose().pushPose();
         guiGraphics.pose().translate(0, 0, 200);
         guiGraphics.blit(Constants.LIST_ENTRY_NEW_TEXTURE, bounds.x(), bounds.y(), 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE);
         guiGraphics.pose().popPose();
     }
 
-    private void renderEntryTooltip(GuiGraphics guiGraphics, Object entry, int mouseX, int mouseY, boolean unlocked) {
+    private void renderEntryTooltip(GuiGraphicsExtractor guiGraphics, Object entry, int mouseX, int mouseY, boolean unlocked) {
         if (unlocked || ServerConfig.get().showUndiscoveredNames) {
             Component name = ClientFieldGuideManager.getEntryName(entry);
             List<Component> tooltip = new ArrayList<>();
@@ -809,8 +807,8 @@ public class FieldGuideCategoryScreen extends BookScreen {
                 }
             }
 
-            if (this.minecraft != null && this.minecraft.options.advancedItemTooltips) {
-                ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+            if (this.minecraft.options.advancedItemTooltips) {
+                Identifier id = ClientFieldGuideManager.getEntryId(entry);
                 if (id != null) {
                     tooltip.add(Component.literal(id.toString()).withStyle(ChatFormatting.DARK_GRAY));
                 }
@@ -840,17 +838,17 @@ public class FieldGuideCategoryScreen extends BookScreen {
         return new Bounds(x, y, CELL_SIZE, CELL_SIZE);
     }
 
-    private void renderPageNumber(int page, Bounds bounds, GuiGraphics guiGraphics) {
+    private void renderPageNumber(int page, Bounds bounds, GuiGraphicsExtractor guiGraphics) {
         String str = page + "";
         guiGraphics.drawString(this.font, str, bounds.x_center() - font.width(str) / 2, bounds.bottom() - 11, ClientConfig.get().getPageNumberColorInt(), false);
     }
 
-    private void renderEntryInGrid(GuiGraphics guiGraphics, Object entry, int x, int y, boolean unlocked) {
+    private void renderEntryInGrid(GuiGraphicsExtractor guiGraphics, Object entry, int x, int y, boolean unlocked) {
         Object coreEntry = EntryResolver.resolveCoreEntry(entry);
         boolean isCobblemon = entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "cobblemon".equals(ge.virtualData().virtualType());
         boolean isTutorial = entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "tutorial".equals(ge.virtualData().virtualType());
 
-        if (unlocked && Services.PLATFORM.isModLoaded("exposure") && ClientConfig.get().exposureShowPhotographsInGrid) {
+/*        if (unlocked && Services.PLATFORM.isModLoaded("exposure") && ClientConfig.get().exposureShowPhotographsInGrid) {
             String selectedVariant = ProgressManager.getInstance().getSelectedVariant(entry);
             ItemStack existingPhoto = ProgressManager.getInstance().getPhotograph(entry, selectedVariant);
             if (!existingPhoto.isEmpty()) {
@@ -859,7 +857,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
             } else if (ServerConfig.get().keepSilhouetteWhenUnlocked) {
                 ClientExposureCompat.renderMissingPhotoBackground(guiGraphics, x - (CELL_SIZE / 2), y - (CELL_SIZE / 2), CELL_SIZE, CELL_SIZE);
             }
-        }
+        }*/
 
         if (entry instanceof GuideEntry ge && ge.isStructure() && coreEntry instanceof Block) {
             EntryRenderHelper.renderStructure(guiGraphics, ge, x, y, CELL_SIZE - 4, unlocked, false, 1.0F);

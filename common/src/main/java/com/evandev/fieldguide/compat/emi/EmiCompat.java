@@ -1,3 +1,4 @@
+/*
 package com.evandev.fieldguide.compat.emi;
 
 import dev.emi.emi.api.EmiApi;
@@ -22,4 +23,4 @@ public class EmiCompat {
 
         return ItemStack.EMPTY;
     }
-}
+}*/

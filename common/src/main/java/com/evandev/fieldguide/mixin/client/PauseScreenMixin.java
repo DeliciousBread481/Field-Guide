@@ -11,7 +11,7 @@ import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -22,7 +22,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class PauseScreenMixin extends Screen {
 
     @Unique
-    private static final WidgetSprites PAUSE_BUTTON_SPRITES = new WidgetSprites(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/fieldguide_button"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/fieldguide_button_highlighted"));
+    private static final WidgetSprites PAUSE_BUTTON_SPRITES = new WidgetSprites(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/fieldguide_button"), Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/fieldguide_button_highlighted"));
 
     protected PauseScreenMixin(Component title) {
         super(title);

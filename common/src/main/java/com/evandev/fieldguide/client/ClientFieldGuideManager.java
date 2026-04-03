@@ -12,16 +12,14 @@ import com.evandev.fieldguide.client.manager.*;
 import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.client.scan.FieldGuideScanner;
 import com.evandev.fieldguide.client.search.SearchManager;
-import com.evandev.fieldguide.compat.cobblemon.ClientFieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.network.ProgressUpdatePacket;
-import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.world.entity.EntityType;
@@ -34,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     private static final ClientFieldGuideManager INSTANCE = new ClientFieldGuideManager();
-    private final Map<String, List<ResourceLocation>> biomeCache = new ConcurrentHashMap<>();
+    private final Map<String, List<Identifier>> biomeCache = new ConcurrentHashMap<>();
 
     private ClientFieldGuideManager() {
     }
@@ -50,7 +48,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         ClientCategoryManager.getInstance().resolveAllEntries();
     }
 
-    public static ResourceLocation getEntryId(Object entry) {
+    public static Identifier getEntryId(Object entry) {
         return EntryResolver.getEntryId(entry);
     }
 
@@ -63,7 +61,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
     }
 
     public static boolean isVariantUnlocked(Object entry, String variantId) {
-        ResourceLocation id = getEntryId(entry);
+        Identifier id = getEntryId(entry);
         if (id == null) return false;
         String fullId = id + "#" + variantId;
         return ProgressManager.getInstance().getUnlockedEntries().contains(fullId);
@@ -109,7 +107,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         return ClientTextManager.getInstance().getDefaultNameComponent(entry);
     }
 
-    public static Map<ResourceLocation, Category> getCategories() {
+    public static Map<Identifier, Category> getCategories() {
         return ClientCategoryManager.getInstance().getCategories();
     }
 
@@ -165,15 +163,15 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         ProgressManager.getInstance().exportToLang(type);
     }
 
-    public boolean isKillToUnlock(ResourceLocation entryId) {
+    public boolean isKillToUnlock(Identifier entryId) {
         return ProgressManager.getInstance().isKillToUnlock(entryId);
     }
 
-    public boolean isEatToUnlock(ResourceLocation entryId) {
+    public boolean isEatToUnlock(Identifier entryId) {
         return ProgressManager.getInstance().isEatToUnlock(entryId);
     }
 
-    public void updateCategoriesFromServer(List<Category> categories, List<GuideEntry> entries, Map<ResourceLocation, ResourceLocation> redirects, boolean clearCache, boolean resolveEntries) {
+    public void updateCategoriesFromServer(List<Category> categories, List<GuideEntry> entries, Map<Identifier, Identifier> redirects, boolean clearCache, boolean resolveEntries) {
         ClientCategoryManager.getInstance().updateCategoriesFromServer(categories, entries, redirects, clearCache, resolveEntries);
     }
 
@@ -181,11 +179,11 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         ClientCategoryManager.getInstance().updateModifiers(biomeAdditions, biomeRemovals, lootAdditions, lootRemovals, clearCache);
     }
 
-    public void updateLootCache(Map<ResourceLocation, List<ItemStack>> lootCache, boolean clearCache) {
+    public void updateLootCache(Map<Identifier, List<ItemStack>> lootCache, boolean clearCache) {
         ClientLootManager.getInstance().updateLootCache(lootCache, clearCache);
     }
 
-    public void updateVariants(Map<ResourceLocation, List<DatapackVariant>> variants) {
+    public void updateVariants(Map<Identifier, List<DatapackVariant>> variants) {
         if (variants != null && !variants.isEmpty()) {
             FieldGuideVariantManager.setDatapackVariants(variants);
         }
@@ -195,7 +193,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         return ClientVisualManager.getInstance().getEntryVisual(AutoPopulateRegistry.getEntryKey(entry));
     }
 
-    public ResourceLocation getRedirect(ResourceLocation source) {
+    public Identifier getRedirect(Identifier source) {
         return ClientCategoryManager.getInstance().getRedirect(source);
     }
 
@@ -218,7 +216,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         return ClientCategoryManager.getInstance().getRecentEntries(category, limit);
     }
 
-    public boolean isValidEntity(EntityType<?> type, ResourceLocation categoryId) {
+    public boolean isValidEntity(EntityType<?> type, Identifier categoryId) {
         return EntryResolver.isValidEntity(type, categoryId);
     }
 
@@ -269,12 +267,12 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         ServerConfig.resetSyncedConfig();
     }
 
-    public List<ResourceLocation> getResolvedBiomes(Object entry) {
+    public List<Identifier> getResolvedBiomes(Object entry) {
         return getResolvedBiomes(entry, null);
     }
 
-    public List<ResourceLocation> getResolvedBiomes(Object entry, String variantId) {
-        ResourceLocation entryId = getEntryId(entry);
+    public List<Identifier> getResolvedBiomes(Object entry, String variantId) {
+        Identifier entryId = getEntryId(entry);
         if (entryId == null) return Collections.emptyList();
 
         String cacheKey = entryId.toString();
@@ -285,14 +283,14 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
             return biomeCache.get(cacheKey);
         }
 
-        List<ResourceLocation> diskBiomes = ClientCacheManager.loadBiomes(entryId);
+        List<Identifier> diskBiomes = ClientCacheManager.loadBiomes(entryId);
 
         if (!isVariant && diskBiomes != null) {
             biomeCache.put(cacheKey, diskBiomes);
             return diskBiomes;
         }
 
-        Set<ResourceLocation> biomes = new LinkedHashSet<>();
+        Set<Identifier> biomes = new LinkedHashSet<>();
 
         if (diskBiomes != null) {
             biomes.addAll(diskBiomes);
@@ -308,9 +306,9 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
                 biomes.addAll(visual.spawnBiomes);
             }
 
-            if (isCobblemon && Services.PLATFORM.isModLoaded("cobblemon")) {
+/*            if (isCobblemon && Services.PLATFORM.isModLoaded("cobblemon")) {
                 biomes.addAll(ClientFieldGuideCobblemonCompat.getCobblemonBiomes(entry));
-            }
+            }*/
         }
 
         ClientCategoryManager categoryManager = ClientCategoryManager.getInstance();
@@ -318,7 +316,7 @@ public class ClientFieldGuideManager implements ResourceManagerReloadListener {
         biomes.addAll(categoryManager.getBiomeAdditions(entry, variantId));
         categoryManager.getBiomeRemovals(entry, variantId).forEach(biomes::remove);
 
-        List<ResourceLocation> result = new ArrayList<>(biomes);
+        List<Identifier> result = new ArrayList<>(biomes);
         biomeCache.put(cacheKey, result);
 
         if (!isVariant) {

@@ -7,7 +7,7 @@ import com.evandev.fieldguide.client.progress.ProgressManager;
 import com.evandev.fieldguide.client.search.SearchManager;
 import com.evandev.fieldguide.entry.EntryResolutionHelper;
 import com.evandev.fieldguide.entry.EntryResolver;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -15,18 +15,18 @@ import java.util.stream.Collectors;
 public class ClientCategoryManager {
     private static final ClientCategoryManager INSTANCE = new ClientCategoryManager();
 
-    private final Map<ResourceLocation, Category> syncedCategories = new LinkedHashMap<>();
-    private final Map<ResourceLocation, GuideEntry> syncedEntries = new HashMap<>();
-    private final Map<ResourceLocation, List<Object>> resolvedCategoryEntries = new HashMap<>();
-    private final Map<ResourceLocation, ResourceLocation> redirects = new HashMap<>();
+    private final Map<Identifier, Category> syncedCategories = new LinkedHashMap<>();
+    private final Map<Identifier, GuideEntry> syncedEntries = new HashMap<>();
+    private final Map<Identifier, List<Object>> resolvedCategoryEntries = new HashMap<>();
+    private final Map<Identifier, Identifier> redirects = new HashMap<>();
     private final List<String> biomeAdditions = new ArrayList<>();
     private final List<String> biomeRemovals = new ArrayList<>();
-    private final Map<String, List<ResourceLocation>> indexedBiomeAdditions = new HashMap<>();
-    private final Map<String, List<ResourceLocation>> indexedBiomeRemovals = new HashMap<>();
+    private final Map<String, List<Identifier>> indexedBiomeAdditions = new HashMap<>();
+    private final Map<String, List<Identifier>> indexedBiomeRemovals = new HashMap<>();
     private final List<String> lootAdditions = new ArrayList<>();
     private final List<String> lootRemovals = new ArrayList<>();
-    private final Map<String, List<ResourceLocation>> indexedLootAdditions = new HashMap<>();
-    private final Map<String, List<ResourceLocation>> indexedLootRemovals = new HashMap<>();
+    private final Map<String, List<Identifier>> indexedLootAdditions = new HashMap<>();
+    private final Map<String, List<Identifier>> indexedLootRemovals = new HashMap<>();
     private boolean needsResolution = false;
 
     private ClientCategoryManager() {
@@ -36,7 +36,7 @@ public class ClientCategoryManager {
         return INSTANCE;
     }
 
-    public void updateCategoriesFromServer(List<Category> categories, List<GuideEntry> entries, Map<ResourceLocation, ResourceLocation> redirects, boolean clearCache, boolean resolveEntries) {
+    public void updateCategoriesFromServer(List<Category> categories, List<GuideEntry> entries, Map<Identifier, Identifier> redirects, boolean clearCache, boolean resolveEntries) {
         if (clearCache) {
             this.redirects.clear();
             this.syncedCategories.clear();
@@ -53,7 +53,7 @@ public class ClientCategoryManager {
             if (this.syncedCategories.containsKey(cat.getId())) {
                 Category existing = this.syncedCategories.get(cat.getId());
                 if (cat.getEntryIds() != null) {
-                    for (ResourceLocation entryId : cat.getEntryIds()) {
+                    for (Identifier entryId : cat.getEntryIds()) {
                         existing.addEntryId(entryId);
                     }
                 }
@@ -90,7 +90,7 @@ public class ClientCategoryManager {
             for (String addition : biomeAdditions) {
                 String[] parts = addition.split("\\|", 2);
                 if (parts.length == 2) {
-                    this.indexedBiomeAdditions.computeIfAbsent(parts[0], k -> new ArrayList<>()).add(ResourceLocation.parse(parts[1]));
+                    this.indexedBiomeAdditions.computeIfAbsent(parts[0], k -> new ArrayList<>()).add(Identifier.parse(parts[1]));
                 }
             }
         }
@@ -99,7 +99,7 @@ public class ClientCategoryManager {
             for (String removal : biomeRemovals) {
                 String[] parts = removal.split("\\|", 2);
                 if (parts.length == 2) {
-                    this.indexedBiomeRemovals.computeIfAbsent(parts[0], k -> new ArrayList<>()).add(ResourceLocation.parse(parts[1]));
+                    this.indexedBiomeRemovals.computeIfAbsent(parts[0], k -> new ArrayList<>()).add(Identifier.parse(parts[1]));
                 }
             }
         }
@@ -108,7 +108,7 @@ public class ClientCategoryManager {
             for (String addition : lootAdditions) {
                 String[] parts = addition.split("\\|", 2);
                 if (parts.length == 2) {
-                    this.indexedLootAdditions.computeIfAbsent(parts[0], k -> new ArrayList<>()).add(ResourceLocation.parse(parts[1]));
+                    this.indexedLootAdditions.computeIfAbsent(parts[0], k -> new ArrayList<>()).add(Identifier.parse(parts[1]));
                 }
             }
         }
@@ -117,7 +117,7 @@ public class ClientCategoryManager {
             for (String removal : lootRemovals) {
                 String[] parts = removal.split("\\|", 2);
                 if (parts.length == 2) {
-                    this.indexedLootRemovals.computeIfAbsent(parts[0], k -> new ArrayList<>()).add(ResourceLocation.parse(parts[1]));
+                    this.indexedLootRemovals.computeIfAbsent(parts[0], k -> new ArrayList<>()).add(Identifier.parse(parts[1]));
                 }
             }
         }
@@ -133,17 +133,17 @@ public class ClientCategoryManager {
         });
     }
 
-    public Map<ResourceLocation, Category> getCategories() {
+    public Map<Identifier, Category> getCategories() {
         return syncedCategories;
     }
 
-    public GuideEntry getGuideEntry(ResourceLocation id) {
+    public GuideEntry getGuideEntry(Identifier id) {
         return syncedEntries.get(id);
     }
 
     public GuideEntry getGuideEntryForTarget(Object target) {
         if (target instanceof GuideEntry ge) return ge;
-        ResourceLocation targetId = AutoPopulateRegistry.getEntryId(target, true);
+        Identifier targetId = AutoPopulateRegistry.getEntryId(target, true);
         return syncedEntries.get(targetId);
     }
 
@@ -175,11 +175,11 @@ public class ClientCategoryManager {
         return EntryResolver.getEntriesForTarget(resolvedCategoryEntries, target);
     }
 
-    public ResourceLocation getRedirect(ResourceLocation source) {
+    public Identifier getRedirect(Identifier source) {
         return redirects.get(source);
     }
 
-    public Map<ResourceLocation, List<Object>> getResolvedCategoryEntries() {
+    public Map<Identifier, List<Object>> getResolvedCategoryEntries() {
         return resolvedCategoryEntries;
     }
 
@@ -203,10 +203,10 @@ public class ClientCategoryManager {
         return lootAdditions;
     }
 
-    public List<ResourceLocation> getBiomeAdditions(Object entry, String variantId) {
+    public List<Identifier> getBiomeAdditions(Object entry, String variantId) {
         String key = AutoPopulateRegistry.getEntryKey(entry);
         String baseId = Objects.requireNonNull(AutoPopulateRegistry.getEntryId(entry, false)).toString();
-        List<ResourceLocation> additions = new ArrayList<>();
+        List<Identifier> additions = new ArrayList<>();
 
         if (variantId != null && !variantId.isEmpty()) {
             if (indexedBiomeAdditions.containsKey(key + "#" + variantId)) additions.addAll(indexedBiomeAdditions.get(key + "#" + variantId));
@@ -219,10 +219,10 @@ public class ClientCategoryManager {
         return additions;
     }
 
-    public List<ResourceLocation> getBiomeRemovals(Object entry, String variantId) {
+    public List<Identifier> getBiomeRemovals(Object entry, String variantId) {
         String key = AutoPopulateRegistry.getEntryKey(entry);
         String baseId = Objects.requireNonNull(AutoPopulateRegistry.getEntryId(entry, false)).toString();
-        List<ResourceLocation> removals = new ArrayList<>();
+        List<Identifier> removals = new ArrayList<>();
 
         if (variantId != null && !variantId.isEmpty()) {
             if (indexedBiomeRemovals.containsKey(key + "#" + variantId)) removals.addAll(indexedBiomeRemovals.get(key + "#" + variantId));
@@ -239,19 +239,19 @@ public class ClientCategoryManager {
         return lootRemovals;
     }
 
-    public List<ResourceLocation> getLootAdditions(Object entry) {
+    public List<Identifier> getLootAdditions(Object entry) {
         String key = AutoPopulateRegistry.getEntryKey(entry);
         String baseId = AutoPopulateRegistry.getEntryId(entry, false).toString();
-        List<ResourceLocation> additions = new ArrayList<>();
+        List<Identifier> additions = new ArrayList<>();
         if (indexedLootAdditions.containsKey(key)) additions.addAll(indexedLootAdditions.get(key));
         if (indexedLootAdditions.containsKey(baseId)) additions.addAll(indexedLootAdditions.get(baseId));
         return additions;
     }
 
-    public List<ResourceLocation> getLootRemovals(Object entry) {
+    public List<Identifier> getLootRemovals(Object entry) {
         String key = AutoPopulateRegistry.getEntryKey(entry);
         String baseId = AutoPopulateRegistry.getEntryId(entry, false).toString();
-        List<ResourceLocation> removals = new ArrayList<>();
+        List<Identifier> removals = new ArrayList<>();
         if (indexedLootRemovals.containsKey(key)) removals.addAll(indexedLootRemovals.get(key));
         if (indexedLootRemovals.containsKey(baseId)) removals.addAll(indexedLootRemovals.get(baseId));
         return removals;

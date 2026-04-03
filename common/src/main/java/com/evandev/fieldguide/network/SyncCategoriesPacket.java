@@ -9,7 +9,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
@@ -18,7 +18,7 @@ import java.util.Map;
 
 public class SyncCategoriesPacket implements CustomPacketPayload {
 
-    public static final Type<SyncCategoriesPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "sync_categories"));
+    public static final Type<SyncCategoriesPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "sync_categories"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, SyncCategoriesPacket> CODEC = StreamCodec.ofMember(
             SyncCategoriesPacket::encode,
@@ -31,8 +31,8 @@ public class SyncCategoriesPacket implements CustomPacketPayload {
     private final List<String> biomeRemovals;
     private final List<String> lootAdditions;
     private final List<String> lootRemovals;
-    private final Map<ResourceLocation, ResourceLocation> redirects;
-    private final Map<ResourceLocation, List<DatapackVariant>> variants;
+    private final Map<Identifier, Identifier> redirects;
+    private final Map<Identifier, List<DatapackVariant>> variants;
     private final boolean clearCache;
     private final boolean resolveEntries;
 
@@ -43,8 +43,8 @@ public class SyncCategoriesPacket implements CustomPacketPayload {
             List<String> biomeRemovals,
             List<String> lootAdditions,
             List<String> lootRemovals,
-            Map<ResourceLocation, ResourceLocation> redirects,
-            Map<ResourceLocation, List<DatapackVariant>> variants,
+            Map<Identifier, Identifier> redirects,
+            Map<Identifier, List<DatapackVariant>> variants,
             boolean clearCache,
             boolean resolveEntries
     ) {
@@ -67,8 +67,8 @@ public class SyncCategoriesPacket implements CustomPacketPayload {
         this.biomeRemovals = buf.readList(FriendlyByteBuf::readUtf);
         this.lootAdditions = buf.readList(FriendlyByteBuf::readUtf);
         this.lootRemovals = buf.readList(FriendlyByteBuf::readUtf);
-        this.redirects = buf.readMap(HashMap::new, FriendlyByteBuf::readResourceLocation, FriendlyByteBuf::readResourceLocation);
-        this.variants = buf.readMap(HashMap::new, FriendlyByteBuf::readResourceLocation, b -> b.readList(vb -> new DatapackVariant(vb.readUtf(), vb.readNbt())));
+        this.redirects = buf.readMap(HashMap::new, FriendlyByteBuf::readIdentifier, FriendlyByteBuf::readIdentifier);
+        this.variants = buf.readMap(HashMap::new, FriendlyByteBuf::readIdentifier, b -> b.readList(vb -> new DatapackVariant(vb.readUtf(), vb.readNbt())));
         this.clearCache = buf.readBoolean();
         this.resolveEntries = buf.readBoolean();
     }
@@ -86,8 +86,8 @@ public class SyncCategoriesPacket implements CustomPacketPayload {
         buf.writeCollection(biomeRemovals, FriendlyByteBuf::writeUtf);
         buf.writeCollection(lootAdditions, FriendlyByteBuf::writeUtf);
         buf.writeCollection(lootRemovals, FriendlyByteBuf::writeUtf);
-        buf.writeMap(redirects, FriendlyByteBuf::writeResourceLocation, FriendlyByteBuf::writeResourceLocation);
-        buf.writeMap(variants, FriendlyByteBuf::writeResourceLocation, (b, list) -> b.writeCollection(list, (vb, v) -> {
+        buf.writeMap(redirects, FriendlyByteBuf::writeIdentifier, FriendlyByteBuf::writeIdentifier);
+        buf.writeMap(variants, FriendlyByteBuf::writeIdentifier, (b, list) -> b.writeCollection(list, (vb, v) -> {
             vb.writeUtf(v.id());
             vb.writeNbt(v.nbt());
         }));
@@ -119,11 +119,11 @@ public class SyncCategoriesPacket implements CustomPacketPayload {
         return lootRemovals;
     }
 
-    public Map<ResourceLocation, ResourceLocation> getRedirects() {
+    public Map<Identifier, Identifier> getRedirects() {
         return redirects;
     }
 
-    public Map<ResourceLocation, List<DatapackVariant>> getVariants() {
+    public Map<Identifier, List<DatapackVariant>> getVariants() {
         return variants;
     }
 

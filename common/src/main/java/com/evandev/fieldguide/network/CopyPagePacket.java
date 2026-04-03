@@ -10,7 +10,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -26,11 +26,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public record CopyPagePacket(ResourceLocation entryId) implements CustomPacketPayload {
+public record CopyPagePacket(Identifier entryId) implements CustomPacketPayload {
 
-    public static final Type<CopyPagePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "copy_page"));
+    public static final Type<CopyPagePacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "copy_page"));
     public static final StreamCodec<FriendlyByteBuf, CopyPagePacket> CODEC = StreamCodec.composite(
-            ResourceLocation.STREAM_CODEC, CopyPagePacket::entryId,
+            Identifier.STREAM_CODEC, CopyPagePacket::entryId,
             CopyPagePacket::new
     );
 
@@ -123,7 +123,7 @@ public record CopyPagePacket(ResourceLocation entryId) implements CustomPacketPa
         player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BOOK_PAGE_TURN, SoundSource.PLAYERS, 1.0F, 1.0F);
     }
 
-    private String getTranslationKey(ResourceLocation id) {
+    private String getTranslationKey(Identifier id) {
         return "fieldguide.entry." + id.getNamespace() + "." + id.getPath().replace("/", ".");
     }
 }

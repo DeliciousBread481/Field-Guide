@@ -4,7 +4,7 @@ import com.evandev.fieldguide.api.GuideEntry;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.entry.EntryResolver;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -31,7 +31,7 @@ public class SeasonsAPI {
         // If it's a GuideEntry, check children too
         if (entry instanceof GuideEntry ge) {
             if (ge.childEntries() != null) {
-                for (ResourceLocation childId : ge.childEntries()) {
+                for (Identifier childId : ge.childEntries()) {
                     resolveAndCheck(childId, allSeasons);
                 }
             }
@@ -42,7 +42,7 @@ public class SeasonsAPI {
 
     private static void resolveAndCheck(Object entry, Set<Season> allSeasons) {
         Object resolved = entry;
-        if (entry instanceof ResourceLocation id) {
+        if (entry instanceof Identifier id) {
             resolved = resolveId(id);
         } else if (entry instanceof GuideEntry) {
             resolved = EntryResolver.resolveCoreEntry(entry);
@@ -58,7 +58,7 @@ public class SeasonsAPI {
         }
     }
 
-    private static Object resolveId(ResourceLocation id) {
+    private static Object resolveId(Identifier id) {
         return BuiltInRegistries.BLOCK.getOptional(id)
                 .map(Object.class::cast)
                 .or(() -> BuiltInRegistries.ITEM.getOptional(id))

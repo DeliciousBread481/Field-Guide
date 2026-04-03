@@ -4,7 +4,7 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.*;
 import com.evandev.fieldguide.platform.Services;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -15,12 +15,12 @@ import java.util.*;
 
 public class EntryResolutionHelper {
 
-    public static List<Object> resolveCategoryEntries(Category category, Map<ResourceLocation, GuideEntry> allEntries, List<CompositeDefinition> globalComposites, Map<ResourceLocation, ResourceLocation> redirects) {
+    public static List<Object> resolveCategoryEntries(Category category, Map<Identifier, GuideEntry> allEntries, List<CompositeDefinition> globalComposites, Map<Identifier, Identifier> redirects) {
         Set<Object> foundEntries = new LinkedHashSet<>();
         Set<String> addedKeys = new HashSet<>();
-        ResourceLocation categoryId = category.getId();
+        Identifier categoryId = category.getId();
 
-        for (ResourceLocation entryId : category.getEntryIds()) {
+        for (Identifier entryId : category.getEntryIds()) {
             GuideEntry entry = allEntries.get(entryId);
             if (entry == null) continue;
 
@@ -36,7 +36,7 @@ public class EntryResolutionHelper {
                 foundEntries.add(entry);
                 addedKeys.add(entry.id().toString());
             } else {
-                ResourceLocation targetId = entry.displayId() != null ? entry.displayId() : entry.id();
+                Identifier targetId = entry.displayId() != null ? entry.displayId() : entry.id();
                 resolveSingleEntry(targetId, categoryId, entry.strategy()).ifPresent(e -> {
                     foundEntries.add(entry.isComposite() || entry.isStructure() ? entry : e);
                     addedKeys.add(AutoPopulateRegistry.getEntryKey(e));
@@ -46,10 +46,10 @@ public class EntryResolutionHelper {
 
         if (globalComposites != null && !globalComposites.isEmpty()) {
             List<Object> groupedEntries = new ArrayList<>();
-            Set<ResourceLocation> processedComposites = new HashSet<>();
+            Set<Identifier> processedComposites = new HashSet<>();
 
             for (Object raw : foundEntries) {
-                ResourceLocation baseId = getEntryId(raw);
+                Identifier baseId = getEntryId(raw);
                 if (raw instanceof GuideEntry ge) {
                     baseId = ge.displayId() != null ? ge.displayId() : ge.id();
                 }
@@ -71,14 +71,14 @@ public class EntryResolutionHelper {
         return getResolvedEntries(redirects, foundEntries);
     }
 
-    private static @NotNull List<Object> getResolvedEntries(Map<ResourceLocation, ResourceLocation> redirects, Set<Object> foundEntries) {
+    private static @NotNull List<Object> getResolvedEntries(Map<Identifier, Identifier> redirects, Set<Object> foundEntries) {
         List<Object> resolved = new ArrayList<>(foundEntries);
         resolved.removeIf(e -> {
-            ResourceLocation id = getEntryId(e);
+            Identifier id = getEntryId(e);
             if (id != null && redirects.containsKey(id)) {
-                ResourceLocation targetId = redirects.get(id);
+                Identifier targetId = redirects.get(id);
                 if (targetId != null) {
-                    ResourceLocation rawTargetId = EntryResolver.getRawId(targetId);
+                    Identifier rawTargetId = EntryResolver.getRawId(targetId);
                     return BuiltInRegistries.ITEM.containsKey(rawTargetId) ||
                             BuiltInRegistries.BLOCK.containsKey(rawTargetId) ||
                             BuiltInRegistries.ENTITY_TYPE.containsKey(rawTargetId);
@@ -89,10 +89,10 @@ public class EntryResolutionHelper {
         return resolved;
     }
 
-    private static CompositeDefinition findCompositeFor(ResourceLocation id, List<CompositeDefinition> composites) {
+    private static CompositeDefinition findCompositeFor(Identifier id, List<CompositeDefinition> composites) {
         if (id == null) return null;
         for (CompositeDefinition def : composites) {
-            ResourceLocation mainId = def.displayId() != null ? def.displayId() : def.id();
+            Identifier mainId = def.displayId() != null ? def.displayId() : def.id();
             if (id.equals(mainId) || (def.components() != null && def.components().contains(id))) {
                 return def;
             }
@@ -100,8 +100,8 @@ public class EntryResolutionHelper {
         return null;
     }
 
-    public static Optional<Object> resolveSingleEntryWithHint(ResourceLocation id, ResourceLocation categoryId, Object hint) {
-        ResourceLocation rawId = EntryResolver.getRawId(id);
+    public static Optional<Object> resolveSingleEntryWithHint(Identifier id, Identifier categoryId, Object hint) {
+        Identifier rawId = EntryResolver.getRawId(id);
         if (hint instanceof EntityType<?>) {
             return BuiltInRegistries.ENTITY_TYPE.getOptional(rawId)
                     .filter(t -> EntryValidator.isValidEntity(t, categoryId))
@@ -121,12 +121,12 @@ public class EntryResolutionHelper {
         return resolveSingleEntry(id, categoryId, null);
     }
 
-    public static Optional<GuideEntry> resolveCompositeDefinition(CompositeDefinition def, ResourceLocation categoryId, Object hint) {
-        ResourceLocation displayLoc = def.displayId() != null ? def.displayId() : def.id();
+    public static Optional<GuideEntry> resolveCompositeDefinition(CompositeDefinition def, Identifier categoryId, Object hint) {
+        Identifier displayLoc = def.displayId() != null ? def.displayId() : def.id();
         return resolveSingleEntryWithHint(displayLoc, categoryId, hint).map(displayEntry -> {
-            List<ResourceLocation> components = new ArrayList<>();
+            List<Identifier> components = new ArrayList<>();
             if (def.components() != null) {
-                for (ResourceLocation compId : def.components()) {
+                for (Identifier compId : def.components()) {
                     resolveSingleEntryWithHint(compId, categoryId, hint).ifPresent(resolved -> components.add(compId));
                 }
             }
@@ -139,12 +139,12 @@ public class EntryResolutionHelper {
         });
     }
 
-    public static Optional<Object> resolveSingleEntry(ResourceLocation id, ResourceLocation categoryId, String strategyHint) {
+    public static Optional<Object> resolveSingleEntry(Identifier id, Identifier categoryId, String strategyHint) {
         if (Services.PLATFORM.isModLoaded("cobblemon") && id.getNamespace().equals(Constants.MOD_ID) && id.getPath().startsWith("cobblemon/")) {
             return Optional.of(new GuideEntry(id, null, null, EntryKind.NORMAL, true, false, null, null, null, new VirtualData("cobblemon"), EntryUnlockData.DEFAULT));
         }
 
-        ResourceLocation finalId = EntryResolver.getRawId(id);
+        Identifier finalId = EntryResolver.getRawId(id);
         String namespace = id.getNamespace();
 
         switch (namespace) {
@@ -183,25 +183,25 @@ public class EntryResolutionHelper {
                 .or(() -> lookupEntity(finalId, categoryId));
     }
 
-    private static Optional<Object> lookupEntity(ResourceLocation id, ResourceLocation categoryId) {
+    private static Optional<Object> lookupEntity(Identifier id, Identifier categoryId) {
         return BuiltInRegistries.ENTITY_TYPE.getOptional(id)
                 .filter(t -> EntryValidator.isValidEntity(t, categoryId))
                 .map(Object.class::cast);
     }
 
-    private static Optional<Object> lookupBlock(ResourceLocation id, ResourceLocation categoryId) {
+    private static Optional<Object> lookupBlock(Identifier id, Identifier categoryId) {
         return BuiltInRegistries.BLOCK.getOptional(id)
                 .filter(b -> EntryValidator.isValidBlock(b, categoryId))
                 .map(Object.class::cast);
     }
 
-    private static Optional<Object> lookupItem(ResourceLocation id, ResourceLocation categoryId) {
+    private static Optional<Object> lookupItem(Identifier id, Identifier categoryId) {
         return BuiltInRegistries.ITEM.getOptional(id)
                 .filter(i -> EntryValidator.isValidItem(i, categoryId))
                 .map(Object.class::cast);
     }
 
-    private static @Nullable String getEffectiveStrategy(ResourceLocation categoryId, String strategyHint) {
+    private static @Nullable String getEffectiveStrategy(Identifier categoryId, String strategyHint) {
         String effectiveStrategy = strategyHint;
         if (effectiveStrategy == null && categoryId != null) {
             String path = categoryId.getPath();
@@ -214,7 +214,7 @@ public class EntryResolutionHelper {
         return effectiveStrategy;
     }
 
-    public static ResourceLocation getEntryId(Object obj) {
+    public static Identifier getEntryId(Object obj) {
         if (obj instanceof GuideEntry ge) return ge.id();
         return AutoPopulateRegistry.getEntryId(obj);
     }

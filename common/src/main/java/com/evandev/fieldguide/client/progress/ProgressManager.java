@@ -25,7 +25,7 @@ import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -79,15 +79,15 @@ public class ProgressManager {
         return lastUnlockedVariant;
     }
 
-    public boolean isKillToUnlock(ResourceLocation entryId) {
+    public boolean isKillToUnlock(Identifier entryId) {
         return killedOnly.contains(entryId.toString());
     }
 
-    public boolean isEatToUnlock(ResourceLocation entryId) {
+    public boolean isEatToUnlock(Identifier entryId) {
         return eatenOnly.contains(entryId.toString());
     }
 
-    public boolean canScanToUnlock(ResourceLocation entryId) {
+    public boolean canScanToUnlock(Identifier entryId) {
         String idStr = entryId.toString();
         if (isKillToUnlock(entryId) || isEatToUnlock(entryId)) {
             return false;
@@ -179,25 +179,25 @@ public class ProgressManager {
     }
 
     private Object resolveEntryFromId(String idStr) {
-        ResourceLocation id = ResourceLocation.tryParse(idStr);
+        Identifier id = Identifier.tryParse(idStr);
         if (id == null) return null;
 
         for (Object entry : ClientFieldGuideManager.getValidEntries()) {
-            ResourceLocation entryId = ClientFieldGuideManager.getEntryId(entry);
+            Identifier entryId = ClientFieldGuideManager.getEntryId(entry);
             if (id.equals(entryId)) return entry;
         }
         return null;
     }
 
     public boolean isUnlocked(Object entry) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        Identifier id = ClientFieldGuideManager.getEntryId(entry);
         if (id == null) return false;
         if (unlockedEntries.contains(id.toString())) return true;
         return unlockedEntries.contains(EntryResolver.getRawId(id).toString());
     }
 
     public boolean isNew(Object entry) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        Identifier id = ClientFieldGuideManager.getEntryId(entry);
         if (id == null) return false;
         String idStr = id.toString();
         String rawIdStr = EntryResolver.getRawId(id).toString();
@@ -215,24 +215,24 @@ public class ProgressManager {
     }
 
     public long getDiscoveryTime(Object entry) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        Identifier id = ClientFieldGuideManager.getEntryId(entry);
         return id != null ? discoveryTimes.getOrDefault(id.toString(), 0L) : 0L;
     }
 
     public long getDiscoveryGameTime(Object entry) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        Identifier id = ClientFieldGuideManager.getEntryId(entry);
         return id != null ? discoveryGameTimes.getOrDefault(id.toString(), 0L) : 0L;
     }
 
     public void markAsSeen(Object entry) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        Identifier id = ClientFieldGuideManager.getEntryId(entry);
         if (id != null && seenEntries.add(id.toString())) {
             Services.NETWORK.sendToServer(new MarkSeenPacket(id));
         }
     }
 
     public String getCustomName(Object entry) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        Identifier id = ClientFieldGuideManager.getEntryId(entry);
         return id != null ? getCustomName(id.toString()) : null;
     }
 
@@ -241,13 +241,13 @@ public class ProgressManager {
     }
 
     public void setCustomName(Object entry, String name) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        Identifier id = ClientFieldGuideManager.getEntryId(entry);
         if (id != null) {
             setCustomVariantName(id, null, name);
         }
     }
 
-    public void setCustomVariantName(ResourceLocation entryId, String variantId, String name) {
+    public void setCustomVariantName(Identifier entryId, String variantId, String name) {
         String key = entryId.toString();
         if (variantId != null && !variantId.isEmpty()) {
             key += "#" + variantId;
@@ -267,7 +267,7 @@ public class ProgressManager {
     }
 
     public String getCustomDescription(Object entry, String variantId) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        Identifier id = ClientFieldGuideManager.getEntryId(entry);
         if (id == null) return null;
         String key = id.toString();
         if (variantId != null && !variantId.isEmpty()) {
@@ -281,7 +281,7 @@ public class ProgressManager {
     }
 
     public void setCustomDescription(Object entry, String variantId, String desc) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        Identifier id = ClientFieldGuideManager.getEntryId(entry);
         if (id != null) {
             String key = id.toString();
             if (variantId != null && !variantId.isEmpty()) {
@@ -293,22 +293,22 @@ public class ProgressManager {
     }
 
     public String getSelectedVariant(Object entry) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        Identifier id = ClientFieldGuideManager.getEntryId(entry);
         return id != null ? getSelectedVariant(id) : null;
     }
 
-    public String getSelectedVariant(ResourceLocation id) {
+    public String getSelectedVariant(Identifier id) {
         return selectedVariants.get(id.toString());
     }
 
     public void setSelectedVariant(Object entry, String variantId) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        Identifier id = ClientFieldGuideManager.getEntryId(entry);
         if (id != null) {
             setSelectedVariant(id, variantId);
         }
     }
 
-    public void setSelectedVariant(ResourceLocation id, String variantId) {
+    public void setSelectedVariant(Identifier id, String variantId) {
         if (variantId == null || variantId.isEmpty()) {
             selectedVariants.remove(id.toString());
         } else {
@@ -323,7 +323,7 @@ public class ProgressManager {
     }
 
     public ItemStack getPhotograph(Object entry, String variantId) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        Identifier id = ClientFieldGuideManager.getEntryId(entry);
         if (id != null) {
             String key = id.toString();
             if (variantId != null && !variantId.isEmpty()) {
@@ -342,7 +342,7 @@ public class ProgressManager {
     }
 
     public void setPhotograph(Object entry, int slot, ItemStack stack, String variantId) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        Identifier id = ClientFieldGuideManager.getEntryId(entry);
         if (id != null) {
             String key = id.toString();
             if (variantId != null && !variantId.isEmpty()) {
@@ -359,7 +359,7 @@ public class ProgressManager {
         }
     }
 
-    public boolean hasTrigger(ResourceLocation entryId, String triggerName) {
+    public boolean hasTrigger(Identifier entryId, String triggerName) {
         String idStr = entryId.toString();
         if (entryTriggers.containsKey(idStr)) {
             return entryTriggers.get(idStr).contains(triggerName);
@@ -471,7 +471,7 @@ public class ProgressManager {
         if (exportNames) {
             for (Map.Entry<String, String> entry : customNames.entrySet()) {
                 String[] parts = entry.getKey().split("#", 2);
-                ResourceLocation prefixedId = ResourceLocation.parse(parts[0]);
+                Identifier prefixedId = Identifier.parse(parts[0]);
 
                 String entryType = prefixedId.getNamespace();
                 String path = prefixedId.getPath().replace('/', '.');
@@ -487,7 +487,7 @@ public class ProgressManager {
         if (exportDesc) {
             for (Map.Entry<String, String> entry : customDescriptions.entrySet()) {
                 String[] parts = entry.getKey().split("#", 2);
-                ResourceLocation prefixedId = ResourceLocation.parse(parts[0]);
+                Identifier prefixedId = Identifier.parse(parts[0]);
 
                 String entryType = prefixedId.getNamespace();
                 String path = prefixedId.getPath().replace('/', '.');

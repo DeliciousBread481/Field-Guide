@@ -1,3 +1,4 @@
+/*
 package com.evandev.fieldguide.client.gui.screens;
 
 import io.github.mortuusars.exposure.client.gui.screen.PhotographScreen;
@@ -20,4 +21,4 @@ public class FieldGuidePhotographScreen extends PhotographScreen {
     public void onClose() {
         Minecraft.getInstance().setScreen(this.parentScreen);
     }
-}
+}*/

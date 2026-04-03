@@ -5,7 +5,7 @@ import com.evandev.fieldguide.api.seasons.SeasonsProvider;
 import io.github.lucaargolo.seasons.resources.CropConfigs;
 import io.github.lucaargolo.seasons.utils.SeasonalFertilizable;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
@@ -21,7 +21,7 @@ public class FabricSeasonsProvider implements SeasonsProvider {
     @Override
     public List<Season> getGrowingSeasons(Object entry) {
         List<Season> seasons = new ArrayList<>();
-        ResourceLocation registryId;
+        Identifier registryId;
         Block targetBlock = null;
 
         if (entry instanceof Block block) {
@@ -46,7 +46,7 @@ public class FabricSeasonsProvider implements SeasonsProvider {
         return seasons;
     }
 
-    private void checkSeasons(ResourceLocation id, List<Season> seasons) {
+    private void checkSeasons(Identifier id, List<Season> seasons) {
         float springGrowth = CropConfigs.getSeasonCropMultiplier(id, io.github.lucaargolo.seasons.utils.Season.SPRING);
         float summerGrowth = CropConfigs.getSeasonCropMultiplier(id, io.github.lucaargolo.seasons.utils.Season.SUMMER);
         float fallGrowth = CropConfigs.getSeasonCropMultiplier(id, io.github.lucaargolo.seasons.utils.Season.FALL);

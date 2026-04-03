@@ -4,7 +4,7 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.google.gson.JsonObject;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.GsonHelper;
 
@@ -17,7 +17,7 @@ import java.util.function.BiConsumer;
 public class ClientVisualManager {
     private static final ClientVisualManager INSTANCE = new ClientVisualManager();
 
-    private final Map<ResourceLocation, EntryVisual> entryVisuals = new HashMap<>();
+    private final Map<Identifier, EntryVisual> entryVisuals = new HashMap<>();
 
     private ClientVisualManager() {
     }
@@ -30,7 +30,7 @@ public class ClientVisualManager {
         if (entryKey == null || entryKey.isEmpty()) return new EntryVisual();
 
         // 1. Try prefixed key (e.g. "entity:minecraft/chicken")
-        ResourceLocation prefixedId = ResourceLocation.parse(entryKey);
+        Identifier prefixedId = Identifier.parse(entryKey);
         if (entryVisuals.containsKey(prefixedId)) {
             return entryVisuals.get(prefixedId);
         }
@@ -40,13 +40,13 @@ public class ClientVisualManager {
             String baseIdStr = entryKey.substring(entryKey.indexOf(":") + 1);
             if (baseIdStr.contains("/")) {
                 String[] parts = baseIdStr.split("/", 2);
-                ResourceLocation baseId = ResourceLocation.fromNamespaceAndPath(parts[0], parts[1]);
+                Identifier baseId = Identifier.fromNamespaceAndPath(parts[0], parts[1]);
                 if (entryVisuals.containsKey(baseId)) {
                     return entryVisuals.get(baseId);
                 }
             }
 
-            ResourceLocation baseId = ResourceLocation.parse(baseIdStr);
+            Identifier baseId = Identifier.parse(baseIdStr);
             if (entryVisuals.containsKey(baseId)) {
                 return entryVisuals.get(baseId);
             }
@@ -60,12 +60,12 @@ public class ClientVisualManager {
         EntryRenderHelper.clearCache();
 
         loadVisuals(resourceManager, (derivedId, json) -> {
-            ResourceLocation targetId = json.has("id") ? ResourceLocation.parse(GsonHelper.getAsString(json, "id")) : derivedId;
+            Identifier targetId = json.has("id") ? Identifier.parse(GsonHelper.getAsString(json, "id")) : derivedId;
             EntryVisual visual = new EntryVisual();
             if (json.has("custom_sound"))
-                visual.customSound = ResourceLocation.parse(GsonHelper.getAsString(json, "custom_sound"));
+                visual.customSound = Identifier.parse(GsonHelper.getAsString(json, "custom_sound"));
             if (json.has("alignment_icon"))
-                visual.alignmentIcon = ResourceLocation.parse(GsonHelper.getAsString(json, "alignment_icon"));
+                visual.alignmentIcon = Identifier.parse(GsonHelper.getAsString(json, "alignment_icon"));
             if (json.has("scale")) visual.scale = GsonHelper.getAsFloat(json, "scale");
             if (json.has("y_offset")) visual.yOffset = GsonHelper.getAsFloat(json, "y_offset");
             if (json.has("x_offset")) visual.xOffset = GsonHelper.getAsFloat(json, "x_offset");
@@ -77,17 +77,17 @@ public class ClientVisualManager {
             if (json.has("page_x_offset")) visual.pageXOffset = GsonHelper.getAsFloat(json, "page_x_offset");
             if (json.has("spawn_biomes")) {
                 visual.spawnBiomes = new ArrayList<>();
-                GsonHelper.getAsJsonArray(json, "spawn_biomes").forEach(el -> visual.spawnBiomes.add(ResourceLocation.parse(el.getAsString())));
+                GsonHelper.getAsJsonArray(json, "spawn_biomes").forEach(el -> visual.spawnBiomes.add(Identifier.parse(el.getAsString())));
             }
             entryVisuals.put(targetId, visual);
         });
     }
 
-    private void loadVisuals(ResourceManager mgr, BiConsumer<ResourceLocation, JsonObject> processor) {
+    private void loadVisuals(ResourceManager mgr, BiConsumer<Identifier, JsonObject> processor) {
         mgr.listResourceStacks("fieldguide/entries", id -> id.getPath().endsWith(".json")).forEach((fileId, resources) -> {
             String path = fileId.getPath();
             String idPath = path.substring(("fieldguide/entries" + "/").length(), path.length() - ".json".length());
-            ResourceLocation targetId = ResourceLocation.fromNamespaceAndPath(fileId.getNamespace(), idPath);
+            Identifier targetId = Identifier.fromNamespaceAndPath(fileId.getNamespace(), idPath);
             resources.forEach(resource -> {
                 try (Reader reader = resource.openAsReader()) {
                     processor.accept(targetId, GsonHelper.parse(reader));
@@ -98,7 +98,7 @@ public class ClientVisualManager {
         });
     }
 
-    public Map<ResourceLocation, EntryVisual> getEntryVisuals() {
+    public Map<Identifier, EntryVisual> getEntryVisuals() {
         return entryVisuals;
     }
 }

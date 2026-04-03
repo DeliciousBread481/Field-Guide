@@ -9,18 +9,15 @@ import com.evandev.fieldguide.client.gui.screens.FieldGuideCategoryScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
 import com.evandev.fieldguide.client.scan.FieldGuideScanner;
 import com.evandev.fieldguide.compat.SeasonsCompat;
-import com.evandev.fieldguide.compat.cobblemon.ClientFieldGuideCobblemonCompat;
-import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.item.ModItems;
 import com.evandev.fieldguide.mixin.accessor.MobAccessor;
-import com.evandev.fieldguide.platform.Services;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -53,10 +50,10 @@ public class FieldGuideClient {
     }
 
     public static void playMobCry(Entity entity) {
-        if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
+        /*if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
             ClientFieldGuideCobblemonCompat.playPokemonCry(entity);
             return;
-        }
+        }*/
 
         if (entity instanceof Mob mob) {
             SoundEvent sound = ((MobAccessor) mob).fieldguide$callGetAmbientSound();
@@ -125,7 +122,7 @@ public class FieldGuideClient {
         }
     }
 
-    public static void renderScanningIcon(GuiGraphics guiGraphics, float partialTick) {
+    public static void renderScanningIcon(GuiGraphicsExtractor guiGraphics, float partialTick) {
         ClientConfig config = ClientConfig.get();
         if (!config.showScanIcon) return;
 

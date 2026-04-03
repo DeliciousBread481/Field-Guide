@@ -6,7 +6,7 @@ import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 
@@ -16,7 +16,7 @@ import java.util.Objects;
 
 class UnlockRewards {
 
-    static void grant(ServerPlayer player, ResourceLocation entryId, boolean grantXp) {
+    static void grant(ServerPlayer player, Identifier entryId, boolean grantXp) {
         try {
             ServerConfig config = ServerConfig.get();
             if (grantXp && config.grantXpOnScan && config.xpAmountOnScan > 0) {
@@ -29,7 +29,7 @@ class UnlockRewards {
         }
     }
 
-    private static void executeCommands(ServerPlayer player, ResourceLocation entryId, ServerConfig config) {
+    private static void executeCommands(ServerPlayer player, Identifier entryId, ServerConfig config) {
         List<String> commandsToRun = new ArrayList<>(config.globalScanCommands);
 
         String idStr = entryId.toString();
@@ -37,7 +37,7 @@ class UnlockRewards {
             commandsToRun.addAll(config.entryScanCommands.get(idStr));
         }
 
-        ResourceLocation categoryId = ServerFieldGuideManager.getInstance().getCategoryForEntryId(entryId);
+        Identifier categoryId = ServerFieldGuideManager.getInstance().getCategoryForEntryId(entryId);
         if (categoryId != null && config.categoryScanCommands.containsKey(categoryId.toString())) {
             commandsToRun.addAll(config.categoryScanCommands.get(categoryId.toString()));
         }
@@ -50,7 +50,7 @@ class UnlockRewards {
         }
     }
 
-    private static CommandSourceStack createRewardSourceStack(ServerPlayer player, ResourceLocation entryId) {
+    private static CommandSourceStack createRewardSourceStack(ServerPlayer player, Identifier entryId) {
         String sourceName = Constants.MOD_ID + "/" + entryId;
         return new CommandSourceStack(
                 new CommandSource() {

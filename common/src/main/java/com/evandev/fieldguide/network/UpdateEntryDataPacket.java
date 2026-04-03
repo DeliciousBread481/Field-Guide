@@ -10,14 +10,14 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 public class UpdateEntryDataPacket implements CustomPacketPayload {
 
-    public static final Type<UpdateEntryDataPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "update_entry_data"));
+    public static final Type<UpdateEntryDataPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "update_entry_data"));
     private static final int MAX_NAME_LENGTH = FieldGuideLimits.MAX_ENTRY_NAME_LENGTH;
     private static final int MAX_DESCRIPTION_LENGTH = FieldGuideLimits.MAX_ENTRY_DESCRIPTION_LENGTH;
     public static final StreamCodec<FriendlyByteBuf, UpdateEntryDataPacket> CODEC = StreamCodec.ofMember(
@@ -26,11 +26,11 @@ public class UpdateEntryDataPacket implements CustomPacketPayload {
     );
 
     private final Action action;
-    private final ResourceLocation entryId;
+    private final Identifier entryId;
     private final String variantId;
     private final Data data;
 
-    private UpdateEntryDataPacket(Action action, ResourceLocation entryId, String variantId, Data data) {
+    private UpdateEntryDataPacket(Action action, Identifier entryId, String variantId, Data data) {
         this.action = action;
         this.entryId = entryId;
         this.variantId = variantId;
@@ -39,7 +39,7 @@ public class UpdateEntryDataPacket implements CustomPacketPayload {
 
     public UpdateEntryDataPacket(FriendlyByteBuf buf) {
         this.action = buf.readEnum(Action.class);
-        this.entryId = buf.readResourceLocation();
+        this.entryId = buf.readIdentifier();
         this.variantId = buf.readUtf(128);
         this.data = switch (action) {
             case SET_NAME -> new NameData(buf.readUtf(MAX_NAME_LENGTH));
@@ -50,27 +50,27 @@ public class UpdateEntryDataPacket implements CustomPacketPayload {
         };
     }
 
-    public static UpdateEntryDataPacket setName(ResourceLocation entryId, String name) {
+    public static UpdateEntryDataPacket setName(Identifier entryId, String name) {
         return new UpdateEntryDataPacket(Action.SET_NAME, entryId, "", new NameData(name));
     }
 
-    public static UpdateEntryDataPacket setVariantName(ResourceLocation entryId, String variantId, String name) {
+    public static UpdateEntryDataPacket setVariantName(Identifier entryId, String variantId, String name) {
         return new UpdateEntryDataPacket(Action.SET_NAME, entryId, variantId != null ? variantId : "", new NameData(name));
     }
 
-    public static UpdateEntryDataPacket setDescription(ResourceLocation entryId, String variantId, String description) {
+    public static UpdateEntryDataPacket setDescription(Identifier entryId, String variantId, String description) {
         return new UpdateEntryDataPacket(Action.SET_DESCRIPTION, entryId, variantId != null ? variantId : "", new DescriptionData(description));
     }
 
-    public static UpdateEntryDataPacket setPhotograph(ResourceLocation entryId, int slot, String variantId) {
+    public static UpdateEntryDataPacket setPhotograph(Identifier entryId, int slot, String variantId) {
         return new UpdateEntryDataPacket(Action.SET_PHOTOGRAPH, entryId, variantId != null ? variantId : "", new PhotographData(slot));
     }
 
-    public static UpdateEntryDataPacket removePhotograph(ResourceLocation entryId, String variantId) {
+    public static UpdateEntryDataPacket removePhotograph(Identifier entryId, String variantId) {
         return new UpdateEntryDataPacket(Action.REMOVE_PHOTOGRAPH, entryId, variantId != null ? variantId : "", new RemovePhotographData());
     }
 
-    public static UpdateEntryDataPacket setSelectedVariant(ResourceLocation entryId, String variantId) {
+    public static UpdateEntryDataPacket setSelectedVariant(Identifier entryId, String variantId) {
         return new UpdateEntryDataPacket(Action.SET_SELECTED_VARIANT, entryId, "", new VariantData(variantId));
     }
 
@@ -82,7 +82,7 @@ public class UpdateEntryDataPacket implements CustomPacketPayload {
 
     public void encode(FriendlyByteBuf buf) {
         buf.writeEnum(action);
-        buf.writeResourceLocation(entryId);
+        buf.writeIdentifier(entryId);
         buf.writeUtf(variantId != null ? variantId : "", 128);
         data.encode(buf);
     }

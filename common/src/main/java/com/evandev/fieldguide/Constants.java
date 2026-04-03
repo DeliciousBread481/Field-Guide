@@ -1,7 +1,7 @@
 package com.evandev.fieldguide;
 
 import com.google.gson.reflect.TypeToken;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,38 +21,38 @@ public class Constants {
     }.getType();
 
     // Backgrounds
-    public static final ResourceLocation BOOK_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/book.png");
-    public static final ResourceLocation TITLE_PAGE_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/page_title.png");
-    public static final ResourceLocation LIST_PAGE_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/page_list.png");
-    public static final ResourceLocation DETAILS_PAGE_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/page_details.png");
-    public static final ResourceLocation DETAILS_PAGE_V_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/page_details_v.png");
-    public static final ResourceLocation DETAILS_PAGE_A_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/page_details_a.png");
-    public static final ResourceLocation DETAILS_PAGE_VA_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/page_details_va.png");
-    public static final ResourceLocation TOAST_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/toast.png");
-    public static final ResourceLocation JOURNAL_TITLE_PAGE_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/page_journal_title.png");
-    public static final ResourceLocation JOURNAL_PAGE_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/page_journal.png");
-    public static final ResourceLocation VARIANT_WIDGET_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/variant_overview_bg.png");
+    public static final Identifier BOOK_TEXTURE = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/book.png");
+    public static final Identifier TITLE_PAGE_TEXTURE = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/page_title.png");
+    public static final Identifier LIST_PAGE_TEXTURE = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/page_list.png");
+    public static final Identifier DETAILS_PAGE_TEXTURE = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/page_details.png");
+    public static final Identifier DETAILS_PAGE_V_TEXTURE = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/page_details_v.png");
+    public static final Identifier DETAILS_PAGE_A_TEXTURE = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/page_details_a.png");
+    public static final Identifier DETAILS_PAGE_VA_TEXTURE = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/page_details_va.png");
+    public static final Identifier TOAST_TEXTURE = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/toast.png");
+    public static final Identifier JOURNAL_TITLE_PAGE_TEXTURE = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/page_journal_title.png");
+    public static final Identifier JOURNAL_PAGE_TEXTURE = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/page_journal.png");
+    public static final Identifier VARIANT_WIDGET_TEXTURE = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/variant_overview_bg.png");
 
     // Sounds
-    public static final ResourceLocation ITEM_PICKUP_SOUND = ResourceLocation.fromNamespaceAndPath("minecraft", "entity.item.pickup");
+    public static final Identifier ITEM_PICKUP_SOUND = Identifier.fromNamespaceAndPath("minecraft", "entity.item.pickup");
 
     // Elements
-    public static final ResourceLocation WIDGETS_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/widgets.png");
-    public static final ResourceLocation LIST_ENTRY_BACKGROUND_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/list_entry_background.png");
-    public static final ResourceLocation LIST_ENTRY_NEW_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/list_entry_new.png");
+    public static final Identifier WIDGETS_TEXTURE = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/widgets.png");
+    public static final Identifier LIST_ENTRY_BACKGROUND_TEXTURE = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/list_entry_background.png");
+    public static final Identifier LIST_ENTRY_NEW_TEXTURE = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/list_entry_new.png");
 
     // Icons
-    public static final ResourceLocation DEFAULT_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/book.png");
-    public static final ResourceLocation TOAST_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/book_icon.png");
-    public static final ResourceLocation QUILL_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/quill.png");
-    public static final ResourceLocation ATTRIBUTES_SEPARATOR = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes_separator.png");
-    public static final ResourceLocation SCANNING_ICON_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/scanning.png");
-    public static final ResourceLocation SEASONS_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/seasons.png");
+    public static final Identifier DEFAULT_ICON = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/book.png");
+    public static final Identifier TOAST_ICON = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/book_icon.png");
+    public static final Identifier QUILL_ICON = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/icons/quill.png");
+    public static final Identifier ATTRIBUTES_SEPARATOR = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes_separator.png");
+    public static final Identifier SCANNING_ICON_TEXTURE = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/scanning.png");
+    public static final Identifier SEASONS_TEXTURE = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/seasons.png");
 
     // Attribute Icons
-    public static final ResourceLocation HEALTH_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes/health.png");
-    public static final ResourceLocation ARMOR_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes/armor.png");
-    public static final ResourceLocation HOSTILE_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes/hostile.png");
-    public static final ResourceLocation PASSIVE_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes/passive.png");
-    public static final ResourceLocation NEUTRAL_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes/neutral.png");
+    public static final Identifier HEALTH_ICON = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes/health.png");
+    public static final Identifier ARMOR_ICON = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes/armor.png");
+    public static final Identifier HOSTILE_ICON = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes/hostile.png");
+    public static final Identifier PASSIVE_ICON = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes/passive.png");
+    public static final Identifier NEUTRAL_ICON = Identifier.fromNamespaceAndPath(MOD_ID, "textures/gui/attributes/neutral.png");
 }

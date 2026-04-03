@@ -5,7 +5,7 @@ import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class ProgressUpdatePacket implements CustomPacketPayload {
-    public static final Type<ProgressUpdatePacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "progress_update"));
+    public static final Type<ProgressUpdatePacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "progress_update"));
     public static final StreamCodec<FriendlyByteBuf, ProgressUpdatePacket> CODEC = StreamCodec.ofMember(ProgressUpdatePacket::encode, ProgressUpdatePacket::new);
 
     private final boolean reset;

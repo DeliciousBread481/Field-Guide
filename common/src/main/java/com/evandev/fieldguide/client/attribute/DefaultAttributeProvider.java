@@ -4,7 +4,7 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.attribute.AttributeProvider;
 import com.evandev.fieldguide.api.attribute.GuideAttribute;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
@@ -21,7 +21,7 @@ public class DefaultAttributeProvider implements AttributeProvider {
 
         if (renderedEntity instanceof LivingEntity living) {
             // Alignment
-            ResourceLocation icon;
+            Identifier icon;
             Component typeComponent;
 
             if (living instanceof NeutralMob) {

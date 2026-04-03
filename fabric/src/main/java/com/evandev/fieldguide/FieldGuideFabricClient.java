@@ -18,7 +18,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.CoreShaderRegistrationCallback;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.jetbrains.annotations.NotNull;
@@ -38,8 +38,8 @@ public class FieldGuideFabricClient implements ClientModInitializer {
 
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
             @Override
-            public ResourceLocation getFabricId() {
-                return ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "mob_data");
+            public Identifier getFabricId() {
+                return Identifier.fromNamespaceAndPath(Constants.MOD_ID, "mob_data");
             }
 
             @Override
@@ -105,13 +105,13 @@ public class FieldGuideFabricClient implements ClientModInitializer {
         CoreShaderRegistrationCallback.EVENT.register(context -> {
             try {
                 context.register(
-                        ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "fieldguide_scan_block"),
+                        Identifier.fromNamespaceAndPath(Constants.MOD_ID, "fieldguide_scan_block"),
                         DefaultVertexFormat.BLOCK,
                         program -> ModRenderTypes.SCAN_BLOCK_SHADER = program
                 );
 
                 context.register(
-                        ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "fieldguide_scan_entity"),
+                        Identifier.fromNamespaceAndPath(Constants.MOD_ID, "fieldguide_scan_entity"),
                         DefaultVertexFormat.NEW_ENTITY,
                         program -> ModRenderTypes.SCAN_ENTITY_SHADER = program
                 );

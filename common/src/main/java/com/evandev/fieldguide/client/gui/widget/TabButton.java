@@ -4,20 +4,20 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.screens.BookScreen;
 import com.evandev.fieldguide.api.Category;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 
 public class TabButton extends ImageButton {
     private static final WidgetSprites SPRITES = new WidgetSprites(
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/tab_button"),
-            ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/tab_button_highlighted")
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/tab_button"),
+            Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/tab_button_highlighted")
     );
     private final Category category;
     private final BookScreen parent;
@@ -35,7 +35,7 @@ public class TabButton extends ImageButton {
     }
 
     @Override
-    public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void renderWidget(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         boolean isSelected = (category == parent.getSelectedCategory());
         int vOffset = isSelected ? 24 : 0;
 

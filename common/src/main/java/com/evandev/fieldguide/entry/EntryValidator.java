@@ -7,7 +7,7 @@ import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.ModTags;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
@@ -15,22 +15,22 @@ import net.minecraft.world.level.block.Block;
 
 public class EntryValidator {
 
-    public static boolean isValidEntity(EntityType<?> type, ResourceLocation categoryId) {
+    public static boolean isValidEntity(EntityType<?> type, Identifier categoryId) {
         return BuiltInRegistries.ENTITY_TYPE.getResourceKey(type).flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder).map(h -> {
             if (h.is(ModTags.EntityTypes.BLACKLISTED)) return false;
             if (categoryId != null) {
-                TagKey<EntityType<?>> catTag = TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "blacklisted/" + categoryId.getNamespace() + "/" + categoryId.getPath()));
+                TagKey<EntityType<?>> catTag = TagKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "blacklisted/" + categoryId.getNamespace() + "/" + categoryId.getPath()));
                 return !h.is(catTag);
             }
             return true;
         }).orElse(true);
     }
 
-    public static boolean isValidBlock(Block block, ResourceLocation categoryId) {
+    public static boolean isValidBlock(Block block, Identifier categoryId) {
         boolean blacklisted = BuiltInRegistries.BLOCK.getResourceKey(block).flatMap(BuiltInRegistries.BLOCK::getHolder).map(h -> {
             if (h.is(ModTags.Blocks.BLACKLISTED)) return true;
             if (categoryId != null) {
-                TagKey<Block> catTag = TagKey.create(Registries.BLOCK, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "blacklisted/" + categoryId.getNamespace() + "/" + categoryId.getPath()));
+                TagKey<Block> catTag = TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "blacklisted/" + categoryId.getNamespace() + "/" + categoryId.getPath()));
                 return (h.is(catTag));
             }
             return false;
@@ -44,7 +44,7 @@ public class EntryValidator {
         return true;
     }
 
-    public static boolean isValidItem(Item item, ResourceLocation categoryId) {
+    public static boolean isValidItem(Item item, Identifier categoryId) {
         // Items are usually validated via their corresponding block or entity if possible, but some are just items.
         return BuiltInRegistries.ITEM.getResourceKey(item).flatMap(BuiltInRegistries.ITEM::getHolder).map(h -> {
             // Add item blacklisting if needed

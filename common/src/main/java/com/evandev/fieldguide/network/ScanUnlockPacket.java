@@ -10,30 +10,30 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.NotNull;
 
 public class ScanUnlockPacket implements CustomPacketPayload {
 
-    public static final Type<ScanUnlockPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "scan_unlock"));
+    public static final Type<ScanUnlockPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "scan_unlock"));
 
     public static final StreamCodec<FriendlyByteBuf, ScanUnlockPacket> CODEC = StreamCodec.ofMember(
             ScanUnlockPacket::encode,
             ScanUnlockPacket::new
     );
 
-    private final ResourceLocation entryId;
+    private final Identifier entryId;
     private final String variantId;
-    private final ResourceLocation scannedTargetId;
+    private final Identifier scannedTargetId;
     private final BlockPos targetBlockPos;
     private final int targetEntityId;
 
     public ScanUnlockPacket(
-            ResourceLocation entryId,
+            Identifier entryId,
             String variantId,
-            ResourceLocation scannedTargetId,
+            Identifier scannedTargetId,
             BlockPos targetBlockPos,
             int targetEntityId
     ) {
@@ -45,9 +45,9 @@ public class ScanUnlockPacket implements CustomPacketPayload {
     }
 
     public ScanUnlockPacket(FriendlyByteBuf buf) {
-        this.entryId = buf.readResourceLocation();
+        this.entryId = buf.readIdentifier();
         this.variantId = buf.readUtf();
-        this.scannedTargetId = buf.readResourceLocation();
+        this.scannedTargetId = buf.readIdentifier();
         this.targetBlockPos = buf.readNullable(b -> b.readBlockPos());
         this.targetEntityId = buf.readVarInt();
     }
@@ -58,9 +58,9 @@ public class ScanUnlockPacket implements CustomPacketPayload {
     }
 
     public void encode(FriendlyByteBuf buf) {
-        buf.writeResourceLocation(entryId);
+        buf.writeIdentifier(entryId);
         buf.writeUtf(variantId);
-        buf.writeResourceLocation(scannedTargetId);
+        buf.writeIdentifier(scannedTargetId);
         buf.writeNullable(targetBlockPos, (b, pos) -> b.writeBlockPos(pos));
         buf.writeVarInt(targetEntityId);
     }

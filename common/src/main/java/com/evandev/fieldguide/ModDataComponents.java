@@ -6,7 +6,7 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.ExtraCodecs;
 
 import java.util.ArrayList;
@@ -18,7 +18,7 @@ import java.util.function.UnaryOperator;
 
 public class ModDataComponents {
 
-    public static final Supplier<DataComponentType<ResourceLocation>> ENTRY_ID = register("entry_id", builder -> builder.persistent(ResourceLocation.CODEC).networkSynchronized(ResourceLocation.STREAM_CODEC));
+    public static final Supplier<DataComponentType<Identifier>> ENTRY_ID = register("entry_id", builder -> builder.persistent(Identifier.CODEC).networkSynchronized(Identifier.STREAM_CODEC));
     public static final Supplier<DataComponentType<Component>> ENTRY_NAME = register("entry_name", builder -> builder.persistent(ComponentSerialization.CODEC).networkSynchronized(ComponentSerialization.STREAM_CODEC));
     public static final Supplier<DataComponentType<String>> AUTHOR = register("author", builder -> builder.persistent(ExtraCodecs.PLAYER_NAME).networkSynchronized(ByteBufCodecs.STRING_UTF8));
     public static final Supplier<DataComponentType<List<String>>> VARIANTS = register("variants", builder -> builder.persistent(Codec.STRING.listOf()).networkSynchronized(ByteBufCodecs.collection(ArrayList::new, ByteBufCodecs.STRING_UTF8)));

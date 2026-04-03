@@ -8,7 +8,7 @@ import com.evandev.fieldguide.client.gui.widget.TabButton;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.api.Category;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.Screen;
@@ -148,12 +148,12 @@ public abstract class BookScreen extends Screen {
 
     abstract public void onTabClick(Category category);
 
-    public void renderFieldGuideBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void renderFieldGuideBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         super.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
     }
 
     @Override
-    public void renderBackground(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void renderBackground(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
     }
 
     @Override

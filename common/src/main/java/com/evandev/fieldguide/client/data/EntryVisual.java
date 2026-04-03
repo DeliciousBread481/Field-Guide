@@ -1,6 +1,6 @@
 package com.evandev.fieldguide.client.data;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 
@@ -9,11 +9,11 @@ public class EntryVisual {
     public float scale = 1.0f;
     public float yOffset = 0.0f;
     public float xOffset = 0.0f;
-    public List<ResourceLocation> spawnBiomes = null;
+    public List<Identifier> spawnBiomes = null;
 
     // Custom Sounds & Icons
-    public ResourceLocation customSound = null;
-    public ResourceLocation alignmentIcon = null;
+    public Identifier customSound = null;
+    public Identifier alignmentIcon = null;
 
     // Grid Overrides
     public Float gridScale = null;

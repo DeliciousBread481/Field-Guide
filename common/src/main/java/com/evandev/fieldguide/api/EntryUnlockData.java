@@ -4,7 +4,7 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.ByIdMap;
 
 import java.util.Collections;
@@ -13,24 +13,24 @@ import java.util.function.IntFunction;
 
 public record EntryUnlockData(
         boolean unlockedByDefault,
-        List<ResourceLocation> prerequisites,
+        List<Identifier> prerequisites,
         List<UnlockTrigger> triggers,
-        List<ResourceLocation> triggerOn
+        List<Identifier> triggerOn
 ) {
     public static final EntryUnlockData DEFAULT = new EntryUnlockData(false, Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
 
     public static final StreamCodec<RegistryFriendlyByteBuf, EntryUnlockData> STREAM_CODEC = StreamCodec.of(
             (buf, data) -> {
                 buf.writeBoolean(data.unlockedByDefault());
-                ResourceLocation.STREAM_CODEC.apply(ByteBufCodecs.list()).encode(buf, data.prerequisites());
+                Identifier.STREAM_CODEC.apply(ByteBufCodecs.list()).encode(buf, data.prerequisites());
                 UnlockTrigger.CODEC.apply(ByteBufCodecs.list()).encode(buf, data.triggers());
-                ResourceLocation.STREAM_CODEC.apply(ByteBufCodecs.list()).encode(buf, data.triggerOn());
+                Identifier.STREAM_CODEC.apply(ByteBufCodecs.list()).encode(buf, data.triggerOn());
             },
             buf -> new EntryUnlockData(
                     buf.readBoolean(),
-                    ResourceLocation.STREAM_CODEC.apply(ByteBufCodecs.list()).decode(buf),
+                    Identifier.STREAM_CODEC.apply(ByteBufCodecs.list()).decode(buf),
                     UnlockTrigger.CODEC.apply(ByteBufCodecs.list()).decode(buf),
-                    ResourceLocation.STREAM_CODEC.apply(ByteBufCodecs.list()).decode(buf)
+                    Identifier.STREAM_CODEC.apply(ByteBufCodecs.list()).decode(buf)
             )
     );
 

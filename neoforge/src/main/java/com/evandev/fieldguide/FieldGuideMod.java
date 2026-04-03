@@ -14,7 +14,7 @@ import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.FieldGuideTriggers;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Mob;
 import net.neoforged.bus.api.IEventBus;
@@ -44,11 +44,11 @@ public class FieldGuideMod {
         modEventBus.addListener(this::registerPayloads);
 
         if (ModList.get().isLoaded("exposure")) {
-            registerExposureCompat();
+            //registerExposureCompat();
         }
 
         if (ModList.get().isLoaded("mixed_litter")) {
-            FieldGuideVariantManager.registerProvider(Mob.class, new MixedLitterCompat.MixedLitterVariantProvider());
+            //FieldGuideVariantManager.registerProvider(Mob.class, new MixedLitterCompat.MixedLitterVariantProvider());
         }
     }
 
@@ -144,7 +144,7 @@ public class FieldGuideMod {
                 FieldGuideTriggers.SCAN_AND_KILL.get().trigger(player, event.getEntity());
             }
 
-            ResourceLocation entityId = EntryResolver.getEntryId(event.getEntity().getType());
+            Identifier entityId = EntryResolver.getEntryId(event.getEntity().getType());
             PlayerFieldGuideProgress progress = manager.getProgress(player);
 
             if (progress != null) {

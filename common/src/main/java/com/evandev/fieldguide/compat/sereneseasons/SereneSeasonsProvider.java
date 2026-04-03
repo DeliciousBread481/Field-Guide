@@ -3,7 +3,7 @@ package com.evandev.fieldguide.compat.sereneseasons;
 import com.evandev.fieldguide.api.seasons.Season;
 import com.evandev.fieldguide.api.seasons.SeasonsProvider;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -16,15 +16,15 @@ import java.util.List;
 public class SereneSeasonsProvider implements SeasonsProvider {
     private static final String MOD_ID = "sereneseasons";
 
-    private static final TagKey<Block> SPRING_BLOCKS = TagKey.create(BuiltInRegistries.BLOCK.key(), ResourceLocation.fromNamespaceAndPath(MOD_ID, "spring_crops"));
-    private static final TagKey<Block> SUMMER_BLOCKS = TagKey.create(BuiltInRegistries.BLOCK.key(), ResourceLocation.fromNamespaceAndPath(MOD_ID, "summer_crops"));
-    private static final TagKey<Block> AUTUMN_BLOCKS = TagKey.create(BuiltInRegistries.BLOCK.key(), ResourceLocation.fromNamespaceAndPath(MOD_ID, "autumn_crops"));
-    private static final TagKey<Block> WINTER_BLOCKS = TagKey.create(BuiltInRegistries.BLOCK.key(), ResourceLocation.fromNamespaceAndPath(MOD_ID, "winter_crops"));
+    private static final TagKey<Block> SPRING_BLOCKS = TagKey.create(BuiltInRegistries.BLOCK.key(), Identifier.fromNamespaceAndPath(MOD_ID, "spring_crops"));
+    private static final TagKey<Block> SUMMER_BLOCKS = TagKey.create(BuiltInRegistries.BLOCK.key(), Identifier.fromNamespaceAndPath(MOD_ID, "summer_crops"));
+    private static final TagKey<Block> AUTUMN_BLOCKS = TagKey.create(BuiltInRegistries.BLOCK.key(), Identifier.fromNamespaceAndPath(MOD_ID, "autumn_crops"));
+    private static final TagKey<Block> WINTER_BLOCKS = TagKey.create(BuiltInRegistries.BLOCK.key(), Identifier.fromNamespaceAndPath(MOD_ID, "winter_crops"));
 
-    private static final TagKey<Item> SPRING_ITEMS = TagKey.create(BuiltInRegistries.ITEM.key(), ResourceLocation.fromNamespaceAndPath(MOD_ID, "spring_crops"));
-    private static final TagKey<Item> SUMMER_ITEMS = TagKey.create(BuiltInRegistries.ITEM.key(), ResourceLocation.fromNamespaceAndPath(MOD_ID, "summer_crops"));
-    private static final TagKey<Item> AUTUMN_ITEMS = TagKey.create(BuiltInRegistries.ITEM.key(), ResourceLocation.fromNamespaceAndPath(MOD_ID, "autumn_crops"));
-    private static final TagKey<Item> WINTER_ITEMS = TagKey.create(BuiltInRegistries.ITEM.key(), ResourceLocation.fromNamespaceAndPath(MOD_ID, "winter_crops"));
+    private static final TagKey<Item> SPRING_ITEMS = TagKey.create(BuiltInRegistries.ITEM.key(), Identifier.fromNamespaceAndPath(MOD_ID, "spring_crops"));
+    private static final TagKey<Item> SUMMER_ITEMS = TagKey.create(BuiltInRegistries.ITEM.key(), Identifier.fromNamespaceAndPath(MOD_ID, "summer_crops"));
+    private static final TagKey<Item> AUTUMN_ITEMS = TagKey.create(BuiltInRegistries.ITEM.key(), Identifier.fromNamespaceAndPath(MOD_ID, "autumn_crops"));
+    private static final TagKey<Item> WINTER_ITEMS = TagKey.create(BuiltInRegistries.ITEM.key(), Identifier.fromNamespaceAndPath(MOD_ID, "winter_crops"));
 
     @Override
     public List<Season> getGrowingSeasons(Object entry) {

@@ -8,8 +8,6 @@ import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.progress.ProgressManager;
-import com.evandev.fieldguide.compat.cobblemon.ClientFieldGuideCobblemonCompat;
-import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.compat.emf.EmfCompat;
 import com.evandev.fieldguide.compat.tide.ClientTideCompat;
 import com.evandev.fieldguide.config.ClientConfig;
@@ -24,14 +22,14 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -55,7 +53,7 @@ import java.util.List;
 
 public class EntryRenderHelper {
 
-    private static final Map<String, Optional<ResourceLocation>> OVERRIDE_CACHE = new HashMap<>();
+    private static final Map<String, Optional<Identifier>> OVERRIDE_CACHE = new HashMap<>();
 
     public static void clearCache() {
         OVERRIDE_CACHE.clear();
@@ -65,7 +63,7 @@ public class EntryRenderHelper {
         }
     }
 
-    private static Optional<ResourceLocation> getResourcePackOverride(Object baseEntry, Object cacheKey, boolean isPage) {
+    private static Optional<Identifier> getResourcePackOverride(Object baseEntry, Object cacheKey, boolean isPage) {
         String entryKey = AutoPopulateRegistry.getEntryKey(baseEntry);
         String key = entryKey + (cacheKey instanceof String str && str.contains("#") ? str.substring(str.indexOf("#")) : "") + (isPage ? "_page" : "_grid");
 
@@ -73,19 +71,19 @@ public class EntryRenderHelper {
             return OVERRIDE_CACHE.get(key);
         }
 
-        ResourceLocation id = AutoPopulateRegistry.getEntryId(baseEntry);
+        Identifier id = AutoPopulateRegistry.getEntryId(baseEntry);
         if (id != null) {
             if (cacheKey instanceof String str && str.contains("#")) {
                 String variantId = str.substring(str.indexOf('#') + 1).replace(":", "_").toLowerCase(Locale.ROOT);
-                ResourceLocation specificVariantLoc = ResourceLocation.fromNamespaceAndPath(id.getNamespace(), "textures/fieldguide/entries/" + id.getPath() + "_" + variantId + (isPage ? "_page.png" : "_grid.png"));
+                Identifier specificVariantLoc = Identifier.fromNamespaceAndPath(id.getNamespace(), "textures/fieldguide/entries/" + id.getPath() + "_" + variantId + (isPage ? "_page.png" : "_grid.png"));
                 if (Minecraft.getInstance().getResourceManager().getResource(specificVariantLoc).isPresent()) {
                     OVERRIDE_CACHE.put(key, Optional.of(specificVariantLoc));
                     return Optional.of(specificVariantLoc);
                 }
             }
 
-            ResourceLocation specificLoc = ResourceLocation.fromNamespaceAndPath(id.getNamespace(), "textures/fieldguide/entries/" + id.getPath() + (isPage ? "_page.png" : "_grid.png"));
-            ResourceLocation defaultLoc = ResourceLocation.fromNamespaceAndPath(id.getNamespace(), "textures/fieldguide/entries/" + id.getPath() + ".png");
+            Identifier specificLoc = Identifier.fromNamespaceAndPath(id.getNamespace(), "textures/fieldguide/entries/" + id.getPath() + (isPage ? "_page.png" : "_grid.png"));
+            Identifier defaultLoc = Identifier.fromNamespaceAndPath(id.getNamespace(), "textures/fieldguide/entries/" + id.getPath() + ".png");
 
             var resourceManager = Minecraft.getInstance().getResourceManager();
             if (resourceManager.getResource(specificLoc).isPresent()) {
@@ -101,8 +99,8 @@ public class EntryRenderHelper {
         return Optional.empty();
     }
 
-    private static void renderWithCache(Object baseEntry, Object cacheKey, GuiGraphics guiGraphics, int x, int y, int width, int height, boolean unlocked, boolean isPage, float bounceScale, Runnable renderAction) {
-        Optional<ResourceLocation> textureOpt = getResourcePackOverride(baseEntry, cacheKey, isPage);
+    private static void renderWithCache(Object baseEntry, Object cacheKey, GuiGraphicsExtractor guiGraphics, int x, int y, int width, int height, boolean unlocked, boolean isPage, float bounceScale, Runnable renderAction) {
+        Optional<Identifier> textureOpt = getResourcePackOverride(baseEntry, cacheKey, isPage);
 
         if (textureOpt.isEmpty()) {
             textureOpt = IconCacheManager.getOrGenerateIcon(baseEntry, cacheKey, isPage, renderAction);
@@ -111,11 +109,11 @@ public class EntryRenderHelper {
         textureOpt.ifPresent(texture -> drawCachedTexture(guiGraphics, texture, x, y, width, height, unlocked, isPage, bounceScale));
     }
 
-    public static void renderEntityNormalized(GuiGraphics guiGraphics, Entity entity, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale) {
+    public static void renderEntityNormalized(GuiGraphicsExtractor guiGraphics, Entity entity, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale) {
         renderEntityNormalized(guiGraphics, entity, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, !isPage);
     }
 
-    public static void renderEntityNormalized(GuiGraphics guiGraphics, Entity entity, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale, boolean syncWithProgress) {
+    public static void renderEntityNormalized(GuiGraphicsExtractor guiGraphics, Entity entity, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale, boolean syncWithProgress) {
         String variantId = "";
         VariantProvider<Mob> provider = null;
         VariantDef currentVariant = null;
@@ -124,7 +122,7 @@ public class EntryRenderHelper {
             provider = FieldGuideVariantManager.getProvider(mob);
             if (provider != null) {
                 if (syncWithProgress) {
-                    ResourceLocation entryId = ClientFieldGuideManager.getEntryId(mob.getType());
+                    Identifier entryId = ClientFieldGuideManager.getEntryId(mob.getType());
                     String selected = ProgressManager.getInstance().getSelectedVariant(entryId);
                     if (selected != null) {
                         for (VariantDef def : provider.getVariants(mob)) {
@@ -144,17 +142,17 @@ public class EntryRenderHelper {
             }
         }
 
-        ResourceLocation baseId = AutoPopulateRegistry.getEntryId(entity.getType());
-        if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
+        Identifier baseId = AutoPopulateRegistry.getEntryId(entity.getType());
+/*        if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
             baseId = FieldGuideCobblemonCompat.getPokemonEntryId(entity);
-        }
+        }*/
 
         String finalVariantId = variantId;
-        if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
+/*        if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
             if (finalVariantId.isEmpty()) {
                 finalVariantId = ClientFieldGuideCobblemonCompat.getFormForEntry(baseId);
             }
-        }
+        }*/
         Object cacheKey = finalVariantId.isEmpty() ? baseId : baseId.toString() + "#" + finalVariantId;
 
         final VariantProvider<Mob> finalProvider = provider;
@@ -176,12 +174,12 @@ public class EntryRenderHelper {
         });
     }
 
-    public static void renderCobblemon(GuiGraphics guiGraphics, GuideEntry entry, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale) {
+    public static void renderCobblemon(GuiGraphicsExtractor guiGraphics, GuideEntry entry, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale) {
         renderCobblemon(guiGraphics, entry, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, !isPage);
     }
 
-    public static void renderCobblemon(GuiGraphics guiGraphics, GuideEntry entry, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale, boolean syncWithProgress) {
-        String formName;
+    public static void renderCobblemon(GuiGraphicsExtractor guiGraphics, GuideEntry entry, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale, boolean syncWithProgress) {
+       /* String formName;
         if (syncWithProgress) {
             formName = ClientFieldGuideCobblemonCompat.getFormForEntry(entry.id());
         } else {
@@ -191,16 +189,16 @@ public class EntryRenderHelper {
         Object cacheKey = formName.equalsIgnoreCase("standard") ? entry : entry.id().toString() + "#" + formName;
 
         renderWithCache(entry, cacheKey, guiGraphics, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, () -> {
-            ResourceLocation id = entry.id();
+            Identifier id = entry.id();
             LivingEntity dummy = ClientFieldGuideCobblemonCompat.getDummyPokemon(id, Minecraft.getInstance().level);
             if (dummy != null) {
                 renderEntity(dummy, id, isPage, -30.0F);
             }
-        });
+        });*/
     }
 
-    public static void renderTutorial(GuiGraphics guiGraphics, GuideEntry entry, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale) {
-        ResourceLocation texture = entry.icon();
+    public static void renderTutorial(GuiGraphicsExtractor guiGraphics, GuideEntry entry, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale) {
+        Identifier texture = entry.icon();
         if (texture == null) texture = Constants.DEFAULT_ICON;
 
         drawCachedTexture(guiGraphics, texture, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale);
@@ -294,7 +292,7 @@ public class EntryRenderHelper {
         }
     }
 
-    public static void renderBlock(GuiGraphics guiGraphics, Block block, int x, int y, float baseScale, boolean unlocked, boolean isPage, float bounceScale) {
+    public static void renderBlock(GuiGraphicsExtractor guiGraphics, Block block, int x, int y, float baseScale, boolean unlocked, boolean isPage, float bounceScale) {
         int scaledSize = (int) (baseScale * 2);
 
         renderWithCache(block, block, guiGraphics, x, y, scaledSize, scaledSize, unlocked, isPage, bounceScale, () -> {
@@ -360,7 +358,7 @@ public class EntryRenderHelper {
         });
     }
 
-    public static void renderItem(GuiGraphics guiGraphics, Item item, int x, int y, float baseScale, boolean unlocked, boolean isPage, float bounceScale) {
+    public static void renderItem(GuiGraphicsExtractor guiGraphics, Item item, int x, int y, float baseScale, boolean unlocked, boolean isPage, float bounceScale) {
         int scaledSize = (int) (baseScale * 2);
 
         renderWithCache(item, item, guiGraphics, x, y, scaledSize, scaledSize, unlocked, isPage, bounceScale, () -> {
@@ -386,7 +384,7 @@ public class EntryRenderHelper {
         });
     }
 
-    public static void renderStructure(GuiGraphics guiGraphics, GuideEntry composite, int x, int y, int size, boolean unlocked, boolean isPage, float bounceScale) {
+    public static void renderStructure(GuiGraphicsExtractor guiGraphics, GuideEntry composite, int x, int y, int size, boolean unlocked, boolean isPage, float bounceScale) {
         renderWithCache(composite, composite, guiGraphics, x, y, size, size, unlocked, isPage, bounceScale, () -> {
             setupFieldGuideBlockLighting();
             PoseStack pose = new PoseStack();
@@ -499,7 +497,7 @@ public class EntryRenderHelper {
         RenderSystem.setShaderLights(light0, light1);
     }
 
-    private static void drawCachedTexture(GuiGraphics guiGraphics, ResourceLocation texture, int x, int y, int width, int height, boolean unlocked, boolean isPage, float bounceScale) {
+    private static void drawCachedTexture(GuiGraphicsExtractor guiGraphics, Identifier texture, int x, int y, int width, int height, boolean unlocked, boolean isPage, float bounceScale) {
         int scaledWidth = (int) (width * bounceScale);
         int scaledHeight = (int) (height * bounceScale);
         int drawX = x - scaledWidth / 2;

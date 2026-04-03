@@ -10,11 +10,6 @@ neoForge {
         accessTransformers.from(at.absolutePath)
     }
 
-    parchment {
-        minecraftVersion = parchment_minecraft
-        mappingsVersion = parchment_version
-    }
-
     runs {
         configureEach {
             systemProperty('neoforge.enabledGameTestNamespaces', mod_id)
@@ -22,9 +17,17 @@ neoForge {
         }
         client {
             client()
+            gameDirectory = this.mkdir(this.file("runs/client"))
+        }
+        data {
+            clientData()
+            gameDirectory = this.mkdir(this.file("runs/data"))
+            programArguments.addAll '--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
         }
         server {
             server()
+            this.file("runs/server").createParentDirectories()
+            gameDirectory = this.mkdir(this.file("runs/server"))
         }
     }
 
@@ -41,8 +44,8 @@ dependencies {
     // Item Descriptions
     implementation "maven.modrinth:item-descriptions:${item_descriptions_version}-neoforge"
 
-    // EMI
-    implementation "dev.emi:emi-neoforge:${emi_version}"
+    // RRV
+    runtimeOnly("cc.cassian.rrv:reliable-recipe-viewer-neoforge:${rrv_version}")
 
     // Cloth Config
     implementation "me.shedaniel.cloth:cloth-config-neoforge:${cloth_config_version}"
@@ -51,37 +54,37 @@ dependencies {
     runtimeOnly "maven.modrinth:immersive-overlays:${immersive_overlays_version}-neoforge"
 
     // Spyglass Improvements
-    runtimeOnly "maven.modrinth:spyglass-improvements:${spyglass_improvements_version}+neoforge"
+    //runtimeOnly "maven.modrinth:spyglass-improvements:${spyglass_improvements_version}+neoforge"
 
     // ETF & EMF
-    compileOnly "maven.modrinth:entitytexturefeatures:${etf_version}-neoforge-1.21"
-    compileOnly "maven.modrinth:entity-model-features:${emf_version}-neoforge-1.21"
+    compileOnly "maven.modrinth:entitytexturefeatures:${etf_version}-neoforge-26.1"
+    compileOnly "maven.modrinth:entity-model-features:${emf_version}-neoforge-26.1"
 
     // Reliable Remover
-    compileOnly "maven.modrinth:reliable-remover:${reliable_remover_version}-neoforge-1.21.1"
+    compileOnly "maven.modrinth:reliable-remover:${reliable_remover_version}-neoforge"
 
     // Exposure
-    implementation "maven.modrinth:exposure:${exposure_neoforge_version}"
+    //implementation "maven.modrinth:exposure:${exposure_neoforge_version}"
 
     // Mixed Litter
-    compileOnly "maven.modrinth:mixed-litter:${mixed_litter_version}"
+    //compileOnly "maven.modrinth:mixed-litter:${mixed_litter_version}"
 
     // Cobblemon
-    compileOnly "com.cobblemon:neoforge:${cobblemon_version}"
+    //compileOnly "com.cobblemon:neoforge:${cobblemon_version}"
 
     // KubeJS
-    compileOnly "maven.modrinth:kubejs:${kubejs_version}"
+    //compileOnly "maven.modrinth:kubejs:${kubejs_version}"
 
     // Serene Seasons
-    compileOnly "maven.modrinth:serene-seasons:${serene_seasons_neoforge_version}"
-    runtimeOnly "maven.modrinth:serene-seasons:${serene_seasons_neoforge_version}"
-    runtimeOnly "maven.modrinth:glitchcore:8wmCpbQ2"
+    //compileOnly "maven.modrinth:serene-seasons:${serene_seasons_neoforge_version}"
+    //runtimeOnly "maven.modrinth:serene-seasons:${serene_seasons_neoforge_version}"
+    //runtimeOnly "maven.modrinth:glitchcore:8wmCpbQ2"
 
     // Ecliptic Seasons
     //runtimeOnly "maven.modrinth:ecliptic-seasons:${ecliptic_seasons_version}"
 
     // Scholar
-    implementation "maven.modrinth:scholar:t5aJhKGV"
+    //implementation "maven.modrinth:scholar:t5aJhKGV"
 }
 
 publishMods {

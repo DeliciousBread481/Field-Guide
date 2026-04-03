@@ -9,7 +9,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -25,8 +25,8 @@ public class StructureUtils {
         Map<BlockPos, BlockState> blocks = new HashMap<>();
 
         if (entry.structureData() != null && entry.structureData().structureNbt() != null) {
-            ResourceLocation nbtLocation = entry.structureData().structureNbt();
-            ResourceLocation path = ResourceLocation.fromNamespaceAndPath(nbtLocation.getNamespace(), "structure/" + nbtLocation.getPath() + ".nbt");
+            Identifier nbtLocation = entry.structureData().structureNbt();
+            Identifier path = Identifier.fromNamespaceAndPath(nbtLocation.getNamespace(), "structure/" + nbtLocation.getPath() + ".nbt");
 
             try {
                 var res = Minecraft.getInstance().getResourceManager().getResource(path);
@@ -71,7 +71,7 @@ public class StructureUtils {
                 propIndex = 2;
             }
 
-            ResourceLocation id = ResourceLocation.parse(blockIdPart);
+            Identifier id = Identifier.parse(blockIdPart);
             Block block = BuiltInRegistries.BLOCK.get(id);
             if (block != Blocks.AIR) {
                 BlockState state = block.defaultBlockState();

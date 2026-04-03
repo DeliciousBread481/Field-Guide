@@ -12,7 +12,7 @@ import com.evandev.fieldguide.client.gui.widget.PageTurnButton;
 import com.evandev.fieldguide.compat.scholar.ScholarCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -200,7 +200,7 @@ public class FieldGuideJournalScreen extends BookScreen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void render(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         List<JournalPage> pages = ClientFieldGuideManager.getInstance().getJournalPages();
         clampCurrentSpread(pages);
         this.renderFieldGuideBackground(guiGraphics, mouseX, mouseY, partialTick);

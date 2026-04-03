@@ -2,20 +2,18 @@ package com.evandev.fieldguide.api;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.ModTags;
-import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.entry.EntryValidator;
 import com.evandev.fieldguide.platform.Services;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SpawnEggItem;
-import net.minecraft.world.level.block.BaseCoralWallFanBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.BushBlock;
@@ -25,8 +23,8 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
 public class AutoPopulateRegistry {
-    private static final Map<String, BiFunction<String, ResourceLocation, List<Object>>> STRATEGIES = new HashMap<>();
-    private static final Set<ResourceLocation> HANDLED_SAPLINGS = new HashSet<>();
+    private static final Map<String, BiFunction<String, Identifier, List<Object>>> STRATEGIES = new HashMap<>();
+    private static final Set<Identifier> HANDLED_SAPLINGS = new HashSet<>();
 
     static {
         register("mod_entities", (modId, categoryId) -> BuiltInRegistries.ENTITY_TYPE.stream()
@@ -79,9 +77,9 @@ public class AutoPopulateRegistry {
         register("mod_trees", (modId, categoryId) -> new ArrayList<>(getAutoTrees(id -> id.getNamespace().equals(modId), categoryId)));
 
         register("tag", (tagPath, categoryId) -> {
-            Map<ResourceLocation, Object> results = new LinkedHashMap<>();
+            Map<Identifier, Object> results = new LinkedHashMap<>();
             try {
-                ResourceLocation tagLocation = ResourceLocation.parse(tagPath);
+                Identifier tagLocation = Identifier.parse(tagPath);
 
                 TagKey<Block> blockTagKey = TagKey.create(Registries.BLOCK, tagLocation);
                 BuiltInRegistries.BLOCK.forEach(block -> BuiltInRegistries.BLOCK.getResourceKey(block)
@@ -115,14 +113,14 @@ public class AutoPopulateRegistry {
 
         register("cobblemon", (params, categoryId) -> {
             if (Services.PLATFORM.isModLoaded("cobblemon")) {
-                return FieldGuideCobblemonCompat.getAutoPopulateEntries();
+                //return FieldGuideCobblemonCompat.getAutoPopulateEntries();
             }
             return Collections.emptyList();
         });
     }
 
-    private static List<Object> getEntityStrategy(String strategy, ResourceLocation categoryId) {
-        TagKey<EntityType<?>> bossesTag = TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "bosses"));
+    private static List<Object> getEntityStrategy(String strategy, Identifier categoryId) {
+        TagKey<EntityType<?>> bossesTag = TagKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "bosses"));
         return BuiltInRegistries.ENTITY_TYPE.stream().filter(type -> {
             boolean isBoss = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type).flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder).map(h -> h.is(bossesTag)).orElse(false);
             if ("monsters".equalsIgnoreCase(strategy)) return type.getCategory() == MobCategory.MONSTER && !isBoss;
@@ -132,11 +130,11 @@ public class AutoPopulateRegistry {
         }).filter(type -> EntryValidator.isValidEntity(type, categoryId)).sorted(Comparator.comparing(type -> BuiltInRegistries.ENTITY_TYPE.getKey(type).toString())).map(Object.class::cast).toList();
     }
 
-    public static void register(String strategyName, BiFunction<String, ResourceLocation, List<Object>> strategy) {
+    public static void register(String strategyName, BiFunction<String, Identifier, List<Object>> strategy) {
         STRATEGIES.put(strategyName.toLowerCase(), strategy);
     }
 
-    public static List<Object> getEntries(String strategy, ResourceLocation categoryId) {
+    public static List<Object> getEntries(String strategy, Identifier categoryId) {
         String name = strategy;
         String params = "";
         if (strategy.contains(":")) {
@@ -145,15 +143,15 @@ public class AutoPopulateRegistry {
             params = strategy.substring(colonIndex + 1);
         }
 
-        BiFunction<String, ResourceLocation, List<Object>> strategyFunc = STRATEGIES.get(name.toLowerCase());
+        BiFunction<String, Identifier, List<Object>> strategyFunc = STRATEGIES.get(name.toLowerCase());
         if (strategyFunc != null) {
             return strategyFunc.apply(params, categoryId);
         }
         return Collections.emptyList();
     }
 
-    public static ResourceLocation getEntryId(Object obj) {
-        if (obj instanceof ResourceLocation loc) return loc;
+    public static Identifier getEntryId(Object obj) {
+        if (obj instanceof Identifier loc) return loc;
         if (obj instanceof EntityType<?> type) return BuiltInRegistries.ENTITY_TYPE.getKey(type);
         if (obj instanceof Block block) return BuiltInRegistries.BLOCK.getKey(block);
         if (obj instanceof Item item) return BuiltInRegistries.ITEM.getKey(item);
@@ -161,9 +159,9 @@ public class AutoPopulateRegistry {
         return null;
     }
 
-    public static ResourceLocation getEntryId(Object obj, boolean prefixed) {
+    public static Identifier getEntryId(Object obj, boolean prefixed) {
         if (!prefixed) return getEntryId(obj);
-        ResourceLocation id = getEntryId(obj);
+        Identifier id = getEntryId(obj);
         if (id == null) return null;
         if (obj instanceof GuideEntry ge && ge.isVirtual()) {
             return id;
@@ -174,45 +172,45 @@ public class AutoPopulateRegistry {
                 ? ge.displayId()
                 : obj;
 
-        if (coreEntry instanceof Block || (coreEntry instanceof ResourceLocation loc && BuiltInRegistries.BLOCK.containsKey(loc)))
+        if (coreEntry instanceof Block || (coreEntry instanceof Identifier loc && BuiltInRegistries.BLOCK.containsKey(loc)))
             prefix = "block";
-        else if (coreEntry instanceof Item || (coreEntry instanceof ResourceLocation loc && BuiltInRegistries.ITEM.containsKey(loc)))
+        else if (coreEntry instanceof Item || (coreEntry instanceof Identifier loc && BuiltInRegistries.ITEM.containsKey(loc)))
             prefix = "item";
-        else if (coreEntry instanceof EntityType<?> || (coreEntry instanceof ResourceLocation loc && BuiltInRegistries.ENTITY_TYPE.containsKey(loc)))
+        else if (coreEntry instanceof EntityType<?> || (coreEntry instanceof Identifier loc && BuiltInRegistries.ENTITY_TYPE.containsKey(loc)))
             prefix = "entity";
 
-        return ResourceLocation.fromNamespaceAndPath(prefix, id.toString().replace(":", "/"));
+        return Identifier.fromNamespaceAndPath(prefix, id.toString().replace(":", "/"));
     }
 
     public static String getEntryKey(Object obj) {
-        ResourceLocation id = getEntryId(obj, true);
+        Identifier id = getEntryId(obj, true);
         return id != null ? id.toString() : "";
     }
 
-    public static List<Object> getAutoTrees(Predicate<ResourceLocation> namespaceFilter, ResourceLocation categoryId) {
+    public static List<Object> getAutoTrees(Predicate<Identifier> namespaceFilter, Identifier categoryId) {
         List<Object> results = new ArrayList<>();
         HANDLED_SAPLINGS.clear();
 
         for (Block block : BuiltInRegistries.BLOCK) {
-            ResourceLocation id = BuiltInRegistries.BLOCK.getKey(block);
+            Identifier id = BuiltInRegistries.BLOCK.getKey(block);
             if (!namespaceFilter.test(id) || !EntryValidator.isValidBlock(block, categoryId)) continue;
 
             if (id.getPath().endsWith("_sapling")) {
                 String baseName = id.getPath().replace("_sapling", "");
 
-                Block leaves = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(id.getNamespace(), baseName + "_leaves"));
+                Block leaves = BuiltInRegistries.BLOCK.get(Identifier.fromNamespaceAndPath(id.getNamespace(), baseName + "_leaves"));
                 if (leaves == Blocks.AIR) continue;
 
-                Block log = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(id.getNamespace(), baseName + "_log"));
+                Block log = BuiltInRegistries.BLOCK.get(Identifier.fromNamespaceAndPath(id.getNamespace(), baseName + "_log"));
                 if (log == Blocks.AIR) {
-                    log = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("minecraft", baseName + "_log"));
+                    log = BuiltInRegistries.BLOCK.get(Identifier.fromNamespaceAndPath("minecraft", baseName + "_log"));
                 }
                 if (log == Blocks.AIR) {
                     String[] parts = baseName.split("_", 2);
                     if (parts.length > 1) {
-                        log = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath(id.getNamespace(), parts[1] + "_log"));
+                        log = BuiltInRegistries.BLOCK.get(Identifier.fromNamespaceAndPath(id.getNamespace(), parts[1] + "_log"));
                         if (log == Blocks.AIR) {
-                            log = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("minecraft", parts[1] + "_log"));
+                            log = BuiltInRegistries.BLOCK.get(Identifier.fromNamespaceAndPath("minecraft", parts[1] + "_log"));
                         }
                     }
                 }
@@ -234,14 +232,14 @@ public class AutoPopulateRegistry {
                         "0,3,0|" + leavesId
                 );
 
-                List<ResourceLocation> components = Arrays.asList(
+                List<Identifier> components = Arrays.asList(
                         BuiltInRegistries.BLOCK.getKey(block),
                         BuiltInRegistries.BLOCK.getKey(leaves),
                         BuiltInRegistries.BLOCK.getKey(log)
                 );
 
                 results.add(new GuideEntry(
-                        ResourceLocation.fromNamespaceAndPath(id.getNamespace(), baseName + "_tree"),
+                        Identifier.fromNamespaceAndPath(id.getNamespace(), baseName + "_tree"),
                         id,
                         null,
                         EntryKind.STRUCTURE,
@@ -258,12 +256,12 @@ public class AutoPopulateRegistry {
         return results;
     }
 
-    public static List<Object> getPlants(Predicate<ResourceLocation> namespaceFilter, ResourceLocation categoryId) {
+    public static List<Object> getPlants(Predicate<Identifier> namespaceFilter, Identifier categoryId) {
         return BuiltInRegistries.BLOCK.stream()
                 .filter(b -> namespaceFilter.test(BuiltInRegistries.BLOCK.getKey(b)))
                 .filter(b -> EntryValidator.isValidBlock(b, categoryId))
                 .filter(b -> {
-                    ResourceLocation id = BuiltInRegistries.BLOCK.getKey(b);
+                    Identifier id = BuiltInRegistries.BLOCK.getKey(b);
                     if (HANDLED_SAPLINGS.contains(id)) return false;
                     return b.defaultBlockState().is(ModTags.Blocks.PLANTS) || b instanceof BushBlock;
                 })

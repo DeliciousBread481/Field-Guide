@@ -3,7 +3,7 @@ package com.evandev.fieldguide.client.gui.widget;
 import com.evandev.fieldguide.config.ClientConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
@@ -207,7 +207,7 @@ public class BookTextFieldWidget extends AbstractWidget {
     }
 
     @Override
-    public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void renderWidget(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         cursorPos = Math.max(0, Math.min(cursorPos, text.length()));
         selectionPos = Math.max(0, Math.min(selectionPos, text.length()));
 
@@ -230,7 +230,7 @@ public class BookTextFieldWidget extends AbstractWidget {
         }
     }
 
-    private void renderCursor(GuiGraphics guiGraphics, int x, int y) {
+    private void renderCursor(GuiGraphicsExtractor guiGraphics, int x, int y) {
         if ((System.currentTimeMillis() / 400) % 2 == 0) {
             if (cursorPos == text.length()) {
                 guiGraphics.drawString(this.font, "_", x, y, ClientConfig.get().getTextCursorColorInt(), false);

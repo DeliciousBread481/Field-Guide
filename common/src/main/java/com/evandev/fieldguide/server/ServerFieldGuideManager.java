@@ -4,7 +4,6 @@ import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.*;
 import com.evandev.fieldguide.api.variant.DatapackVariant;
 import com.evandev.fieldguide.api.variant.VariantConditionEvaluator;
-import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ModConfig;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.entry.EntryResolutionHelper;
@@ -25,7 +24,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.resources.Resource;
@@ -46,17 +45,17 @@ import java.util.*;
 
 public class ServerFieldGuideManager extends SimplePreparableReloadListener<ServerFieldGuideManager.ReloadData> {
     private static final ServerFieldGuideManager INSTANCE = new ServerFieldGuideManager();
-    private final Map<ResourceLocation, List<Object>> resolvedCategoryEntries = new HashMap<>();
-    private final Map<ResourceLocation, EntryUnlockData> entryUnlockDataMap = new HashMap<>();
-    private final Map<ResourceLocation, Set<ResourceLocation>> triggerOnMap = new HashMap<>();
+    private final Map<Identifier, List<Object>> resolvedCategoryEntries = new HashMap<>();
+    private final Map<Identifier, EntryUnlockData> entryUnlockDataMap = new HashMap<>();
+    private final Map<Identifier, Set<Identifier>> triggerOnMap = new HashMap<>();
 
-    private Map<ResourceLocation, Category> categories = new LinkedHashMap<>();
-    private Map<ResourceLocation, GuideEntry> allEntries = new HashMap<>();
+    private Map<Identifier, Category> categories = new LinkedHashMap<>();
+    private Map<Identifier, GuideEntry> allEntries = new HashMap<>();
 
     private List<CompositeDefinition> composites = new ArrayList<>();
-    private Map<ResourceLocation, List<ItemStack>> serverLootCache = new HashMap<>();
-    private Map<ResourceLocation, ResourceLocation> redirects = new HashMap<>();
-    private Map<ResourceLocation, List<DatapackVariant>> variants = new HashMap<>();
+    private Map<Identifier, List<ItemStack>> serverLootCache = new HashMap<>();
+    private Map<Identifier, Identifier> redirects = new HashMap<>();
+    private Map<Identifier, List<DatapackVariant>> variants = new HashMap<>();
     private List<String> biomeAdditions = new ArrayList<>();
     private List<String> biomeRemovals = new ArrayList<>();
     private List<String> lootAdditions = new ArrayList<>();
@@ -68,13 +67,13 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         return INSTANCE;
     }
 
-    public EntryUnlockData getUnlockData(ResourceLocation entryId) {
+    public EntryUnlockData getUnlockData(Identifier entryId) {
         EntryUnlockData mapData = entryUnlockDataMap.get(entryId);
         if (mapData != null && !EntryUnlockData.DEFAULT.equals(mapData)) {
             return mapData;
         }
 
-        ResourceLocation rawId = EntryResolver.getRawId(entryId);
+        Identifier rawId = EntryResolver.getRawId(entryId);
         if (rawId != null && !rawId.equals(entryId)) {
             EntryUnlockData rawMapData = entryUnlockDataMap.get(rawId);
             if (rawMapData != null && !EntryUnlockData.DEFAULT.equals(rawMapData)) {
@@ -101,11 +100,11 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         return EntryUnlockData.DEFAULT;
     }
 
-    public Map<ResourceLocation, Category> getCategories() {
+    public Map<Identifier, Category> getCategories() {
         return categories;
     }
 
-    public Map<ResourceLocation, ResourceLocation> getRedirects() {
+    public Map<Identifier, Identifier> getRedirects() {
         return redirects;
     }
 
@@ -125,16 +124,16 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         return lootRemovals;
     }
 
-    public boolean hasEntry(ResourceLocation entryId) {
+    public boolean hasEntry(Identifier entryId) {
         return EntryResolver.hasEntry(resolvedCategoryEntries, entryId);
     }
 
-    public Map<ResourceLocation, List<Object>> getResolvedEntries() {
+    public Map<Identifier, List<Object>> getResolvedEntries() {
         return this.resolvedCategoryEntries;
     }
 
-    public boolean isKillToUnlock(ResourceLocation entryId) {
-        TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "kill_to_unlock"));
+    public boolean isKillToUnlock(Identifier entryId) {
+        TagKey<EntityType<?>> killToUnlockTag = TagKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "kill_to_unlock"));
 
         return BuiltInRegistries.ENTITY_TYPE.getOptional(EntryResolver.getRawId(entryId))
                 .flatMap(BuiltInRegistries.ENTITY_TYPE::getResourceKey)
@@ -143,28 +142,28 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                 .orElse(false);
     }
 
-    public boolean isEatToUnlock(ResourceLocation entryId) {
+    public boolean isEatToUnlock(Identifier entryId) {
         if ("entity".equals(entryId.getNamespace())) return false;
-        TagKey<Item> eatToUnlockTag = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "eat_to_unlock"));
+        TagKey<Item> eatToUnlockTag = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "eat_to_unlock"));
 
         return BuiltInRegistries.ITEM.getOptional(EntryResolver.getRawId(entryId))
                 .map(item -> item.components().has(DataComponents.FOOD) || BuiltInRegistries.ITEM.getHolderOrThrow(BuiltInRegistries.ITEM.getResourceKey(item).get()).is(eatToUnlockTag))
                 .orElse(false);
     }
 
-    public Set<ResourceLocation> getEntriesTriggeredBy(ResourceLocation triggerId) {
+    public Set<Identifier> getEntriesTriggeredBy(Identifier triggerId) {
         return triggerOnMap.getOrDefault(triggerId, Collections.emptySet());
     }
 
-    public ResourceLocation getCategoryForEntryId(ResourceLocation entryId) {
+    public Identifier getCategoryForEntryId(Identifier entryId) {
         return EntryResolver.getCategoryForEntryId(resolvedCategoryEntries, entryId);
     }
 
-    public Set<ResourceLocation> getAllEntryIds() {
+    public Set<Identifier> getAllEntryIds() {
         return EntryResolver.getAllEntryIds(resolvedCategoryEntries);
     }
 
-    public Set<ResourceLocation> getEntryIdsForCategory(ResourceLocation categoryId) {
+    public Set<Identifier> getEntryIdsForCategory(Identifier categoryId) {
         return EntryResolver.getEntryIdsForCategory(resolvedCategoryEntries, categoryId);
     }
 
@@ -172,7 +171,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         return composites;
     }
 
-    public Map<ResourceLocation, List<DatapackVariant>> getVariants() {
+    public Map<Identifier, List<DatapackVariant>> getVariants() {
         return variants;
     }
 
@@ -180,7 +179,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         return EntryResolver.getEntriesForTarget(resolvedCategoryEntries, target);
     }
 
-    public boolean isTargetInEntry(ResourceLocation targetId, ResourceLocation entryId) {
+    public boolean isTargetInEntry(Identifier targetId, Identifier entryId) {
         return EntryResolver.isTargetInEntry(resolvedCategoryEntries, targetId, entryId);
     }
 
@@ -193,7 +192,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         return original.stream().map(s -> {
             String[] parts = s.split("\\|", 2);
             if (parts.length == 2 && !parts[0].contains(":")) {
-                Optional<Object> entry = EntryResolutionHelper.resolveSingleEntry(ResourceLocation.parse(parts[0]), null, null);
+                Optional<Object> entry = EntryResolutionHelper.resolveSingleEntry(Identifier.parse(parts[0]), null, null);
                 if (entry.isPresent()) return AutoPopulateRegistry.getEntryId(entry.get(), true) + "|" + parts[1];
             }
             return s;
@@ -232,7 +231,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                 int endIndex = Math.min(index + maxEntriesPerChunk, resolved.size());
                 for (int j = index; j < endIndex; j++) {
                     Object obj = resolved.get(j);
-                    ResourceLocation id = AutoPopulateRegistry.getEntryId(obj, true);
+                    Identifier id = AutoPopulateRegistry.getEntryId(obj, true);
 
                     if (obj instanceof GuideEntry ge) {
                         chunkCat.addEntryId(ge.id());
@@ -267,9 +266,9 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
         if (!redirects.isEmpty()) {
             int maxModifiersChunkSize = 500;
-            Map<ResourceLocation, ResourceLocation> redChunk = new HashMap<>();
+            Map<Identifier, Identifier> redChunk = new HashMap<>();
             int count = 0;
-            for (Map.Entry<ResourceLocation, ResourceLocation> entry : redirects.entrySet()) {
+            for (Map.Entry<Identifier, Identifier> entry : redirects.entrySet()) {
                 redChunk.put(entry.getKey(), entry.getValue());
                 count++;
                 if (count >= maxModifiersChunkSize) {
@@ -289,7 +288,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             for (int i = 0; i < flattenedCategories.size(); i++) {
                 List<Category> catChunk = Collections.singletonList(flattenedCategories.get(i));
                 List<GuideEntry> entryChunk = new ArrayList<>();
-                for (ResourceLocation entryId : flattenedCategories.get(i).getEntryIds()) {
+                for (Identifier entryId : flattenedCategories.get(i).getEntryIds()) {
                     flattenedEntries.stream().filter(e -> e.id().equals(entryId)).findFirst().ifPresent(entryChunk::add);
                 }
 
@@ -305,10 +304,10 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         if (serverLootCache.isEmpty()) return;
 
         int maxLootChunkSize = 100;
-        Map<ResourceLocation, List<ItemStack>> chunk = new HashMap<>();
+        Map<Identifier, List<ItemStack>> chunk = new HashMap<>();
         int count = 0;
 
-        for (Map.Entry<ResourceLocation, List<ItemStack>> entry : serverLootCache.entrySet()) {
+        for (Map.Entry<Identifier, List<ItemStack>> entry : serverLootCache.entrySet()) {
             chunk.put(entry.getKey(), entry.getValue());
             count++;
 
@@ -324,7 +323,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         }
     }
 
-    public void syncLootToPlayer(ServerPlayer player, ResourceLocation entryId) {
+    public void syncLootToPlayer(ServerPlayer player, Identifier entryId) {
         if (serverLootCache.containsKey(entryId)) {
             Services.NETWORK.sendToPlayer(new SyncLootPacket(Map.of(entryId, serverLootCache.get(entryId)), false), player);
         }
@@ -347,7 +346,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             for (Object entry : entries) {
                 if (entry instanceof GuideEntry ge && ge.isComposite()) {
                     if (ge.childEntries() != null) {
-                        for (ResourceLocation comp : ge.childEntries()) {
+                        for (Identifier comp : ge.childEntries()) {
                             allCompositeComponents.add(comp.toString());
                         }
                     }
@@ -389,7 +388,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     }
 
     public Category getCategoryForEntry(Object entry) {
-        for (Map.Entry<ResourceLocation, List<Object>> cat : resolvedCategoryEntries.entrySet()) {
+        for (Map.Entry<Identifier, List<Object>> cat : resolvedCategoryEntries.entrySet()) {
             if (cat.getValue().contains(entry)) return categories.get(cat.getKey());
         }
         return null;
@@ -414,24 +413,24 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     }
 
     private void loadCategories(ResourceManager resourceManager, ReloadData data) {
-        Map<ResourceLocation, List<Resource>> categoryResources = resourceManager.listResourceStacks(
+        Map<Identifier, List<Resource>> categoryResources = resourceManager.listResourceStacks(
                 "fieldguide/categories",
                 id -> id.getPath().endsWith(".json")
         );
 
-        for (Map.Entry<ResourceLocation, List<Resource>> entry : categoryResources.entrySet()) {
-            ResourceLocation fileId = entry.getKey();
+        for (Map.Entry<Identifier, List<Resource>> entry : categoryResources.entrySet()) {
+            Identifier fileId = entry.getKey();
             String path = fileId.getPath();
             String idPath = path.substring("fieldguide/categories/".length(), path.length() - ".json".length());
-            ResourceLocation defaultCategoryId = ResourceLocation.fromNamespaceAndPath(fileId.getNamespace(), idPath);
+            Identifier defaultCategoryId = Identifier.fromNamespaceAndPath(fileId.getNamespace(), idPath);
 
             for (Resource resource : entry.getValue()) {
                 try (Reader reader = resource.openAsReader()) {
                     JsonObject json = GsonHelper.parse(reader);
 
-                    ResourceLocation categoryId = defaultCategoryId;
+                    Identifier categoryId = defaultCategoryId;
                     if (json.has("target_category")) {
-                        categoryId = ResourceLocation.parse(GsonHelper.getAsString(json, "target_category"));
+                        categoryId = Identifier.parse(GsonHelper.getAsString(json, "target_category"));
                     }
 
                     Category category = data.categories.computeIfAbsent(categoryId, Category::new);
@@ -450,7 +449,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                     }
 
                     if (json.has("icon")) {
-                        category.setIcon(ResourceLocation.parse(GsonHelper.getAsString(json, "icon")));
+                        category.setIcon(Identifier.parse(GsonHelper.getAsString(json, "icon")));
                     }
 
                     if (json.has("group_by")) {
@@ -472,16 +471,16 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
                             switch (typeStr) {
                                 case "entry" -> {
-                                    ResourceLocation id = ResourceLocation.parse(GsonHelper.getAsString(obj, "id"));
+                                    Identifier id = Identifier.parse(GsonHelper.getAsString(obj, "id"));
                                     GuideEntry ge = new GuideEntry(id, id, null, EntryKind.NORMAL, false, false, null, null, null, null, unlockData);
                                     data.allEntries.put(id, ge);
                                     category.addEntryId(id);
                                     data.entryUnlockData.put(id, unlockData);
                                 }
                                 case "virtual_entry" -> {
-                                    ResourceLocation id = ResourceLocation.parse(GsonHelper.getAsString(obj, "id"));
+                                    Identifier id = Identifier.parse(GsonHelper.getAsString(obj, "id"));
                                     String virtualType = GsonHelper.getAsString(obj, "virtual_type");
-                                    ResourceLocation icon = obj.has("icon") ? ResourceLocation.parse(GsonHelper.getAsString(obj, "icon")) : null;
+                                    Identifier icon = obj.has("icon") ? Identifier.parse(GsonHelper.getAsString(obj, "icon")) : null;
                                     GuideEntry ge = new GuideEntry(id, null, icon, EntryKind.NORMAL, true, false, null, null, null, new VirtualData(virtualType), unlockData);
                                     data.allEntries.put(id, ge);
                                     category.addEntryId(id);
@@ -490,7 +489,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                                 case "auto_populate" -> {
                                     String strategy = GsonHelper.getAsString(obj, "strategy");
                                     String safeStrategyName = strategy.replace(":", "_");
-                                    ResourceLocation id = ResourceLocation.fromNamespaceAndPath(categoryId.getNamespace(), categoryId.getPath() + "_auto_" + safeStrategyName);
+                                    Identifier id = Identifier.fromNamespaceAndPath(categoryId.getNamespace(), categoryId.getPath() + "_auto_" + safeStrategyName);
                                     GuideEntry ge = new GuideEntry(id, null, null, EntryKind.NORMAL, false, true, strategy, null, null, null, unlockData);
                                     data.allEntries.put(id, ge);
                                     category.addEntryId(id);
@@ -510,10 +509,10 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         JsonObject unlock = obj.getAsJsonObject("unlock");
 
         boolean unlockedByDefault = GsonHelper.getAsBoolean(unlock, "unlocked_by_default", false);
-        List<ResourceLocation> prerequisites = new ArrayList<>();
+        List<Identifier> prerequisites = new ArrayList<>();
         if (unlock.has("prerequisites")) {
             for (JsonElement e : unlock.getAsJsonArray("prerequisites")) {
-                prerequisites.add(ResourceLocation.parse(e.getAsString()));
+                prerequisites.add(Identifier.parse(e.getAsString()));
             }
         }
 
@@ -529,15 +528,15 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             }
         }
 
-        List<ResourceLocation> triggerOn = new ArrayList<>();
+        List<Identifier> triggerOn = new ArrayList<>();
         if (unlock.has("trigger_on")) {
             JsonElement e = unlock.get("trigger_on");
             if (e.isJsonArray()) {
                 for (JsonElement el : e.getAsJsonArray()) {
-                    triggerOn.add(ResourceLocation.parse(el.getAsString()));
+                    triggerOn.add(Identifier.parse(el.getAsString()));
                 }
             } else {
-                triggerOn.add(ResourceLocation.parse(e.getAsString()));
+                triggerOn.add(Identifier.parse(e.getAsString()));
             }
         }
 
@@ -545,29 +544,29 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     }
 
     private void loadComposites(ResourceManager resourceManager, ReloadData data) {
-        Map<ResourceLocation, List<Resource>> compositeResources = resourceManager.listResourceStacks(
+        Map<Identifier, List<Resource>> compositeResources = resourceManager.listResourceStacks(
                 "fieldguide/composites",
                 id -> id.getPath().endsWith(".json")
         );
 
-        for (Map.Entry<ResourceLocation, List<Resource>> entry : compositeResources.entrySet()) {
+        for (Map.Entry<Identifier, List<Resource>> entry : compositeResources.entrySet()) {
             for (Resource resource : entry.getValue()) {
                 try (Reader reader = resource.openAsReader()) {
                     JsonObject json = GsonHelper.parse(reader);
                     if (json.has("values")) {
                         for (JsonElement el : GsonHelper.getAsJsonArray(json, "values")) {
                             JsonObject obj = el.getAsJsonObject();
-                            ResourceLocation id = ResourceLocation.parse(GsonHelper.getAsString(obj, "id"));
-                            ResourceLocation displayId = obj.has("display") ? ResourceLocation.parse(GsonHelper.getAsString(obj, "display")) : id;
+                            Identifier id = Identifier.parse(GsonHelper.getAsString(obj, "id"));
+                            Identifier displayId = obj.has("display") ? Identifier.parse(GsonHelper.getAsString(obj, "display")) : id;
 
-                            List<ResourceLocation> components = new ArrayList<>();
+                            List<Identifier> components = new ArrayList<>();
                             if (obj.has("components")) {
                                 for (JsonElement comp : GsonHelper.getAsJsonArray(obj, "components")) {
-                                    components.add(ResourceLocation.parse(comp.getAsString()));
+                                    components.add(Identifier.parse(comp.getAsString()));
                                 }
                             }
 
-                            ResourceLocation structureNbt = obj.has("structure_nbt") ? ResourceLocation.parse(GsonHelper.getAsString(obj, "structure_nbt")) : null;
+                            Identifier structureNbt = obj.has("structure_nbt") ? Identifier.parse(GsonHelper.getAsString(obj, "structure_nbt")) : null;
 
                             List<String> stackedBlocks = null;
                             if (obj.has("render")) {
@@ -588,19 +587,19 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     }
 
     private void loadRedirects(ResourceManager resourceManager, ReloadData data) {
-        Map<ResourceLocation, List<Resource>> redirectResources = resourceManager.listResourceStacks(
+        Map<Identifier, List<Resource>> redirectResources = resourceManager.listResourceStacks(
                 "fieldguide/redirects",
                 id -> id.getPath().endsWith(".json")
         );
-        for (Map.Entry<ResourceLocation, List<Resource>> entry : redirectResources.entrySet()) {
+        for (Map.Entry<Identifier, List<Resource>> entry : redirectResources.entrySet()) {
             for (Resource resource : entry.getValue()) {
                 try (Reader reader = resource.openAsReader()) {
                     JsonObject json = GsonHelper.parse(reader);
                     if (json.has("entries")) {
                         for (JsonElement el : GsonHelper.getAsJsonArray(json, "entries")) {
                             JsonObject obj = el.getAsJsonObject();
-                            ResourceLocation source = ResourceLocation.parse(GsonHelper.getAsString(obj, "source"));
-                            ResourceLocation target = ResourceLocation.parse(GsonHelper.getAsString(obj, "target"));
+                            Identifier source = Identifier.parse(GsonHelper.getAsString(obj, "source"));
+                            Identifier target = Identifier.parse(GsonHelper.getAsString(obj, "target"));
                             data.redirects.put(source, target);
                         }
                     }
@@ -612,12 +611,12 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     }
 
     private void loadVariants(ResourceManager resourceManager, ReloadData data) {
-        Map<ResourceLocation, List<Resource>> variantResources = resourceManager.listResourceStacks(
+        Map<Identifier, List<Resource>> variantResources = resourceManager.listResourceStacks(
                 "fieldguide/variants",
                 id -> id.getPath().endsWith(".json")
         );
 
-        for (Map.Entry<ResourceLocation, List<Resource>> entry : variantResources.entrySet()) {
+        for (Map.Entry<Identifier, List<Resource>> entry : variantResources.entrySet()) {
             for (Resource resource : entry.getValue()) {
                 try (Reader reader = resource.openAsReader()) {
                     JsonObject json = GsonHelper.parse(reader);
@@ -633,7 +632,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                                 }
                             }
 
-                            ResourceLocation entityId = ResourceLocation.parse(GsonHelper.getAsString(obj, "id"));
+                            Identifier entityId = Identifier.parse(GsonHelper.getAsString(obj, "id"));
 
                             List<DatapackVariant> variantList = data.variants.computeIfAbsent(entityId, k -> new ArrayList<>());
 
@@ -664,12 +663,12 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
         for (var biomeEntry : biomeRegistry.entrySet()) {
             try {
-                ResourceLocation biomeId = biomeEntry.getKey().location();
+                Identifier biomeId = biomeEntry.getKey().location();
                 Biome biome = biomeEntry.getValue();
 
                 for (MobCategory cat : MobCategory.values()) {
                     for (var spawn : biome.getMobSettings().getMobs(cat).unwrap()) {
-                        ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(spawn.type);
+                        Identifier entityId = BuiltInRegistries.ENTITY_TYPE.getKey(spawn.type);
                         additionsSet.add(entityId + "|" + biomeId);
                     }
                 }
@@ -682,8 +681,8 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     }
 
     private void loadModifiers(ResourceManager resourceManager, String path, List<String> additions, List<String> removals) {
-        Map<ResourceLocation, List<Resource>> resources = resourceManager.listResourceStacks(path, id -> id.getPath().endsWith(".json"));
-        for (Map.Entry<ResourceLocation, List<Resource>> entry : resources.entrySet()) {
+        Map<Identifier, List<Resource>> resources = resourceManager.listResourceStacks(path, id -> id.getPath().endsWith(".json"));
+        for (Map.Entry<Identifier, List<Resource>> entry : resources.entrySet()) {
             for (Resource resource : entry.getValue()) {
                 try (Reader reader = resource.openAsReader()) {
                     JsonObject json = GsonHelper.parse(reader);
@@ -762,7 +761,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             if (parts.length == 2 && parts[1].startsWith("#")) {
                 String tagPath = parts[1].substring(1);
                 try {
-                    TagKey<Biome> tagKey = TagKey.create(Registries.BIOME, ResourceLocation.parse(tagPath));
+                    TagKey<Biome> tagKey = TagKey.create(Registries.BIOME, Identifier.parse(tagPath));
                     biomeRegistry.getTagOrEmpty(tagKey).forEach(holder -> {
                         holder.unwrapKey().ifPresent(key -> {
                             expanded.add(parts[0] + "|" + key.location());
@@ -802,24 +801,24 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         this.entryUnlockDataMap.putAll(data.entryUnlockData);
 
         this.triggerOnMap.clear();
-        for (Map.Entry<ResourceLocation, EntryUnlockData> entry : this.entryUnlockDataMap.entrySet()) {
-            ResourceLocation entryId = entry.getKey();
-            for (ResourceLocation triggerId : entry.getValue().triggerOn()) {
+        for (Map.Entry<Identifier, EntryUnlockData> entry : this.entryUnlockDataMap.entrySet()) {
+            Identifier entryId = entry.getKey();
+            for (Identifier triggerId : entry.getValue().triggerOn()) {
                 this.triggerOnMap.computeIfAbsent(triggerId, k -> new HashSet<>()).add(entryId);
             }
         }
     }
 
     public static class ReloadData {
-        public Map<ResourceLocation, Category> categories = new LinkedHashMap<>();
-        public Map<ResourceLocation, GuideEntry> allEntries = new HashMap<>();
+        public Map<Identifier, Category> categories = new LinkedHashMap<>();
+        public Map<Identifier, GuideEntry> allEntries = new HashMap<>();
         public List<CompositeDefinition> composites = new ArrayList<>();
         public List<String> biomeAdditions = new ArrayList<>();
         public List<String> biomeRemovals = new ArrayList<>();
         public List<String> lootAdditions = new ArrayList<>();
         public List<String> lootRemovals = new ArrayList<>();
-        public Map<ResourceLocation, ResourceLocation> redirects = new HashMap<>();
-        public Map<ResourceLocation, List<DatapackVariant>> variants = new HashMap<>();
-        public Map<ResourceLocation, EntryUnlockData> entryUnlockData = new HashMap<>();
+        public Map<Identifier, Identifier> redirects = new HashMap<>();
+        public Map<Identifier, List<DatapackVariant>> variants = new HashMap<>();
+        public Map<Identifier, EntryUnlockData> entryUnlockData = new HashMap<>();
     }
 }

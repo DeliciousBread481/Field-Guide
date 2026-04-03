@@ -10,7 +10,7 @@ import com.evandev.fieldguide.server.data.ItemStackKey;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
@@ -25,16 +25,16 @@ import java.util.*;
 
 public class LootTableHelper {
 
-    private static void resolveAndAdd(ResourceLocation id, Set<Object> uniqueEntries) {
+    private static void resolveAndAdd(Identifier id, Set<Object> uniqueEntries) {
         BuiltInRegistries.BLOCK.getOptional(id).ifPresent(uniqueEntries::add);
         BuiltInRegistries.ITEM.getOptional(id).ifPresent(uniqueEntries::add);
         BuiltInRegistries.ENTITY_TYPE.getOptional(id).ifPresent(uniqueEntries::add);
     }
 
-    public static Map<ResourceLocation, List<ItemStack>> generateLootMap(ServerLevel level) {
-        Map<ResourceLocation, List<ItemStack>> lootMap = new HashMap<>();
+    public static Map<Identifier, List<ItemStack>> generateLootMap(ServerLevel level) {
+        Map<Identifier, List<ItemStack>> lootMap = new HashMap<>();
         Set<Object> uniqueEntries = new HashSet<>();
-        Map<ResourceLocation, List<Object>> resolvedEntries = ServerFieldGuideManager.getInstance().getResolvedEntries();
+        Map<Identifier, List<Object>> resolvedEntries = ServerFieldGuideManager.getInstance().getResolvedEntries();
 
         for (List<Object> categoryEntries : resolvedEntries.values()) {
             for (Object entry : categoryEntries) {
@@ -43,7 +43,7 @@ public class LootTableHelper {
                 if (entry instanceof GuideEntry ge) {
                     if (ge.displayId() != null) resolveAndAdd(ge.displayId(), uniqueEntries);
                     if (ge.childEntries() != null) {
-                        for (ResourceLocation childId : ge.childEntries()) {
+                        for (Identifier childId : ge.childEntries()) {
                             resolveAndAdd(childId, uniqueEntries);
                         }
                     }
@@ -68,7 +68,7 @@ public class LootTableHelper {
         return lootMap;
     }
 
-    private static void processEntry(ServerLevel level, Object entry, ResourceKey<LootTable> tableId, Map<ResourceLocation, List<ItemStack>> lootMap) {
+    private static void processEntry(ServerLevel level, Object entry, ResourceKey<LootTable> tableId, Map<Identifier, List<ItemStack>> lootMap) {
         List<ItemStack> formattedDrops = new ArrayList<>();
 
         if (tableId != null && !tableId.location().toString().equals("minecraft:empty")) {
@@ -91,7 +91,7 @@ public class LootTableHelper {
         applyConfigModifications(entry, formattedDrops);
 
         if (!formattedDrops.isEmpty()) {
-            ResourceLocation id = AutoPopulateRegistry.getEntryId(entry, true);
+            Identifier id = AutoPopulateRegistry.getEntryId(entry, true);
             if (id != null) {
                 List<ItemStack> existing = lootMap.computeIfAbsent(id, k -> new ArrayList<>());
                 Map<ItemStackKey, ItemStack> existingMap = new LinkedHashMap<>();
@@ -125,12 +125,12 @@ public class LootTableHelper {
 
     private static boolean matchesTarget(Object entry, String targetStr) {
         Object coreEntry = EntryResolver.resolveCoreEntry(entry);
-        ResourceLocation entryId = EntryResolver.getRawId(EntryResolver.getEntryId(coreEntry));
+        Identifier entryId = EntryResolver.getRawId(EntryResolver.getEntryId(coreEntry));
 
         if (entryId == null) return false;
         if (targetStr.startsWith("#")) {
             try {
-                ResourceLocation tagId = ResourceLocation.parse(targetStr.substring(1));
+                Identifier tagId = Identifier.parse(targetStr.substring(1));
                 if (coreEntry instanceof EntityType<?> type) {
                     return BuiltInRegistries.ENTITY_TYPE.getHolder(BuiltInRegistries.ENTITY_TYPE.getResourceKey(type).get()).get().is(TagKey.create(Registries.ENTITY_TYPE, tagId));
                 } else if (coreEntry instanceof Block block) {
@@ -143,12 +143,12 @@ public class LootTableHelper {
             return false;
         }
 
-        ResourceLocation targetId = EntryResolver.getRawId(ResourceLocation.parse(targetStr));
+        Identifier targetId = EntryResolver.getRawId(Identifier.parse(targetStr));
         return entryId.equals(targetId);
     }
 
     public static void applyConfigModifications(Object entry, List<ItemStack> distinctDrops) {
-        ResourceLocation entryId = EntryResolver.getEntryId(entry);
+        Identifier entryId = EntryResolver.getEntryId(entry);
         if (entryId == null) return;
 
         ServerFieldGuideManager manager = ServerFieldGuideManager.getInstance();
@@ -161,11 +161,11 @@ public class LootTableHelper {
 
         if (!itemsToRemove.isEmpty()) {
             distinctDrops.removeIf(stack -> {
-                ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+                Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
                 for (String t : itemsToRemove) {
                     if (t.startsWith("#")) {
                         try {
-                            if (stack.is(TagKey.create(Registries.ITEM, ResourceLocation.parse(t.substring(1)))))
+                            if (stack.is(TagKey.create(Registries.ITEM, Identifier.parse(t.substring(1)))))
                                 return true;
                         } catch (Exception ignored) {
                         }
@@ -182,7 +182,7 @@ public class LootTableHelper {
                 String target = parts[1];
                 if (target.startsWith("#")) {
                     try {
-                        for (var holder : BuiltInRegistries.ITEM.getTagOrEmpty(TagKey.create(Registries.ITEM, ResourceLocation.parse(target.substring(1))))) {
+                        for (var holder : BuiltInRegistries.ITEM.getTagOrEmpty(TagKey.create(Registries.ITEM, Identifier.parse(target.substring(1))))) {
                             ItemStack s = new ItemStack(holder.value());
                             s.set(ModDataComponents.DROP_CHANCE.get(), 100.0f);
                             distinctDrops.add(s);
@@ -192,7 +192,7 @@ public class LootTableHelper {
                         Constants.LOG.error("Failed to parse loot addition tag {}", target, e);
                     }
                 } else {
-                    Item i = BuiltInRegistries.ITEM.get(EntryResolver.getRawId(ResourceLocation.parse(target)));
+                    Item i = BuiltInRegistries.ITEM.get(EntryResolver.getRawId(Identifier.parse(target)));
                     if (i != Items.AIR) {
                         ItemStack s = new ItemStack(i);
                         s.set(ModDataComponents.DROP_CHANCE.get(), 100.0f);

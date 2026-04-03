@@ -6,21 +6,16 @@ import com.evandev.fieldguide.api.variant.VariantDef;
 import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
-import com.evandev.fieldguide.compat.cobblemon.ClientFieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastComponent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
@@ -39,7 +34,7 @@ public class FieldGuideToast implements Toast {
     }
 
     @Override
-    public @NotNull Visibility render(GuiGraphics guiGraphics, @NotNull ToastComponent toastComponent, long timeSinceLastVisible) {
+    public @NotNull Visibility render(GuiGraphicsExtractor guiGraphics, @NotNull ToastComponent toastComponent, long timeSinceLastVisible) {
         guiGraphics.blit(Constants.TOAST_TEXTURE, 0, 0, 0, 0, this.width(), this.height(), 160, 32);
 
         Component name = ClientFieldGuideManager.getEntryName(entry);
@@ -57,14 +52,14 @@ public class FieldGuideToast implements Toast {
 
         if (!entityInitialized) {
             if (Services.PLATFORM.isModLoaded("cobblemon") && isCobblemon) {
-                ResourceLocation id = ((GuideEntry) this.entry).id();
+/*                Identifier id = ((GuideEntry) this.entry).id();
                 if (variantId != null) {
                     cachedEntity = ClientFieldGuideCobblemonCompat.getDummyVariant(id, variantId, Minecraft.getInstance().level);
                 } else {
                     cachedEntity = ClientFieldGuideCobblemonCompat.getDummyPokemon(id, Minecraft.getInstance().level);
-                }
+                }*/
             } else if (coreEntry instanceof EntityType<?> type) {
-                cachedEntity = type.create(Minecraft.getInstance().level);
+                cachedEntity = type.create(Minecraft.getInstance().level, EntitySpawnReason.TRIGGERED);
 
                 if (variantId != null && cachedEntity instanceof Mob mob) {
                     VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(mob);

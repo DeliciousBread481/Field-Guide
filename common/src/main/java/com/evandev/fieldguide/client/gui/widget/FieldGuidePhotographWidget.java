@@ -1,3 +1,4 @@
+/*
 package com.evandev.fieldguide.client.gui.widget;
 
 import com.mojang.blaze3d.platform.InputConstants;
@@ -5,7 +6,7 @@ import io.github.mortuusars.exposure.ExposureClient;
 import io.github.mortuusars.exposure.client.render.photograph.PhotographStyle;
 import io.github.mortuusars.exposure.world.item.PhotographItem;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -38,7 +39,7 @@ public class FieldGuidePhotographWidget extends AbstractButton {
     }
 
     @Override
-    public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void renderWidget(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         ItemStack photograph = photographGetter.get();
         if (photograph.getItem() instanceof PhotographItem) {
             PhotographStyle style = PhotographStyle.of(photograph);
@@ -109,4 +110,4 @@ public class FieldGuidePhotographWidget extends AbstractButton {
     protected void updateWidgetNarration(@NotNull NarrationElementOutput output) {
         this.defaultButtonNarrationText(output);
     }
-}
+}*/

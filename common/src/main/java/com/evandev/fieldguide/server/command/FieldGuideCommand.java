@@ -3,7 +3,6 @@ package com.evandev.fieldguide.server.command;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.Category;
 import com.evandev.fieldguide.api.variant.VariantDef;
-import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.network.ExportContentPacket;
 import com.evandev.fieldguide.platform.Services;
@@ -17,7 +16,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
-import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -25,7 +24,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
@@ -52,19 +51,19 @@ public class FieldGuideCommand {
                         .then(Commands.literal("descriptions").executes(ctx -> export(ctx.getSource(), "descriptions")))
                         .then(Commands.literal("all").executes(ctx -> export(ctx.getSource(), "all")))
                         .then(Commands.literal("feature")
-                                .then(Commands.argument("feature", ResourceLocationArgument.id())
+                                .then(Commands.argument("feature", IdentifierArgument.id())
                                         .suggests((ctx, builder) -> SharedSuggestionProvider.suggestResource(
                                                 ctx.getSource().registryAccess().registryOrThrow(Registries.CONFIGURED_FEATURE).keySet(), builder))
 
-                                        .executes(ctx -> exportFeature(ctx.getSource(), ResourceLocationArgument.getId(ctx, "feature"), Blocks.DIRT))
+                                        .executes(ctx -> exportFeature(ctx.getSource(), IdentifierArgument.getId(ctx, "feature"), Blocks.DIRT))
 
-                                        .then(Commands.argument("base_block", ResourceLocationArgument.id())
+                                        .then(Commands.argument("base_block", IdentifierArgument.id())
                                                 .suggests((ctx, builder) -> SharedSuggestionProvider.suggestResource(
                                                         BuiltInRegistries.BLOCK.keySet(), builder))
                                                 .executes(ctx -> exportFeature(
                                                         ctx.getSource(),
-                                                        ResourceLocationArgument.getId(ctx, "feature"),
-                                                        BuiltInRegistries.BLOCK.get(EntryResolver.getRawId(ResourceLocationArgument.getId(ctx, "base_block")))
+                                                        IdentifierArgument.getId(ctx, "feature"),
+                                                        BuiltInRegistries.BLOCK.get(EntryResolver.getRawId(IdentifierArgument.getId(ctx, "base_block")))
                                                 ))
                                         )
                                 )
@@ -77,34 +76,34 @@ public class FieldGuideCommand {
                                         .executes(ctx -> grantEverything(ctx.getSource(), EntityArgument.getPlayers(ctx, "targets")))
                                 )
                                 .then(Commands.literal("category")
-                                        .then(Commands.argument("category", ResourceLocationArgument.id())
+                                        .then(Commands.argument("category", IdentifierArgument.id())
                                                 .suggests((ctx, builder) -> SharedSuggestionProvider.suggestResource(ServerFieldGuideManager.getInstance().getCategories().keySet(), builder))
-                                                .executes(ctx -> grantCategory(ctx.getSource(), EntityArgument.getPlayers(ctx, "targets"), ResourceLocationArgument.getId(ctx, "category")))
+                                                .executes(ctx -> grantCategory(ctx.getSource(), EntityArgument.getPlayers(ctx, "targets"), IdentifierArgument.getId(ctx, "category")))
                                         )
                                 )
                                 .then(Commands.literal("only")
-                                        .then(Commands.argument("entry", ResourceLocationArgument.id())
+                                        .then(Commands.argument("entry", IdentifierArgument.id())
                                                 .suggests((ctx, builder) -> SharedSuggestionProvider.suggestResource(
                                                         ServerFieldGuideManager.getInstance().getAllEntryIds(),
                                                         builder))
-                                                .executes(ctx -> grantEntry(ctx.getSource(), EntityArgument.getPlayers(ctx, "targets"), ResourceLocationArgument.getId(ctx, "entry")))
+                                                .executes(ctx -> grantEntry(ctx.getSource(), EntityArgument.getPlayers(ctx, "targets"), IdentifierArgument.getId(ctx, "entry")))
                                         )
                                 )
                                 .then(Commands.literal("variant")
-                                        .then(Commands.argument("entry", ResourceLocationArgument.id())
+                                        .then(Commands.argument("entry", IdentifierArgument.id())
                                                 .suggests((ctx, builder) -> SharedSuggestionProvider.suggestResource(
                                                         ServerFieldGuideManager.getInstance().getAllEntryIds(),
                                                         builder))
                                                 .then(Commands.argument("variant", StringArgumentType.string())
                                                         .suggests((ctx, builder) -> {
-                                                            ResourceLocation entryId = ResourceLocationArgument.getId(ctx, "entry");
+                                                            Identifier entryId = IdentifierArgument.getId(ctx, "entry");
                                                             List<String> variants = new ArrayList<>();
                                                             variants.add("all");
 
                                                             if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
                                                                 variants.addAll(FieldGuideCobblemonCompat.getVariantIds(entryId));
                                                             } else {
-                                                                ResourceLocation rawId = EntryResolver.getRawId(entryId);
+                                                                Identifier rawId = EntryResolver.getRawId(entryId);
                                                                 if (BuiltInRegistries.ENTITY_TYPE.containsKey(rawId)) {
                                                                     EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(rawId);
                                                                     variants.addAll(FieldGuideVariantManager.getVariantIds(type, ctx.getSource().getLevel()));
@@ -112,7 +111,7 @@ public class FieldGuideCommand {
                                                             }
                                                             return SharedSuggestionProvider.suggest(variants, builder);
                                                         })
-                                                        .executes(ctx -> grantVariant(ctx.getSource(), EntityArgument.getPlayers(ctx, "targets"), ResourceLocationArgument.getId(ctx, "entry"), StringArgumentType.getString(ctx, "variant")))
+                                                        .executes(ctx -> grantVariant(ctx.getSource(), EntityArgument.getPlayers(ctx, "targets"), IdentifierArgument.getId(ctx, "entry"), StringArgumentType.getString(ctx, "variant")))
                                                 )
                                         )
                                 )
@@ -124,34 +123,34 @@ public class FieldGuideCommand {
                                         .executes(ctx -> revokeEverything(ctx.getSource(), EntityArgument.getPlayers(ctx, "targets")))
                                 )
                                 .then(Commands.literal("category")
-                                        .then(Commands.argument("category", ResourceLocationArgument.id())
+                                        .then(Commands.argument("category", IdentifierArgument.id())
                                                 .suggests((ctx, builder) -> SharedSuggestionProvider.suggestResource(ServerFieldGuideManager.getInstance().getCategories().keySet(), builder))
-                                                .executes(ctx -> revokeCategory(ctx.getSource(), EntityArgument.getPlayers(ctx, "targets"), ResourceLocationArgument.getId(ctx, "category")))
+                                                .executes(ctx -> revokeCategory(ctx.getSource(), EntityArgument.getPlayers(ctx, "targets"), IdentifierArgument.getId(ctx, "category")))
                                         )
                                 )
                                 .then(Commands.literal("only")
-                                        .then(Commands.argument("entry", ResourceLocationArgument.id())
+                                        .then(Commands.argument("entry", IdentifierArgument.id())
                                                 .suggests((ctx, builder) -> SharedSuggestionProvider.suggestResource(
                                                         ServerFieldGuideManager.getInstance().getAllEntryIds(),
                                                         builder))
-                                                .executes(ctx -> revokeEntry(ctx.getSource(), EntityArgument.getPlayers(ctx, "targets"), ResourceLocationArgument.getId(ctx, "entry")))
+                                                .executes(ctx -> revokeEntry(ctx.getSource(), EntityArgument.getPlayers(ctx, "targets"), IdentifierArgument.getId(ctx, "entry")))
                                         )
                                 )
                                 .then(Commands.literal("variant")
-                                        .then(Commands.argument("entry", ResourceLocationArgument.id())
+                                        .then(Commands.argument("entry", IdentifierArgument.id())
                                                 .suggests((ctx, builder) -> SharedSuggestionProvider.suggestResource(
                                                         ServerFieldGuideManager.getInstance().getAllEntryIds(),
                                                         builder))
                                                 .then(Commands.argument("variant", StringArgumentType.string())
                                                         .suggests((ctx, builder) -> {
-                                                            ResourceLocation entryId = ResourceLocationArgument.getId(ctx, "entry");
+                                                            Identifier entryId = IdentifierArgument.getId(ctx, "entry");
                                                             List<String> variants = new ArrayList<>();
                                                             variants.add("all");
 
                                                             if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
                                                                 variants.addAll(FieldGuideCobblemonCompat.getVariantIds(entryId));
                                                             } else {
-                                                                ResourceLocation rawId = EntryResolver.getRawId(entryId);
+                                                                Identifier rawId = EntryResolver.getRawId(entryId);
                                                                 if (BuiltInRegistries.ENTITY_TYPE.containsKey(rawId)) {
                                                                     EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(rawId);
                                                                     variants.addAll(FieldGuideVariantManager.getVariantIds(type, ctx.getSource().getLevel()));
@@ -159,7 +158,7 @@ public class FieldGuideCommand {
                                                             }
                                                             return SharedSuggestionProvider.suggest(variants, builder);
                                                         })
-                                                        .executes(ctx -> revokeVariant(ctx.getSource(), EntityArgument.getPlayers(ctx, "targets"), ResourceLocationArgument.getId(ctx, "entry"), StringArgumentType.getString(ctx, "variant")))
+                                                        .executes(ctx -> revokeVariant(ctx.getSource(), EntityArgument.getPlayers(ctx, "targets"), IdentifierArgument.getId(ctx, "entry"), StringArgumentType.getString(ctx, "variant")))
                                                 )
                                         )
                                 )
@@ -168,12 +167,12 @@ public class FieldGuideCommand {
         );
     }
 
-    private static int grantVariant(CommandSourceStack source, Collection<ServerPlayer> targets, ResourceLocation entryId, String variantId) {
+    private static int grantVariant(CommandSourceStack source, Collection<ServerPlayer> targets, Identifier entryId, String variantId) {
         FieldGuideProgressManager manager = FieldGuideProgressManager.getInstance();
 
         if (variantId.equalsIgnoreCase("all")) {
             if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
-                List<String> variants = FieldGuideCobblemonCompat.getVariantIds(entryId);
+/*                List<String> variants = FieldGuideCobblemonCompat.getVariantIds(entryId);
                 if (!variants.isEmpty()) {
                     for (ServerPlayer player : targets) {
                         PlayerFieldGuideProgress progress = manager.getProgress(player);
@@ -185,9 +184,9 @@ public class FieldGuideCommand {
                     }
                     source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.variant.success", "all", entryId.toString()), true);
                     return targets.size();
-                }
+                }*/
             } else {
-                ResourceLocation rawId = EntryResolver.getRawId(entryId);
+                Identifier rawId = EntryResolver.getRawId(entryId);
                 if (BuiltInRegistries.ENTITY_TYPE.containsKey(rawId)) {
                     EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(rawId);
                     List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, source.getLevel());
@@ -217,7 +216,7 @@ public class FieldGuideCommand {
         return targets.size();
     }
 
-    private static int revokeVariant(CommandSourceStack source, Collection<ServerPlayer> targets, ResourceLocation entryId, String variantId) {
+    private static int revokeVariant(CommandSourceStack source, Collection<ServerPlayer> targets, Identifier entryId, String variantId) {
         FieldGuideProgressManager manager = FieldGuideProgressManager.getInstance();
 
         if (variantId.equalsIgnoreCase("all")) {
@@ -236,7 +235,7 @@ public class FieldGuideCommand {
                     return targets.size();
                 }
             } else {
-                ResourceLocation rawId = EntryResolver.getRawId(entryId);
+                Identifier rawId = EntryResolver.getRawId(entryId);
                 if (BuiltInRegistries.ENTITY_TYPE.containsKey(rawId)) {
                     EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(rawId);
                     List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, source.getLevel());
@@ -269,11 +268,11 @@ public class FieldGuideCommand {
 
     private static int grantEverything(CommandSourceStack source, Collection<ServerPlayer> targets) {
         FieldGuideProgressManager manager = FieldGuideProgressManager.getInstance();
-        Set<ResourceLocation> allEntries = ServerFieldGuideManager.getInstance().getAllEntryIds();
+        Set<Identifier> allEntries = ServerFieldGuideManager.getInstance().getAllEntryIds();
         for (ServerPlayer player : targets) {
             PlayerFieldGuideProgress progress = manager.getProgress(player);
             if (progress != null) {
-                for (ResourceLocation entryId : allEntries) {
+                for (Identifier entryId : allEntries) {
                     progress.unlock(player, entryId, null, true);
                     unlockVariants(player, entryId, source.getLevel());
                 }
@@ -283,7 +282,7 @@ public class FieldGuideCommand {
         return targets.size();
     }
 
-    private static void unlockVariants(ServerPlayer player, ResourceLocation entryId, ServerLevel level) {
+    private static void unlockVariants(ServerPlayer player, Identifier entryId, ServerLevel level) {
         PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
         if (progress == null) return;
 
@@ -292,7 +291,7 @@ public class FieldGuideCommand {
                 progress.unlock(player, entryId, variantId, true);
             }
         } else {
-            ResourceLocation rawId = EntryResolver.getRawId(entryId);
+            Identifier rawId = EntryResolver.getRawId(entryId);
             if (BuiltInRegistries.ENTITY_TYPE.containsKey(rawId)) {
                 EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(rawId);
                 List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, level);
@@ -303,7 +302,7 @@ public class FieldGuideCommand {
         }
     }
 
-    private static void revokeVariants(ServerPlayer player, ResourceLocation entryId, ServerLevel level) {
+    private static void revokeVariants(ServerPlayer player, Identifier entryId, ServerLevel level) {
         PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
         if (progress == null) return;
 
@@ -312,7 +311,7 @@ public class FieldGuideCommand {
                 progress.revoke(entryId + "#" + variantId);
             }
         } else {
-            ResourceLocation rawId = EntryResolver.getRawId(entryId);
+            Identifier rawId = EntryResolver.getRawId(entryId);
             if (BuiltInRegistries.ENTITY_TYPE.containsKey(rawId)) {
                 EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(rawId);
                 List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, level);
@@ -323,18 +322,18 @@ public class FieldGuideCommand {
         }
     }
 
-    private static int grantCategory(CommandSourceStack source, Collection<ServerPlayer> targets, ResourceLocation categoryId) {
+    private static int grantCategory(CommandSourceStack source, Collection<ServerPlayer> targets, Identifier categoryId) {
         Category category = ServerFieldGuideManager.getInstance().getCategories().get(categoryId);
         if (category == null) {
             source.sendFailure(Component.translatable("commands.fieldguide.category.not_found", categoryId.toString()));
             return 0;
         }
         FieldGuideProgressManager manager = FieldGuideProgressManager.getInstance();
-        Set<ResourceLocation> entryIds = ServerFieldGuideManager.getInstance().getEntryIdsForCategory(categoryId);
+        Set<Identifier> entryIds = ServerFieldGuideManager.getInstance().getEntryIdsForCategory(categoryId);
         for (ServerPlayer player : targets) {
             PlayerFieldGuideProgress progress = manager.getProgress(player);
             if (progress != null) {
-                for (ResourceLocation entryId : entryIds) {
+                for (Identifier entryId : entryIds) {
                     progress.unlock(player, entryId, null, true);
                     unlockVariants(player, entryId, source.getLevel());
                 }
@@ -355,7 +354,7 @@ public class FieldGuideCommand {
         }
     }
 
-    private static int exportFeature(CommandSourceStack source, ResourceLocation featureId, Block baseBlock) {
+    private static int exportFeature(CommandSourceStack source, Identifier featureId, Block baseBlock) {
         if (!(source.getEntity() instanceof ServerPlayer player)) {
             source.sendFailure(Component.literal("This command must be run by an in-game player."));
             return 0;
@@ -451,7 +450,7 @@ public class FieldGuideCommand {
         return 1;
     }
 
-    private static int grantEntry(CommandSourceStack source, Collection<ServerPlayer> targets, ResourceLocation entryId) {
+    private static int grantEntry(CommandSourceStack source, Collection<ServerPlayer> targets, Identifier entryId) {
         FieldGuideProgressManager manager = FieldGuideProgressManager.getInstance();
         for (ServerPlayer player : targets) {
             PlayerFieldGuideProgress progress = manager.getProgress(player);
@@ -476,13 +475,13 @@ public class FieldGuideCommand {
         return targets.size();
     }
 
-    private static int revokeCategory(CommandSourceStack source, Collection<ServerPlayer> targets, ResourceLocation categoryId) {
+    private static int revokeCategory(CommandSourceStack source, Collection<ServerPlayer> targets, Identifier categoryId) {
         FieldGuideProgressManager manager = FieldGuideProgressManager.getInstance();
-        Set<ResourceLocation> entryIds = ServerFieldGuideManager.getInstance().getEntryIdsForCategory(categoryId);
+        Set<Identifier> entryIds = ServerFieldGuideManager.getInstance().getEntryIdsForCategory(categoryId);
         for (ServerPlayer player : targets) {
             PlayerFieldGuideProgress progress = manager.getProgress(player);
             if (progress != null) {
-                for (ResourceLocation entryId : entryIds) {
+                for (Identifier entryId : entryIds) {
                     progress.revoke(entryId.toString());
                     revokeVariants(player, entryId, source.getLevel());
                 }
@@ -492,7 +491,7 @@ public class FieldGuideCommand {
         return targets.size();
     }
 
-    private static int revokeEntry(CommandSourceStack source, Collection<ServerPlayer> targets, ResourceLocation entryId) {
+    private static int revokeEntry(CommandSourceStack source, Collection<ServerPlayer> targets, Identifier entryId) {
         FieldGuideProgressManager manager = FieldGuideProgressManager.getInstance();
         for (ServerPlayer player : targets) {
             PlayerFieldGuideProgress progress = manager.getProgress(player);

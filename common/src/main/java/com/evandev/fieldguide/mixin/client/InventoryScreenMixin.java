@@ -5,13 +5,13 @@ import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.gui.screens.BookScreen;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideCategoryScreen;
 import com.evandev.fieldguide.config.ClientConfig;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.WidgetSprites;
 import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.InventoryMenu;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class InventoryScreenMixin extends EffectRenderingInventoryScreen<InventoryMenu> {
 
     @Unique
-    private static final WidgetSprites GUIDE_BUTTON_SPRITES = new WidgetSprites(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/fieldguide_inventory_button"), ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/fieldguide_inventory_button_highlighted"));
+    private static final WidgetSprites GUIDE_BUTTON_SPRITES = new WidgetSprites(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/fieldguide_inventory_button"), Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/fieldguide_inventory_button_highlighted"));
 
     @Unique
     private ImageButton fieldguide$guideButton;
@@ -59,7 +59,7 @@ public abstract class InventoryScreenMixin extends EffectRenderingInventoryScree
     }
 
     @Inject(method = "render", at = @At("HEAD"))
-    private void updateButtonPosition(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
+    private void updateButtonPosition(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
         if (this.fieldguide$guideButton != null && ClientConfig.get().showInventoryButton) {
             this.fieldguide$guideButton.setX(this.leftPos + ClientConfig.get().inventoryButtonXOffset);
             this.fieldguide$guideButton.setY(this.topPos + ClientConfig.get().inventoryButtonYOffset);

@@ -1,3 +1,4 @@
+/*
 package com.evandev.fieldguide.compat.kubejs;
 
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
@@ -5,7 +6,7 @@ import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
 import dev.latvian.mods.kubejs.plugin.KubeJSPlugin;
 import dev.latvian.mods.kubejs.script.BindingRegistry;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 
 public class FieldGuideKubeJSPlugin implements KubeJSPlugin {
@@ -35,14 +36,14 @@ public class FieldGuideKubeJSPlugin implements KubeJSPlugin {
         public void unlock(ServerPlayer player, String entryId) {
             PlayerFieldGuideProgress progress = getProgress(player);
             if (progress != null) {
-                progress.unlock(player, ResourceLocation.parse(entryId), null, true);
+                progress.unlock(player, Identifier.parse(entryId), null, true);
             }
         }
 
         public void unlock(ServerPlayer player, String entryId, String variantId) {
             PlayerFieldGuideProgress progress = getProgress(player);
             if (progress != null) {
-                progress.unlock(player, ResourceLocation.parse(entryId), variantId, true);
+                progress.unlock(player, Identifier.parse(entryId), variantId, true);
             }
         }
 
@@ -59,3 +60,4 @@ public class FieldGuideKubeJSPlugin implements KubeJSPlugin {
         }
     }
 }
+*/

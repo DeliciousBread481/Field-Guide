@@ -1,3 +1,4 @@
+/*
 package com.evandev.fieldguide.compat.cobblemon;
 
 import com.cobblemon.mod.common.api.pokemon.PokemonSpecies;
@@ -20,7 +21,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.GsonHelper;
@@ -38,9 +39,9 @@ public final class FieldGuideCobblemonCompat {
     public static final String MOD_ID = "cobblemon";
     private static final String POKEMON_PATH = "pokemon";
 
-    private static final Map<ResourceLocation, List<ItemStack>> COBBLEMON_DROPS_CACHE = new HashMap<>();
+    private static final Map<Identifier, List<ItemStack>> COBBLEMON_DROPS_CACHE = new HashMap<>();
     private static final List<Object> AUTO_POPULATE_CACHE = new ArrayList<>();
-    private static final Map<ResourceLocation, Set<String>> COBBLEMON_BIOMES_CACHE = new HashMap<>();
+    private static final Map<Identifier, Set<String>> COBBLEMON_BIOMES_CACHE = new HashMap<>();
 
     static {
         FieldGuideVariantManager.registerProvider(PokemonEntity.class, new VariantProvider<>() {
@@ -119,7 +120,7 @@ public final class FieldGuideCobblemonCompat {
         return "standard";
     }
 
-    public static String getDefaultForm(ResourceLocation id) {
+    public static String getDefaultForm(Identifier id) {
         String path = id.getPath();
         int idx = path.lastIndexOf("cobblemon/");
         String speciesAndForm = idx != -1 ? path.substring(idx + "cobblemon/".length()) : path;
@@ -131,7 +132,7 @@ public final class FieldGuideCobblemonCompat {
         return "standard";
     }
 
-    public static String getSpeciesName(ResourceLocation id) {
+    public static String getSpeciesName(Identifier id) {
         String path = id.getPath();
         if (!path.startsWith("cobblemon/")) return path;
         String speciesAndForm = path.substring("cobblemon/".length());
@@ -142,16 +143,16 @@ public final class FieldGuideCobblemonCompat {
         return speciesAndForm;
     }
 
-    public static List<String> getVariantIds(ResourceLocation entryId) {
+    public static List<String> getVariantIds(Identifier entryId) {
         String speciesName = getSpeciesName(entryId);
-        Species species = PokemonSpecies.getByIdentifier(ResourceLocation.fromNamespaceAndPath(MOD_ID, speciesName));
+        Species species = PokemonSpecies.getByIdentifier(Identifier.fromNamespaceAndPath(MOD_ID, speciesName));
         if (species != null) {
             return species.getForms().stream().map(FormData::getName).toList();
         }
         return List.of();
     }
 
-    public static ResourceLocation getPokemonEntryId(Entity entity) {
+    public static Identifier getPokemonEntryId(Entity entity) {
         if (!(entity instanceof PokemonEntity pokemonEntity)) {
             return BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
         }
@@ -161,7 +162,7 @@ public final class FieldGuideCobblemonCompat {
             Species species = pokemon.getSpecies();
 
             String speciesName = species.getResourceIdentifier().getPath();
-            return ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "cobblemon/" + speciesName + "_standard");
+            return Identifier.fromNamespaceAndPath(Constants.MOD_ID, "cobblemon/" + speciesName + "_standard");
         } catch (Exception e) {
             Constants.LOG.error("Failed to parse Cobblemon properties for Field Guide ID", e);
         }
@@ -173,20 +174,20 @@ public final class FieldGuideCobblemonCompat {
         AUTO_POPULATE_CACHE.clear();
         COBBLEMON_DROPS_CACHE.clear();
 
-        Map<ResourceLocation, List<Resource>> speciesFiles = resourceManager.listResourceStacks(
+        Map<Identifier, List<Resource>> speciesFiles = resourceManager.listResourceStacks(
                 "species", id -> id.getNamespace().equals(MOD_ID) && id.getPath().endsWith(".json")
         );
 
         List<Map.Entry<GuideEntry, Integer>> sortedEntries = new ArrayList<>();
 
-        for (Map.Entry<ResourceLocation, List<Resource>> entry : speciesFiles.entrySet()) {
+        for (Map.Entry<Identifier, List<Resource>> entry : speciesFiles.entrySet()) {
             for (Resource resource : entry.getValue()) {
                 try (Reader reader = resource.openAsReader()) {
                     JsonObject json = GsonHelper.parse(reader);
 
                     if (json.has("name")) {
                         String speciesName = json.get("name").getAsString().toLowerCase(Locale.ROOT);
-                        ResourceLocation entryId = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "cobblemon/" + speciesName + "_standard");
+                        Identifier entryId = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "cobblemon/" + speciesName + "_standard");
                         int pokedexNumber = json.has("nationalPokedexNumber") ? json.get("nationalPokedexNumber").getAsInt() : Integer.MAX_VALUE;
 
                         if (json.has("drops")) {
@@ -200,7 +201,7 @@ public final class FieldGuideCobblemonCompat {
                                         float chance = dropJson.has("percentage") ? dropJson.get("percentage").getAsFloat() : 100f;
                                         int quantity = dropJson.has("quantity") ? dropJson.get("quantity").getAsInt() : 1;
 
-                                        Item item = BuiltInRegistries.ITEM.get(EntryResolver.getRawId(ResourceLocation.parse(itemStr)));
+                                        Item item = BuiltInRegistries.ITEM.get(EntryResolver.getRawId(Identifier.parse(itemStr)));
                                         if (item != Items.AIR) {
                                             ItemStack stack = new ItemStack(item, quantity);
                                             stack.set(ModDataComponents.DROP_CHANCE.get(), chance);
@@ -229,7 +230,7 @@ public final class FieldGuideCobblemonCompat {
             AUTO_POPULATE_CACHE.add(sortedEntry.getKey());
         }
 
-        Map<ResourceLocation, List<Resource>> spawnPoolFiles = resourceManager.listResourceStacks(
+        Map<Identifier, List<Resource>> spawnPoolFiles = resourceManager.listResourceStacks(
                 "spawn_pool_world", id -> id.getNamespace().equals(MOD_ID) && id.getPath().endsWith(".json")
         );
 
@@ -239,7 +240,7 @@ public final class FieldGuideCobblemonCompat {
             );
         }
 
-        for (Map.Entry<ResourceLocation, List<Resource>> entry : spawnPoolFiles.entrySet()) {
+        for (Map.Entry<Identifier, List<Resource>> entry : spawnPoolFiles.entrySet()) {
             for (Resource resource : entry.getValue()) {
                 try (Reader reader = resource.openAsReader()) {
                     JsonObject json = GsonHelper.parse(reader);
@@ -250,7 +251,7 @@ public final class FieldGuideCobblemonCompat {
                             if (spawn.has("pokemon")) {
                                 String pokemonStr = spawn.get("pokemon").getAsString().toLowerCase(Locale.ROOT);
                                 String speciesName = pokemonStr.split(" ")[0];
-                                ResourceLocation entryId = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "cobblemon/" + speciesName + "_standard");
+                                Identifier entryId = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "cobblemon/" + speciesName + "_standard");
 
                                 if (spawn.has("condition")) {
                                     JsonObject condition = spawn.getAsJsonObject("condition");
@@ -286,21 +287,21 @@ public final class FieldGuideCobblemonCompat {
 
     public static boolean isPokemon(Entity entity) {
         if (entity == null || !Services.PLATFORM.isModLoaded(MOD_ID)) return false;
-        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+        Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
         return MOD_ID.equals(id.getNamespace()) && POKEMON_PATH.equals(id.getPath());
     }
 
     public static boolean isPokemonType(EntityType<?> type) {
         if (!Services.PLATFORM.isModLoaded(MOD_ID)) return false;
-        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
         return MOD_ID.equals(id.getNamespace());
     }
 
-    public static Set<String> getCobblemonBiomesForId(ResourceLocation id) {
+    public static Set<String> getCobblemonBiomesForId(Identifier id) {
         return COBBLEMON_BIOMES_CACHE.get(id);
     }
 
-    public static List<ItemStack> getCobblemonDropsForId(ResourceLocation id) {
+    public static List<ItemStack> getCobblemonDropsForId(Identifier id) {
         return COBBLEMON_DROPS_CACHE.get(id);
     }
-}
+}*/

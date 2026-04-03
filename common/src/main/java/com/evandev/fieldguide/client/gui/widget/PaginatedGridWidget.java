@@ -2,12 +2,12 @@ package com.evandev.fieldguide.client.gui.widget;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.client.ClientConstants;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -91,7 +91,7 @@ public class PaginatedGridWidget<T> extends AbstractWidget {
     }
 
     @Override
-    public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void renderWidget(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         if (items.isEmpty()) return;
 
         int indexStart = itemsPerPage * (currentPage - 1);
@@ -119,8 +119,8 @@ public class PaginatedGridWidget<T> extends AbstractWidget {
             int progressWidth = (int) (barWidth * progressEnd) - (int) (barWidth * progressStart);
             int barHeight = 5;
 
-            guiGraphics.blitSprite(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_bar_bg"), barStartX, barY, barWidth, barHeight);
-            guiGraphics.blitSprite(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_bar_fill"), barStartX + (int) (barWidth * progressStart), barY, progressWidth, barHeight);
+            guiGraphics.blitSprite(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_bar_bg"), barStartX, barY, barWidth, barHeight);
+            guiGraphics.blitSprite(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_bar_fill"), barStartX + (int) (barWidth * progressStart), barY, progressWidth, barHeight);
         }
     }
 
@@ -129,6 +129,6 @@ public class PaginatedGridWidget<T> extends AbstractWidget {
     }
 
     public interface ItemRenderer<T> {
-        void render(GuiGraphics graphics, T item, int x, int y, int mouseX, int mouseY);
+        void render(GuiGraphicsExtractor graphics, T item, int x, int y, int mouseX, int mouseY);
     }
 }

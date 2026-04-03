@@ -117,7 +117,7 @@ public class FieldGuideNeoForgeClient {
         public static void onRenderGuiOverlay(RenderGuiLayerEvent.Post event) {
             if (event.getName().equals(VanillaGuiLayers.CROSSHAIR)) {
                 float partialTick = Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
-                FieldGuideClient.renderScanningIcon(event.getGuiGraphics(), partialTick);
+                FieldGuideClient.renderScanningIcon(event.getGuiGraphicsExtractor(), partialTick);
             }
         }
 

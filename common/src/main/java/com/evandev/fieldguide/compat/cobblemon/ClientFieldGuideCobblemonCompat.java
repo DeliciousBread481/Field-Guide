@@ -1,3 +1,4 @@
+/*
 package com.evandev.fieldguide.compat.cobblemon;
 
 import com.cobblemon.mod.common.api.pokemon.PokemonProperties;
@@ -11,7 +12,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
@@ -24,10 +25,10 @@ import java.util.*;
 
 public final class ClientFieldGuideCobblemonCompat {
 
-    private static final Map<ResourceLocation, LivingEntity> DUMMY_CACHE = new HashMap<>();
+    private static final Map<Identifier, LivingEntity> DUMMY_CACHE = new HashMap<>();
     private static final Map<String, LivingEntity> VARIANT_DUMMY_CACHE = new HashMap<>();
-    private static final Map<ResourceLocation, String> FORM_CACHE = new HashMap<>();
-    private static final Map<ResourceLocation, List<ResourceLocation>> RESOLVED_BIOME_CACHE = new HashMap<>();
+    private static final Map<Identifier, String> FORM_CACHE = new HashMap<>();
+    private static final Map<Identifier, List<Identifier>> RESOLVED_BIOME_CACHE = new HashMap<>();
 
     private ClientFieldGuideCobblemonCompat() {
     }
@@ -38,13 +39,13 @@ public final class ClientFieldGuideCobblemonCompat {
         RESOLVED_BIOME_CACHE.clear();
     }
 
-    public static String getFormForEntry(ResourceLocation id) {
+    public static String getFormForEntry(Identifier id) {
         String selected = ProgressManager.getInstance().getSelectedVariant(id);
         if (selected != null) return selected;
         return FORM_CACHE.getOrDefault(id, FieldGuideCobblemonCompat.getDefaultForm(id));
     }
 
-    public static LivingEntity getDummyVariant(ResourceLocation id, String variantName, Level level) {
+    public static LivingEntity getDummyVariant(Identifier id, String variantName, Level level) {
         String cacheKey = id.toString() + "#" + variantName;
         if (VARIANT_DUMMY_CACHE.containsKey(cacheKey)) {
             return VARIANT_DUMMY_CACHE.get(cacheKey);
@@ -99,7 +100,7 @@ public final class ClientFieldGuideCobblemonCompat {
         return null;
     }
 
-    public static LivingEntity getDummyPokemon(ResourceLocation id, Level level) {
+    public static LivingEntity getDummyPokemon(Identifier id, Level level) {
         String selectedForm = ProgressManager.getInstance().getSelectedVariant(id);
         if (selectedForm != null) {
             return getDummyVariant(id, selectedForm, level);
@@ -161,13 +162,13 @@ public final class ClientFieldGuideCobblemonCompat {
     public static void playPokemonCry(Entity entity) {
         if (entity instanceof PokemonEntity pokemonEntity) {
             String speciesName = pokemonEntity.getPokemon().getSpecies().getResourceIdentifier().getPath();
-            ResourceLocation cryId = ResourceLocation.fromNamespaceAndPath(FieldGuideCobblemonCompat.MOD_ID, "pokemon." + speciesName + ".cry");
+            Identifier cryId = Identifier.fromNamespaceAndPath(FieldGuideCobblemonCompat.MOD_ID, "pokemon." + speciesName + ".cry");
             Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(cryId), 1.0F, 1.0F));
         }
     }
 
     public static List<ItemStack> getCobblemonDrops(Object entry) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+        Identifier id = ClientFieldGuideManager.getEntryId(entry);
         if (id == null) return List.of();
 
         List<ItemStack> drops = FieldGuideCobblemonCompat.getCobblemonDropsForId(id);
@@ -176,7 +177,7 @@ public final class ClientFieldGuideCobblemonCompat {
         }
 
         String speciesName = FieldGuideCobblemonCompat.getSpeciesName(id);
-        ResourceLocation standardId = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "cobblemon/" + speciesName + "_standard");
+        Identifier standardId = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "cobblemon/" + speciesName + "_standard");
         drops = FieldGuideCobblemonCompat.getCobblemonDropsForId(standardId);
 
         if (drops != null) {
@@ -186,8 +187,8 @@ public final class ClientFieldGuideCobblemonCompat {
         return List.of();
     }
 
-    public static List<ResourceLocation> getCobblemonBiomes(Object entry) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+    public static List<Identifier> getCobblemonBiomes(Object entry) {
+        Identifier id = ClientFieldGuideManager.getEntryId(entry);
         if (id == null) return List.of();
 
         if (RESOLVED_BIOME_CACHE.containsKey(id)) {
@@ -197,13 +198,13 @@ public final class ClientFieldGuideCobblemonCompat {
         Set<String> conditions = FieldGuideCobblemonCompat.getCobblemonBiomesForId(id);
         if (conditions == null) {
             String speciesName = FieldGuideCobblemonCompat.getSpeciesName(id);
-            ResourceLocation standardId = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "cobblemon/" + speciesName + "_standard");
+            Identifier standardId = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "cobblemon/" + speciesName + "_standard");
             conditions = FieldGuideCobblemonCompat.getCobblemonBiomesForId(standardId);
         }
 
         if (conditions == null) return List.of();
 
-        List<ResourceLocation> results = new ArrayList<>();
+        List<Identifier> results = new ArrayList<>();
         var connection = Minecraft.getInstance().getConnection();
         if (connection != null) {
             var biomeRegistry = connection.registryAccess().registryOrThrow(Registries.BIOME);
@@ -217,14 +218,14 @@ public final class ClientFieldGuideCobblemonCompat {
         return results;
     }
 
-    public static boolean isCobblemonBiomeMatch(Object entry, ResourceLocation biomeId, Holder<Biome> holder) {
-        ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
+    public static boolean isCobblemonBiomeMatch(Object entry, Identifier biomeId, Holder<Biome> holder) {
+        Identifier id = ClientFieldGuideManager.getEntryId(entry);
         if (id == null) return false;
 
         Set<String> conditions = FieldGuideCobblemonCompat.getCobblemonBiomesForId(id);
         if (conditions == null) {
             String speciesName = FieldGuideCobblemonCompat.getSpeciesName(id);
-            ResourceLocation standardId = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "cobblemon/" + speciesName + "_standard");
+            Identifier standardId = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "cobblemon/" + speciesName + "_standard");
             conditions = FieldGuideCobblemonCompat.getCobblemonBiomesForId(standardId);
         }
 
@@ -233,7 +234,7 @@ public final class ClientFieldGuideCobblemonCompat {
         for (String condition : conditions) {
             if (condition.startsWith("#")) {
                 String tagPath = condition.substring(1);
-                TagKey<Biome> tagKey = TagKey.create(Registries.BIOME, ResourceLocation.parse(tagPath));
+                TagKey<Biome> tagKey = TagKey.create(Registries.BIOME, Identifier.parse(tagPath));
                 if (holder.is(tagKey)) return true;
             } else {
                 if (biomeId.toString().equals(condition) || biomeId.getPath().equals(condition)) return true;
@@ -242,4 +243,4 @@ public final class ClientFieldGuideCobblemonCompat {
 
         return false;
     }
-}
+}*/

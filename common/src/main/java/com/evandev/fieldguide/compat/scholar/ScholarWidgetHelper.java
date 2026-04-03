@@ -1,3 +1,4 @@
+/*
 package com.evandev.fieldguide.compat.scholar;
 
 import com.evandev.fieldguide.Constants;
@@ -11,10 +12,10 @@ import io.github.mortuusars.scholar.client.gui.widget.textbox.text.FormattedStri
 import io.github.mortuusars.scholar.client.gui.widget.textbox.text.Formatting;
 import io.github.mortuusars.scholar.client.util.Pos2i;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
@@ -195,7 +196,7 @@ public class ScholarWidgetHelper {
         }
 
         @Override
-        public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        public void renderWidget(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
             FormattedStringDisplayCache displayCache = this.getDisplayCache();
 
             if (!scrollable) {
@@ -254,15 +255,15 @@ public class ScholarWidgetHelper {
                 int thumbHeight = Math.max(4, (int) ((float) maxVisibleLines / totalLines * scrollbarHeight));
                 int thumbY = scrollbarY + (int) (progress * (scrollbarHeight - thumbHeight));
 
-                ResourceLocation trackSprite = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/scrollbar_track");
-                ResourceLocation thumbSprite = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "widget/scrollbar_thumb" + (isDraggingScrollbar || isScrollbarHovered(mouseX, mouseY) ? "_hovered" : ""));
+                Identifier trackSprite = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/scrollbar_track");
+                Identifier thumbSprite = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/scrollbar_thumb" + (isDraggingScrollbar || isScrollbarHovered(mouseX, mouseY) ? "_hovered" : ""));
 
                 guiGraphics.blitSprite(trackSprite, scrollbarX, scrollbarY, 4, scrollbarHeight);
                 guiGraphics.blitSprite(thumbSprite, scrollbarX, thumbY, 4, thumbHeight);
             }
         }
 
-        private void renderCursorScrollable(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick, FormattedStringEditor editor, Pos2i cursor, int color) {
+        private void renderCursorScrollable(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick, FormattedStringEditor editor, Pos2i cursor, int color) {
             if (this.isFocused() && !editor.isSelecting()) {
                 if (System.currentTimeMillis() - this.lastActionTime <= 200L || (System.currentTimeMillis() - this.lastActionTime) % 600L <= 300L) {
                     if (editor.isCursorAtEnd()) {
@@ -278,4 +279,4 @@ public class ScholarWidgetHelper {
             }
         }
     }
-}
+}*/

@@ -1,3 +1,4 @@
+/*
 package com.evandev.fieldguide.compat.exposure;
 
 import com.evandev.fieldguide.api.EntryUnlockData;
@@ -14,7 +15,7 @@ import io.github.mortuusars.exposure.world.camera.frame.EntityInFrame;
 import io.github.mortuusars.exposure.world.camera.frame.Frame;
 import io.github.mortuusars.exposure.world.item.PhotographItem;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -47,7 +48,7 @@ public class ExposureCompat {
 
         if (frame != null && frame.entitiesInFrame() != null) {
             for (EntityInFrame entityInFrame : frame.entitiesInFrame()) {
-                ResourceLocation entityId = entityInFrame.id();
+                Identifier entityId = entityInFrame.id();
                 if (entityId != null) {
                     BuiltInRegistries.ENTITY_TYPE.getOptional(entityId).ifPresent(type -> hitTargets.put(type, null));
                 }
@@ -143,7 +144,7 @@ public class ExposureCompat {
                     if (entry instanceof GuideEntry composite && composite.isComposite()) {
                         int score = 0;
                         if (composite.childEntries() != null) {
-                            for (ResourceLocation compId : composite.childEntries()) {
+                            for (Identifier compId : composite.childEntries()) {
                                 Optional<Block> blockOpt = BuiltInRegistries.BLOCK.getOptional(compId);
                                 if (blockOpt.isPresent() && hitTargets.containsKey(blockOpt.get())) score++;
 
@@ -182,7 +183,7 @@ public class ExposureCompat {
                 }
             }
 
-            ResourceLocation id = EntryResolver.getEntryId(bestMatch);
+            Identifier id = EntryResolver.getEntryId(bestMatch);
             if (id != null) {
                 progress.tryUnlock(serverPlayer, id, variantId, EntryUnlockData.UnlockTrigger.SCAN);
             }
@@ -202,4 +203,4 @@ public class ExposureCompat {
         float k = (float) Math.sin(f);
         return new Vec3((i * j), (-k), (h * j));
     }
-}
+}*/

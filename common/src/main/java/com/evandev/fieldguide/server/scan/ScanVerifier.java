@@ -1,13 +1,11 @@
 package com.evandev.fieldguide.server.scan;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.entry.EntryResolver;
-import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -17,8 +15,8 @@ import net.minecraft.world.level.block.Block;
 
 public class ScanVerifier {
 
-    public static boolean verifyScan(ServerPlayer player, ResourceLocation entryId,
-                                     ResourceLocation scannedTargetId, BlockPos targetBlockPos, int targetEntityId) {
+    public static boolean verifyScan(ServerPlayer player, Identifier entryId,
+                                     Identifier scannedTargetId, BlockPos targetBlockPos, int targetEntityId) {
         ServerConfig config = ServerConfig.get();
 
         if (config.disableScanning) return false;
@@ -37,7 +35,7 @@ public class ScanVerifier {
         double maxDistSq = activeScanDist * activeScanDist;
         ServerLevel level = player.serverLevel();
 
-        ResourceLocation categoryId = ServerFieldGuideManager.getInstance().getCategoryForEntryId(entryId);
+        Identifier categoryId = ServerFieldGuideManager.getInstance().getCategoryForEntryId(entryId);
         if (categoryId == null) {
             return false;
         }
@@ -45,16 +43,16 @@ public class ScanVerifier {
         if (targetEntityId != 0) {
             Entity entity = level.getEntity(targetEntityId);
 
-            if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
+           /* if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
                 if (entity.isSpectator() || player.distanceToSqr(entity) > maxDistSq) {
                     return false;
                 }
 
-                ResourceLocation pokemonEntryId = FieldGuideCobblemonCompat.getPokemonEntryId(entity);
+                Identifier pokemonEntryId = FieldGuideCobblemonCompat.getPokemonEntryId(entity);
                 if (targetBelongsToEntry(pokemonEntryId, entryId)) return true;
 
                 return FieldGuideCobblemonCompat.getSpeciesName(pokemonEntryId).equals(FieldGuideCobblemonCompat.getSpeciesName(entryId));
-            }
+            }*/
 
             if (!verifyEntityPresence(player, scannedTargetId, targetEntityId, level, maxDistSq, categoryId)) {
                 return false;
@@ -74,8 +72,8 @@ public class ScanVerifier {
         return belongs;
     }
 
-    private static boolean verifyEntityPresence(ServerPlayer player, ResourceLocation scannedTargetId,
-                                                int entityId, ServerLevel level, double maxDistSq, ResourceLocation categoryId) {
+    private static boolean verifyEntityPresence(ServerPlayer player, Identifier scannedTargetId,
+                                                int entityId, ServerLevel level, double maxDistSq, Identifier categoryId) {
         Entity entity = level.getEntity(entityId);
         if (entity == null || entity.isSpectator()) return false;
         if (player.distanceToSqr(entity) > maxDistSq) return false;
@@ -83,18 +81,18 @@ public class ScanVerifier {
         if (entity instanceof ItemEntity itemEntity) {
             Item item = itemEntity.getItem().getItem();
             if (!EntryResolver.isValidItem(item, categoryId)) return false;
-            ResourceLocation actualItemId = EntryResolver.getEntryId(item, true);
+            Identifier actualItemId = EntryResolver.getEntryId(item, true);
             return actualItemId.equals(scannedTargetId);
         }
 
         if (!EntryResolver.isValidEntity(entity.getType(), categoryId)) return false;
 
-        ResourceLocation actualTypeId = EntryResolver.getEntryId(entity.getType(), true);
+        Identifier actualTypeId = EntryResolver.getEntryId(entity.getType(), true);
         return actualTypeId.equals(scannedTargetId);
     }
 
-    private static boolean verifyBlockPresence(ServerPlayer player, ResourceLocation scannedTargetId,
-                                               BlockPos blockPos, ServerLevel level, double maxDistSq, ResourceLocation categoryId) {
+    private static boolean verifyBlockPresence(ServerPlayer player, Identifier scannedTargetId,
+                                               BlockPos blockPos, ServerLevel level, double maxDistSq, Identifier categoryId) {
         if (!level.isLoaded(blockPos)) {
             Constants.LOG.warn("verifyBlockPresence failed: Block at {} is not loaded.", blockPos);
             return false;
@@ -112,8 +110,8 @@ public class ScanVerifier {
             return false;
         }
 
-        ResourceLocation actualBlockId = EntryResolver.getEntryId(block, true);
-        ResourceLocation rawBlockId = EntryResolver.getEntryId(block, false);
+        Identifier actualBlockId = EntryResolver.getEntryId(block, true);
+        Identifier rawBlockId = EntryResolver.getEntryId(block, false);
 
         boolean idMatches = actualBlockId.equals(scannedTargetId)
                 || rawBlockId.equals(scannedTargetId);
@@ -125,14 +123,14 @@ public class ScanVerifier {
         return idMatches;
     }
 
-    private static boolean targetBelongsToEntry(ResourceLocation scannedTargetId, ResourceLocation entryId) {
+    private static boolean targetBelongsToEntry(Identifier scannedTargetId, Identifier entryId) {
         if (scannedTargetId.equals(entryId)) return true;
 
-        ResourceLocation rawScannedId = EntryResolver.getRawId(scannedTargetId);
-        ResourceLocation rawEntryId = EntryResolver.getRawId(entryId);
+        Identifier rawScannedId = EntryResolver.getRawId(scannedTargetId);
+        Identifier rawEntryId = EntryResolver.getRawId(entryId);
 
         if (rawScannedId != null && rawScannedId.equals(rawEntryId)) return true;
-        ResourceLocation redirected = ServerFieldGuideManager.getInstance().getRedirects().get(scannedTargetId);
+        Identifier redirected = ServerFieldGuideManager.getInstance().getRedirects().get(scannedTargetId);
 
         if (redirected == null && rawScannedId != null) {
             redirected = ServerFieldGuideManager.getInstance().getRedirects().get(rawScannedId);

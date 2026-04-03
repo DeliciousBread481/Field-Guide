@@ -8,17 +8,17 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.animal.Sheep;
-import net.minecraft.world.entity.animal.horse.Horse;
-import net.minecraft.world.entity.animal.horse.Llama;
-import net.minecraft.world.entity.animal.horse.Variant;
-import net.minecraft.world.entity.npc.VillagerData;
-import net.minecraft.world.entity.npc.VillagerDataHolder;
-import net.minecraft.world.entity.npc.VillagerType;
+import net.minecraft.world.entity.animal.equine.Horse;
+import net.minecraft.world.entity.animal.equine.Llama;
+import net.minecraft.world.entity.animal.equine.Variant;
+import net.minecraft.world.entity.animal.sheep.Sheep;
+import net.minecraft.world.entity.npc.villager.VillagerData;
+import net.minecraft.world.entity.npc.villager.VillagerDataHolder;
+import net.minecraft.world.entity.npc.villager.VillagerType;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.Level;
 
@@ -31,7 +31,7 @@ public class FieldGuideVariantManager {
     private static final Map<Class<?>, VariantProvider<?>> PROVIDERS = new HashMap<>();
     private static final Map<String, List<VariantDef>> VARIANT_CACHE = new HashMap<>();
     private static final Map<String, List<VariantDef>> ENTITY_TYPE_VARIANT_CACHE = new HashMap<>();
-    private static final Map<ResourceLocation, List<DatapackVariant>> DATAPACK_VARIANTS = new HashMap<>();
+    private static final Map<Identifier, List<DatapackVariant>> DATAPACK_VARIANTS = new HashMap<>();
     private static final Set<Class<?>> FAILED_REFLECTION = new HashSet<>();
 
     static {
@@ -102,6 +102,7 @@ public class FieldGuideVariantManager {
         });
     }
 
+    @SuppressWarnings("unchecked")
     public static <T extends Mob> void registerProvider(Class<T> entityClass, VariantProvider<T> provider) {
         if (PROVIDERS.containsKey(entityClass)) {
             VariantProvider<T> existing = (VariantProvider<T>) PROVIDERS.get(entityClass);
@@ -117,7 +118,7 @@ public class FieldGuideVariantManager {
         }
     }
 
-    public static void setDatapackVariants(Map<ResourceLocation, List<DatapackVariant>> variants) {
+    public static void setDatapackVariants(Map<Identifier, List<DatapackVariant>> variants) {
         DATAPACK_VARIANTS.clear();
 
         variants.forEach((entityId, datapackVariants) -> {
@@ -146,7 +147,7 @@ public class FieldGuideVariantManager {
     public static <T extends Mob> VariantProvider<T> getProvider(Entity entity) {
         if (!(entity instanceof Mob mob)) return null;
 
-        ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
+        Identifier entityId = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
 
         if (DATAPACK_VARIANTS.containsKey(entityId)) {
             return (VariantProvider<T>) getDatapackProvider(entityId);
@@ -250,7 +251,7 @@ public class FieldGuideVariantManager {
         return Component.literal(name);
     }
 
-    private static VariantProvider<Mob> getDatapackProvider(ResourceLocation entityId) {
+    private static VariantProvider<Mob> getDatapackProvider(Identifier entityId) {
         List<DatapackVariant> variants = DATAPACK_VARIANTS.get(entityId);
         if (variants == null) return null;
         return new VariantProvider<>() {
@@ -311,7 +312,7 @@ public class FieldGuideVariantManager {
             public VariantDef getCurrent(Mob entity) {
                 if (entity instanceof VillagerDataHolder holder) {
                     VillagerType type = holder.getVillagerData().getType();
-                    ResourceLocation id = BuiltInRegistries.VILLAGER_TYPE.getKey(type);
+                    Identifier id = BuiltInRegistries.VILLAGER_TYPE.getKey(type);
                     return new VariantDef(id.toString(), type);
                 }
                 return new VariantDef("default", null);

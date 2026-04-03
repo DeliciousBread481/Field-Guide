@@ -1,3 +1,4 @@
+/*
 package com.evandev.fieldguide.compat.mixedlitter;
 
 import com.evandev.fieldguide.api.variant.VariantDef;
@@ -11,7 +12,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
@@ -22,7 +23,7 @@ import java.util.List;
 
 public class MixedLitterCompat {
 
-    private static boolean isForEntity(ResourceLocation id, String entityPath) {
+    private static boolean isForEntity(Identifier id, String entityPath) {
         if (id == null) return false;
         String path = id.getPath().toLowerCase();
 
@@ -49,12 +50,12 @@ public class MixedLitterCompat {
             List<Variant> selected = new ArrayList<>();
             for (Holder<VariantGroup> groupHolder : groupRegistry.holders().toList()) {
                 VariantGroup group = groupHolder.value();
-                ResourceLocation groupId = groupRegistry.getKey(group);
+                Identifier groupId = groupRegistry.getKey(group);
                 if (groupId == null) continue;
 
                 List<Variant> matching = new ArrayList<>();
 
-                for (ResourceLocation id : variantRegistry.keySet()) {
+                for (Identifier id : variantRegistry.keySet()) {
                     Variant variant = variantRegistry.get(id);
                     if (variant != null && variant.group().isPresent() && variant.group().get().equals(groupId)) {
                         if (isForEntity(id, entityPath) || isForEntity(groupId, entityPath)) {
@@ -68,7 +69,7 @@ public class MixedLitterCompat {
                 }
             }
 
-            for (ResourceLocation id : variantRegistry.keySet()) {
+            for (Identifier id : variantRegistry.keySet()) {
                 Variant variant = variantRegistry.get(id);
                 if (variant != null && variant.group().isEmpty()) {
                     if (isForEntity(id, entityPath)) {
@@ -91,10 +92,10 @@ public class MixedLitterCompat {
             Registry<VariantGroup> groupRegistry = entity.registryAccess().registryOrThrow(MLRegistries.VARIANT_GROUP_KEY);
             String entityPath = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).getPath();
 
-            List<ResourceLocation> sortedKeys = new ArrayList<>(variantRegistry.keySet());
+            List<Identifier> sortedKeys = new ArrayList<>(variantRegistry.keySet());
             Collections.sort(sortedKeys);
 
-            for (ResourceLocation id : sortedKeys) {
+            for (Identifier id : sortedKeys) {
                 Variant variant = variantRegistry.get(id);
                 if (variant == null) continue;
 
@@ -114,16 +115,16 @@ public class MixedLitterCompat {
 
     public static void applyVariant(Entity entity, VariantDef def) {
         switch (def.value()) {
-            case ResourceLocation newVariantId -> {
+            case Identifier newVariantId -> {
                 try {
                     Registry<Variant> variantRegistry = entity.registryAccess().registryOrThrow(MLRegistries.VARIANT_KEY);
                     Variant newVariant = variantRegistry.get(newVariantId);
                     if (newVariant == null) return;
 
-                    List<ResourceLocation> currentIds = new ArrayList<>(entity.getData(MLDataAttachmentTypes.VARIANTS.get()));
+                    List<Identifier> currentIds = new ArrayList<>(entity.getData(MLDataAttachmentTypes.VARIANTS.get()));
 
                     if (newVariant.group().isPresent()) {
-                        ResourceLocation newGroup = newVariant.group().get();
+                        Identifier newGroup = newVariant.group().get();
                         currentIds.removeIf(id -> {
                             Variant v = variantRegistry.get(id);
                             return v != null && v.group().isPresent() && v.group().get().equals(newGroup);
@@ -158,9 +159,9 @@ public class MixedLitterCompat {
 
     public static VariantDef getCurrentVariant(Entity entity) {
         try {
-            List<ResourceLocation> variants = entity.getData(MLDataAttachmentTypes.VARIANTS.get());
+            List<Identifier> variants = entity.getData(MLDataAttachmentTypes.VARIANTS.get());
             if (!variants.isEmpty()) {
-                ResourceLocation id = variants.getLast();
+                Identifier id = variants.getLast();
                 return new VariantDef(id.toString(), id);
             }
         } catch (Exception ignored) {
@@ -186,8 +187,8 @@ public class MixedLitterCompat {
 
         @Override
         public String getCacheKey(Mob entity) {
-            ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
+            Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
             return id + "_mixed_litter";
         }
     }
-}
+}*/

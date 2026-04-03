@@ -3,21 +3,21 @@ package com.evandev.fieldguide.api;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Objects;
 
 public record GuideEntry(
-        ResourceLocation id,
-        @Nullable ResourceLocation displayId,
-        @Nullable ResourceLocation icon,
+        Identifier id,
+        @Nullable Identifier displayId,
+        @Nullable Identifier icon,
         EntryKind kind,
         boolean virtual,
         boolean autoPopulate,
         @Nullable String strategy,
-        @Nullable List<ResourceLocation> childEntries,
+        @Nullable List<Identifier> childEntries,
         @Nullable StructureData structureData,
         @Nullable VirtualData virtualData,
         EntryUnlockData unlockData
@@ -25,21 +25,21 @@ public record GuideEntry(
 
     public static final StreamCodec<RegistryFriendlyByteBuf, GuideEntry> STREAM_CODEC = StreamCodec.of(
             (buf, entry) -> {
-                buf.writeResourceLocation(entry.id());
-                buf.writeNullable(entry.displayId(), FriendlyByteBuf::writeResourceLocation);
-                buf.writeNullable(entry.icon(), FriendlyByteBuf::writeResourceLocation);
+                buf.writeIdentifier(entry.id());
+                buf.writeNullable(entry.displayId(), FriendlyByteBuf::writeIdentifier);
+                buf.writeNullable(entry.icon(), FriendlyByteBuf::writeIdentifier);
                 buf.writeEnum(entry.kind());
                 buf.writeBoolean(entry.virtual());
                 buf.writeBoolean(entry.autoPopulate());
                 buf.writeNullable(entry.strategy(), FriendlyByteBuf::writeUtf);
 
                 buf.writeNullable(entry.childEntries(), (nb, comps) -> {
-                    List<ResourceLocation> safeComps = comps.stream().filter(Objects::nonNull).toList();
-                    nb.writeCollection(safeComps, FriendlyByteBuf::writeResourceLocation);
+                    List<Identifier> safeComps = comps.stream().filter(Objects::nonNull).toList();
+                    nb.writeCollection(safeComps, FriendlyByteBuf::writeIdentifier);
                 });
 
                 buf.writeNullable(entry.structureData(), (nb, data) -> {
-                    nb.writeNullable(data.structureNbt(), FriendlyByteBuf::writeResourceLocation);
+                    nb.writeNullable(data.structureNbt(), FriendlyByteBuf::writeIdentifier);
                     nb.writeCollection(data.stackedBlocks() != null ? data.stackedBlocks() : List.of(), FriendlyByteBuf::writeUtf);
                 });
 
@@ -51,16 +51,16 @@ public record GuideEntry(
                 EntryUnlockData.STREAM_CODEC.encode(buf, safeUnlockData);
             },
             buf -> new GuideEntry(
-                    buf.readResourceLocation(),
-                    buf.readNullable(FriendlyByteBuf::readResourceLocation),
-                    buf.readNullable(FriendlyByteBuf::readResourceLocation),
+                    buf.readIdentifier(),
+                    buf.readNullable(FriendlyByteBuf::readIdentifier),
+                    buf.readNullable(FriendlyByteBuf::readIdentifier),
                     buf.readEnum(EntryKind.class),
                     buf.readBoolean(),
                     buf.readBoolean(),
                     buf.readNullable(FriendlyByteBuf::readUtf),
-                    buf.readNullable(nb -> nb.readList(FriendlyByteBuf::readResourceLocation)),
+                    buf.readNullable(nb -> nb.readList(FriendlyByteBuf::readIdentifier)),
                     buf.readNullable(nb -> new StructureData(
-                            nb.readNullable(FriendlyByteBuf::readResourceLocation),
+                            nb.readNullable(FriendlyByteBuf::readIdentifier),
                             nb.readList(FriendlyByteBuf::readUtf)
                     )),
                     buf.readNullable(nb -> new VirtualData(nb.readUtf())),

@@ -22,7 +22,7 @@ import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -152,7 +152,7 @@ public class ScanOverlayRenderer {
                                 if (hDist > 6 || vDist > 32) continue;
 
                                 boolean isHorizontal = dx != 0 || dz != 0;
-                                ResourceLocation neighborId = BuiltInRegistries.BLOCK.getKey(mc.level.getBlockState(neighbor).getBlock());
+                                Identifier neighborId = BuiltInRegistries.BLOCK.getKey(mc.level.getBlockState(neighbor).getBlock());
 
                                 if (isHorizontal && (composite.childEntries() == null || !composite.childEntries().contains(neighborId)))
                                     continue;

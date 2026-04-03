@@ -6,11 +6,11 @@ import com.evandev.fieldguide.client.gui.util.IconCacheManager;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 public class ExportContentPacket implements CustomPacketPayload {
-    public static final Type<ExportContentPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "export_content"));
+    public static final Type<ExportContentPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "export_content"));
     public static final StreamCodec<RegistryFriendlyByteBuf, ExportContentPacket> CODEC = StreamCodec.ofMember(ExportContentPacket::encode, ExportContentPacket::new);
 
     private final String type;

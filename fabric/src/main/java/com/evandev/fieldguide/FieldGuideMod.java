@@ -23,7 +23,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -70,8 +70,8 @@ public class FieldGuideMod implements ModInitializer {
 
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(new IdentifiableResourceReloadListener() {
             @Override
-            public ResourceLocation getFabricId() {
-                return ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "server_data");
+            public Identifier getFabricId() {
+                return Identifier.fromNamespaceAndPath(Constants.MOD_ID, "server_data");
             }
 
             @Override
@@ -134,7 +134,7 @@ public class FieldGuideMod implements ModInitializer {
                     FieldGuideTriggers.SCAN_AND_KILL.get().trigger(player, killedEntity);
                 }
 
-                ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(killedEntity.getType());
+                Identifier entityId = BuiltInRegistries.ENTITY_TYPE.getKey(killedEntity.getType());
                 PlayerFieldGuideProgress progress = manager.getProgress(player);
 
                 if (progress != null) {

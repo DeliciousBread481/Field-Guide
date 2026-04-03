@@ -7,7 +7,7 @@ import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 
@@ -16,7 +16,7 @@ import java.util.List;
 
 public class UpdateJournalPacket implements CustomPacketPayload {
 
-    public static final Type<UpdateJournalPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "update_journal"));
+    public static final Type<UpdateJournalPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "update_journal"));
     private static final int MAX_TITLE_LENGTH = FieldGuideLimits.MAX_JOURNAL_TITLE_LENGTH;
     private static final int MAX_PAGE_CONTENT_LENGTH = FieldGuideLimits.MAX_JOURNAL_PAGE_CONTENT_LENGTH;
     private static final int MAX_JOURNAL_PAGES = FieldGuideLimits.MAX_JOURNAL_PAGES;

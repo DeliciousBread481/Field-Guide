@@ -3,11 +3,10 @@ package com.evandev.fieldguide.client.manager;
 import com.evandev.fieldguide.ModDataComponents;
 import com.evandev.fieldguide.api.AutoPopulateRegistry;
 import com.evandev.fieldguide.api.GuideEntry;
-import com.evandev.fieldguide.compat.cobblemon.ClientFieldGuideCobblemonCompat;
 import com.evandev.fieldguide.network.RequestLootPacket;
 import com.evandev.fieldguide.platform.Services;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.*;
@@ -16,8 +15,8 @@ public class ClientLootManager {
     private static final ClientLootManager INSTANCE = new ClientLootManager();
 
     private final Map<Object, List<ItemStack>> dropCache = new HashMap<>();
-    private final Map<String, Set<ResourceLocation>> dropIndex = new HashMap<>();
-    private final Set<ResourceLocation> requestedIds = new HashSet<>();
+    private final Map<String, Set<Identifier>> dropIndex = new HashMap<>();
+    private final Set<Identifier> requestedIds = new HashSet<>();
 
     private ClientLootManager() {
     }
@@ -32,14 +31,14 @@ public class ClientLootManager {
         this.requestedIds.clear();
     }
 
-    public void updateLootCache(Map<ResourceLocation, List<ItemStack>> lootCache, boolean clearCache) {
+    public void updateLootCache(Map<Identifier, List<ItemStack>> lootCache, boolean clearCache) {
         if (clearCache) {
             this.clear();
         }
 
         if (lootCache != null) {
-            for (Map.Entry<ResourceLocation, List<ItemStack>> entry : lootCache.entrySet()) {
-                ResourceLocation id = entry.getKey();
+            for (Map.Entry<Identifier, List<ItemStack>> entry : lootCache.entrySet()) {
+                Identifier id = entry.getKey();
                 List<ItemStack> drops = entry.getValue();
                 dropCache.put(id, drops);
 
@@ -54,14 +53,14 @@ public class ClientLootManager {
     }
 
     public List<Object> getEntriesDropping(String dropName, boolean exact) {
-        Set<ResourceLocation> matchedIds = new HashSet<>();
+        Set<Identifier> matchedIds = new HashSet<>();
         String query = dropName.toLowerCase(Locale.ROOT);
 
         if (exact) {
-            Set<ResourceLocation> ids = dropIndex.get(query);
+            Set<Identifier> ids = dropIndex.get(query);
             if (ids != null) matchedIds.addAll(ids);
         } else {
-            for (Map.Entry<String, Set<ResourceLocation>> entry : dropIndex.entrySet()) {
+            for (Map.Entry<String, Set<Identifier>> entry : dropIndex.entrySet()) {
                 if (entry.getKey().contains(query)) {
                     matchedIds.addAll(entry.getValue());
                 }
@@ -70,13 +69,13 @@ public class ClientLootManager {
 
         Set<Object> uniqueResults = new LinkedHashSet<>();
         ClientCategoryManager categoryManager = ClientCategoryManager.getInstance();
-        for (ResourceLocation id : matchedIds) {
+        for (Identifier id : matchedIds) {
             uniqueResults.addAll(categoryManager.getEntriesForTarget(id));
         }
         return new ArrayList<>(uniqueResults);
     }
 
-    public void requestLoot(ResourceLocation entryId) {
+    public void requestLoot(Identifier entryId) {
         if (entryId != null && !requestedIds.contains(entryId)) {
             List<ItemStack> diskDrops = ClientCacheManager.loadDrops(entryId);
             if (diskDrops != null) {
@@ -102,14 +101,14 @@ public class ClientLootManager {
                 BuiltInRegistries.ENTITY_TYPE.getOptional(ge.displayId()).ifPresent(uniqueComponents::add);
             }
             if (ge.childEntries() != null) {
-                for (ResourceLocation compId : ge.childEntries()) {
+                for (Identifier compId : ge.childEntries()) {
                     BuiltInRegistries.BLOCK.getOptional(compId).ifPresent(uniqueComponents::add);
                     BuiltInRegistries.ITEM.getOptional(compId).ifPresent(uniqueComponents::add);
                     BuiltInRegistries.ENTITY_TYPE.getOptional(compId).ifPresent(uniqueComponents::add);
                 }
             }
             for (Object comp : uniqueComponents) {
-                ResourceLocation id = AutoPopulateRegistry.getEntryId(comp, true);
+                Identifier id = AutoPopulateRegistry.getEntryId(comp, true);
                 if (id != null) {
                     if (dropCache.containsKey(id)) {
                         rawDrops.addAll(dropCache.get(id));
@@ -119,7 +118,7 @@ public class ClientLootManager {
                 }
             }
         } else {
-            ResourceLocation id = AutoPopulateRegistry.getEntryId(entry, true);
+            Identifier id = AutoPopulateRegistry.getEntryId(entry, true);
             if (id != null) {
                 if (dropCache.containsKey(id)) {
                     rawDrops.addAll(dropCache.get(id));
@@ -129,9 +128,9 @@ public class ClientLootManager {
             }
         }
 
-        if (Services.PLATFORM.isModLoaded("cobblemon")) {
+/*        if (Services.PLATFORM.isModLoaded("cobblemon")) {
             rawDrops.addAll(ClientFieldGuideCobblemonCompat.getCobblemonDrops(entry));
-        }
+        }*/
 
         List<ItemStack> distinct = new ArrayList<>();
         for (ItemStack stack : rawDrops) {

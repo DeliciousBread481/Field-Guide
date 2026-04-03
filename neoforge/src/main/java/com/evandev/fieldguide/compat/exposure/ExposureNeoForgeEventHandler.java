@@ -1,3 +1,4 @@
+/*
 package com.evandev.fieldguide.compat.exposure;
 
 import io.github.mortuusars.exposure.neoforge.api.event.FrameAddedEvent;
@@ -12,4 +13,4 @@ public class ExposureNeoForgeEventHandler {
             ExposureCompat.onPhotographTaken(player, event.getFrame());
         }
     }
-}
+}*/

@@ -4,7 +4,6 @@ import com.evandev.fieldguide.ModTags;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
 import com.evandev.fieldguide.client.progress.ProgressManager;
-import com.evandev.fieldguide.compat.cobblemon.FieldGuideCobblemonCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.entry.EntryResolver;
@@ -14,7 +13,7 @@ import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
@@ -102,15 +101,15 @@ public class FieldGuideScanManager {
             BlockPos posContext = (foundTarget instanceof Block) ? blockHit.getBlockPos() : ((Entity) foundTarget).blockPosition();
             Object baseTarget = foundTarget;
             if (foundTarget instanceof Entity entity) {
-                baseTarget = (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity))
+                baseTarget = /*(Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity))
                         ? FieldGuideCobblemonCompat.getPokemonEntryId(entity)
-                        : entity.getType();
+                        :*/ entity.getType();
             }
             targetKey = FieldGuideRaytracer.getInstance().getContextAwareEntry(baseTarget, minecraft, posContext);
             if (targetKey == null) targetKey = baseTarget;
         }
 
-        ResourceLocation entryId = ClientFieldGuideManager.getEntryId(targetKey);
+        Identifier entryId = ClientFieldGuideManager.getEntryId(targetKey);
 
         if (entryId != null && !ProgressManager.getInstance().canScanToUnlock(entryId)) {
             state.setOutOfRangeTarget(null);
@@ -158,11 +157,11 @@ public class FieldGuideScanManager {
 
     public void completeScan(Minecraft minecraft, Object targetKey, Object foundTarget) {
         FieldGuideScanState state = FieldGuideScanState.getInstance();
-        ResourceLocation targetId = ClientFieldGuideManager.getEntryId(targetKey);
+        Identifier targetId = ClientFieldGuideManager.getEntryId(targetKey);
         if (targetId != null) {
-            ResourceLocation redirectId = ClientFieldGuideManager.getInstance().getRedirect(targetId);
+            Identifier redirectId = ClientFieldGuideManager.getInstance().getRedirect(targetId);
             if (redirectId != null) {
-                ResourceLocation rawRedirectId = EntryResolver.getRawId(redirectId);
+                Identifier rawRedirectId = EntryResolver.getRawId(redirectId);
 
                 Object newTargetKey = BuiltInRegistries.ENTITY_TYPE.getOptional(rawRedirectId)
                         .map(Object.class::cast)
@@ -181,9 +180,9 @@ public class FieldGuideScanManager {
             Objects.requireNonNull(minecraft.player).playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 0.25F, 1.0F);
         }
 
-        ResourceLocation entryId = ClientFieldGuideManager.getEntryId(targetKey);
+        Identifier entryId = ClientFieldGuideManager.getEntryId(targetKey);
         if (entryId != null) {
-            ResourceLocation scannedTargetId;
+            Identifier scannedTargetId;
             String variantId = "";
 
             if (foundTarget instanceof Entity entity) {

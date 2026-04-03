@@ -4,7 +4,7 @@ import com.evandev.fieldguide.Constants;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,39 +13,39 @@ public class Category {
 
     public static final StreamCodec<RegistryFriendlyByteBuf, Category> STREAM_CODEC = StreamCodec.of(
             (buf, cat) -> {
-                buf.writeResourceLocation(cat.getId());
+                buf.writeIdentifier(cat.getId());
                 buf.writeInt(cat.getSortIndex());
-                buf.writeNullable(cat.getIcon(), FriendlyByteBuf::writeResourceLocation);
+                buf.writeNullable(cat.getIcon(), FriendlyByteBuf::writeIdentifier);
                 buf.writeCollection(cat.getGroupByQueries() != null ? cat.getGroupByQueries() : List.of(), FriendlyByteBuf::writeUtf);
-                buf.writeCollection(cat.getEntryIds() != null ? cat.getEntryIds() : List.of(), FriendlyByteBuf::writeResourceLocation);
+                buf.writeCollection(cat.getEntryIds() != null ? cat.getEntryIds() : List.of(), FriendlyByteBuf::writeIdentifier);
             },
             buf -> {
-                Category cat = new Category(buf.readResourceLocation());
+                Category cat = new Category(buf.readIdentifier());
                 cat.setSortIndex(buf.readInt());
 
-                ResourceLocation icon = buf.readNullable(FriendlyByteBuf::readResourceLocation);
+                Identifier icon = buf.readNullable(FriendlyByteBuf::readIdentifier);
                 if (icon != null) {
                     cat.setIcon(icon);
                 }
 
                 cat.setGroupByQueries(buf.readList(FriendlyByteBuf::readUtf));
-                buf.readList(FriendlyByteBuf::readResourceLocation).forEach(cat::addEntryId);
+                buf.readList(FriendlyByteBuf::readIdentifier).forEach(cat::addEntryId);
 
                 return cat;
             }
     );
 
-    private final ResourceLocation id;
-    private final List<ResourceLocation> entryIds = new ArrayList<>();
+    private final Identifier id;
+    private final List<Identifier> entryIds = new ArrayList<>();
     private List<String> groupByQueries = new ArrayList<>();
     private int sortIndex = 0;
-    private ResourceLocation icon = Constants.DEFAULT_ICON;
+    private Identifier icon = Constants.DEFAULT_ICON;
 
-    public Category(ResourceLocation id) {
+    public Category(Identifier id) {
         this.id = id;
     }
 
-    public ResourceLocation getId() {
+    public Identifier getId() {
         return id;
     }
 
@@ -61,19 +61,19 @@ public class Category {
         this.sortIndex = sortIndex;
     }
 
-    public List<ResourceLocation> getEntryIds() {
+    public List<Identifier> getEntryIds() {
         return entryIds;
     }
 
-    public void addEntryId(ResourceLocation entryId) {
+    public void addEntryId(Identifier entryId) {
         this.entryIds.add(entryId);
     }
 
-    public ResourceLocation getIcon() {
+    public Identifier getIcon() {
         return icon;
     }
 
-    public void setIcon(ResourceLocation icon) {
+    public void setIcon(Identifier icon) {
         this.icon = icon;
     }
 

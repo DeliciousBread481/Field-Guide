@@ -7,7 +7,7 @@ import com.evandev.fieldguide.network.ProgressUpdatePacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.google.gson.*;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.io.BufferedReader;
@@ -54,7 +54,7 @@ public class PlayerFieldGuideProgress {
     }
 
     public void checkDefaultUnlocks(ServerPlayer player) {
-        for (ResourceLocation entryId : ServerFieldGuideManager.getInstance().getAllEntryIds()) {
+        for (Identifier entryId : ServerFieldGuideManager.getInstance().getAllEntryIds()) {
             EntryUnlockData unlockData = ServerFieldGuideManager.getInstance().getUnlockData(entryId);
             if (unlockData.unlockedByDefault() && canUnlock(entryId)) {
                 unlock(player, entryId, null, false);
@@ -62,22 +62,22 @@ public class PlayerFieldGuideProgress {
         }
     }
 
-    public boolean canUnlock(ResourceLocation entryId) {
+    public boolean canUnlock(Identifier entryId) {
         EntryUnlockData unlockData = ServerFieldGuideManager.getInstance().getUnlockData(entryId);
-        for (ResourceLocation prereq : unlockData.prerequisites()) {
+        for (Identifier prereq : unlockData.prerequisites()) {
             if (!isUnlocked(prereq)) return false;
         }
         return true;
     }
 
-    public void tryUnlock(ServerPlayer player, ResourceLocation triggeredId, String variantId, EntryUnlockData.UnlockTrigger trigger) {
+    public void tryUnlock(ServerPlayer player, Identifier triggeredId, String variantId, EntryUnlockData.UnlockTrigger trigger) {
         tryUnlockDirect(player, triggeredId, variantId, trigger);
-        for (ResourceLocation entryId : ServerFieldGuideManager.getInstance().getEntriesTriggeredBy(triggeredId)) {
+        for (Identifier entryId : ServerFieldGuideManager.getInstance().getEntriesTriggeredBy(triggeredId)) {
             tryUnlockDirect(player, entryId, null, trigger);
         }
     }
 
-    private void tryUnlockDirect(ServerPlayer player, ResourceLocation entryId, String variantId, EntryUnlockData.UnlockTrigger trigger) {
+    private void tryUnlockDirect(ServerPlayer player, Identifier entryId, String variantId, EntryUnlockData.UnlockTrigger trigger) {
         if (!ServerFieldGuideManager.getInstance().hasEntry(entryId)) return;
 
         if (isUnlocked(entryId)) {
@@ -97,7 +97,7 @@ public class PlayerFieldGuideProgress {
         }
     }
 
-    public void unlock(ServerPlayer player, ResourceLocation entryId, String variantId, boolean grantXp) {
+    public void unlock(ServerPlayer player, Identifier entryId, String variantId, boolean grantXp) {
         String id = entryId.toString();
         boolean newlyUnlocked = false;
 
@@ -110,9 +110,9 @@ public class PlayerFieldGuideProgress {
             UnlockRewards.grant(player, entryId, grantXp);
             FieldGuideTriggers.ENTRY_UNLOCKED.get().trigger(player, entryId);
 
-            ResourceLocation categoryId = ServerFieldGuideManager.getInstance().getCategoryForEntryId(entryId);
+            Identifier categoryId = ServerFieldGuideManager.getInstance().getCategoryForEntryId(entryId);
             if (categoryId != null) {
-                Set<ResourceLocation> categoryEntries = ServerFieldGuideManager.getInstance().getEntryIdsForCategory(categoryId);
+                Set<Identifier> categoryEntries = ServerFieldGuideManager.getInstance().getEntryIdsForCategory(categoryId);
                 if (!categoryEntries.isEmpty() && categoryEntries.stream().allMatch(e -> isUnlocked(e.toString()))) {
                     FieldGuideTriggers.CATEGORY_COMPLETED.get().trigger(player, categoryId);
                 }
@@ -248,7 +248,7 @@ public class PlayerFieldGuideProgress {
         dirty = true;
     }
 
-    public boolean revoke(ResourceLocation entryId) {
+    public boolean revoke(Identifier entryId) {
         return revoke(entryId.toString());
     }
 
@@ -280,15 +280,15 @@ public class PlayerFieldGuideProgress {
     public boolean isUnlocked(String entryId) {
         if (unlockedEntries.contains(entryId)) return true;
         try {
-            ResourceLocation id = ResourceLocation.parse(entryId);
-            ResourceLocation rawId = EntryResolver.getRawId(id);
+            Identifier id = Identifier.parse(entryId);
+            Identifier rawId = EntryResolver.getRawId(id);
             return unlockedEntries.contains(rawId.toString());
         } catch (Exception e) {
             return false;
         }
     }
 
-    public boolean isUnlocked(ResourceLocation entryId) {
+    public boolean isUnlocked(Identifier entryId) {
         return isUnlocked(entryId.toString());
     }
 
@@ -341,7 +341,7 @@ public class PlayerFieldGuideProgress {
         int iterations = Math.max(1, allUnlocked.size());
 
         Map<String, List<String>> allTriggers = new HashMap<>();
-        for (ResourceLocation resId : ServerFieldGuideManager.getInstance().getAllEntryIds()) {
+        for (Identifier resId : ServerFieldGuideManager.getInstance().getAllEntryIds()) {
             EntryUnlockData unlockData = ServerFieldGuideManager.getInstance().getUnlockData(resId);
             List<String> triggers = unlockData.triggers().stream()
                     .map(Enum::name)
@@ -386,11 +386,11 @@ public class PlayerFieldGuideProgress {
                             .selectedVariants(variants)
                             .killedOnly(ServerFieldGuideManager.getInstance().getAllEntryIds().stream()
                                     .filter(id -> ServerFieldGuideManager.getInstance().getUnlockData(id).triggers().contains(EntryUnlockData.UnlockTrigger.KILL))
-                                    .map(ResourceLocation::toString)
+                                    .map(Identifier::toString)
                                     .toList())
                             .eatenOnly(ServerFieldGuideManager.getInstance().getAllEntryIds().stream()
                                     .filter(id -> ServerFieldGuideManager.getInstance().getUnlockData(id).triggers().contains(EntryUnlockData.UnlockTrigger.EAT))
-                                    .map(ResourceLocation::toString)
+                                    .map(Identifier::toString)
                                     .toList())
                             .entryTriggers(first ? allTriggers : Collections.emptyMap())
                             .build(),

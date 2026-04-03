@@ -6,26 +6,26 @@ import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 
 public class MarkSeenPacket implements CustomPacketPayload {
-    public static final Type<MarkSeenPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "mark_seen"));
+    public static final Type<MarkSeenPacket> TYPE = new Type<>(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "mark_seen"));
     public static final StreamCodec<FriendlyByteBuf, MarkSeenPacket> CODEC = StreamCodec.ofMember(MarkSeenPacket::encode, MarkSeenPacket::new);
 
-    private final ResourceLocation entryId;
+    private final Identifier entryId;
 
-    public MarkSeenPacket(ResourceLocation entryId) {
+    public MarkSeenPacket(Identifier entryId) {
         this.entryId = entryId;
     }
 
     public MarkSeenPacket(FriendlyByteBuf buf) {
-        this.entryId = buf.readResourceLocation();
+        this.entryId = buf.readIdentifier();
     }
 
     public void encode(FriendlyByteBuf buf) {
-        buf.writeResourceLocation(entryId);
+        buf.writeIdentifier(entryId);
     }
 
     @Override
