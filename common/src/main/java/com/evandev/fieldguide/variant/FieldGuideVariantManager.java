@@ -140,6 +140,11 @@ public class FieldGuideVariantManager {
             if (PROVIDERS.containsKey(clazz)) {
                 return (VariantProvider<T>) PROVIDERS.get(clazz);
             }
+            for (Class<?> iface : clazz.getInterfaces()) {
+                if (PROVIDERS.containsKey(iface)) {
+                    return (VariantProvider<T>) PROVIDERS.get(iface);
+                }
+            }
             clazz = clazz.getSuperclass();
         }
 

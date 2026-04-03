@@ -1,3 +1,3 @@
-### Fixed
+### Changed
 
-- Hotfix for invisible Biomes o' Plenty trees on 1.20.
+- Added additional API capabilities for eventual Spawn variant integration.
