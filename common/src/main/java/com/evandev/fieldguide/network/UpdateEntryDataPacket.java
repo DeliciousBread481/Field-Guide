@@ -2,17 +2,13 @@ package com.evandev.fieldguide.network;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.FieldGuideLimits;
-import com.evandev.fieldguide.compat.exposure.ExposureCompat;
-import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.progress.FieldGuideProgressManager;
 import com.evandev.fieldguide.server.progress.PlayerFieldGuideProgress;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 public class UpdateEntryDataPacket implements CustomPacketPayload {
@@ -44,8 +40,8 @@ public class UpdateEntryDataPacket implements CustomPacketPayload {
         this.data = switch (action) {
             case SET_NAME -> new NameData(buf.readUtf(MAX_NAME_LENGTH));
             case SET_DESCRIPTION -> new DescriptionData(buf.readUtf(MAX_DESCRIPTION_LENGTH));
-            case SET_PHOTOGRAPH -> new PhotographData(buf.readVarInt());
-            case REMOVE_PHOTOGRAPH -> new RemovePhotographData();
+/*            case SET_PHOTOGRAPH -> new PhotographData(buf.readVarInt());
+            case REMOVE_PHOTOGRAPH -> new RemovePhotographData();*/
             case SET_SELECTED_VARIANT -> new VariantData(buf.readUtf(128));
         };
     }
@@ -62,13 +58,13 @@ public class UpdateEntryDataPacket implements CustomPacketPayload {
         return new UpdateEntryDataPacket(Action.SET_DESCRIPTION, entryId, variantId != null ? variantId : "", new DescriptionData(description));
     }
 
-    public static UpdateEntryDataPacket setPhotograph(Identifier entryId, int slot, String variantId) {
+/*    public static UpdateEntryDataPacket setPhotograph(Identifier entryId, int slot, String variantId) {
         return new UpdateEntryDataPacket(Action.SET_PHOTOGRAPH, entryId, variantId != null ? variantId : "", new PhotographData(slot));
     }
 
     public static UpdateEntryDataPacket removePhotograph(Identifier entryId, String variantId) {
         return new UpdateEntryDataPacket(Action.REMOVE_PHOTOGRAPH, entryId, variantId != null ? variantId : "", new RemovePhotographData());
-    }
+    }*/
 
     public static UpdateEntryDataPacket setSelectedVariant(Identifier entryId, String variantId) {
         return new UpdateEntryDataPacket(Action.SET_SELECTED_VARIANT, entryId, "", new VariantData(variantId));
@@ -105,8 +101,8 @@ public class UpdateEntryDataPacket implements CustomPacketPayload {
     private enum Action {
         SET_NAME,
         SET_DESCRIPTION,
-        SET_PHOTOGRAPH,
-        REMOVE_PHOTOGRAPH,
+        /*        SET_PHOTOGRAPH,
+                REMOVE_PHOTOGRAPH,*/
         SET_SELECTED_VARIANT;
     }
 
@@ -140,7 +136,7 @@ public class UpdateEntryDataPacket implements CustomPacketPayload {
         }
     }
 
-    private record PhotographData(int slot) implements Data {
+    /*private record PhotographData(int slot) implements Data {
         @Override
         public void encode(FriendlyByteBuf buf) {
             buf.writeVarInt(slot);
@@ -175,9 +171,9 @@ public class UpdateEntryDataPacket implements CustomPacketPayload {
             Tag tag = stack.saveOptional(player.registryAccess());
             progress.setEntryPhotograph(entryId, tag.toString());
         }
-    }
+    }*/
 
-    private record RemovePhotographData() implements Data {
+/*    private record RemovePhotographData() implements Data {
         @Override
         public void encode(FriendlyByteBuf buf) {
         }
@@ -186,7 +182,7 @@ public class UpdateEntryDataPacket implements CustomPacketPayload {
         public void apply(String entryId, PlayerFieldGuideProgress progress, ServerPlayer player) {
             progress.setEntryPhotograph(entryId, null);
         }
-    }
+    }*/
 
     private record VariantData(String variantId) implements Data {
         @Override
