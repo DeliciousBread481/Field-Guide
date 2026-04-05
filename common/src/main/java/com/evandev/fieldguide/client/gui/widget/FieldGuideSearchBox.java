@@ -15,9 +15,9 @@ public class FieldGuideSearchBox extends EditBox {
     private static final int BACKGROUND_COLOR = 0xFF050302;
 
     public FieldGuideSearchBox(Font font, int x, int y, int width, int height, String value, Consumer<String> onSearch) {
-        super(font, x, y, width, height, Component.translatable("gui.fieldguide.search"));
+        super(font, x + 4, y + 6, width - 8, height - 8, Component.translatable("gui.fieldguide.search"));
         this.setMaxLength(50);
-        this.setBordered(true);
+        this.setBordered(false);
         this.setVisible(true);
         this.setTextColor(0xFCF3DD);
         this.setValue(value);
@@ -32,10 +32,10 @@ public class FieldGuideSearchBox extends EditBox {
 
     @Override
     public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        int boxX = this.getX() - 2;
-        int boxY = this.getY() - 2;
-        int boxW = this.width + 4;
-        int boxH = this.height + 4;
+        int boxX = this.getX() - 6;
+        int boxY = this.getY() - 8;
+        int boxW = this.width + 12;
+        int boxH = this.height + 12;
 
         int borderColor = this.isFocused() ? BORDER_COLOR_FOCUSED : BORDER_COLOR_NORMAL;
 
@@ -44,9 +44,9 @@ public class FieldGuideSearchBox extends EditBox {
         super.renderWidget(guiGraphics, mouseX, mouseY, partialTick);
 
         if (this.getValue().isEmpty()) {
-            guiGraphics.drawString(Minecraft.getInstance().font, Component.translatable("gui.fieldguide.search"), this.getX() + 4, this.getY() + 6, ClientConfig.get().getTextMutedColorInt(), false);
+            guiGraphics.drawString(Minecraft.getInstance().font, Component.translatable("gui.fieldguide.search"), this.getX(), this.getY(), ClientConfig.get().getTextMutedColorInt(), false);
         }
 
-        guiGraphics.renderOutline(this.getX() - 1, this.getY() - 1, this.width + 2, this.height + 2, borderColor);
+        guiGraphics.renderOutline(this.getX() - 5, this.getY() - 7, this.width + 10, this.height + 10, borderColor);
     }
 }

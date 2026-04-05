@@ -226,7 +226,7 @@ public class FieldGuideEntryScreen extends BookScreen {
             boolean hasPaper = this.minecraft != null && this.minecraft.player != null && (this.minecraft.player.isCreative() || this.minecraft.player.getInventory().contains(Items.PAPER.getDefaultInstance()));
             boolean canCopy = hasPaper || (this.minecraft != null && this.minecraft.player != null && this.minecraft.player.isCreative());
 
-            PageTurnButton copyBtn = new PageTurnButton(this.bounds.right() - 13, this.bounds.bottom() - 44, 24, 24, ClientConstants.COPY_SPRITES, (btn) -> {
+            PageTurnButton copyBtn = new PageTurnButton(this.bounds.right() - 13, this.bounds.bottom() - 56, 24, 24, ClientConstants.COPY_SPRITES, (btn) -> {
                 if (canCopy) {
                     ResourceLocation id = ClientFieldGuideManager.getEntryId(entry);
                     if (id != null) {
