@@ -1,9 +1,6 @@
 package com.evandev.fieldguide.entry;
 
 import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.compat.reliableremover.ReliableRemoverCompat;
-import com.evandev.fieldguide.config.ServerConfig;
-import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.ModTags;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -38,17 +35,17 @@ public class EntryValidator {
 
         if (blacklisted) return false;
 
-        if (Services.PLATFORM.isModLoaded("reliable_remover") && ServerConfig.get().enableReliableRemover && ReliableRemoverCompat.isHidden(block)) {
+/*        if (Services.PLATFORM.isModLoaded("reliable_remover") && ServerConfig.get().enableReliableRemover && ReliableRemoverCompat.isHidden(block)) {
             return false;
-        }
+        }*/
         return true;
     }
 
     public static boolean isValidItem(Item item, Identifier categoryId) {
-        // Items are usually validated via their corresponding block or entity if possible, but some are just items.
-        return BuiltInRegistries.ITEM.getResourceKey(item).flatMap(BuiltInRegistries.ITEM::getHolder).map(h -> {
-            // Add item blacklisting if needed
-            return true;
-        }).orElse(true);
+        // TODO: add blacklisting
+        /*        if (Services.PLATFORM.isModLoaded("reliable_remover") && ServerConfig.get().enableReliableRemover && ReliableRemoverCompat.isHidden(item)) {
+            return false;
+        }*/
+        return true;
     }
 }
