@@ -17,6 +17,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -102,7 +103,7 @@ public class FieldGuideJournalScreen extends BookScreen {
         this.addRenderableWidget(nextButton);
 
         this.searchBox = new FieldGuideSearchBox(this.font, this.width / 2 - 70, this.bounds.bottom() + 5, 140, 20, "", q -> {
-            if (!q.isEmpty() && this.minecraft != null) {
+            if (!q.isEmpty()) {
                 FieldGuideCategoryScreen searchScreen = new FieldGuideCategoryScreen(q, this);
                 searchScreen.setInitialSearchFocus(true);
                 this.minecraft.setScreen(searchScreen);
@@ -157,19 +158,19 @@ public class FieldGuideJournalScreen extends BookScreen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(net.minecraft.client.input.@NonNull KeyEvent event) {
         if (this.getFocused() instanceof AbstractWidget widget && widget.isFocused()) {
-            if (this.minecraft != null && this.minecraft.options.keyInventory.matches(keyCode, scanCode)) return true;
-            if (FieldGuideClient.OPEN_GUIDE_KEY.matches(keyCode, scanCode)) return true;
+            if (this.minecraft.options.keyInventory.matches(event)) return true;
+            if (FieldGuideClient.OPEN_GUIDE_KEY.matches(event)) return true;
         }
 
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.searchBox != null) this.searchBox.setFocused(this.searchBox.isMouseOver(mouseX, mouseY));
-        return super.mouseClicked(mouseX, mouseY, button);
+    public boolean mouseClicked(net.minecraft.client.input.@NonNull MouseButtonEvent event, boolean doubleClick) {
+        if (this.searchBox != null) this.searchBox.setFocused(this.searchBox.isMouseOver(event.x(), event.y()));
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
@@ -200,23 +201,23 @@ public class FieldGuideJournalScreen extends BookScreen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void extractRenderState(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         List<JournalPage> pages = ClientFieldGuideManager.getInstance().getJournalPages();
         clampCurrentSpread(pages);
-        this.renderFieldGuideBackground(guiGraphics, mouseX, mouseY, partialTick);
+        this.extractFieldGuideBackground(guiGraphics, mouseX, mouseY, partialTick);
 
-        guiGraphics.pose().pushPose();
+        guiGraphics.pose().pushMatrix();
 
-        guiGraphics.blit(Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
+        guiGraphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
 
         if (currentSpread == 0) {
-            guiGraphics.blit(Constants.JOURNAL_TITLE_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
-            guiGraphics.blit(Constants.JOURNAL_PAGE_TEXTURE, this.bounds.x_center(), this.bounds.top(), this.bounds.width() / 2.0F, 0, this.bounds.width() / 2, this.bounds.height(), this.bounds.width(), this.bounds.height());
+            guiGraphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, Constants.JOURNAL_TITLE_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
+            guiGraphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, Constants.JOURNAL_PAGE_TEXTURE, this.bounds.x_center(), this.bounds.top(), (float) this.bounds.width() / 2, 0, this.bounds.width() / 2, this.bounds.height(), this.bounds.width(), this.bounds.height());
         } else {
-            guiGraphics.blit(Constants.JOURNAL_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
+            guiGraphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, Constants.JOURNAL_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
         }
 
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
 
         // Page Numbers and Dates
         SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy");
@@ -224,18 +225,18 @@ public class FieldGuideJournalScreen extends BookScreen {
 
         if (currentSpread > 0) {
             String leftPageStr = (currentSpread * 2) + "";
-            guiGraphics.drawString(this.font, leftPageStr, this.leftPageBounds.x_center() - this.font.width(leftPageStr) / 2, this.leftPageBounds.bottom() - 11, ClientConfig.get().getPageNumberColorInt(), false);
+            guiGraphics.text(this.font, leftPageStr, this.leftPageBounds.x_center() - this.font.width(leftPageStr) / 2, this.leftPageBounds.bottom() - 11, ClientConfig.get().getPageNumberColorInt(), false);
 
             JournalPage lPage = pages.get(currentSpread * 2 - 1);
-            guiGraphics.drawString(this.font, dateFormat.format(new Date(lPage.timestamp)), this.leftPageBounds.left() + 6, dateY, ClientConfig.get().getTextMutedColorInt(), false);
+            guiGraphics.text(this.font, dateFormat.format(new Date(lPage.timestamp)), this.leftPageBounds.left() + 6, dateY, ClientConfig.get().getTextMutedColorInt(), false);
         }
 
         String rightPageStr = (currentSpread * 2 + 1) + "";
-        guiGraphics.drawString(this.font, rightPageStr, this.rightPageBounds.x_center() - this.font.width(rightPageStr) / 2, this.rightPageBounds.bottom() - 11, ClientConfig.get().getPageNumberColorInt(), false);
+        guiGraphics.text(this.font, rightPageStr, this.rightPageBounds.x_center() - this.font.width(rightPageStr) / 2, this.rightPageBounds.bottom() - 11, ClientConfig.get().getPageNumberColorInt(), false);
 
         JournalPage rPage = pages.get(currentSpread == 0 ? 0 : currentSpread * 2);
-        guiGraphics.drawString(this.font, dateFormat.format(new Date(rPage.timestamp)), this.rightPageBounds.left() + 6, dateY, ClientConfig.get().getTextMutedColorInt(), false);
+        guiGraphics.text(this.font, dateFormat.format(new Date(rPage.timestamp)), this.rightPageBounds.left() + 6, dateY, ClientConfig.get().getTextMutedColorInt(), false);
 
-        guiGraphics.pose().popPose();
+        guiGraphics.pose().popMatrix();
     }
 }

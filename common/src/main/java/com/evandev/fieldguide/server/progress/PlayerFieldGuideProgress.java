@@ -103,7 +103,7 @@ public class PlayerFieldGuideProgress {
 
         if (unlockedEntries.add(id)) {
             discoveryTimes.put(id, System.currentTimeMillis());
-            discoveryGameTimes.put(id, player.serverLevel().dayTime());
+            discoveryGameTimes.put(id, player.level().getOverworldClockTime());
             pendingUnlocks.add(id);
             pendingRevokes.remove(id);
             newlyUnlocked = true;

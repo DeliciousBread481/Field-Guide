@@ -18,6 +18,7 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -27,6 +28,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permission;
+import net.minecraft.server.permissions.PermissionLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -36,16 +39,13 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class FieldGuideCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("fieldguide")
-                .requires(source -> source.hasPermission(2))
+                .requires(source -> source.permissions().hasPermission(new Permission.HasCommandLevel(PermissionLevel.GAMEMASTERS)))
                 .then(Commands.literal("export")
                         .then(Commands.literal("names").executes(ctx -> export(ctx.getSource(), "names")))
                         .then(Commands.literal("descriptions").executes(ctx -> export(ctx.getSource(), "descriptions")))
@@ -53,7 +53,7 @@ public class FieldGuideCommand {
                         .then(Commands.literal("feature")
                                 .then(Commands.argument("feature", IdentifierArgument.id())
                                         .suggests((ctx, builder) -> SharedSuggestionProvider.suggestResource(
-                                                ctx.getSource().registryAccess().registryOrThrow(Registries.CONFIGURED_FEATURE).keySet(), builder))
+                                                ctx.getSource().registryAccess().lookupOrThrow(Registries.CONFIGURED_FEATURE).keySet(), builder))
 
                                         .executes(ctx -> exportFeature(ctx.getSource(), IdentifierArgument.getId(ctx, "feature"), Blocks.DIRT))
 
@@ -63,7 +63,7 @@ public class FieldGuideCommand {
                                                 .executes(ctx -> exportFeature(
                                                         ctx.getSource(),
                                                         IdentifierArgument.getId(ctx, "feature"),
-                                                        BuiltInRegistries.BLOCK.get(EntryResolver.getRawId(IdentifierArgument.getId(ctx, "base_block")))
+                                                        BuiltInRegistries.BLOCK.getValue(EntryResolver.getRawId(IdentifierArgument.getId(ctx, "base_block")))
                                                 ))
                                         )
                                 )
@@ -100,12 +100,13 @@ public class FieldGuideCommand {
                                                             List<String> variants = new ArrayList<>();
                                                             variants.add("all");
 
-                                                            if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
+                                                            /*if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
                                                                 variants.addAll(FieldGuideCobblemonCompat.getVariantIds(entryId));
-                                                            } else {
+                                                            } else*/
+                                                            {
                                                                 Identifier rawId = EntryResolver.getRawId(entryId);
                                                                 if (BuiltInRegistries.ENTITY_TYPE.containsKey(rawId)) {
-                                                                    EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(rawId);
+                                                                    EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getValue(rawId);
                                                                     variants.addAll(FieldGuideVariantManager.getVariantIds(type, ctx.getSource().getLevel()));
                                                                 }
                                                             }
@@ -147,12 +148,13 @@ public class FieldGuideCommand {
                                                             List<String> variants = new ArrayList<>();
                                                             variants.add("all");
 
-                                                            if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
+                                                            /*if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
                                                                 variants.addAll(FieldGuideCobblemonCompat.getVariantIds(entryId));
-                                                            } else {
+                                                            } else*/
+                                                            {
                                                                 Identifier rawId = EntryResolver.getRawId(entryId);
                                                                 if (BuiltInRegistries.ENTITY_TYPE.containsKey(rawId)) {
-                                                                    EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(rawId);
+                                                                    EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getValue(rawId);
                                                                     variants.addAll(FieldGuideVariantManager.getVariantIds(type, ctx.getSource().getLevel()));
                                                                 }
                                                             }
@@ -171,8 +173,8 @@ public class FieldGuideCommand {
         FieldGuideProgressManager manager = FieldGuideProgressManager.getInstance();
 
         if (variantId.equalsIgnoreCase("all")) {
-            if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
-/*                List<String> variants = FieldGuideCobblemonCompat.getVariantIds(entryId);
+            /*if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
+                List<String> variants = FieldGuideCobblemonCompat.getVariantIds(entryId);
                 if (!variants.isEmpty()) {
                     for (ServerPlayer player : targets) {
                         PlayerFieldGuideProgress progress = manager.getProgress(player);
@@ -184,11 +186,12 @@ public class FieldGuideCommand {
                     }
                     source.sendSuccess(() -> Component.translatable("commands.fieldguide.grant.variant.success", "all", entryId.toString()), true);
                     return targets.size();
-                }*/
-            } else {
+                }
+            } else*/
+            {
                 Identifier rawId = EntryResolver.getRawId(entryId);
                 if (BuiltInRegistries.ENTITY_TYPE.containsKey(rawId)) {
-                    EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(rawId);
+                    EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getValue(rawId);
                     List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, source.getLevel());
                     if (!variants.isEmpty()) {
                         for (ServerPlayer player : targets) {
@@ -220,7 +223,7 @@ public class FieldGuideCommand {
         FieldGuideProgressManager manager = FieldGuideProgressManager.getInstance();
 
         if (variantId.equalsIgnoreCase("all")) {
-            if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
+            /*if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
                 List<String> variants = FieldGuideCobblemonCompat.getVariantIds(entryId);
                 if (!variants.isEmpty()) {
                     for (ServerPlayer player : targets) {
@@ -234,10 +237,11 @@ public class FieldGuideCommand {
                     source.sendSuccess(() -> Component.translatable("commands.fieldguide.revoke.variant.success", "all", entryId.toString()), true);
                     return targets.size();
                 }
-            } else {
+            } else*/
+            {
                 Identifier rawId = EntryResolver.getRawId(entryId);
                 if (BuiltInRegistries.ENTITY_TYPE.containsKey(rawId)) {
-                    EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(rawId);
+                    EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getValue(rawId);
                     List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, source.getLevel());
                     if (!variants.isEmpty()) {
                         for (ServerPlayer player : targets) {
@@ -286,14 +290,15 @@ public class FieldGuideCommand {
         PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
         if (progress == null) return;
 
-        if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
+        /*if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
             for (String variantId : FieldGuideCobblemonCompat.getVariantIds(entryId)) {
                 progress.unlock(player, entryId, variantId, true);
             }
-        } else {
+        } else*/
+        {
             Identifier rawId = EntryResolver.getRawId(entryId);
             if (BuiltInRegistries.ENTITY_TYPE.containsKey(rawId)) {
-                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(rawId);
+                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getValue(rawId);
                 List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, level);
                 for (VariantDef variant : variants) {
                     progress.unlock(player, entryId, variant.id(), true);
@@ -306,14 +311,15 @@ public class FieldGuideCommand {
         PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(player);
         if (progress == null) return;
 
-        if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
+        /*if (Services.PLATFORM.isModLoaded("cobblemon") && entryId.getPath().contains("cobblemon")) {
             for (String variantId : FieldGuideCobblemonCompat.getVariantIds(entryId)) {
                 progress.revoke(entryId + "#" + variantId);
             }
-        } else {
+        } else*/
+        {
             Identifier rawId = EntryResolver.getRawId(entryId);
             if (BuiltInRegistries.ENTITY_TYPE.containsKey(rawId)) {
-                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(rawId);
+                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getValue(rawId);
                 List<VariantDef> variants = FieldGuideVariantManager.getVariants(type, level);
                 for (VariantDef variant : variants) {
                     progress.revoke(entryId + "#" + variant.id());
@@ -361,14 +367,14 @@ public class FieldGuideCommand {
         }
 
         ServerLevel level = source.getLevel();
-        int y = Math.min(player.getBlockY() + 50, level.getMaxBuildHeight() - 40);
+        int y = Math.min(player.getBlockY() + 50, level.getMaxY() - 40);
         BlockPos origin = new BlockPos(player.getBlockX(), y, player.getBlockZ());
 
-        Registry<ConfiguredFeature<?, ?>> registry = level.registryAccess().registryOrThrow(Registries.CONFIGURED_FEATURE);
-        ConfiguredFeature<?, ?> feature = registry.get(featureId);
+        Registry<ConfiguredFeature<?, ?>> registry = level.registryAccess().lookupOrThrow(Registries.CONFIGURED_FEATURE);
+        Optional<Holder.Reference<ConfiguredFeature<?, ?>>> feature = registry.get(featureId);
 
-        if (feature == null) {
-            source.sendFailure(Component.literal("Feature not found: " + featureId.toString()));
+        if (feature.isEmpty()) {
+            source.sendFailure(Component.literal("Feature not found: " + featureId));
             return 0;
         }
 
@@ -385,7 +391,7 @@ public class FieldGuideCommand {
 
         level.setBlock(origin.below(), baseBlock.defaultBlockState(), 3);
 
-        feature.place(level, level.getChunkSource().getGenerator(), level.getRandom(), origin);
+        feature.get().value().place(level, level.getChunkSource().getGenerator(), level.getRandom(), origin);
 
         BlockPos min = null;
         BlockPos max = null;
@@ -412,7 +418,7 @@ public class FieldGuideCommand {
         } else {
             StructureTemplate template = new StructureTemplate();
             BlockPos size = max.subtract(min).offset(1, 1, 1);
-            template.fillFromWorld(level, min, size, false, Blocks.AIR);
+            template.fillFromWorld(level, min, size, false, List.of(Blocks.AIR));
 
             try {
                 Path exportDir = Services.PLATFORM.getConfigDirectory().getParent()

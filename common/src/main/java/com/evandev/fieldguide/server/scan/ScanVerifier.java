@@ -33,7 +33,7 @@ public class ScanVerifier {
         }
 
         double maxDistSq = activeScanDist * activeScanDist;
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = player.level();
 
         Identifier categoryId = ServerFieldGuideManager.getInstance().getCategoryForEntryId(entryId);
         if (categoryId == null) {
@@ -41,9 +41,9 @@ public class ScanVerifier {
         }
 
         if (targetEntityId != 0) {
-            Entity entity = level.getEntity(targetEntityId);
+            /* Entity entity = level.getEntity(targetEntityId);
 
-           /* if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
+            if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
                 if (entity.isSpectator() || player.distanceToSqr(entity) > maxDistSq) {
                     return false;
                 }

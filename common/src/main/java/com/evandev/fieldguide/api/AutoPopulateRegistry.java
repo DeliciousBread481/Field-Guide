@@ -83,19 +83,19 @@ public class AutoPopulateRegistry {
 
                 TagKey<Block> blockTagKey = TagKey.create(Registries.BLOCK, tagLocation);
                 BuiltInRegistries.BLOCK.forEach(block -> BuiltInRegistries.BLOCK.getResourceKey(block)
-                        .flatMap(BuiltInRegistries.BLOCK::getHolder)
+                        .flatMap(BuiltInRegistries.BLOCK::get)
                         .filter(h -> h.is(blockTagKey) && EntryValidator.isValidBlock(block, categoryId))
                         .ifPresent(h -> results.put(BuiltInRegistries.BLOCK.getKey(block), block)));
 
                 TagKey<Item> itemTagKey = TagKey.create(Registries.ITEM, tagLocation);
                 BuiltInRegistries.ITEM.forEach(item -> BuiltInRegistries.ITEM.getResourceKey(item)
-                        .flatMap(BuiltInRegistries.ITEM::getHolder)
+                        .flatMap(BuiltInRegistries.ITEM::get)
                         .filter(h -> h.is(itemTagKey) && EntryValidator.isValidItem(item, categoryId))
                         .ifPresent(h -> results.putIfAbsent(BuiltInRegistries.ITEM.getKey(item), item)));
 
                 TagKey<EntityType<?>> entityTagKey = TagKey.create(Registries.ENTITY_TYPE, tagLocation);
                 BuiltInRegistries.ENTITY_TYPE.forEach(type -> BuiltInRegistries.ENTITY_TYPE.getResourceKey(type)
-                        .flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder)
+                        .flatMap(BuiltInRegistries.ENTITY_TYPE::get)
                         .filter(h -> h.is(entityTagKey) && EntryValidator.isValidEntity(type, categoryId))
                         .ifPresent(h -> results.putIfAbsent(BuiltInRegistries.ENTITY_TYPE.getKey(type), type)));
 
@@ -122,10 +122,10 @@ public class AutoPopulateRegistry {
     private static List<Object> getEntityStrategy(String strategy, Identifier categoryId) {
         TagKey<EntityType<?>> bossesTag = TagKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "bosses"));
         return BuiltInRegistries.ENTITY_TYPE.stream().filter(type -> {
-            boolean isBoss = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type).flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder).map(h -> h.is(bossesTag)).orElse(false);
+            boolean isBoss = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type).flatMap(BuiltInRegistries.ENTITY_TYPE::get).map(h -> h.is(bossesTag)).orElse(false);
             if ("monsters".equalsIgnoreCase(strategy)) return type.getCategory() == MobCategory.MONSTER && !isBoss;
             if ("animals".equalsIgnoreCase(strategy))
-                return type.getCategory() != MobCategory.MONSTER && (type.getCategory() != MobCategory.MISC || SpawnEggItem.byId(type) != null) && !isBoss;
+                return type.getCategory() != MobCategory.MONSTER && (type.getCategory() != MobCategory.MISC || SpawnEggItem.byId(type).isPresent()) && !isBoss;
             return false;
         }).filter(type -> EntryValidator.isValidEntity(type, categoryId)).sorted(Comparator.comparing(type -> BuiltInRegistries.ENTITY_TYPE.getKey(type).toString())).map(Object.class::cast).toList();
     }
@@ -198,19 +198,19 @@ public class AutoPopulateRegistry {
             if (id.getPath().endsWith("_sapling")) {
                 String baseName = id.getPath().replace("_sapling", "");
 
-                Block leaves = BuiltInRegistries.BLOCK.get(Identifier.fromNamespaceAndPath(id.getNamespace(), baseName + "_leaves"));
+                Block leaves = BuiltInRegistries.BLOCK.getValue(Identifier.fromNamespaceAndPath(id.getNamespace(), baseName + "_leaves"));
                 if (leaves == Blocks.AIR) continue;
 
-                Block log = BuiltInRegistries.BLOCK.get(Identifier.fromNamespaceAndPath(id.getNamespace(), baseName + "_log"));
+                Block log = BuiltInRegistries.BLOCK.getValue(Identifier.fromNamespaceAndPath(id.getNamespace(), baseName + "_log"));
                 if (log == Blocks.AIR) {
-                    log = BuiltInRegistries.BLOCK.get(Identifier.fromNamespaceAndPath("minecraft", baseName + "_log"));
+                    log = BuiltInRegistries.BLOCK.getValue(Identifier.fromNamespaceAndPath("minecraft", baseName + "_log"));
                 }
                 if (log == Blocks.AIR) {
                     String[] parts = baseName.split("_", 2);
                     if (parts.length > 1) {
-                        log = BuiltInRegistries.BLOCK.get(Identifier.fromNamespaceAndPath(id.getNamespace(), parts[1] + "_log"));
+                        log = BuiltInRegistries.BLOCK.getValue(Identifier.fromNamespaceAndPath(id.getNamespace(), parts[1] + "_log"));
                         if (log == Blocks.AIR) {
-                            log = BuiltInRegistries.BLOCK.get(Identifier.fromNamespaceAndPath("minecraft", parts[1] + "_log"));
+                            log = BuiltInRegistries.BLOCK.getValue(Identifier.fromNamespaceAndPath("minecraft", parts[1] + "_log"));
                         }
                     }
                 }

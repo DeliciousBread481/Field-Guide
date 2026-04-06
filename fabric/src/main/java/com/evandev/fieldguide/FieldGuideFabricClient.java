@@ -1,44 +1,37 @@
 package com.evandev.fieldguide;
 
-import com.evandev.fieldguide.api.seasons.SeasonsAPI;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.FieldGuideClient;
-import com.evandev.fieldguide.client.ModRenderTypes;
 import com.evandev.fieldguide.client.gui.screens.FieldGuideEntryScreen;
-import com.evandev.fieldguide.compat.fabricseasons.FabricSeasonsProvider;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.network.*;
-import com.evandev.fieldguide.platform.Services;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.client.rendering.v1.CoreShaderRegistrationCallback;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.jetbrains.annotations.NotNull;
-
-import java.io.IOException;
+import org.jspecify.annotations.NonNull;
 
 public class FieldGuideFabricClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         FieldGuideClient.init();
-        KeyBindingHelper.registerKeyBinding(FieldGuideClient.OPEN_GUIDE_KEY);
-        KeyBindingHelper.registerKeyBinding(FieldGuideClient.SCAN_KEY);
+        KeyMappingHelper.registerKeyMapping(FieldGuideClient.OPEN_GUIDE_KEY);
+        KeyMappingHelper.registerKeyMapping(FieldGuideClient.SCAN_KEY);
 
-        if (Services.PLATFORM.isModLoaded("seasons")) {
+/*        if (Services.PLATFORM.isModLoaded("seasons")) {
             SeasonsAPI.registerProvider(new FabricSeasonsProvider());
-        }
+        }*/
 
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
             @Override
-            public Identifier getFabricId() {
+            public @NonNull Identifier getFabricId() {
                 return Identifier.fromNamespaceAndPath(Constants.MOD_ID, "mob_data");
             }
 
@@ -100,25 +93,6 @@ public class FieldGuideFabricClient implements ClientModInitializer {
 
         ClientPlayNetworking.registerGlobalReceiver(ExportContentPacket.TYPE, (payload, context) -> {
             context.client().execute(payload::handleClient);
-        });
-
-        CoreShaderRegistrationCallback.EVENT.register(context -> {
-            try {
-                context.register(
-                        Identifier.fromNamespaceAndPath(Constants.MOD_ID, "fieldguide_scan_block"),
-                        DefaultVertexFormat.BLOCK,
-                        program -> ModRenderTypes.SCAN_BLOCK_SHADER = program
-                );
-
-                context.register(
-                        Identifier.fromNamespaceAndPath(Constants.MOD_ID, "fieldguide_scan_entity"),
-                        DefaultVertexFormat.NEW_ENTITY,
-                        program -> ModRenderTypes.SCAN_ENTITY_SHADER = program
-                );
-
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to register fieldguide shaders", e);
-            }
         });
 
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {

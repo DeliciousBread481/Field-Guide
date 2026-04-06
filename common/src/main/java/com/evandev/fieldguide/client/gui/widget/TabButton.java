@@ -8,6 +8,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.WidgetSprites;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
@@ -35,17 +36,17 @@ public class TabButton extends ImageButton {
     }
 
     @Override
-    public void renderWidget(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void extractContents(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         boolean isSelected = (category == parent.getSelectedCategory());
         int vOffset = isSelected ? 24 : 0;
 
-        guiGraphics.blit(Constants.WIDGETS_TEXTURE, this.getX(), this.getY(), 0, 144 + vOffset, this.width, this.height);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.WIDGETS_TEXTURE, this.getX(), this.getY(), 0, 144 + vOffset, this.width, this.height, 256, 256);
 
         int iconX = this.getX() + 3;
         int iconY = this.getY() + 4;
         if (isSelected) iconX = iconX + 1;
 
-        guiGraphics.blit(category.getIcon(), iconX, iconY, 0, 0, 16, 16, 16, 16);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, category.getIcon(), iconX, iconY, 0, 0, 16, 16, 16, 16);
     }
 
     @Override

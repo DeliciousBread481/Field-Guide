@@ -137,7 +137,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
         return BuiltInRegistries.ENTITY_TYPE.getOptional(EntryResolver.getRawId(entryId))
                 .flatMap(BuiltInRegistries.ENTITY_TYPE::getResourceKey)
-                .flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder)
+                .flatMap(BuiltInRegistries.ENTITY_TYPE::get)
                 .map(h -> h.is(killToUnlockTag))
                 .orElse(false);
     }
@@ -147,7 +147,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         TagKey<Item> eatToUnlockTag = TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "eat_to_unlock"));
 
         return BuiltInRegistries.ITEM.getOptional(EntryResolver.getRawId(entryId))
-                .map(item -> item.components().has(DataComponents.FOOD) || BuiltInRegistries.ITEM.getHolderOrThrow(BuiltInRegistries.ITEM.getResourceKey(item).get()).is(eatToUnlockTag))
+                .map(item -> item.components().has(DataComponents.FOOD) || BuiltInRegistries.ITEM.getOrThrow(BuiltInRegistries.ITEM.getResourceKey(item).get()).is(eatToUnlockTag))
                 .orElse(false);
     }
 
@@ -405,9 +405,9 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         loadRedirects(resourceManager, data);
         loadVariants(resourceManager, data);
 
-        if (Services.PLATFORM.isModLoaded("cobblemon")) {
+/*        if (Services.PLATFORM.isModLoaded("cobblemon")) {
             FieldGuideCobblemonCompat.populateCache(resourceManager);
-        }
+        }*/
 
         return data;
     }
@@ -644,7 +644,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                                 for (JsonElement vEl : GsonHelper.getAsJsonArray(obj, "variants")) {
                                     JsonObject vObj = vEl.getAsJsonObject();
                                     String id = GsonHelper.getAsString(vObj, "id");
-                                    CompoundTag nbt = TagParser.parseTag(GsonHelper.getAsString(vObj, "nbt"));
+                                    CompoundTag nbt = TagParser.parseCompoundFully(GsonHelper.getAsString(vObj, "nbt"));
                                     variantList.add(new DatapackVariant(id, nbt));
                                 }
                             }
@@ -658,22 +658,22 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     }
 
     private void generateAutoBiomeAdditions(MinecraftServer server) {
-        Registry<Biome> biomeRegistry = server.registryAccess().registryOrThrow(Registries.BIOME);
+        Registry<Biome> biomeRegistry = server.registryAccess().lookupOrThrow(Registries.BIOME);
         Set<String> additionsSet = new LinkedHashSet<>(this.biomeAdditions);
 
         for (var biomeEntry : biomeRegistry.entrySet()) {
             try {
-                Identifier biomeId = biomeEntry.getKey().location();
+                Identifier biomeId = biomeEntry.getKey().registryKey().identifier();
                 Biome biome = biomeEntry.getValue();
 
                 for (MobCategory cat : MobCategory.values()) {
                     for (var spawn : biome.getMobSettings().getMobs(cat).unwrap()) {
-                        Identifier entityId = BuiltInRegistries.ENTITY_TYPE.getKey(spawn.type);
+                        Identifier entityId = BuiltInRegistries.ENTITY_TYPE.getKey(spawn.value().type());
                         additionsSet.add(entityId + "|" + biomeId);
                     }
                 }
             } catch (IllegalStateException e) {
-                Constants.LOG.warn("Skipping unbound biome in registry: {}", biomeEntry.getKey().location());
+                Constants.LOG.warn("Skipping unbound biome in registry: {}", biomeEntry.getKey().registryKey().identifier());
             }
         }
 
@@ -747,7 +747,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
     }
 
     private void expandBiomeTags(MinecraftServer server) {
-        Registry<Biome> biomeRegistry = server.registryAccess().registryOrThrow(Registries.BIOME);
+        Registry<Biome> biomeRegistry = server.registryAccess().lookupOrThrow(Registries.BIOME);
 
         this.biomeAdditions = expandTagsForList(this.biomeAdditions, biomeRegistry);
         this.biomeRemovals = expandTagsForList(this.biomeRemovals, biomeRegistry);
@@ -764,7 +764,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                     TagKey<Biome> tagKey = TagKey.create(Registries.BIOME, Identifier.parse(tagPath));
                     biomeRegistry.getTagOrEmpty(tagKey).forEach(holder -> {
                         holder.unwrapKey().ifPresent(key -> {
-                            expanded.add(parts[0] + "|" + key.location());
+                            expanded.add(parts[0] + "|" + key.registryKey());
                         });
                     });
                 } catch (Exception e) {

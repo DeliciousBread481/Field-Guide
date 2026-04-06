@@ -8,25 +8,30 @@ import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.entry.EntryResolver;
-import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.toasts.Toast;
-import net.minecraft.client.gui.components.toasts.ToastComponent;
+import net.minecraft.client.gui.components.toasts.ToastManager;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.List;
+import java.util.Objects;
 
 public class FieldGuideToast implements Toast {
     private final Object entry;
     private final String variantId;
     private Entity cachedEntity = null;
     private boolean entityInitialized = false;
+    private Toast.Visibility wantedVisibility = Toast.Visibility.HIDE;
 
     public FieldGuideToast(Object entry, String variantId) {
         this.entry = entry;
@@ -34,14 +39,24 @@ public class FieldGuideToast implements Toast {
     }
 
     @Override
-    public @NotNull Visibility render(GuiGraphicsExtractor guiGraphics, @NotNull ToastComponent toastComponent, long timeSinceLastVisible) {
+    public Toast.@NonNull Visibility getWantedVisibility() {
+        return this.wantedVisibility;
+    }
+
+    @Override
+    public void update(ToastManager manager, long fullyVisibleForMs) {
+        this.wantedVisibility = fullyVisibleForMs >= 5000L * manager.getNotificationDisplayTimeMultiplier() ? Toast.Visibility.HIDE : Toast.Visibility.SHOW;
+    }
+
+    @Override
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, @NonNull Font font, long fullyVisibleForMs) {
         guiGraphics.blit(Constants.TOAST_TEXTURE, 0, 0, 0, 0, this.width(), this.height(), 160, 32);
 
         Component name = ClientFieldGuideManager.getEntryName(entry);
         Component discovered = Component.translatable("fieldguide.toast.discovered");
 
-        guiGraphics.drawString(toastComponent.getMinecraft().font, name, 30, 7, ClientConfig.get().getTextTitleColorInt(), false);
-        guiGraphics.drawString(toastComponent.getMinecraft().font, discovered, 30, 17, 0xAF8C5C, false);
+        guiGraphics.text(font, name, 30, 7, ClientConfig.get().getTextTitleColorInt(), false);
+        guiGraphics.text(font, discovered, 30, 17, 0xAF8C5C, false);
 
         int iconX = 16;
         int iconY = 17;
@@ -51,15 +66,16 @@ public class FieldGuideToast implements Toast {
         boolean isTutorial = this.entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "tutorial".equals(ge.virtualData().virtualType());
 
         if (!entityInitialized) {
-            if (Services.PLATFORM.isModLoaded("cobblemon") && isCobblemon) {
-/*                Identifier id = ((GuideEntry) this.entry).id();
+/*            if (Services.PLATFORM.isModLoaded("cobblemon") && isCobblemon) {
+                Identifier id = ((GuideEntry) this.entry).id();
                 if (variantId != null) {
                     cachedEntity = ClientFieldGuideCobblemonCompat.getDummyVariant(id, variantId, Minecraft.getInstance().level);
                 } else {
                     cachedEntity = ClientFieldGuideCobblemonCompat.getDummyPokemon(id, Minecraft.getInstance().level);
-                }*/
-            } else if (coreEntry instanceof EntityType<?> type) {
-                cachedEntity = type.create(Minecraft.getInstance().level, EntitySpawnReason.TRIGGERED);
+                }
+            } else */
+            if (coreEntry instanceof EntityType<?> type) {
+                cachedEntity = type.create(Objects.requireNonNull(Minecraft.getInstance().level), EntitySpawnReason.TRIGGERED);
 
                 if (variantId != null && cachedEntity instanceof Mob mob) {
                     VariantProvider<Mob> provider = FieldGuideVariantManager.getProvider(mob);
@@ -77,11 +93,13 @@ public class FieldGuideToast implements Toast {
             entityInitialized = true;
         }
 
-        if (this.entry instanceof GuideEntry ge && ge.isStructure() && coreEntry instanceof Block block) {
+        if (this.entry instanceof GuideEntry ge && ge.isStructure() && coreEntry instanceof Block) {
             EntryRenderHelper.renderStructure(guiGraphics, ge, iconX, iconY, 24, true, false, 1.0F);
-        } else if (isCobblemon && cachedEntity instanceof LivingEntity) {
+        }
+/*        else if (isCobblemon && cachedEntity instanceof LivingEntity) {
             EntryRenderHelper.renderCobblemon(guiGraphics, (GuideEntry) this.entry, iconX, iconY, 24, 24, true, false, 1.0F, false);
-        } else if (isTutorial) {
+        } */
+        else if (isTutorial) {
             EntryRenderHelper.renderTutorial(guiGraphics, (GuideEntry) this.entry, iconX, iconY, 24, 24, true, false, 1.0F);
         } else if (coreEntry instanceof EntityType<?>) {
             if (cachedEntity != null) {
@@ -96,7 +114,5 @@ public class FieldGuideToast implements Toast {
         } else {
             guiGraphics.blit(Constants.TOAST_ICON, 8, 8, 0, 0, 16, 16, 16, 16);
         }
-
-        return timeSinceLastVisible >= 5000L ? Visibility.HIDE : Visibility.SHOW;
     }
 }

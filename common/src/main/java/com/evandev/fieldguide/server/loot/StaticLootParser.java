@@ -106,7 +106,7 @@ public class StaticLootParser {
                 int min = 1, max = 1;
                 for (LootItemFunction function : functions) {
                     if (function instanceof SetItemCountFunction countFunc) {
-                        NumberProvider provider = ((SetItemCountFunctionAccessor) countFunc).fieldguide$getValue();
+                        NumberProvider provider = ((SetItemCountFunctionAccessor) countFunc).fieldguide$getCount();
                         min = Math.max(0, Math.round(getMinRolls(provider)));
                         max = Math.max(min, Math.round(getMaxRolls(provider)));
 

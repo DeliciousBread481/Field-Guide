@@ -25,6 +25,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
@@ -34,6 +37,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Item;
@@ -41,6 +45,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
@@ -331,16 +336,16 @@ public class FieldGuideCategoryScreen extends BookScreen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.searchBox != null) this.searchBox.setFocused(this.searchBox.isMouseOver(mouseX, mouseY));
-        if (super.mouseClicked(mouseX, mouseY, button)) return true;
+    public boolean mouseClicked(@NonNull MouseButtonEvent event, boolean doubleClick) {
+        if (this.searchBox != null) this.searchBox.setFocused(this.searchBox.isMouseOver(event.x(), event.y()));
+        if (super.mouseClicked(event, doubleClick)) return true;
 
         if (!isSearching && currentPage == 0) {
             for (int i = 0; i < recentEntries.size(); i++) {
                 int slotIndex = ITEMS_PER_PAGE + i;
                 Bounds bounds = getGridCellBounds(slotIndex);
 
-                if (bounds.contains((int) mouseX, (int) mouseY)) {
+                if (bounds.contains((int) event.x(), (int) event.y())) {
                     Object entry = recentEntries.get(i);
                     handleEntryClick(entry);
                     return true;
@@ -354,7 +359,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
             Bounds cellBounds = getGridCellBoundsLocal(i);
 
-            if (cellBounds.contains((int) mouseX, (int) mouseY)) {
+            if (cellBounds.contains((int) event.x(), (int) event.y())) {
                 int itemIndex = getItemIndexForSlot(i);
                 if (itemIndex >= 0 && itemIndex < currentEntries.size()) {
                     handleEntryClick(currentEntries.get(itemIndex));
@@ -392,22 +397,22 @@ public class FieldGuideCategoryScreen extends BookScreen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(@NonNull KeyEvent event) {
         if (this.searchBox.isFocused()) {
-            if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
                 this.searchBox.setFocused(false);
                 return true;
             }
-            if (this.searchBox.keyPressed(keyCode, scanCode, modifiers)) return true;
+            if (this.searchBox.keyPressed(event)) return true;
             return true;
         }
 
-        if (this.minecraft.player != null && this.minecraft.options.keyInventory.matches(keyCode, scanCode)) {
+        if (this.minecraft.player != null && this.minecraft.options.keyInventory.matches(event)) {
             this.minecraft.setScreen(new InventoryScreen(this.minecraft.player));
             return true;
         }
 
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
     }
 
     @Override
@@ -428,12 +433,12 @@ public class FieldGuideCategoryScreen extends BookScreen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderFieldGuideBackground(guiGraphics, mouseX, mouseY, partialTick);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        this.extractFieldGuideBackground(guiGraphics, mouseX, mouseY, partialTick);
 
-        guiGraphics.pose().pushPose();
+        guiGraphics.pose().pushMatrix();
 
-        guiGraphics.blit(Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0f, 0f, this.bounds.width(), this.bounds.height(), 256, 256);
 
         // Page Numbers
         int leftPageNum, rightPageNum;
@@ -447,7 +452,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
         if (currentPage > 0 || isSearching) {
             int titleY = this.rightPageBounds.top() + 8;
-            guiGraphics.blit(Constants.LIST_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.LIST_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0f, 0f, this.bounds.width(), this.bounds.height(), 256, 256);
             renderPageNumber(leftPageNum, this.leftPageBounds, guiGraphics);
             if (isSearching) {
                 if (currentEntries.size() > leftPageNum * ITEMS_PER_PAGE) {
@@ -467,7 +472,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
                                 int iconSize = 16;
                                 int iconY = titleY - 5;
                                 int iconX = this.leftPageBounds.left() + 3;
-                                guiGraphics.blit(texture, iconX, iconY, 0, 0, iconSize, iconSize, iconSize, iconSize);
+                                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, texture, iconX, iconY, 0f, 0f, iconSize, iconSize, 256, 256);
                                 iconOffset = iconSize;
                             }
                         }
@@ -527,7 +532,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
                     int iconX = this.leftPageBounds.left() + 3;
 
                     if (!displayStack.isEmpty()) {
-                        guiGraphics.renderItem(displayStack, iconX, iconY);
+                        guiGraphics.fakeItem(displayStack, iconX, iconY);
                         renderTitle(guiGraphics, Component.translatable("gui.fieldguide.drops", dropName), iconSize, ClientConfig.get().getTextColorInt());
                     } else {
                         renderTitle(guiGraphics, Component.translatable("gui.fieldguide.searching_drops"));
@@ -554,18 +559,20 @@ public class FieldGuideCategoryScreen extends BookScreen {
         } else if (isSearching) {
             if (currentEntries.isEmpty()) {
                 Component noResults = Component.translatable("gui.fieldguide.no_results");
-                guiGraphics.drawString(this.font, noResults, this.leftPageBounds.x_center() - this.font.width(noResults) / 2, this.leftPageBounds.y_center() - (font.lineHeight / 2), ClientConfig.get().getTextMutedColorInt(), false);
+                guiGraphics.text(this.font, noResults, this.leftPageBounds.x_center() - this.font.width(noResults) / 2, this.leftPageBounds.y_center() - (font.lineHeight / 2), ClientConfig.get().getTextMutedColorInt(), false);
             }
         }
 
         // Back Button
         this.backButton.visible = this.isSearching;
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
 
         // Grid
         if (currentPage > 0 || isSearching) {
             renderGrid(guiGraphics, mouseX, mouseY);
         }
+
+        guiGraphics.pose().popMatrix();
     }
 
     private @NotNull Component getSearchTitle() {
@@ -594,11 +601,11 @@ public class FieldGuideCategoryScreen extends BookScreen {
         if (this.font.width(text) > maxWidth) {
             title = font.plainSubstrByWidth(title, maxWidth) + "...";
         }
-        guiGraphics.drawString(this.font, title, this.leftPageBounds.left() + 6 + offset, titleY, color, false);
+        guiGraphics.text(this.font, title, this.leftPageBounds.left() + 6 + offset, titleY, color, false);
     }
 
     private void renderCategoryInfo(GuiGraphicsExtractor guiGraphics) {
-        guiGraphics.blit(Constants.TITLE_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.TITLE_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0f, 0f, this.bounds.width(), this.bounds.height(), 256, 256);
 
         Category category = this.getSelectedCategory();
         Component title = Component.translatable(category.getTranslationKey());
@@ -612,7 +619,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
         for (FormattedCharSequence line : lines) {
             int lineWidth = this.font.width(line);
             int lineX = this.leftPageBounds.x_center() - lineWidth / 2;
-            guiGraphics.drawString(this.font, line, lineX, titleY, ClientConfig.get().getTextTitleColorInt(), false);
+            guiGraphics.text(this.font, line, lineX, titleY, ClientConfig.get().getTextTitleColorInt(), false);
             titleY += font.lineHeight;
         }
 
@@ -626,8 +633,8 @@ public class FieldGuideCategoryScreen extends BookScreen {
             String countText = String.valueOf(unlocked);
             String totalText = String.valueOf(total);
 
-            guiGraphics.drawString(this.font, countText, x - xOffset - font.width(countText) / 2, y, ClientConfig.get().getTextColorInt(), false);
-            guiGraphics.drawString(this.font, totalText, x + xOffset - font.width(totalText) / 2, y, ClientConfig.get().getTextColorInt(), false);
+            guiGraphics.text(this.font, countText, x - xOffset - font.width(countText) / 2, y, ClientConfig.get().getTextColorInt(), false);
+            guiGraphics.text(this.font, totalText, x + xOffset - font.width(totalText) / 2, y, ClientConfig.get().getTextColorInt(), false);
 
             // Progress Bar
             if (unlocked > 0) {
@@ -638,7 +645,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
                 int progressWidth = (int) ((float) unlocked / total * barWidth);
                 progressWidth = Math.max(progressWidth, 6);
-                guiGraphics.blitSprite(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/progress_bar_fill"), barX, barY, progressWidth, barHeight);
+                guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/progress_bar_fill"), barX, barY, progressWidth, barHeight);
             }
         }
     }
@@ -647,7 +654,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
         // Title
         Component title = Component.translatable("gui.fieldguide.main.default");
         int titleY = this.rightPageBounds.top() + 8;
-        guiGraphics.drawString(this.font, title, this.rightPageBounds.x_center() - font.width(title) / 2, titleY, ClientConfig.get().getTextMutedColorInt(), false);
+        guiGraphics.text(this.font, title, this.rightPageBounds.x_center() - font.width(title) / 2, titleY, ClientConfig.get().getTextMutedColorInt(), false);
 
         for (int i = 0; i < ITEMS_PER_PAGE; i++) {
             if (i >= recentEntries.size()) break;
@@ -657,9 +664,9 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
             boolean hovered = bounds.contains(mouseX, mouseY);
             if (hovered) {
-                guiGraphics.blit(Constants.LIST_ENTRY_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE * 2);
+                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.LIST_ENTRY_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0f, (float) CELL_SIZE, CELL_SIZE, CELL_SIZE, 256, 256);
             } else {
-                guiGraphics.blit(Constants.LIST_ENTRY_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE * 2);
+                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.LIST_ENTRY_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0f, 0f, CELL_SIZE, CELL_SIZE, 256, 256);
             }
 
             renderEntryInGrid(guiGraphics, entry, bounds.x_center(), bounds.y_center(), true);
@@ -699,9 +706,9 @@ public class FieldGuideCategoryScreen extends BookScreen {
                 boolean hovered = bounds.contains(mouseX, mouseY);
 
                 if (hovered) {
-                    guiGraphics.blit(Constants.LIST_ENTRY_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE * 2);
+                    guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.LIST_ENTRY_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0f, (float) CELL_SIZE, CELL_SIZE, CELL_SIZE, 256, 256);
                 } else {
-                    guiGraphics.blit(Constants.LIST_ENTRY_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0, 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE * 2);
+                    guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.LIST_ENTRY_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0f, 0f, CELL_SIZE, CELL_SIZE, 256, 256);
                 }
 
                 renderEntryInGrid(guiGraphics, entry, bounds.x_center(), bounds.y_center(), unlocked);
@@ -739,7 +746,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
             Object coreEntry = EntryResolver.resolveCoreEntry(entry);
             if (coreEntry instanceof EntityType<?> type) {
                 try {
-                    entity = type.create(this.minecraft.level);
+                    entity = type.create(this.minecraft.level, EntitySpawnReason.LOAD);
                     if (Services.PLATFORM.isModLoaded("mixed_litter")) {
                         Services.PLATFORM.applyMixedLitterCompat(entity);
                     }
@@ -774,10 +781,10 @@ public class FieldGuideCategoryScreen extends BookScreen {
     }
 
     private void renderNewLabel(GuiGraphicsExtractor guiGraphics, Bounds bounds) {
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(0, 0, 200);
-        guiGraphics.blit(Constants.LIST_ENTRY_NEW_TEXTURE, bounds.x(), bounds.y(), 0, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE);
-        guiGraphics.pose().popPose();
+        guiGraphics.pose().pushMatrix();
+        guiGraphics.pose().translate(0f, 0f);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.LIST_ENTRY_NEW_TEXTURE, bounds.x(), bounds.y(), 0f, (float) CELL_SIZE, CELL_SIZE, CELL_SIZE, 256, 256);
+        guiGraphics.pose().popMatrix();
     }
 
     private void renderEntryTooltip(GuiGraphicsExtractor guiGraphics, Object entry, int mouseX, int mouseY, boolean unlocked) {
@@ -813,9 +820,9 @@ public class FieldGuideCategoryScreen extends BookScreen {
                     tooltip.add(Component.literal(id.toString()).withStyle(ChatFormatting.DARK_GRAY));
                 }
             }
-            guiGraphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
+            guiGraphics.setComponentTooltipForNextFrame(this.font, tooltip, mouseX, mouseY);
         } else {
-            guiGraphics.renderTooltip(this.font, Component.translatable("fieldguide.unknown"), mouseX, mouseY);
+            guiGraphics.setTooltipForNextFrame(this.font, Component.translatable("fieldguide.unknown"), mouseX, mouseY);
         }
     }
 
@@ -840,7 +847,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
     private void renderPageNumber(int page, Bounds bounds, GuiGraphicsExtractor guiGraphics) {
         String str = page + "";
-        guiGraphics.drawString(this.font, str, bounds.x_center() - font.width(str) / 2, bounds.bottom() - 11, ClientConfig.get().getPageNumberColorInt(), false);
+        guiGraphics.text(this.font, str, bounds.x_center() - font.width(str) / 2, bounds.bottom() - 11, ClientConfig.get().getPageNumberColorInt(), false);
     }
 
     private void renderEntryInGrid(GuiGraphicsExtractor guiGraphics, Object entry, int x, int y, boolean unlocked) {
@@ -861,9 +868,10 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
         if (entry instanceof GuideEntry ge && ge.isStructure() && coreEntry instanceof Block) {
             EntryRenderHelper.renderStructure(guiGraphics, ge, x, y, CELL_SIZE - 4, unlocked, false, 1.0F);
-        } else if (isCobblemon) {
-            EntryRenderHelper.renderCobblemon(guiGraphics, (GuideEntry) entry, x, y, CELL_SIZE - 8, CELL_SIZE - 8, unlocked, false, 1.0F);
-        } else if (isTutorial) {
+        }// else if (isCobblemon) {
+        // EntryRenderHelper.renderCobblemon(guiGraphics, (GuideEntry) entry, x, y, CELL_SIZE - 8, CELL_SIZE - 8, unlocked, false, 1.0F);
+        //}
+        else if (isTutorial) {
             EntryRenderHelper.renderTutorial(guiGraphics, (GuideEntry) entry, x, y, CELL_SIZE - 8, CELL_SIZE - 8, unlocked, false, 1.0F);
         } else if (coreEntry instanceof EntityType<?>) {
             Entity entity = getCachedEntity(entry);

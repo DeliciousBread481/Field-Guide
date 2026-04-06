@@ -18,11 +18,10 @@ import java.util.UUID;
 public class FieldGuideProgressManager {
     private static final FieldGuideProgressManager NOOP = new FieldGuideProgressManager();
     private static FieldGuideProgressManager INSTANCE = NOOP;
-
-    private MinecraftServer server;
-    private Path progressDir;
     private final Map<UUID, PlayerFieldGuideProgress> playerProgress = new HashMap<>();
     private final Map<UUID, Map<Integer, Long>> recentlyScannedEntities = new HashMap<>();
+    private MinecraftServer server;
+    private Path progressDir;
 
     private FieldGuideProgressManager() {
     }
@@ -30,21 +29,6 @@ public class FieldGuideProgressManager {
     private FieldGuideProgressManager(MinecraftServer server) {
         this.server = server;
         this.progressDir = server.getWorldPath(LevelResource.ROOT).resolve("fieldguide_progress");
-    }
-
-    public void recordScan(ServerPlayer player, int entityId) {
-        recentlyScannedEntities.computeIfAbsent(player.getUUID(), k -> new HashMap<>()).put(entityId, System.currentTimeMillis());
-    }
-
-    public boolean wasRecentlyScanned(ServerPlayer player, int entityId) {
-        Map<Integer, Long> scans = recentlyScannedEntities.get(player.getUUID());
-        if (scans != null) {
-            Long time = scans.get(entityId);
-            if (time != null) {
-                return (System.currentTimeMillis() - time) < 10000; // 10 seconds
-            }
-        }
-        return false;
     }
 
     public static void init(MinecraftServer server) {
@@ -62,6 +46,21 @@ public class FieldGuideProgressManager {
 
     public static FieldGuideProgressManager getInstance() {
         return INSTANCE;
+    }
+
+    public void recordScan(ServerPlayer player, int entityId) {
+        recentlyScannedEntities.computeIfAbsent(player.getUUID(), k -> new HashMap<>()).put(entityId, System.currentTimeMillis());
+    }
+
+    public boolean wasRecentlyScanned(ServerPlayer player, int entityId) {
+        Map<Integer, Long> scans = recentlyScannedEntities.get(player.getUUID());
+        if (scans != null) {
+            Long time = scans.get(entityId);
+            if (time != null) {
+                return (System.currentTimeMillis() - time) < 10000; // 10 seconds
+            }
+        }
+        return false;
     }
 
     public void onPlayerJoin(ServerPlayer player) {
@@ -82,11 +81,11 @@ public class FieldGuideProgressManager {
 
         try {
             Files.createDirectories(progressDir);
-            Files.move(legacyFile, progressDir.resolve(profile.getId() + ".json"));
-            Constants.LOG.info("Migrated legacy field guide progress for {}", profile.getName());
+            Files.move(legacyFile, progressDir.resolve(profile.id() + ".json"));
+            Constants.LOG.info("Migrated legacy field guide progress for {}", profile.name());
         } catch (FileAlreadyExistsException ignored) {
         } catch (Exception e) {
-            Constants.LOG.error("Failed to migrate legacy field guide progress for {}", profile.getName(), e);
+            Constants.LOG.error("Failed to migrate legacy field guide progress for {}", profile.name(), e);
         }
     }
 

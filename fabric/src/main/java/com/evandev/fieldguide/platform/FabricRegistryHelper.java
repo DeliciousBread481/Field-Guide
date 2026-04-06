@@ -2,13 +2,13 @@ package com.evandev.fieldguide.platform;
 
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.platform.services.IRegistryHelper;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.minecraft.advancements.CriterionTrigger;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.ItemLike;
@@ -38,6 +38,6 @@ public class FabricRegistryHelper implements IRegistryHelper {
 
     @Override
     public void registerToTab(ResourceKey<CreativeModeTab> tab, Supplier<? extends ItemLike> itemSupplier) {
-        ItemGroupEvents.modifyEntriesEvent(tab).register(content -> content.accept(itemSupplier.get()));
+        CreativeModeTabEvents.modifyOutputEvent(tab).register(content -> content.accept(itemSupplier.get()));
     }
 }

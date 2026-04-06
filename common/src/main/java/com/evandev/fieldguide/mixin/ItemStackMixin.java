@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class ItemStackMixin {
     @Inject(method = "finishUsingItem", at = @At("HEAD"))
     private void onFinishUsingItem(Level level, LivingEntity livingEntity, CallbackInfoReturnable<ItemStack> cir) {
-        if (!level.isClientSide && livingEntity instanceof ServerPlayer serverPlayer) {
+        if (!level.isClientSide() && livingEntity instanceof ServerPlayer serverPlayer) {
             ItemStack stack = (ItemStack) (Object) this;
             Identifier itemId = EntryResolver.getEntryId(stack.getItem());
             PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(serverPlayer);

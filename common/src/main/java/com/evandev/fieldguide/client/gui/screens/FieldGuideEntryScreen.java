@@ -30,7 +30,6 @@ import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.network.CopyPagePacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -38,6 +37,9 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.CommonComponents;
@@ -52,6 +54,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -65,7 +68,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     private final FieldGuideCategoryScreen parent;
     private final Object entry;
     private final List<Identifier> spawnBiomes = new ArrayList<>();
-    private final List<AbstractWidget> exposureWidgets = new ArrayList<>();
+    //private final List<AbstractWidget> exposureWidgets = new ArrayList<>();
     private List<ItemStack> loadedDrops = new ArrayList<>();
     private boolean dataLoaded = false;
     private boolean isLoadingData = false;
@@ -124,9 +127,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     public void refresh() {
-        if (this.minecraft != null) {
-            this.init(this.minecraft, this.width, this.height);
-        }
+        this.init();
     }
 
     public FieldGuideCategoryScreen getParentScreen() {
@@ -137,10 +138,10 @@ public class FieldGuideEntryScreen extends BookScreen {
         return leftPageBounds;
     }
 
-    public void addExposureWidget(AbstractWidget widget) {
+/*    public void addExposureWidget(AbstractWidget widget) {
         this.addRenderableWidget(widget);
         this.exposureWidgets.add(widget);
-    }
+    }*/
 
     private void refreshExposureWidgets() {
 /*        if (Services.PLATFORM.isModLoaded("exposure")) {
@@ -158,9 +159,9 @@ public class FieldGuideEntryScreen extends BookScreen {
     private void updateWidgetVisibility() {
         boolean overviewVisible = this.variantOverviewWidget != null && this.variantOverviewWidget.isVisible();
 
-        for (AbstractWidget widget : exposureWidgets) {
+/*        for (AbstractWidget widget : exposureWidgets) {
             widget.visible = !overviewVisible;
-        }
+        }*/
 
         if (this.prevVariantButton != null) {
             this.prevVariantButton.visible = !overviewVisible;
@@ -361,12 +362,16 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+
         if (this.variantOverviewWidget != null && this.variantOverviewWidget.isVisible()) {
-            if (this.variantOverviewWidget.mouseClicked(mouseX, mouseY, button)) return true;
+            if (this.variantOverviewWidget.mouseClicked(event, doubleClick)) return true;
         }
 
-        if (super.mouseClicked(mouseX, mouseY, button)) return true;
+        if (super.mouseClicked(event, doubleClick)) return true;
 
         List<Season> seasons = SeasonsAPI.getGrowingSeasons(entry);
         if (!seasons.isEmpty()) {
@@ -460,16 +465,15 @@ public class FieldGuideEntryScreen extends BookScreen {
         }
     }
 
-    @Override
-    public void render(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderFieldGuideBackground(guiGraphics, mouseX, mouseY, partialTick);
+    public void extractRenderState(@NonNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        this.extractFieldGuideBackground(guiGraphics, mouseX, mouseY, partialTick);
 
-        guiGraphics.pose().pushPose();
+        guiGraphics.pose().pushMatrix();
 
-        guiGraphics.blit(Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0f, 0f, this.bounds.width(), this.bounds.height(), 256, 256);
 
         Identifier detailsTexture = getDetailsTexture();
-        guiGraphics.blit(detailsTexture, this.bounds.left(), this.bounds.top(), 0, 0, this.bounds.width(), this.bounds.height(), this.bounds.width(), this.bounds.height());
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, detailsTexture, this.bounds.left(), this.bounds.top(), 0f, 0f, this.bounds.width(), this.bounds.height(), 256, 256);
 
         boolean unlocked = ClientFieldGuideManager.isUnlocked(entry);
 
@@ -481,9 +485,8 @@ public class FieldGuideEntryScreen extends BookScreen {
             String currentVariantId = (!entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) ? entityVariants.get(currentVariantIndex).id() : null;
             String hintText = ClientTextManager.getInstance().getLockedHint(entry, currentVariantId);
 
-            RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-            guiGraphics.drawString(this.font, getTitleForEntry(entry), titleX, titleY, ClientConfig.get().getTextMutedColorInt(), false);
-            guiGraphics.drawWordWrap(font, Component.literal(hintText), titleX, titleY + 21, textAreaWidth, ClientConfig.get().getTextMutedColorInt());
+            guiGraphics.text(this.font, getTitleForEntry(entry), titleX, titleY, ClientConfig.get().getTextMutedColorInt(), false);
+            guiGraphics.text(font, Component.literal(hintText), titleX, titleY + 21, ClientConfig.get().getTextMutedColorInt(), false);
         } else {
             long discoveryTime = ProgressManager.getInstance().getDiscoveryTime(entry);
             if (discoveryTime > 0 && ClientConfig.get().showUnlockDate) {
@@ -504,23 +507,21 @@ public class FieldGuideEntryScreen extends BookScreen {
 
                 int quillX = this.rightPageBounds.right() - 15;
                 int quillY = this.rightPageBounds.top() + 5;
-                RenderSystem.enableBlend();
-                guiGraphics.blit(Constants.QUILL_ICON, quillX, quillY, 0, 0, 11, 11, 11, 11);
-                RenderSystem.disableBlend();
+                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.QUILL_ICON, quillX, quillY, 0f, 0f, 11, 11, 256, 256);
 
                 if (mouseX >= quillX && mouseX <= quillX + 11 && mouseY >= quillY && mouseY <= quillY + 11) {
-                    guiGraphics.renderTooltip(this.font, dateComponent, mouseX, mouseY);
+                    guiGraphics.setTooltipForNextFrame(this.font, dateComponent, mouseX, mouseY);
                 }
             }
 
             if (ServerConfig.get().disableEditingNames) {
-                guiGraphics.drawString(this.font, ClientFieldGuideManager.getEntryName(entry), titleX, titleY, ClientConfig.get().getTextTitleColorInt(), false);
+                guiGraphics.text(this.font, ClientFieldGuideManager.getEntryName(entry), titleX, titleY, ClientConfig.get().getTextTitleColorInt(), false);
                 if (!entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) {
                     VariantDef variant = entityVariants.get(currentVariantIndex);
                     String variantId = variant.id();
                     String customVariantName = ProgressManager.getInstance().getCustomName(ClientFieldGuideManager.getEntryId(entry).toString() + "#" + variantId);
                     Component variantName = customVariantName != null ? Component.literal(customVariantName) : FieldGuideVariantManager.getVariantDisplayName(variant);
-                    guiGraphics.drawString(this.font, variantName, titleX, titleY + LINE_HEIGHT + 3, ClientConfig.get().getTextMutedColorInt(), false);
+                    guiGraphics.text(this.font, variantName, titleX, titleY + LINE_HEIGHT + 3, ClientConfig.get().getTextMutedColorInt(), false);
                 }
             }
 
@@ -536,7 +537,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                 } else {
                     textY += LINE_HEIGHT; // Buffer
                 }
-                guiGraphics.drawWordWrap(font, Component.literal(ClientFieldGuideManager.getEntryDescription(entry)), titleX, textY, textAreaWidth, ClientConfig.get().getTextColorInt());
+                guiGraphics.text(font, Component.literal(ClientFieldGuideManager.getEntryDescription(entry)), titleX, textY, ClientConfig.get().getTextColorInt(), false);
             }
         }
 
@@ -549,7 +550,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         String variantId = (!entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) ? entityVariants.get(currentVariantIndex).id() : null;
         //boolean hideEntity = Services.PLATFORM.isModLoaded("exposure") && ClientExposureCompat.hasPhotograph(entry, variantId);
-        boolean hideEntity = true;
+        boolean hideEntity = false;
         boolean mouseOverEntity = mouseX >= xPos - 50 && mouseX <= xPos + 50 && mouseY >= yPos - 50 && mouseY <= yPos + 50;
 
         float targetScale = 1.0f;
@@ -573,10 +574,10 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         Object renderEntry = EntryResolver.resolveCoreEntry(entry);
 
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(xPos, yPos, 0);
-        guiGraphics.pose().scale(bounce, bounce, bounce);
-        guiGraphics.pose().translate(-xPos, -yPos, 0);
+        guiGraphics.pose().pushMatrix();
+        guiGraphics.pose().translate((float) xPos, (float) yPos);
+        guiGraphics.pose().scale(bounce, bounce);
+        guiGraphics.pose().translate((float) -xPos, (float) -yPos);
 
         if (entry instanceof GuideEntry ge && ge.isStructure() && renderEntry instanceof Block block) {
             if (!hideEntity) {
@@ -586,10 +587,10 @@ public class FieldGuideEntryScreen extends BookScreen {
                     EntryRenderHelper.renderBlock(guiGraphics, block, xPos, yPos, 40.0F, unlocked, true, 1.0f);
                 }
             }
-        } else if (entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && ge.virtualData().virtualType().equals("cobblemon")) {
+/*        } else if (entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && ge.virtualData().virtualType().equals("cobblemon")) {
             if (!hideEntity) {
                 EntryRenderHelper.renderCobblemon(guiGraphics, ge, xPos, yPos, 112, 112, unlocked, true, 1.0f);
-            }
+            }*/
         } else if (entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && ge.virtualData().virtualType().equals("tutorial")) {
             if (!hideEntity) {
                 EntryRenderHelper.renderTutorial(guiGraphics, ge, xPos, yPos, 112, 112, unlocked, true, 1.0f);
@@ -612,18 +613,17 @@ public class FieldGuideEntryScreen extends BookScreen {
                 EntryRenderHelper.renderItem(guiGraphics, item, xPos, yPos, 60.0F, unlocked, true, 1.0f);
             }
         }
-        guiGraphics.pose().popPose();
+        guiGraphics.pose().popMatrix();
 
         if (unlocked) {
             renderSeasons(guiGraphics, xPos, yPos, mouseX, mouseY);
         }
 
         if (!dataLoaded) {
-            guiGraphics.drawString(this.font, Component.translatable("gui.fieldguide.loading"), this.bounds.left() + 20, this.bounds.bottom() - 30, ClientConfig.get().getTextMutedColorInt(), false);
+            guiGraphics.text(this.font, Component.translatable("gui.fieldguide.loading"), this.bounds.left() + 20, this.bounds.bottom() - 30, ClientConfig.get().getTextMutedColorInt(), false);
         }
 
-        guiGraphics.pose().popPose();
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+        guiGraphics.pose().popMatrix();
     }
 
     private void renderSeasons(GuiGraphicsExtractor guiGraphics, int x, int y, int mouseX, int mouseY) {
@@ -644,12 +644,11 @@ public class FieldGuideEntryScreen extends BookScreen {
 
             boolean hovered = Bounds.isMouseOver(mouseX, mouseY, drawX - 2, startY - 2, iconSize + 4, iconSize + 4);
 
-            RenderSystem.enableBlend();
             if (hovered) {
-                guiGraphics.pose().pushPose();
-                guiGraphics.pose().translate(drawX + iconSize / 2.0, startY + iconSize / 2.0, 0);
-                guiGraphics.pose().scale(1.1f, 1.1f, 1.1f);
-                guiGraphics.pose().translate(-(drawX + iconSize / 2.0), -(startY + iconSize / 2.0), 0);
+                guiGraphics.pose().pushMatrix();
+                guiGraphics.pose().translate((float) (drawX + iconSize / 2.0), (float) (startY + iconSize / 2.0));
+                guiGraphics.pose().scale(1.1f, 1.1f);
+                guiGraphics.pose().translate((float) (-(drawX + iconSize / 2.0)), (float) (-(startY + iconSize / 2.0)));
             }
 
             int u = 0;
@@ -662,12 +661,11 @@ public class FieldGuideEntryScreen extends BookScreen {
                     v = 8;
                 }
             }
-            guiGraphics.blit(Constants.SEASONS_TEXTURE, drawX, startY, iconSize, iconSize, u, v, 8, 8, 16, 16);
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.SEASONS_TEXTURE, drawX, startY, (float) u, (float) v, 8, 8, 256, 256);
 
             if (hovered) {
-                guiGraphics.pose().popPose();
+                guiGraphics.pose().popMatrix();
             }
-            RenderSystem.disableBlend();
 
             if (hovered) {
                 hoveredSeason = season;
@@ -675,7 +673,7 @@ public class FieldGuideEntryScreen extends BookScreen {
         }
 
         if (hoveredSeason != null) {
-            guiGraphics.renderTooltip(this.font, hoveredSeason.getDisplayName(), mouseX, mouseY);
+            guiGraphics.setTooltipForNextFrame(this.font, hoveredSeason.getDisplayName(), mouseX, mouseY);
         }
     }
 
@@ -726,24 +724,22 @@ public class FieldGuideEntryScreen extends BookScreen {
 
                 boolean mouseOver = Bounds.isMouseOver(mouseX, mouseY, x, y, itemSize, itemSize) && (this.variantOverviewWidget == null || !this.variantOverviewWidget.isMouseOver(mouseX, mouseY));
                 int backgroundOffset = mouseOver ? itemSize : 0;
-                graphics.blit(Constants.WIDGETS_TEXTURE, x, y, 20, 64 + backgroundOffset, itemSize, itemSize);
+                graphics.blit(RenderPipelines.GUI_TEXTURED, Constants.WIDGETS_TEXTURE, x, y, 20f, (float) (64 + backgroundOffset), itemSize, itemSize, 256, 256);
                 int offset = (itemSize - 16) / 2;
 
                 if (Minecraft.getInstance().getResourceManager().getResource(texture).isPresent()) {
-                    graphics.blit(texture, x + offset, y + offset, 0, 0, 16, 16, 16, 16);
+                    graphics.blit(RenderPipelines.GUI_TEXTURED, texture, x + offset, y + offset, 0f, 0f, 16, 16, 256, 256);
                 } else {
                     Identifier plainsTexture = Identifier.fromNamespaceAndPath("minecraft", "textures/immersiveoverlays/plains.png");
                     if (Minecraft.getInstance().getResourceManager().getResource(plainsTexture).isPresent()) {
-                        graphics.blit(plainsTexture, x + offset, y + offset, 0, 0, 16, 16, 16, 16);
+                        graphics.blit(RenderPipelines.GUI_TEXTURED, plainsTexture, x + offset, y + offset, 0f, 0f, 16, 16, 256, 256);
                     }
                 }
 
                 if (Bounds.isMouseOver(mouseX, mouseY, x + offset, y + offset, 16, 16)) {
-                    graphics.renderTooltip(this.font, Component.translatable("biome." + item.getNamespace() + "." + item.getPath()), mouseX, mouseY);
+                    graphics.setTooltipForNextFrame(this.font, Component.translatable("biome." + item.getNamespace() + "." + item.getPath()), mouseX, mouseY);
                 }
-            }, item -> {
-                this.minecraft.setScreen(new FieldGuideCategoryScreen("=!" + item, this));
-            }));
+            }, item -> this.minecraft.setScreen(new FieldGuideCategoryScreen("=!" + item, this))));
         }
     }
 
@@ -752,20 +748,19 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         List<ItemStack> drops = loadedDrops;
 
-        if (unlocked && drops.isEmpty() && isCobblemon(entry)) {
+/*        if (unlocked && drops.isEmpty() && isCobblemon(entry)) {
             drops = ClientFieldGuideCobblemonCompat.getCobblemonDrops(entry);
-        }
+        }*/
 
         if (!drops.isEmpty()) {
             int dropItemSize = 20;
             this.addRenderableWidget(new PaginatedGridWidget<>(this.leftPageBounds.left() + 2, this.leftPageBounds.bottom() - 33, this.leftPageBounds.width() - 4, dropItemSize, 5, dropItemSize, 0, drops, (graphics, stack, x, y, mouseX, mouseY) -> {
-                RenderSystem.enableDepthTest();
                 boolean mouseOver = Bounds.isMouseOver(mouseX, mouseY, x, y, dropItemSize, dropItemSize) && (this.variantOverviewWidget == null || !this.variantOverviewWidget.isMouseOver(mouseX, mouseY));
                 int backgroundOffset = mouseOver ? dropItemSize : 0;
-                graphics.blit(Constants.WIDGETS_TEXTURE, x, y, 0, 64 + backgroundOffset, dropItemSize, dropItemSize);
+                graphics.blit(RenderPipelines.GUI_TEXTURED, Constants.WIDGETS_TEXTURE, x, y, 0f, (float) (64 + backgroundOffset), dropItemSize, dropItemSize, 256, 256);
                 int offset = (dropItemSize - 16) / 2;
-                graphics.renderItem(stack, x + offset, y + offset);
-                graphics.renderItemDecorations(this.font, stack, x + offset, y + offset, "");
+                graphics.fakeItem(stack, x + offset, y + offset);
+                graphics.itemDecorations(this.font, stack, x + offset, y + offset, "");
                 if (mouseOver) {
                     Minecraft mc = Minecraft.getInstance();
                     List<Component> tooltip = new ArrayList<>(Screen.getTooltipFromItem(mc, stack));
@@ -773,7 +768,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                         float dropChance = stack.get(ModDataComponents.DROP_CHANCE.get());
                         tooltip.add(Component.literal(String.format(Locale.ROOT, "%.2f%%", dropChance)).withStyle(ChatFormatting.GRAY));
                     }
-                    graphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
+                    graphics.setComponentTooltipForNextFrame(this.font, tooltip, mouseX, mouseY);
                 }
             }, stack -> {
                 this.minecraft.setScreen(new FieldGuideCategoryScreen("=^" + stack.getHoverName().getString().toLowerCase(Locale.ROOT), this));
@@ -816,18 +811,18 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(@NonNull KeyEvent event) {
         if (this.getFocused() instanceof AbstractWidget widget && widget.isFocused()) {
-            if (this.minecraft.options.keyInventory.matches(keyCode, scanCode)) return true;
-            if (FieldGuideClient.OPEN_GUIDE_KEY.matches(keyCode, scanCode)) return true;
+            if (this.minecraft.options.keyInventory.matches(event)) return true;
+            if (FieldGuideClient.OPEN_GUIDE_KEY.matches(event)) return true;
         }
 
-        if (this.minecraft.player != null && this.minecraft.options.keyInventory.matches(keyCode, scanCode)) {
+        if (this.minecraft.player != null && this.minecraft.options.keyInventory.matches(event)) {
             this.minecraft.setScreen(new InventoryScreen(this.minecraft.player));
             return true;
         }
 
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(event);
     }
 
     @Override
@@ -838,8 +833,6 @@ public class FieldGuideEntryScreen extends BookScreen {
 
     private void renderDynamicAttributes(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY) {
         if (activeAttributes.isEmpty()) return;
-
-        RenderSystem.setShaderColor(1, 1, 1, 1);
 
         int iconSize = 9;
         int iconSpacing = 2;
@@ -862,22 +855,22 @@ public class FieldGuideEntryScreen extends BookScreen {
         int textYOffset = 4;
 
         for (GuideAttribute attr : activeAttributes) {
-            RenderSystem.setShaderTexture(0, attr.icon());
-            guiGraphics.blit(attr.icon(), drawX + horizontalPadding, currentY + iconYOffset + (iconSize - attr.height()) / 2, attr.u(), attr.v(), attr.width(), attr.height(), attr.textureWidth(), attr.textureHeight());
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, attr.icon(), drawX + horizontalPadding, currentY + iconYOffset + (iconSize - attr.height()) / 2, attr.u(), attr.v(), attr.width(), attr.height(), attr.textureWidth(), attr.textureHeight());
+
             int textWidth = 0;
             if (attr.value() != null) {
                 textWidth = font.width(attr.value());
-                guiGraphics.drawString(this.font, attr.value(), drawX + horizontalPadding + attr.width() + iconSpacing, currentY + textYOffset, ClientConfig.get().getTextColorInt(), false);
+                guiGraphics.text(this.font, attr.value(), drawX + horizontalPadding + attr.width() + iconSpacing, currentY + textYOffset, ClientConfig.get().getTextColorInt(), false);
                 textWidth += iconSpacing;
             }
             Bounds attrBounds = new Bounds(drawX, currentY, attr.width() + horizontalPadding * 2 + textWidth, barHeight);
 
             drawX += attrBounds.width();
-            guiGraphics.blit(Constants.ATTRIBUTES_SEPARATOR, drawX, currentY, 0, 0, 1, 15, 1, 15);
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.ATTRIBUTES_SEPARATOR, drawX, currentY, 0, 0, 1, 15, 1, 15);
             drawX += gap;
 
             if (attrBounds.contains(mouseX, mouseY)) {
-                this.setTooltipForNextRenderPass(attr.tooltip());
+                guiGraphics.setTooltipForNextFrame(this.font, attr.tooltip(), mouseX, mouseY);
             }
         }
     }

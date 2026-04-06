@@ -120,7 +120,7 @@ public class FieldGuideRaytracer {
             if (actualTargetKey instanceof EntityType<?> actualType) {
                 var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(actualType);
                 if (key.isPresent()) {
-                    var holder = BuiltInRegistries.ENTITY_TYPE.getHolder(key.get());
+                    var holder = BuiltInRegistries.ENTITY_TYPE.get(key.get());
                     if (holder.isPresent() && holder.get().is(killToUnlockTag)) requiresAction = true;
                 }
             } else if (actualTargetKey instanceof net.minecraft.world.item.Item item) {

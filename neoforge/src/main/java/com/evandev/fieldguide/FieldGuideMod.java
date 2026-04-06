@@ -3,8 +3,6 @@ package com.evandev.fieldguide;
 import com.evandev.fieldguide.api.EntryUnlockData;
 import com.evandev.fieldguide.api.variant.VariantDef;
 import com.evandev.fieldguide.api.variant.VariantProvider;
-import com.evandev.fieldguide.compat.exposure.ExposureNeoForgeEventHandler;
-import com.evandev.fieldguide.compat.mixedlitter.MixedLitterCompat;
 import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.network.*;
 import com.evandev.fieldguide.platform.NeoForgeRegistryHelper;
@@ -17,12 +15,14 @@ import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Mob;
+import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.AddReloadListenerEvent;
+import net.neoforged.neoforge.event.AddServerReloadListenersEvent;
 import net.neoforged.neoforge.event.OnDatapackSyncEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
@@ -50,11 +50,18 @@ public class FieldGuideMod {
         if (ModList.get().isLoaded("mixed_litter")) {
             //FieldGuideVariantManager.registerProvider(Mob.class, new MixedLitterCompat.MixedLitterVariantProvider());
         }
+
+        // Initialize client events explicitly to bypass annotation issues
+        if (FMLLoader.getCurrent().getDist() == Dist.CLIENT) {
+            FieldGuideNeoForgeClient.init(modEventBus);
+        }
     }
 
+/*
     private void registerExposureCompat() {
         NeoForge.EVENT_BUS.register(ExposureNeoForgeEventHandler.class);
     }
+*/
 
     private void registerPayloads(final RegisterPayloadHandlersEvent event) {
         final PayloadRegistrar registrar = event.registrar(Constants.MOD_ID).versioned("1.0");
@@ -95,8 +102,8 @@ public class FieldGuideMod {
     }
 
     @SubscribeEvent
-    public void onAddReloadListeners(AddReloadListenerEvent event) {
-        event.addListener(ServerFieldGuideManager.getInstance());
+    public void onAddReloadListeners(AddServerReloadListenersEvent event) {
+        event.addListener(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "server_data"), ServerFieldGuideManager.getInstance());
     }
 
     @SubscribeEvent

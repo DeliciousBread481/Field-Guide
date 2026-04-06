@@ -8,21 +8,19 @@ import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.gui.util.Bounds;
 import com.evandev.fieldguide.client.gui.util.EntryRenderHelper;
 import com.evandev.fieldguide.client.progress.ProgressManager;
-import com.evandev.fieldguide.config.ClientConfig;
-import com.evandev.fieldguide.config.ServerConfig;
-import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Arrays;
 import java.util.List;
@@ -98,13 +96,13 @@ public class VariantOverviewWidget extends AbstractWidget {
     }
 
     @Override
-    public void renderWidget(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
+    protected void extractWidgetRenderState(@NonNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         if (!this.visible) return;
 
-        graphics.pose().pushPose();
-        graphics.pose().translate(0, 0, 300);
+        guiGraphics.pose().pushMatrix();
+        guiGraphics.pose().translate(0f, 0f);
 
-        graphics.blit(Constants.VARIANT_WIDGET_TEXTURE, this.getX(), this.getY(), 0, 0, this.width, this.height, this.width, this.height);
+        guiGraphics.blit(Constants.VARIANT_WIDGET_TEXTURE, this.getX(), this.getY(), 0, 0, this.width, this.height, this.width, this.height);
 
         Component tooltipText = null;
 
@@ -143,29 +141,29 @@ public class VariantOverviewWidget extends AbstractWidget {
                 provider.apply(mob, variant);
             }
 
-            graphics.pose().pushPose();
+            guiGraphics.pose().pushMatrix();
 
             int centerX = bounds.x_center();
             int centerY = bounds.y_center();
-            graphics.pose().translate(centerX, centerY, 0);
+            guiGraphics.pose().translate((float) centerX, (float) centerY);
             float currentScale = hoverScales[gridIndex];
-            graphics.pose().scale(currentScale, currentScale, currentScale);
+            guiGraphics.pose().scale(currentScale, currentScale);
 
-            graphics.pose().translate(-centerX, -centerY, 0);
+            guiGraphics.pose().translate((float) -centerX, (float) -centerY);
 
             boolean renderedPhoto = false;
             /* if (isUnlocked && Services.PLATFORM.isModLoaded("exposure") && ClientConfig.get().exposureShowPhotographsInGrid) {
                 ItemStack existingPhoto = ProgressManager.getInstance().getPhotograph(entry, variant.id());
                 if (!existingPhoto.isEmpty()) {
-                    ClientExposureCompat.renderPhotographInGrid(graphics, centerX - (bounds.width() / 2), centerY - (bounds.height() / 2), bounds.width(), bounds.height(), existingPhoto);
+                    ClientExposureCompat.renderPhotographInGrid(guiGraphics, centerX - (bounds.width() / 2), centerY - (bounds.height() / 2), bounds.width(), bounds.height(), existingPhoto);
                     renderedPhoto = true;
                 } else if (ServerConfig.get().keepSilhouetteWhenUnlocked) {
-                    ClientExposureCompat.renderMissingPhotoBackground(graphics, centerX - (bounds.width() / 2), centerY - (bounds.height() / 2), bounds.width(), bounds.height());
+                    ClientExposureCompat.renderMissingPhotoBackground(guiGraphics, centerX - (bounds.width() / 2), centerY - (bounds.height() / 2), bounds.width(), bounds.height());
                 }
             }*/
 
             if (!renderedPhoto) {
-                EntryRenderHelper.renderEntityNormalized(graphics, renderEntity, centerX, centerY, bounds.width(), bounds.height(), isUnlocked, false, 1.0f, false);
+                EntryRenderHelper.renderEntityNormalized(guiGraphics, renderEntity, centerX, centerY, bounds.width(), bounds.height(), isUnlocked, false, 1.0f, false);
             }
 
             if (provider != null && renderedEntity instanceof Mob mob && originalVariant != null) {
@@ -184,7 +182,7 @@ public class VariantOverviewWidget extends AbstractWidget {
                 hoverScales[gridIndex] = targetScale;
             }
 
-            graphics.pose().popPose();
+            guiGraphics.pose().popMatrix();
 
             if (hovered) {
                 if (isUnlocked) {
@@ -204,21 +202,26 @@ public class VariantOverviewWidget extends AbstractWidget {
         }
 
         if (tooltipText != null) {
-            graphics.renderTooltip(Minecraft.getInstance().font, tooltipText, mouseX, mouseY);
+            guiGraphics.setTooltipForNextFrame(Minecraft.getInstance().font, tooltipText, mouseX, mouseY);
         }
 
-        if (this.currentPage > 0) this.leftButton.render(graphics, mouseX, mouseY, partialTicks);
-        if (this.currentPage < maxPages - 1) this.rightButton.render(graphics, mouseX, mouseY, partialTicks);
+        if (this.currentPage > 0) this.leftButton.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
+        if (this.currentPage < maxPages - 1)
+            this.rightButton.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
 
-        graphics.pose().popPose();
+        guiGraphics.pose().popMatrix();
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(@NonNull MouseButtonEvent event, boolean doubleClick) {
         if (!this.visible) return false;
 
-        if (this.currentPage > 0 && this.leftButton.mouseClicked(mouseX, mouseY, button)) return true;
-        if (this.currentPage < maxPages - 1 && this.rightButton.mouseClicked(mouseX, mouseY, button)) return true;
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+
+        if (this.currentPage > 0 && this.leftButton.mouseClicked(event, doubleClick)) return true;
+        if (this.currentPage < maxPages - 1 && this.rightButton.mouseClicked(event, doubleClick)) return true;
 
         int startIdx = currentPage * 9;
         int endIdx = Math.min(startIdx + 9, variants.size());
@@ -243,7 +246,7 @@ public class VariantOverviewWidget extends AbstractWidget {
             return true;
         }
 
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
@@ -262,5 +265,4 @@ public class VariantOverviewWidget extends AbstractWidget {
         int y = startY + (row * (cell_size + gap));
         return new Bounds(x, y, cell_size, cell_size);
     }
-
 }

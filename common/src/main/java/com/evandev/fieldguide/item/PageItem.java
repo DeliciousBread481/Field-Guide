@@ -10,7 +10,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -28,12 +28,12 @@ public class PageItem extends Item {
     }
 
     @Override
-    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
+    public @NotNull InteractionResult use(@NotNull Level level, @NotNull Player player, @NotNull InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         Identifier entryId = stack.get(ModDataComponents.ENTRY_ID.get());
 
         if (entryId != null) {
-            if (!level.isClientSide && player instanceof ServerPlayer serverPlayer) {
+            if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
                 PlayerFieldGuideProgress progress = FieldGuideProgressManager.getInstance().getProgress(serverPlayer);
 
                 if (progress != null) {
@@ -79,23 +79,23 @@ public class PageItem extends Item {
                     }
                 }
             }
-            return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
+            return level.isClientSide() ? InteractionResult.SUCCESS : InteractionResult.CONSUME;
         }
 
-        return InteractionResultHolder.pass(stack);
+        return InteractionResult.PASS;
     }
 
     @Override
-    public void appendHoverText(@NotNull ItemStack stack, @NotNull TooltipContext context, @NotNull List<Component> tooltipComponents, @NotNull TooltipFlag tooltipFlag) {
+    public void appendHoverText(@NotNull ItemStack stack, @NotNull TooltipContext context, @NotNull net.minecraft.world.item.component.TooltipDisplay display, @NotNull java.util.function.Consumer<net.minecraft.network.chat.Component> tooltip, @NotNull TooltipFlag tooltipFlag) {
         Component entryName = stack.get(ModDataComponents.ENTRY_NAME.get());
         if (entryName != null) {
-            tooltipComponents.add(Component.translatable("item.fieldguide.page.entry", entryName).withStyle(ChatFormatting.GOLD));
+            tooltip.accept(Component.translatable("item.fieldguide.page.entry", entryName).withStyle(ChatFormatting.GOLD));
         }
         String author = stack.get(ModDataComponents.AUTHOR.get());
         if (author != null) {
-            tooltipComponents.add(Component.translatable("item.fieldguide.page.author", author).withStyle(ChatFormatting.GRAY));
+            tooltip.accept(Component.translatable("item.fieldguide.page.author", author).withStyle(ChatFormatting.GRAY));
         }
-        tooltipComponents.add(Component.translatable("item.fieldguide.page.tooltip").withStyle(ChatFormatting.BLUE));
-        super.appendHoverText(stack, context, tooltipComponents, tooltipFlag);
+        tooltip.accept(Component.translatable("item.fieldguide.page.tooltip").withStyle(ChatFormatting.BLUE));
+        super.appendHoverText(stack, context, display, tooltip, tooltipFlag);
     }
 }

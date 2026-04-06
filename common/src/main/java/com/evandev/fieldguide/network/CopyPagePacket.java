@@ -63,7 +63,7 @@ public record CopyPagePacket(Identifier entryId) implements CustomPacketPayload 
             switch (obj) {
                 case EntityType<?> type -> nameComponent = type.getDescription();
                 case Block block -> nameComponent = block.getName();
-                case Item item -> nameComponent = item.getDescription();
+                case Item item -> nameComponent = Component.translatable(item.getDescriptionId());
                 default -> {
                 }
             }

@@ -9,8 +9,8 @@ import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import com.evandev.fieldguide.server.data.ItemStackKey;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.EntityType;
@@ -55,11 +55,14 @@ public class LootTableHelper {
             ResourceKey<LootTable> tableId = null;
 
             if (entry instanceof EntityType<?> type) {
-                tableId = type.getDefaultLootTable();
+                tableId = type.getDefaultLootTable().orElse(null);
             } else if (entry instanceof Block block) {
-                tableId = block.getLootTable();
-            } else if (entry instanceof Item item && Block.byItem(item) != Blocks.AIR) {
-                tableId = Block.byItem(item).getLootTable();
+                tableId = block.getLootTable().orElse(null);
+            } else if (entry instanceof Item item) {
+                Block block = Block.byItem(item);
+                if (block != Blocks.AIR) {
+                    tableId = block.getLootTable().orElse(null);
+                }
             }
 
             processEntry(level, entry, tableId, lootMap);
@@ -68,23 +71,31 @@ public class LootTableHelper {
         return lootMap;
     }
 
-    private static void processEntry(ServerLevel level, Object entry, ResourceKey<LootTable> tableId, Map<Identifier, List<ItemStack>> lootMap) {
+    private static void processEntry(
+            ServerLevel level,
+            Object entry,
+            ResourceKey<LootTable> tableId,
+            Map<Identifier, List<ItemStack>> lootMap
+    ) {
         List<ItemStack> formattedDrops = new ArrayList<>();
 
-        if (tableId != null && !tableId.location().toString().equals("minecraft:empty")) {
+        if (tableId != null && !tableId.identifier().getPath().equals("empty")) {
             try {
                 LootTable table = level.getServer().reloadableRegistries().getLootTable(tableId);
-                List<ParsedDrop> finalDrops = StaticLootParser.parseTable(table, level);
 
-                for (ParsedDrop drop : finalDrops) {
-                    ItemStack stack = drop.stack.copy();
-                    stack.set(ModDataComponents.DROP_CHANCE.get(), drop.chance * 100.0f);
-                    stack.set(ModDataComponents.MIN_DROP.get(), drop.minCount);
-                    stack.set(ModDataComponents.MAX_DROP.get(), drop.maxCount);
-                    formattedDrops.add(stack);
+                if (table != LootTable.EMPTY) {
+                    List<ParsedDrop> finalDrops = StaticLootParser.parseTable(table, level);
+
+                    for (ParsedDrop drop : finalDrops) {
+                        ItemStack stack = drop.stack.copy();
+                        stack.set(ModDataComponents.DROP_CHANCE.get(), drop.chance * 100.0f);
+                        stack.set(ModDataComponents.MIN_DROP.get(), drop.minCount);
+                        stack.set(ModDataComponents.MAX_DROP.get(), drop.maxCount);
+                        formattedDrops.add(stack);
+                    }
                 }
             } catch (Exception e) {
-                Constants.LOG.error("Failed to parse loot table {}", tableId.location(), e);
+                Constants.LOG.error("Failed to parse loot table {}", tableId.identifier(), e);
             }
         }
 
@@ -128,15 +139,25 @@ public class LootTableHelper {
         Identifier entryId = EntryResolver.getRawId(EntryResolver.getEntryId(coreEntry));
 
         if (entryId == null) return false;
+
         if (targetStr.startsWith("#")) {
             try {
                 Identifier tagId = Identifier.parse(targetStr.substring(1));
+
                 if (coreEntry instanceof EntityType<?> type) {
-                    return BuiltInRegistries.ENTITY_TYPE.getHolder(BuiltInRegistries.ENTITY_TYPE.getResourceKey(type).get()).get().is(TagKey.create(Registries.ENTITY_TYPE, tagId));
+                    TagKey<EntityType<?>> tag = TagKey.create(Registries.ENTITY_TYPE, tagId);
+                    return BuiltInRegistries.ENTITY_TYPE.getResourceKey(type)
+                            .flatMap(BuiltInRegistries.ENTITY_TYPE::get)
+                            .map(holder -> holder.is(tag))
+                            .orElse(false);
+
                 } else if (coreEntry instanceof Block block) {
-                    return BuiltInRegistries.BLOCK.getHolder(BuiltInRegistries.BLOCK.getResourceKey(block).get()).get().is(TagKey.create(Registries.BLOCK, tagId));
+                    TagKey<Block> tag = TagKey.create(Registries.BLOCK, tagId);
+                    return block.defaultBlockState().is(tag);
+
                 } else if (coreEntry instanceof Item item) {
-                    return BuiltInRegistries.ITEM.getHolder(BuiltInRegistries.ITEM.getResourceKey(item).get()).get().is(TagKey.create(Registries.ITEM, tagId));
+                    TagKey<Item> tag = TagKey.create(Registries.ITEM, tagId);
+                    return item.builtInRegistryHolder().is(tag);
                 }
             } catch (Exception ignored) {
             }
@@ -192,7 +213,7 @@ public class LootTableHelper {
                         Constants.LOG.error("Failed to parse loot addition tag {}", target, e);
                     }
                 } else {
-                    Item i = BuiltInRegistries.ITEM.get(EntryResolver.getRawId(Identifier.parse(target)));
+                    Item i = BuiltInRegistries.ITEM.getValue(EntryResolver.getRawId(Identifier.parse(target)));
                     if (i != Items.AIR) {
                         ItemStack s = new ItemStack(i);
                         s.set(ModDataComponents.DROP_CHANCE.get(), 100.0f);

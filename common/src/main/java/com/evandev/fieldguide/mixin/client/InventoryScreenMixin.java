@@ -8,8 +8,9 @@ import com.evandev.fieldguide.config.ClientConfig;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.components.WidgetSprites;
-import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
+import net.minecraft.client.gui.screens.inventory.AbstractRecipeBookScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.gui.screens.recipebook.CraftingRecipeBookComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
@@ -21,7 +22,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(InventoryScreen.class)
-public abstract class InventoryScreenMixin extends EffectRenderingInventoryScreen<InventoryMenu> {
+public abstract class InventoryScreenMixin extends AbstractRecipeBookScreen<InventoryMenu> {
 
     @Unique
     private static final WidgetSprites GUIDE_BUTTON_SPRITES = new WidgetSprites(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/fieldguide_inventory_button"), Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/fieldguide_inventory_button_highlighted"));
@@ -30,7 +31,7 @@ public abstract class InventoryScreenMixin extends EffectRenderingInventoryScree
     private ImageButton fieldguide$guideButton;
 
     public InventoryScreenMixin(InventoryMenu menu, Inventory inventory, Component title) {
-        super(menu, inventory, title);
+        super(menu, new CraftingRecipeBookComponent(menu), inventory, title);
     }
 
     @Inject(method = "init", at = @At("RETURN"))
@@ -43,14 +44,12 @@ public abstract class InventoryScreenMixin extends EffectRenderingInventoryScree
         int yPos = this.topPos + ClientConfig.get().inventoryButtonYOffset;
 
         this.fieldguide$guideButton = new ImageButton(xPos, yPos, 20, 18, GUIDE_BUTTON_SPRITES, (button) -> {
-            if (this.minecraft != null) {
-                if (!FieldGuideClient.canOpenGuide()) return;
-                String defaultMode = ClientConfig.get().defaultScreen;
-                if ("last_opened_screen".equals(defaultMode) && BookScreen.lastOpenedScreen != null) {
-                    this.minecraft.setScreen(BookScreen.lastOpenedScreen);
-                } else {
-                    this.minecraft.setScreen(new FieldGuideCategoryScreen());
-                }
+            if (!FieldGuideClient.canOpenGuide()) return;
+            String defaultMode = ClientConfig.get().defaultScreen;
+            if ("last_opened_screen".equals(defaultMode) && BookScreen.lastOpenedScreen != null) {
+                this.minecraft.setScreen(BookScreen.lastOpenedScreen);
+            } else {
+                this.minecraft.setScreen(new FieldGuideCategoryScreen());
             }
         }
         );
@@ -58,7 +57,7 @@ public abstract class InventoryScreenMixin extends EffectRenderingInventoryScree
         this.addRenderableWidget(this.fieldguide$guideButton);
     }
 
-    @Inject(method = "render", at = @At("HEAD"))
+    @Inject(method = "extractRenderState(Lnet/minecraft/client/gui/GuiGraphicsExtractor;IIF)V", at = @At("HEAD"))
     private void updateButtonPosition(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
         if (this.fieldguide$guideButton != null && ClientConfig.get().showInventoryButton) {
             this.fieldguide$guideButton.setX(this.leftPos + ClientConfig.get().inventoryButtonXOffset);

@@ -1,10 +1,11 @@
 package com.evandev.fieldguide.item;
 
+import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.platform.Services;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
 
 import java.util.function.Supplier;
@@ -15,11 +16,20 @@ public class ModItems {
     public static Supplier<PageItem> PAGE;
 
     public static void init() {
-        FIELD_GUIDE = Services.REGISTRY.registerItem("field_guide", () -> new FieldGuideItem(new Item.Properties().stacksTo(1)));
+        FIELD_GUIDE = Services.REGISTRY.registerItem("field_guide", () ->
+                new FieldGuideItem(new Item.Properties()
+                        .setId(ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "field_guide")))
+                        .stacksTo(1)));
+
         if (ServerConfig.get().enableFieldGuideItem) {
             Services.REGISTRY.registerToTab(ResourceKey.create(Registries.CREATIVE_MODE_TAB, Identifier.withDefaultNamespace("tools_and_utilities")), FIELD_GUIDE);
         }
-        PAGE = Services.REGISTRY.registerItem("page", () -> new PageItem(new Item.Properties().stacksTo(64)));
+
+        PAGE = Services.REGISTRY.registerItem("page", () ->
+                new PageItem(new Item.Properties()
+                        .setId(ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "page")))
+                        .stacksTo(64)));
+
         Services.REGISTRY.registerToTab(ResourceKey.create(Registries.CREATIVE_MODE_TAB, Identifier.withDefaultNamespace("tools_and_utilities")), PAGE);
     }
 }

@@ -1,3 +1,4 @@
+/*
 package com.evandev.fieldguide.compat.fabricseasons;
 
 import com.evandev.fieldguide.api.seasons.Season;
@@ -57,4 +58,4 @@ public class FabricSeasonsProvider implements SeasonsProvider {
         if (fallGrowth >= GROWTH_THRESHOLD) seasons.add(Season.AUTUMN);
         if (winterGrowth >= GROWTH_THRESHOLD) seasons.add(Season.WINTER);
     }
-}
+}*/

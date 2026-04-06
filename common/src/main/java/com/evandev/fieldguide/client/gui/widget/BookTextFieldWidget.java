@@ -6,9 +6,11 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
@@ -26,7 +28,8 @@ public class BookTextFieldWidget extends AbstractWidget {
     private boolean centered = false;
     private boolean editable = true;
 
-    public BookTextFieldWidget(Font font, int x, int y, int width, int height, String text, int textColor, int maxTextWidth, int maxCharacters, Consumer<String> onChanged) {        super(x, y, width, height, Component.empty());
+    public BookTextFieldWidget(Font font, int x, int y, int width, int height, String text, int textColor, int maxTextWidth, int maxCharacters, Consumer<String> onChanged) {
+        super(x, y, width, height, Component.empty());
         this.font = font;
         this.textColor = textColor;
         this.text = text == null ? "" : text.substring(0, Math.min(text.length(), maxCharacters));
@@ -74,14 +77,17 @@ public class BookTextFieldWidget extends AbstractWidget {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+
         if (this.isMouseOver(mouseX, mouseY)) {
             if (this.editable) {
                 this.setFocused(true);
                 int renderX = this.centered ? this.getX() + (this.width - this.font.width(text)) / 2 : this.getX();
                 int relativeX = (int) (mouseX - renderX);
                 cursorPos = this.font.plainSubstrByWidth(text, Math.max(0, relativeX)).length();
-                if (!Screen.hasShiftDown()) selectionPos = cursorPos;
+                if (!Minecraft.getInstance().hasShiftDown()) selectionPos = cursorPos;
             }
             return true;
         }
@@ -89,8 +95,15 @@ public class BookTextFieldWidget extends AbstractWidget {
         return false;
     }
 
-    @Override
     public boolean charTyped(char codePoint, int modifiers) {
+        return handleCharTyped(codePoint);
+    }
+
+    public boolean charTyped(char codePoint) {
+        return handleCharTyped(codePoint);
+    }
+
+    private boolean handleCharTyped(char codePoint) {
         if (!this.isFocused() || !this.editable) return false;
         String proposedText;
         int newCursor;
@@ -109,34 +122,37 @@ public class BookTextFieldWidget extends AbstractWidget {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(@NonNull KeyEvent event) {
         if (!this.isFocused()) return false;
 
+        Minecraft mc = Minecraft.getInstance();
+        int keyCode = event.key();
+
         if (this.editable) {
-            if (Screen.isSelectAll(keyCode)) {
+            if (keyCode == GLFW.GLFW_KEY_A && mc.hasControlDown()) {
                 selectionPos = 0;
                 cursorPos = text.length();
                 return true;
             }
-            if (Screen.isCopy(keyCode)) {
+            if (keyCode == GLFW.GLFW_KEY_C && mc.hasControlDown()) {
                 if (selectionPos != cursorPos) {
                     int start = Math.min(cursorPos, selectionPos);
                     int end = Math.max(cursorPos, selectionPos);
-                    Minecraft.getInstance().keyboardHandler.setClipboard(text.substring(start, end));
+                    mc.keyboardHandler.setClipboard(text.substring(start, end));
                 }
                 return true;
             }
-            if (Screen.isCut(keyCode)) {
+            if (keyCode == GLFW.GLFW_KEY_X && mc.hasControlDown()) {
                 if (selectionPos != cursorPos) {
                     int start = Math.min(cursorPos, selectionPos);
                     int end = Math.max(cursorPos, selectionPos);
-                    Minecraft.getInstance().keyboardHandler.setClipboard(text.substring(start, end));
+                    mc.keyboardHandler.setClipboard(text.substring(start, end));
                     deleteSelection();
                 }
                 return true;
             }
-            if (Screen.isPaste(keyCode)) {
-                String clipboard = Minecraft.getInstance().keyboardHandler.getClipboard();
+            if (keyCode == GLFW.GLFW_KEY_V && mc.hasControlDown()) {
+                String clipboard = mc.keyboardHandler.getClipboard();
                 if (!clipboard.isEmpty()) {
                     int start = Math.min(cursorPos, selectionPos);
                     int end = Math.max(cursorPos, selectionPos);
@@ -166,15 +182,15 @@ public class BookTextFieldWidget extends AbstractWidget {
             }
         }
         if (keyCode == GLFW.GLFW_KEY_LEFT) {
-            if (Screen.hasControlDown()) cursorPos = getWordPosition(text, cursorPos, -1);
+            if (mc.hasControlDown()) cursorPos = getWordPosition(text, cursorPos, -1);
             else if (cursorPos > 0) cursorPos--;
-            if (!Screen.hasShiftDown()) selectionPos = cursorPos;
+            if (!mc.hasShiftDown()) selectionPos = cursorPos;
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_RIGHT) {
-            if (Screen.hasControlDown()) cursorPos = getWordPosition(text, cursorPos, 1);
+            if (mc.hasControlDown()) cursorPos = getWordPosition(text, cursorPos, 1);
             else if (cursorPos < text.length()) cursorPos++;
-            if (!Screen.hasShiftDown()) selectionPos = cursorPos;
+            if (!mc.hasShiftDown()) selectionPos = cursorPos;
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER || keyCode == GLFW.GLFW_KEY_ESCAPE) {
@@ -207,7 +223,7 @@ public class BookTextFieldWidget extends AbstractWidget {
     }
 
     @Override
-    public void renderWidget(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractWidgetRenderState(@NonNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         cursorPos = Math.max(0, Math.min(cursorPos, text.length()));
         selectionPos = Math.max(0, Math.min(selectionPos, text.length()));
 
@@ -221,8 +237,7 @@ public class BookTextFieldWidget extends AbstractWidget {
             guiGraphics.fill(selStartX, this.getY(), selEndX, this.getY() + this.font.lineHeight, highlightColor);
         }
 
-        guiGraphics.drawString(this.font, text, renderX, this.getY(), textColor, false);
-
+        guiGraphics.text(this.font, text, renderX, this.getY(), textColor, false);
 
         if (this.isFocused()) {
             int cursorX = renderX + this.font.width(text.substring(0, cursorPos));
@@ -233,7 +248,7 @@ public class BookTextFieldWidget extends AbstractWidget {
     private void renderCursor(GuiGraphicsExtractor guiGraphics, int x, int y) {
         if ((System.currentTimeMillis() / 400) % 2 == 0) {
             if (cursorPos == text.length()) {
-                guiGraphics.drawString(this.font, "_", x, y, ClientConfig.get().getTextCursorColorInt(), false);
+                guiGraphics.text(this.font, "_", x, y, ClientConfig.get().getTextCursorColorInt(), false);
             } else {
                 int cursorWidth = 1;
                 int cursorHeight = this.font.lineHeight;

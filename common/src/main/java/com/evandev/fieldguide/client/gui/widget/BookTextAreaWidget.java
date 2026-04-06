@@ -7,11 +7,14 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -168,7 +171,11 @@ public class BookTextAreaWidget extends AbstractWidget {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+
         if (scrollable && button == 0 && isScrollbarHovered(mouseX, mouseY)) {
             isDraggingScrollbar = true;
             updateScrollFromMouse(mouseY);
@@ -187,21 +194,21 @@ public class BookTextAreaWidget extends AbstractWidget {
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+    public boolean mouseDragged(@NonNull MouseButtonEvent event, double dragX, double dragY) {
         if (isDraggingScrollbar) {
-            updateScrollFromMouse(mouseY);
+            updateScrollFromMouse(event.y());
             return true;
         }
-        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        return super.mouseDragged(event, dragX, dragY);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(@NonNull MouseButtonEvent event) {
         if (isDraggingScrollbar) {
             isDraggingScrollbar = false;
             return true;
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(event);
     }
 
     @Override
@@ -214,8 +221,16 @@ public class BookTextAreaWidget extends AbstractWidget {
         return false;
     }
 
-    @Override
+    // TODO: fix this
     public boolean charTyped(char codePoint, int modifiers) {
+        return handleCharTyped(codePoint);
+    }
+
+    public boolean charTyped(char codePoint) {
+        return handleCharTyped(codePoint);
+    }
+
+    private boolean handleCharTyped(char codePoint) {
         if (!this.isFocused() || !this.editable) return false;
         String proposedText;
         int newCursor;
@@ -233,34 +248,37 @@ public class BookTextAreaWidget extends AbstractWidget {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(@NonNull KeyEvent event) {
         if (!this.isFocused()) return false;
 
+        Minecraft mc = Minecraft.getInstance();
+        int keyCode = event.key();
+
         if (this.editable) {
-            if (Screen.isSelectAll(keyCode)) {
+            if (keyCode == GLFW.GLFW_KEY_A && mc.hasControlDown()) {
                 selectionPos = 0;
                 cursorPos = text.length();
                 return true;
             }
-            if (Screen.isCopy(keyCode)) {
+            if (keyCode == GLFW.GLFW_KEY_C && mc.hasControlDown()) {
                 if (selectionPos != cursorPos) {
                     int start = Math.min(cursorPos, selectionPos);
                     int end = Math.max(cursorPos, selectionPos);
-                    Minecraft.getInstance().keyboardHandler.setClipboard(text.substring(start, end));
+                    mc.keyboardHandler.setClipboard(text.substring(start, end));
                 }
                 return true;
             }
-            if (Screen.isCut(keyCode)) {
+            if (keyCode == GLFW.GLFW_KEY_X && mc.hasControlDown()) {
                 if (selectionPos != cursorPos) {
                     int start = Math.min(cursorPos, selectionPos);
                     int end = Math.max(cursorPos, selectionPos);
-                    Minecraft.getInstance().keyboardHandler.setClipboard(text.substring(start, end));
+                    mc.keyboardHandler.setClipboard(text.substring(start, end));
                     deleteSelection();
                 }
                 return true;
             }
-            if (Screen.isPaste(keyCode)) {
-                String clipboard = Minecraft.getInstance().keyboardHandler.getClipboard();
+            if (keyCode == GLFW.GLFW_KEY_V && mc.hasControlDown()) {
+                String clipboard = mc.keyboardHandler.getClipboard();
                 if (!clipboard.isEmpty()) {
                     int start = Math.min(cursorPos, selectionPos);
                     int end = Math.max(cursorPos, selectionPos);
@@ -293,16 +311,16 @@ public class BookTextAreaWidget extends AbstractWidget {
         }
 
         if (keyCode == GLFW.GLFW_KEY_LEFT) {
-            if (Screen.hasControlDown()) cursorPos = getWordPosition(text, cursorPos, -1);
+            if (mc.hasControlDown()) cursorPos = getWordPosition(text, cursorPos, -1);
             else if (cursorPos > 0) cursorPos--;
-            if (!Screen.hasShiftDown()) selectionPos = cursorPos;
+            if (!mc.hasShiftDown()) selectionPos = cursorPos;
             scrollToCursor();
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_RIGHT) {
-            if (Screen.hasControlDown()) cursorPos = getWordPosition(text, cursorPos, 1);
+            if (mc.hasControlDown()) cursorPos = getWordPosition(text, cursorPos, 1);
             else if (cursorPos < text.length()) cursorPos++;
-            if (!Screen.hasShiftDown()) selectionPos = cursorPos;
+            if (!mc.hasShiftDown()) selectionPos = cursorPos;
             scrollToCursor();
             return true;
         }
@@ -384,7 +402,7 @@ public class BookTextAreaWidget extends AbstractWidget {
             }
             cursorPos = bestPos;
         }
-        if (!Screen.hasShiftDown()) selectionPos = cursorPos;
+        if (!Minecraft.getInstance().hasShiftDown()) selectionPos = cursorPos;
         scrollToCursor();
     }
 
@@ -395,7 +413,7 @@ public class BookTextAreaWidget extends AbstractWidget {
 
         if (targetLine >= lineStarts.size()) {
             cursorPos = text.length();
-            if (!Screen.hasShiftDown()) selectionPos = cursorPos;
+            if (!Minecraft.getInstance().hasShiftDown()) selectionPos = cursorPos;
             return;
         }
 
@@ -412,7 +430,7 @@ public class BookTextAreaWidget extends AbstractWidget {
             }
         }
         cursorPos = bestPos;
-        if (!Screen.hasShiftDown()) selectionPos = cursorPos;
+        if (!Minecraft.getInstance().hasShiftDown()) selectionPos = cursorPos;
     }
 
     private void scrollToCursor() {
@@ -442,14 +460,15 @@ public class BookTextAreaWidget extends AbstractWidget {
     }
 
     @Override
-    public void renderWidget(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractWidgetRenderState(@NonNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         List<FormattedCharSequence> lines = this.font.split(Component.literal(text), this.width);
         int totalLines = lineStarts.size();
         scrollOffset = Math.max(0, Math.min(scrollOffset, Math.max(0, totalLines - maxVisibleLines)));
 
         for (int i = 0; i < maxVisibleLines && (i + scrollOffset) < totalLines; i++) {
             if (i + scrollOffset < lines.size()) {
-                guiGraphics.drawString(this.font, lines.get(i + scrollOffset), this.getX(), this.getY() + i * this.lineHeight, textColor, false);
+                // drawString was renamed to text()
+                guiGraphics.text(this.font, lines.get(i + scrollOffset), this.getX(), this.getY() + i * this.lineHeight, textColor, false);
             }
         }
 
@@ -488,15 +507,15 @@ public class BookTextAreaWidget extends AbstractWidget {
             Identifier trackSprite = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/scrollbar_track");
             Identifier thumbSprite = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/scrollbar_thumb" + (isDraggingScrollbar || isScrollbarHovered(mouseX, mouseY) ? "_hovered" : ""));
 
-            guiGraphics.blitSprite(trackSprite, scrollbarX, scrollbarY, 4, scrollbarHeight);
-            guiGraphics.blitSprite(thumbSprite, scrollbarX, thumbY, 4, thumbHeight);
+            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, trackSprite, scrollbarX, scrollbarY, 4, scrollbarHeight);
+            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, thumbSprite, scrollbarX, thumbY, 4, thumbHeight);
         }
     }
 
     private void renderCursor(GuiGraphicsExtractor guiGraphics, int x, int y) {
         if ((System.currentTimeMillis() / 400) % 2 == 0) {
             if (cursorPos == text.length()) {
-                guiGraphics.drawString(this.font, "_", x, y, ClientConfig.get().getTextCursorColorInt(), false);
+                guiGraphics.text(this.font, "_", x, y, ClientConfig.get().getTextCursorColorInt(), false);
             } else {
                 int cursorWidth = 1;
                 int cursorHeight = this.font.lineHeight;

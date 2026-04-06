@@ -6,6 +6,7 @@
   "mixins": [
     "InventoryMixin",
     "ItemStackMixin",
+    "accessor.BlockDisplayAccessor",
     "accessor.CompositeEntryBaseAccessor",
     "accessor.EntityAccessor",
     "accessor.LootItemAccessor",

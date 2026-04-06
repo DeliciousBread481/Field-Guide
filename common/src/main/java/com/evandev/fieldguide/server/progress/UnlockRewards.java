@@ -8,6 +8,8 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.PermissionLevel;
+import net.minecraft.server.permissions.PermissionSet;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -45,7 +47,7 @@ class UnlockRewards {
         if (!commandsToRun.isEmpty()) {
             CommandSourceStack sourceStack = createRewardSourceStack(player, entryId);
             for (String cmd : commandsToRun) {
-                Objects.requireNonNull(player.getServer()).getCommands().performPrefixedCommand(sourceStack, cmd);
+                Objects.requireNonNull(player.level().getServer()).getCommands().performPrefixedCommand(sourceStack, cmd);
             }
         }
     }
@@ -74,8 +76,8 @@ class UnlockRewards {
                         return false;
                     }
                 },
-                player.position(), player.getRotationVector(), player.serverLevel(),
-                2, sourceName, Component.literal(sourceName), Objects.requireNonNull(player.getServer()), player
+                player.position(), player.getRotationVector(), player.level(),
+                PermissionSet.ALL_PERMISSIONS, sourceName, Component.literal(sourceName), Objects.requireNonNull(player.level().getServer()), player
         );
     }
 }

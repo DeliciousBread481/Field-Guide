@@ -83,7 +83,7 @@ public class ScanUnlockPacket implements CustomPacketPayload {
         }
 
         if (targetEntityId != 0) {
-            Entity entity = player.serverLevel().getEntity(targetEntityId);
+            Entity entity = player.level().getEntity(targetEntityId);
             if (entity != null) {
                 FieldGuideTriggers.SCAN_ENTITY.get().trigger(player, entity);
                 manager.recordScan(player, targetEntityId);

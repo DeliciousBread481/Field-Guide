@@ -31,7 +31,7 @@ public class FieldGuideSearchBox extends EditBox {
     }
 
     @Override
-    public void renderWidget(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+    public void extractWidgetRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         int boxX = this.getX() - 2;
         int boxY = this.getY() - 2;
         int boxW = this.width + 4;
@@ -41,12 +41,12 @@ public class FieldGuideSearchBox extends EditBox {
 
         guiGraphics.fill(boxX, boxY, boxX + boxW, boxY + boxH, BACKGROUND_COLOR);
 
-        super.renderWidget(guiGraphics, mouseX, mouseY, partialTick);
+        super.extractWidgetRenderState(guiGraphics, mouseX, mouseY, partialTick);
 
         if (this.getValue().isEmpty()) {
-            guiGraphics.drawString(Minecraft.getInstance().font, Component.translatable("gui.fieldguide.search"), this.getX() + 4, this.getY() + 6, ClientConfig.get().getTextMutedColorInt(), false);
+            guiGraphics.text(Minecraft.getInstance().font, Component.translatable("gui.fieldguide.search"), this.getX() + 4, this.getY() + 6, ClientConfig.get().getTextMutedColorInt(), false);
         }
 
-        guiGraphics.renderOutline(this.getX() - 1, this.getY() - 1, this.width + 2, this.height + 2, borderColor);
+        guiGraphics.outline(this.getX() - 1, this.getY() - 1, this.width + 2, this.height + 2, borderColor);
     }
 }

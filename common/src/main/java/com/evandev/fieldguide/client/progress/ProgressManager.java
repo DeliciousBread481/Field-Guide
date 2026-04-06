@@ -146,7 +146,7 @@ public class ProgressManager {
                 this.lastUnlockedEntry = entry;
                 this.lastUnlockedVariant = entryToToast.getValue();
                 if (ClientConfig.get().showToasts) {
-                    Minecraft.getInstance().getToasts().addToast(new FieldGuideToast(entry, entryToToast.getValue()));
+                    Minecraft.getInstance().getToastManager().addToast(new FieldGuideToast(entry, entryToToast.getValue()));
                 }
             }
         }
@@ -318,12 +318,8 @@ public class ProgressManager {
         Services.NETWORK.sendToServer(UpdateEntryDataPacket.setSelectedVariant(id, variantId));
     }
 
-    public ItemStack getPhotograph(Object entry) {
-        return getPhotograph(entry, null);
-    }
-
     public ItemStack getPhotograph(Object entry, String variantId) {
-        Identifier id = ClientFieldGuideManager.getEntryId(entry);
+        /*Identifier id = ClientFieldGuideManager.getEntryId(entry);
         if (id != null) {
             String key = id.toString();
             if (variantId != null && !variantId.isEmpty()) {
@@ -332,17 +328,17 @@ public class ProgressManager {
             if (entryPhotographs.containsKey(key)) {
                 try {
                     CompoundTag tag = TagParser.parseTag(entryPhotographs.get(key));
-                    return ItemStack.parseOptional(Minecraft.getInstance().level.registryAccess(), tag);
+                    return ItemStack.parse(Minecraft.getInstance().level.registryAccess(), tag).orElse(ItemStack.EMPTY);
                 } catch (Exception e) {
                     return ItemStack.EMPTY;
                 }
             }
-        }
+        }*/
         return ItemStack.EMPTY;
     }
 
     public void setPhotograph(Object entry, int slot, ItemStack stack, String variantId) {
-        Identifier id = ClientFieldGuideManager.getEntryId(entry);
+        /*Identifier id = ClientFieldGuideManager.getEntryId(entry);
         if (id != null) {
             String key = id.toString();
             if (variantId != null && !variantId.isEmpty()) {
@@ -356,7 +352,7 @@ public class ProgressManager {
                 entryPhotographs.put(key, tag.toString());
                 Services.NETWORK.sendToServer(UpdateEntryDataPacket.setPhotograph(id, slot, variantId));
             }
-        }
+        }*/
     }
 
     public boolean hasTrigger(Identifier entryId, String triggerName) {
@@ -437,7 +433,7 @@ public class ProgressManager {
     }
 
     public void exportToLang(String type) {
-        try {
+        /*try {
             JsonObject langJson = getLangJson(type);
 
             Path exportDir = Minecraft.getInstance().gameDirectory.toPath().resolve("fieldguide_exports");
@@ -459,8 +455,8 @@ public class ProgressManager {
         } catch (Exception e) {
             Constants.LOG.error("Failed to export lang file", e);
             if (Minecraft.getInstance().player != null)
-                Minecraft.getInstance().player.displayClientMessage(Component.literal("§cFailed to export: " + e.getMessage()), false);
-        }
+                Minecraft.getInstance().player.sendSystemMessage(Component.literal("§cFailed to export: " + e.getMessage()));
+        }*/
     }
 
     private @NotNull JsonObject getLangJson(String type) {

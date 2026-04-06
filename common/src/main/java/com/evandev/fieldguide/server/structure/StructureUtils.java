@@ -5,6 +5,7 @@ import com.evandev.fieldguide.api.GuideEntry;
 import com.evandev.fieldguide.mixin.accessor.StructureTemplateAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
@@ -33,7 +34,7 @@ public class StructureUtils {
                 if (res.isPresent()) {
                     CompoundTag tag = NbtIo.readCompressed(res.get().open(), NbtAccounter.unlimitedHeap());
                     StructureTemplate template = new StructureTemplate();
-                    template.load(BuiltInRegistries.BLOCK.asLookup(), tag);
+                    template.load(BuiltInRegistries.BLOCK, tag);
 
                     List<StructureTemplate.Palette> palettes = ((StructureTemplateAccessor) template).getPalettes();
 
@@ -72,7 +73,8 @@ public class StructureUtils {
             }
 
             Identifier id = Identifier.parse(blockIdPart);
-            Block block = BuiltInRegistries.BLOCK.get(id);
+            Block block = BuiltInRegistries.BLOCK.get(id).map(Holder::value).orElse(Blocks.AIR);
+
             if (block != Blocks.AIR) {
                 BlockState state = block.defaultBlockState();
                 if (parts.length > propIndex) {

@@ -1,3 +1,4 @@
+/*
 package com.evandev.fieldguide.compat.exposure;
 
 import io.github.mortuusars.exposure.fabric.api.event.FrameAddedCallback;
@@ -11,4 +12,4 @@ public class ExposureFabricEventHandler {
             }
         });
     }
-}
+}*/

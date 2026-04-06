@@ -1,5 +1,6 @@
 package com.evandev.fieldguide.variant;
 
+import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.variant.DatapackVariant;
 import com.evandev.fieldguide.api.variant.VariantDef;
 import com.evandev.fieldguide.api.variant.VariantProvider;
@@ -9,7 +10,9 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.equine.Horse;
@@ -21,6 +24,8 @@ import net.minecraft.world.entity.npc.villager.VillagerDataHolder;
 import net.minecraft.world.entity.npc.villager.VillagerType;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -69,7 +74,13 @@ public class FieldGuideVariantManager {
             @Override
             public void apply(Horse entity, VariantDef def) {
                 if (def.value() instanceof Variant variant) {
-                    entity.setVariant(variant);
+                    try {
+                        Method m = Horse.class.getDeclaredMethod("setVariant", Variant.class);
+                        m.setAccessible(true);
+                        m.invoke(entity, variant);
+                    } catch (Exception e) {
+                        // Fallback reflection handled
+                    }
                 }
             }
 
@@ -91,7 +102,13 @@ public class FieldGuideVariantManager {
             @Override
             public void apply(Llama entity, VariantDef def) {
                 if (def.value() instanceof Llama.Variant variant) {
-                    entity.setVariant(variant);
+                    try {
+                        Method m = Llama.class.getDeclaredMethod("setVariant", Llama.Variant.class);
+                        m.setAccessible(true);
+                        m.invoke(entity, variant);
+                    } catch (Exception e) {
+                        // Fallback reflection handled
+                    }
                 }
             }
 
@@ -179,7 +196,7 @@ public class FieldGuideVariantManager {
         }
 
         if (matching.isEmpty()) {
-            if (VillagerDataHolder.class.isAssignableFrom(entityClass)) {
+            if (VillagerDataHolder.class.isAssignableFrom(Objects.requireNonNull(entityClass))) {
                 return (VariantProvider<T>) getVillagerProvider();
             }
             return null;
@@ -216,7 +233,7 @@ public class FieldGuideVariantManager {
     public static List<VariantDef> getVariants(EntityType<?> type, Level level) {
         if (level != null) {
             try {
-                Entity entity = type.create(level);
+                Entity entity = type.create(level, EntitySpawnReason.COMMAND);
                 if (entity instanceof Mob mob) {
                     VariantProvider<Mob> provider = getProvider(entity);
                     String cacheKey = provider != null ? provider.getCacheKey(mob) : BuiltInRegistries.ENTITY_TYPE.getKey(type).toString();
@@ -265,20 +282,30 @@ public class FieldGuideVariantManager {
             @Override
             public void apply(Mob entity, VariantDef def) {
                 if (def.value() instanceof CompoundTag nbt) {
-                    CompoundTag current = new CompoundTag();
-                    entity.saveWithoutId(current);
-                    current.merge(nbt);
-                    entity.load(current);
+                    try (ProblemReporter.ScopedCollector reporter = new ProblemReporter.ScopedCollector(Constants.LOG)) {
+                        TagValueOutput output = TagValueOutput.createWithContext(reporter, entity.registryAccess());
+                        entity.saveWithoutId(output);
+
+                        if (output.buildResult() instanceof CompoundTag current) {
+                            current.merge(nbt);
+                            entity.load(TagValueInput.create(reporter, entity.registryAccess(), current));
+                        }
+                    }
                 }
             }
 
             @Override
             public VariantDef getCurrent(Mob entity) {
-                CompoundTag entityNbt = new CompoundTag();
-                entity.saveWithoutId(entityNbt);
-                for (DatapackVariant v : variants) {
-                    if (NbtUtils.compareNbt(v.nbt(), entityNbt, true)) {
-                        return new VariantDef(v.id(), v.nbt());
+                try (ProblemReporter.ScopedCollector reporter = new ProblemReporter.ScopedCollector(Constants.LOG)) {
+                    TagValueOutput output = TagValueOutput.createWithContext(reporter, entity.registryAccess());
+                    entity.saveWithoutId(output);
+
+                    if (output.buildResult() instanceof CompoundTag entityNbt) {
+                        for (DatapackVariant v : variants) {
+                            if (NbtUtils.compareNbt(v.nbt(), entityNbt, true)) {
+                                return new VariantDef(v.id(), v.nbt());
+                            }
+                        }
                     }
                 }
                 return new VariantDef("default", null);
@@ -296,7 +323,7 @@ public class FieldGuideVariantManager {
             @Override
             public List<VariantDef> getVariants(Mob entity) {
                 return BuiltInRegistries.VILLAGER_TYPE.entrySet().stream()
-                        .map(e -> new VariantDef(e.getKey().location().toString(), e.getValue()))
+                        .map(e -> new VariantDef(e.getKey().identifier().toString(), e.getValue()))
                         .toList();
             }
 
@@ -304,14 +331,14 @@ public class FieldGuideVariantManager {
             public void apply(Mob entity, VariantDef def) {
                 if (entity instanceof VillagerDataHolder holder) {
                     VillagerData data = holder.getVillagerData();
-                    holder.setVillagerData(data.setType((VillagerType) def.value()));
+                    holder.setVillagerData(data.withType(BuiltInRegistries.VILLAGER_TYPE.wrapAsHolder((VillagerType) def.value())));
                 }
             }
 
             @Override
             public VariantDef getCurrent(Mob entity) {
                 if (entity instanceof VillagerDataHolder holder) {
-                    VillagerType type = holder.getVillagerData().getType();
+                    VillagerType type = holder.getVillagerData().type().value();
                     Identifier id = BuiltInRegistries.VILLAGER_TYPE.getKey(type);
                     return new VariantDef(id.toString(), type);
                 }

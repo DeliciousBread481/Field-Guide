@@ -13,7 +13,7 @@ import net.minecraft.world.level.block.Block;
 public class EntryValidator {
 
     public static boolean isValidEntity(EntityType<?> type, Identifier categoryId) {
-        return BuiltInRegistries.ENTITY_TYPE.getResourceKey(type).flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder).map(h -> {
+        return BuiltInRegistries.ENTITY_TYPE.getResourceKey(type).flatMap(BuiltInRegistries.ENTITY_TYPE::get).map(h -> {
             if (h.is(ModTags.EntityTypes.BLACKLISTED)) return false;
             if (categoryId != null) {
                 TagKey<EntityType<?>> catTag = TagKey.create(Registries.ENTITY_TYPE, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "blacklisted/" + categoryId.getNamespace() + "/" + categoryId.getPath()));
@@ -24,7 +24,7 @@ public class EntryValidator {
     }
 
     public static boolean isValidBlock(Block block, Identifier categoryId) {
-        boolean blacklisted = BuiltInRegistries.BLOCK.getResourceKey(block).flatMap(BuiltInRegistries.BLOCK::getHolder).map(h -> {
+        boolean blacklisted = BuiltInRegistries.BLOCK.getResourceKey(block).flatMap(BuiltInRegistries.BLOCK::get).map(h -> {
             if (h.is(ModTags.Blocks.BLACKLISTED)) return true;
             if (categoryId != null) {
                 TagKey<Block> catTag = TagKey.create(Registries.BLOCK, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "blacklisted/" + categoryId.getNamespace() + "/" + categoryId.getPath()));
@@ -43,6 +43,7 @@ public class EntryValidator {
 
     public static boolean isValidItem(Item item, Identifier categoryId) {
         // TODO: add blacklisting
+
         /*        if (Services.PLATFORM.isModLoaded("reliable_remover") && ServerConfig.get().enableReliableRemover && ReliableRemoverCompat.isHidden(item)) {
             return false;
         }*/

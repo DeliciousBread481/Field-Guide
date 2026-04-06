@@ -192,7 +192,7 @@ public class ClientTextManager {
 
         if (coreEntry instanceof EntityType<?> type) return type.getDescription();
         if (coreEntry instanceof Block block) return block.getName();
-        if (coreEntry instanceof Item item) return item.getDescription();
+        if (coreEntry instanceof Item item) return Component.translatable(item.getDescriptionId());
 
         return Component.translatable("fieldguide.unknown");
     }

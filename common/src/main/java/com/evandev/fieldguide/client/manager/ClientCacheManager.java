@@ -3,13 +3,11 @@ package com.evandev.fieldguide.client.manager;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.platform.Services;
 import com.google.common.hash.Hashing;
+import com.mojang.serialization.DataResult;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.*;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
@@ -20,6 +18,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class ClientCacheManager {
     private static final Path CACHE_BASE_DIR = Services.PLATFORM.getConfigDirectory().resolve("../fieldguide_cache");
@@ -78,7 +77,8 @@ public class ClientCacheManager {
         for (Map.Entry<Identifier, List<ItemStack>> entry : allDrops.entrySet()) {
             ListTag list = new ListTag();
             for (ItemStack stack : entry.getValue()) {
-                list.add(stack.saveOptional(provider));
+                DataResult<Tag> result = ItemStack.OPTIONAL_CODEC.encodeStart(provider.createSerializationContext(NbtOps.INSTANCE), stack);
+                result.ifSuccess(list::add);
             }
             root.put(entry.getKey().toString(), list);
         }
@@ -89,14 +89,19 @@ public class ClientCacheManager {
         Path dropFile = getSessionDir().resolve("drops.nbt");
         CompoundTag root = loadNbt(dropFile);
 
-        if (root.contains(entryId.toString(), Tag.TAG_LIST)) {
+        if (root.contains(entryId.toString())) {
             HolderLookup.Provider provider = getRegistryAccess();
-            ListTag list = root.getList(entryId.toString(), Tag.TAG_COMPOUND);
-            List<ItemStack> drops = new ArrayList<>();
-            for (int i = 0; i < list.size(); i++) {
-                drops.add(ItemStack.parseOptional(provider, list.getCompound(i)));
+            Optional<ListTag> listOpt = root.getList(entryId.toString());
+
+            if (listOpt.isPresent()) {
+                ListTag list = listOpt.get();
+                List<ItemStack> drops = new ArrayList<>();
+                for (Tag tag : list) {
+                    DataResult<ItemStack> result = ItemStack.OPTIONAL_CODEC.parse(provider.createSerializationContext(NbtOps.INSTANCE), tag);
+                    result.ifSuccess(drops::add);
+                }
+                return drops;
             }
-            return drops;
         }
         return null;
     }
@@ -119,13 +124,17 @@ public class ClientCacheManager {
     public static List<Identifier> loadBiomes(Identifier entryId) {
         Path biomeFile = getSessionDir().resolve("biomes.nbt");
         CompoundTag root = loadNbt(biomeFile);
-        if (root.contains(entryId.toString(), Tag.TAG_LIST)) {
-            ListTag list = root.getList(entryId.toString(), Tag.TAG_COMPOUND);
-            List<Identifier> biomes = new ArrayList<>();
-            for (int i = 0; i < list.size(); i++) {
-                biomes.add(Identifier.parse(list.getCompound(i).getString("id")));
+        if (root.contains(entryId.toString())) {
+            Optional<ListTag> listOpt = root.getList(entryId.toString());
+
+            if (listOpt.isPresent()) {
+                ListTag list = listOpt.get();
+                List<Identifier> biomes = new ArrayList<>();
+                for (int i = 0; i < list.size(); i++) {
+                    list.getCompound(i).flatMap(compound -> compound.getString("id")).ifPresent(idStr -> biomes.add(Identifier.parse(idStr)));
+                }
+                return biomes;
             }
-            return biomes;
         }
         return null;
     }

@@ -8,43 +8,30 @@ import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.progress.ProgressManager;
-import com.evandev.fieldguide.compat.emf.EmfCompat;
 import com.evandev.fieldguide.compat.tide.ClientTideCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.config.ServerConfig;
+import com.evandev.fieldguide.mixin.accessor.BlockDisplayAccessor;
 import com.evandev.fieldguide.mixin.accessor.EntityAccessor;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.structure.StructureUtils;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
-import com.mojang.blaze3d.platform.Lighting;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.animal.WaterAnimal;
+import net.minecraft.util.ARGB;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.animal.fish.WaterAnimal;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
-import net.minecraft.world.level.block.state.properties.EnumProperty;
-import net.minecraft.world.level.block.state.properties.IntegerProperty;
-import net.minecraft.world.level.block.state.properties.Property;
-import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import java.awt.*;
@@ -58,9 +45,6 @@ public class EntryRenderHelper {
     public static void clearCache() {
         OVERRIDE_CACHE.clear();
         IconCacheManager.clearCache();
-        if (Services.PLATFORM.isModLoaded("cobblemon")) {
-            ClientFieldGuideCobblemonCompat.clearCache();
-        }
     }
 
     private static Optional<Identifier> getResourcePackOverride(Object baseEntry, Object cacheKey, boolean isPage) {
@@ -143,16 +127,7 @@ public class EntryRenderHelper {
         }
 
         Identifier baseId = AutoPopulateRegistry.getEntryId(entity.getType());
-/*        if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
-            baseId = FieldGuideCobblemonCompat.getPokemonEntryId(entity);
-        }*/
-
         String finalVariantId = variantId;
-/*        if (Services.PLATFORM.isModLoaded("cobblemon") && FieldGuideCobblemonCompat.isPokemon(entity)) {
-            if (finalVariantId.isEmpty()) {
-                finalVariantId = ClientFieldGuideCobblemonCompat.getFormForEntry(baseId);
-            }
-        }*/
         Object cacheKey = finalVariantId.isEmpty() ? baseId : baseId.toString() + "#" + finalVariantId;
 
         final VariantProvider<Mob> finalProvider = provider;
@@ -166,35 +141,12 @@ public class EntryRenderHelper {
                 finalProvider.apply(mob, finalVariant);
             }
 
-            renderEntity(entity, entity.getType(), isPage, -30.0F);
+            renderEntity(guiGraphics, entity, entity.getType(), isPage, -30.0F, x, y, maxWidth, maxHeight, bounceScale);
 
             if (finalProvider != null && entity instanceof Mob mob && tempOriginal != null) {
                 finalProvider.apply(mob, tempOriginal);
             }
         });
-    }
-
-    public static void renderCobblemon(GuiGraphicsExtractor guiGraphics, GuideEntry entry, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale) {
-        renderCobblemon(guiGraphics, entry, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, !isPage);
-    }
-
-    public static void renderCobblemon(GuiGraphicsExtractor guiGraphics, GuideEntry entry, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale, boolean syncWithProgress) {
-       /* String formName;
-        if (syncWithProgress) {
-            formName = ClientFieldGuideCobblemonCompat.getFormForEntry(entry.id());
-        } else {
-            LivingEntity dummy = ClientFieldGuideCobblemonCompat.getDummyPokemon(entry.id(), Minecraft.getInstance().level);
-            formName = FieldGuideCobblemonCompat.getCurrentForm(dummy);
-        }
-        Object cacheKey = formName.equalsIgnoreCase("standard") ? entry : entry.id().toString() + "#" + formName;
-
-        renderWithCache(entry, cacheKey, guiGraphics, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, () -> {
-            Identifier id = entry.id();
-            LivingEntity dummy = ClientFieldGuideCobblemonCompat.getDummyPokemon(id, Minecraft.getInstance().level);
-            if (dummy != null) {
-                renderEntity(dummy, id, isPage, -30.0F);
-            }
-        });*/
     }
 
     public static void renderTutorial(GuiGraphicsExtractor guiGraphics, GuideEntry entry, int x, int y, int maxWidth, int maxHeight, boolean unlocked, boolean isPage, float bounceScale) {
@@ -204,8 +156,8 @@ public class EntryRenderHelper {
         drawCachedTexture(guiGraphics, texture, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale);
     }
 
-    private static void renderEntity(Entity entity, Object entrySource, boolean isPage, float yRotation) {
-        setupFieldGuideEntityLighting();
+    @SuppressWarnings("unchecked")
+    private static <T extends Entity, S extends EntityRenderState> void renderEntity(GuiGraphicsExtractor guiGraphics, T entity, Object entrySource, boolean isPage, float yRotation, int x, int y, int maxWidth, int maxHeight, float bounceScale) {
         EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(entrySource);
 
         float visualScale = getVisualScale(visual, isPage);
@@ -213,7 +165,7 @@ public class EntryRenderHelper {
         float xOff = getXOffset(visual, isPage);
 
         float dynamicFactor = getScaleFactorForEntity(entity);
-        float clampedScale = 85.0F * dynamicFactor * visualScale;
+        float clampedScale = 85.0F * dynamicFactor * visualScale * bounceScale;
         float entityHeight = entity.getBbHeight();
         float entityWidth = entity.getBbWidth();
         float maxDimension = Math.max(entityHeight, entityWidth);
@@ -223,16 +175,8 @@ public class EntryRenderHelper {
             clampedScale = safetyClamp / maxDimension;
         }
 
-        PoseStack pose = new PoseStack();
-        pose.scale(clampedScale, -clampedScale, -clampedScale);
-        pose.mulPose(Axis.XP.rotationDegrees(30.0F));
-        pose.mulPose(Axis.YP.rotationDegrees(yRotation));
-        pose.translate((xOff / clampedScale), (entityHeight / -2.0F) + (yOff / clampedScale), 0);
-
-        entity.setYRot(0.0F);
-        entity.yRotO = 0.0F;
-        entity.setXRot(0.0F);
-        entity.xRotO = 0.0F;
+        Quaternionf rotation = new Quaternionf().rotateX((float) Math.toRadians(30.0F)).rotateY((float) Math.toRadians(yRotation));
+        Vector3f translation = new Vector3f(xOff / clampedScale, (entityHeight / -2.0F) + (yOff / clampedScale), 0.0F);
 
         if (entity instanceof LivingEntity living) {
             living.setYHeadRot(0.0F);
@@ -241,17 +185,9 @@ public class EntryRenderHelper {
             living.setYBodyRot(0.0F);
             living.yBodyRot = 0.0F;
             living.yBodyRotO = 0.0F;
-            living.walkAnimation.setSpeed(0.0F);
-            living.walkAnimation.position(0.0F);
-            living.attackAnim = 0.0F;
-            living.oAttackAnim = 0.0F;
         }
 
-        if (Minecraft.getInstance().player != null) {
-            entity.tickCount = Minecraft.getInstance().player.tickCount;
-        } else {
-            entity.tickCount = 1;
-        }
+        entity.tickCount = 1;
 
         if (entity instanceof WaterAnimal) {
             ((EntityAccessor) entity).fieldguide$setWasTouchingWater(true);
@@ -261,34 +197,16 @@ public class EntryRenderHelper {
             ClientTideCompat.applyLavaFishFix(entity);
         }
 
-        if (Services.PLATFORM.isModLoaded("entity_model_features")) {
-            try {
-                EmfCompat.setInGui(true);
-            } catch (Throwable ignored) {
-            }
-        }
-
-        MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
-        var entityRenderDispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
-
-        boolean previousHitboxState = entityRenderDispatcher.shouldRenderHitBoxes();
-        entityRenderDispatcher.setRenderHitBoxes(false);
-
         try {
-            float partialTicks = Minecraft.getInstance().getFrameTimeNs();
-            entityRenderDispatcher.render(entity, 0, 0, 0, 0.0F, partialTicks, pose, buffers, LightTexture.FULL_BRIGHT);
+            EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
+            net.minecraft.client.renderer.entity.EntityRenderer<T, S> renderer = (net.minecraft.client.renderer.entity.EntityRenderer<T, S>) dispatcher.getRenderer(entity);
+            S state = renderer.createRenderState();
+            renderer.extractRenderState(entity, state, 0.0F);
+            state.outlineColor = 0;
+
+            guiGraphics.entity(state, clampedScale, translation, rotation, null, x - maxWidth / 2, y - maxHeight / 2, x + maxWidth / 2, y + maxHeight / 2);
         } catch (Exception e) {
             Constants.LOG.error("Failed to render entity in Field Guide: {}", entrySource, e);
-        } finally {
-            entityRenderDispatcher.setRenderHitBoxes(previousHitboxState);
-            buffers.endBatch();
-
-            if (Services.PLATFORM.isModLoaded("entity_model_features")) {
-                try {
-                    EmfCompat.setInGui(false);
-                } catch (Throwable ignored) {
-                }
-            }
         }
     }
 
@@ -296,64 +214,16 @@ public class EntryRenderHelper {
         int scaledSize = (int) (baseScale * 2);
 
         renderWithCache(block, block, guiGraphics, x, y, scaledSize, scaledSize, unlocked, isPage, bounceScale, () -> {
-            setupFieldGuideBlockLighting();
-            EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(block);
+            ItemStack stack = new ItemStack(block);
+            if (!stack.isEmpty()) {
+                EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(block);
+                float clampedScale = (getVisualScale(visual, isPage) * bounceScale) * 1.5f;
 
-            float clampedScale = 100f * getVisualScale(visual, isPage);
-
-            PoseStack pose = new PoseStack();
-            pose.scale(clampedScale, -clampedScale, -clampedScale);
-            pose.mulPose(Axis.XP.rotationDegrees(30.0F));
-            pose.mulPose(Axis.YP.rotationDegrees(210.0F));
-            pose.translate(-0.5, -0.5, -0.5);
-
-            MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
-            BlockState state = block.defaultBlockState();
-
-            for (Property<?> prop : state.getProperties()) {
-                if (prop instanceof IntegerProperty intProp) {
-                    String name = prop.getName();
-                    if (!name.equals("bites") && !name.equals("level") && !name.equals("rotation")) {
-                        int max = intProp.getPossibleValues().stream().max(Integer::compareTo).orElse(0);
-                        state = state.setValue(intProp, max);
-                    }
-                }
-            }
-
-            Property<?> verticalProp = state.getProperties().stream()
-                    .filter(p -> p instanceof EnumProperty<?> enumProp && enumProp.getValueClass() == DoubleBlockHalf.class)
-                    .findFirst()
-                    .orElse(null);
-
-            try {
-                if (verticalProp == null) {
-                    Minecraft.getInstance().getBlockRenderer().renderSingleBlock(state, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-                } else {
-                    Collection<?> values = verticalProp.getPossibleValues();
-                    pose.translate(0.0F, -0.5F * (values.size() - 1), 0.0F);
-
-                    List<?> sortedValues = values.stream()
-                            .sorted((a, b) -> Integer.compare(((Enum<?>) b).ordinal(), ((Enum<?>) a).ordinal()))
-                            .toList();
-
-                    for (Object value : sortedValues) {
-                        @SuppressWarnings({"unchecked", "rawtypes"})
-                        BlockState variant = state.setValue((Property) verticalProp, (Comparable) value);
-                        Minecraft.getInstance().getBlockRenderer().renderSingleBlock(variant, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-                        pose.translate(0.0F, 1.0F, 0.0F);
-                    }
-                }
-
-                if (block instanceof EntityBlock entityBlock) {
-                    var blockEntity = entityBlock.newBlockEntity(BlockPos.ZERO, state);
-                    if (blockEntity != null) {
-                        Minecraft.getInstance().getBlockEntityRenderDispatcher().renderItem(blockEntity, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-                    }
-                }
-            } catch (Exception e) {
-                Constants.LOG.error("Failed to render block in Field Guide: {}", BuiltInRegistries.BLOCK.getKey(block), e);
-            } finally {
-                buffers.endBatch();
+                guiGraphics.pose().pushMatrix();
+                guiGraphics.pose().translate((float) x, (float) y);
+                guiGraphics.pose().scale(clampedScale, clampedScale);
+                guiGraphics.item(stack, -8, -8);
+                guiGraphics.pose().popMatrix();
             }
         });
     }
@@ -363,32 +233,19 @@ public class EntryRenderHelper {
 
         renderWithCache(item, item, guiGraphics, x, y, scaledSize, scaledSize, unlocked, isPage, bounceScale, () -> {
             ItemStack stack = new ItemStack(item);
-            Lighting.setupForFlatItems();
-
             EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(item);
+            float clampedScale = (getVisualScale(visual, isPage) * bounceScale) * 1.5f;
 
-            float clampedScale = 100f * getVisualScale(visual, isPage);
-
-            PoseStack pose = new PoseStack();
-            pose.scale(clampedScale, -clampedScale, 1.0f);
-
-            MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
-
-            try {
-                Minecraft.getInstance().getItemRenderer().renderStatic(stack, ItemDisplayContext.GUI, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, pose, buffers, Minecraft.getInstance().level, 0);
-            } catch (Exception e) {
-                Constants.LOG.error("Failed to render item in Field Guide: {}", BuiltInRegistries.ITEM.getKey(item), e);
-            } finally {
-                buffers.endBatch();
-            }
+            guiGraphics.pose().pushMatrix();
+            guiGraphics.pose().translate((float) x, (float) y);
+            guiGraphics.pose().scale(clampedScale, clampedScale);
+            guiGraphics.item(stack, -8, -8);
+            guiGraphics.pose().popMatrix();
         });
     }
 
     public static void renderStructure(GuiGraphicsExtractor guiGraphics, GuideEntry composite, int x, int y, int size, boolean unlocked, boolean isPage, float bounceScale) {
         renderWithCache(composite, composite, guiGraphics, x, y, size, size, unlocked, isPage, bounceScale, () -> {
-            setupFieldGuideBlockLighting();
-            PoseStack pose = new PoseStack();
-
             Map<BlockPos, BlockState> blocks = StructureUtils.getStructureBlocks(composite);
             if (blocks.isEmpty() && composite.structureData() != null && composite.structureData().stackedBlocks() != null && !composite.structureData().stackedBlocks().isEmpty()) {
                 blocks = StructureUtils.getStackedBlocks(composite.structureData().stackedBlocks());
@@ -413,37 +270,56 @@ public class EntryRenderHelper {
             int maxDim = Math.max(width, Math.max(height, length));
 
             float scale = 35.0f * (5.0f / maxDim);
-            pose.scale(scale, -scale, -scale);
-
-            pose.mulPose(Axis.XP.rotationDegrees(30.0F));
-            pose.mulPose(Axis.YP.rotationDegrees(210.0F));
 
             float centerX = minX + width / 2.0f;
             float centerY = minY + height / 2.0f;
             float centerZ = minZ + length / 2.0f;
 
-            pose.translate(-centerX, -centerY, -centerZ);
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.level == null) return;
 
-            MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
-            var blockRenderer = Minecraft.getInstance().getBlockRenderer();
+            Display.BlockDisplay dummyDisplay = EntityType.BLOCK_DISPLAY.create(mc.level, EntitySpawnReason.COMMAND);
+            if (dummyDisplay == null) return;
 
-            try {
-                for (Map.Entry<BlockPos, BlockState> b : blocks.entrySet()) {
-                    BlockPos pos = b.getKey();
-                    BlockState state = b.getValue();
-                    if (state.isAir()) continue;
+            Quaternionf rotation = new Quaternionf()
+                    .rotateX((float) Math.toRadians(30.0))
+                    .rotateY((float) Math.toRadians(210.0));
 
-                    pose.pushPose();
-                    pose.translate(pos.getX(), pos.getY(), pos.getZ());
-                    blockRenderer.renderSingleBlock(state, pose, buffers, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-                    pose.popPose();
-                }
-            } catch (Exception e) {
-                Constants.LOG.error("Failed to render structure in Field Guide", e);
-            } finally {
-                buffers.endBatch();
+            List<Map.Entry<BlockPos, BlockState>> sortedBlocks = new ArrayList<>(blocks.entrySet());
+            sortedBlocks.sort((a, b) -> {
+                BlockPos pA = a.getKey();
+                BlockPos pB = b.getKey();
+                return Integer.compare(pA.getX() + pA.getY() + pA.getZ(), pB.getX() + pB.getY() + pB.getZ());
+            });
+
+            for (Map.Entry<BlockPos, BlockState> b : sortedBlocks) {
+                BlockPos pos = b.getKey();
+                BlockState state = b.getValue();
+                if (state.isAir()) continue;
+
+                ((BlockDisplayAccessor) dummyDisplay).fieldguide$setBlockState(state);
+
+                float blockX = pos.getX() - centerX - 0.5f;
+                float blockY = pos.getY() - centerY - 0.5f;
+                float blockZ = pos.getZ() - centerZ - 0.5f;
+
+                Vector3f trans = new Vector3f(blockX, blockY, blockZ);
+
+                extractAndSubmitBlock(guiGraphics, dummyDisplay, scale, trans, rotation, x, y, size);
             }
         });
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T extends Entity, S extends EntityRenderState> void extractAndSubmitBlock(GuiGraphicsExtractor guiGraphics, T entity, float scale, Vector3f trans, Quaternionf rotation, int x, int y, int size) {
+        var dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
+        var renderer = (EntityRenderer<T, S>) dispatcher.getRenderer(entity);
+
+        S state = renderer.createRenderState(entity, 1.0F);
+        renderer.extractRenderState(entity, state, 0.0F);
+        state.outlineColor = 0;
+
+        guiGraphics.entity(state, scale, trans, rotation, null, x - size, y - size, x + size, y + size);
     }
 
     private static float getScaleFactorForEntity(Entity entity) {
@@ -485,18 +361,6 @@ public class EntryRenderHelper {
         return visual.xOffset;
     }
 
-    private static void setupFieldGuideEntityLighting() {
-        Vector3f light0 = new Vector3f(1.0F, -1.0F, -1.0F).normalize();
-        Vector3f light1 = new Vector3f(-1.0F, -1.0F, -1.0F).normalize();
-        RenderSystem.setShaderLights(light0, light1);
-    }
-
-    private static void setupFieldGuideBlockLighting() {
-        Vector3f light0 = new Vector3f(0.2F, -1.0F, 0.7F).normalize();
-        Vector3f light1 = new Vector3f(-0.2F, 0.0F, -0.7F).normalize();
-        RenderSystem.setShaderLights(light0, light1);
-    }
-
     private static void drawCachedTexture(GuiGraphicsExtractor guiGraphics, Identifier texture, int x, int y, int width, int height, boolean unlocked, boolean isPage, float bounceScale) {
         int scaledWidth = (int) (width * bounceScale);
         int scaledHeight = (int) (height * bounceScale);
@@ -506,8 +370,6 @@ public class EntryRenderHelper {
         boolean silhouette = !unlocked || ServerConfig.get().keepSilhouetteWhenUnlocked;
 
         if (silhouette) {
-            guiGraphics.flush();
-
             int color;
             double alpha;
             if (isPage) {
@@ -519,34 +381,11 @@ public class EntryRenderHelper {
             }
 
             Color rgb = new Color(color);
-            float r = rgb.getRed() / 255F;
-            float g = rgb.getGreen() / 255F;
-            float b = rgb.getBlue() / 255F;
+            int argb = ARGB.color((int) (alpha * 255), rgb.getRed(), rgb.getGreen(), rgb.getBlue());
 
-            RenderSystem.enableDepthTest();
-            RenderSystem.setShaderFogColor(r, g, b, (float) alpha);
-            RenderSystem.setShaderFogStart(0.0F);
-            RenderSystem.setShaderFogEnd(0.1F);
-
-            guiGraphics.flush();
-
-            VertexConsumer consumer = guiGraphics.bufferSource().getBuffer(RenderType.entityCutout(texture));
-            Matrix4f matrix = guiGraphics.pose().last().pose();
-
-            consumer.addVertex(matrix, drawX, drawY + scaledHeight, 0).setColor(255, 255, 255, 255).setUv(0.0F, 1.0F).setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(0, 0, 1);
-            consumer.addVertex(matrix, drawX + scaledWidth, drawY + scaledHeight, 0).setColor(255, 255, 255, 255).setUv(1.0F, 1.0F).setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(0, 0, 1);
-            consumer.addVertex(matrix, drawX + scaledWidth, drawY, 0).setColor(255, 255, 255, 255).setUv(1.0F, 0.0F).setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(0, 0, 1);
-            consumer.addVertex(matrix, drawX, drawY, 0).setColor(255, 255, 255, 255).setUv(0.0F, 0.0F).setOverlay(OverlayTexture.NO_OVERLAY).setLight(LightTexture.FULL_BRIGHT).setNormal(0, 0, 1);
-
-            guiGraphics.flush();
-
-            RenderSystem.setShaderFogStart(Float.MAX_VALUE);
-            RenderSystem.setShaderFogEnd(Float.MAX_VALUE);
-            RenderSystem.disableDepthTest();
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, texture, drawX, drawY, 0, 0, scaledWidth, scaledHeight, scaledWidth, scaledHeight, argb);
         } else {
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-            RenderSystem.enableBlend();
-            guiGraphics.blit(texture, drawX, drawY, 0, 0, scaledWidth, scaledHeight, scaledWidth, scaledHeight);
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, texture, drawX, drawY, 0, 0, scaledWidth, scaledHeight, scaledWidth, scaledHeight, -1);
         }
     }
 }

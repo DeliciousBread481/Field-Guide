@@ -37,12 +37,12 @@ public class EclipticSeasonsProvider implements SeasonsProvider {
     }
 
     private void checkBlock(Block block, List<Season> seasons) {
-        block.defaultBlockState().getTags().forEach(tagKey -> processTag(tagKey, seasons));
+        block.defaultBlockState().tags().forEach(tagKey -> processTag(tagKey, seasons));
     }
 
     private void checkItem(Item item, List<Season> seasons) {
         if (item == Items.AIR) return;
-        item.getDefaultInstance().getTags().forEach(tagKey -> processTag(tagKey, seasons));
+        item.getDefaultInstance().tags().forEach(tagKey -> processTag(tagKey, seasons));
     }
 
     private void processTag(TagKey<?> tagKey, List<Season> seasons) {

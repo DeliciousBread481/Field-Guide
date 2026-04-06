@@ -14,11 +14,12 @@ import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.item.ModItems;
 import com.evandev.fieldguide.mixin.accessor.MobAccessor;
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
@@ -26,6 +27,7 @@ import net.minecraft.world.entity.Mob;
 import org.lwjgl.glfw.GLFW;
 
 public class FieldGuideClient {
+    public static final KeyMapping.Category FIELD_GUIDE_CATEGORY = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "main"));
     private static final long AUTO_OPEN_THRESHOLD_MS = 5000;
     public static KeyMapping OPEN_GUIDE_KEY;
     public static KeyMapping SCAN_KEY;
@@ -38,14 +40,14 @@ public class FieldGuideClient {
                 "key.fieldguide.open",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_B,
-                "category.fieldguide.main"
+                FIELD_GUIDE_CATEGORY
         );
 
         SCAN_KEY = new KeyMapping(
                 "key.fieldguide.scan",
                 InputConstants.Type.KEYSYM,
                 InputConstants.UNKNOWN.getValue(),
-                "category.fieldguide.main"
+                FIELD_GUIDE_CATEGORY
         );
     }
 
@@ -155,15 +157,12 @@ public class FieldGuideClient {
                 frame = (int) Math.min(Math.floor(progress * animationFrames), animationFrames - 1);
             }
 
-            guiGraphics.pose().pushPose();
-            guiGraphics.pose().translate(0, 0, 100);
-            guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-            RenderSystem.enableBlend();
+            guiGraphics.pose().pushMatrix();
+            guiGraphics.pose().translate(0, 0);
 
-            guiGraphics.blit(Constants.SCANNING_ICON_TEXTURE, x, y, 0, textureSize * frame, textureSize, textureSize, textureSize, textureSize * totalFramesInTexture);
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.SCANNING_ICON_TEXTURE, x, y, 0, textureSize * frame, textureSize, textureSize, textureSize, textureSize * totalFramesInTexture);
 
-            guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-            guiGraphics.pose().popPose();
+            guiGraphics.pose().popMatrix();
         }
     }
 }

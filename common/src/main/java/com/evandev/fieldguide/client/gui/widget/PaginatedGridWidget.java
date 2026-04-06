@@ -6,9 +6,12 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -57,9 +60,13 @@ public class PaginatedGridWidget<T> extends AbstractWidget {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (prevButton.mouseClicked(mouseX, mouseY, button)) return true;
-        if (nextButton.mouseClicked(mouseX, mouseY, button)) return true;
+    public boolean mouseClicked(@NonNull MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+
+        if (prevButton.mouseClicked(event, doubleClick)) return true;
+        if (nextButton.mouseClicked(event, doubleClick)) return true;
 
         if (button == 0 && onClick != null && !items.isEmpty()) {
             int indexStart = itemsPerPage * (currentPage - 1);
@@ -78,7 +85,7 @@ public class PaginatedGridWidget<T> extends AbstractWidget {
             }
         }
 
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
@@ -91,7 +98,7 @@ public class PaginatedGridWidget<T> extends AbstractWidget {
     }
 
     @Override
-    public void renderWidget(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+    protected void extractWidgetRenderState(@NonNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
         if (items.isEmpty()) return;
 
         int indexStart = itemsPerPage * (currentPage - 1);
@@ -106,8 +113,8 @@ public class PaginatedGridWidget<T> extends AbstractWidget {
             currentX += itemSize + spacing;
         }
 
-        prevButton.render(guiGraphics, mouseX, mouseY, partialTick);
-        nextButton.render(guiGraphics, mouseX, mouseY, partialTick);
+        prevButton.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
+        nextButton.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
 
         if (getTotalPages() > 1) {
             int barY = this.getY() + itemSize;
@@ -119,8 +126,8 @@ public class PaginatedGridWidget<T> extends AbstractWidget {
             int progressWidth = (int) (barWidth * progressEnd) - (int) (barWidth * progressStart);
             int barHeight = 5;
 
-            guiGraphics.blitSprite(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_bar_bg"), barStartX, barY, barWidth, barHeight);
-            guiGraphics.blitSprite(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_bar_fill"), barStartX + (int) (barWidth * progressStart), barY, progressWidth, barHeight);
+            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_bar_bg"), barStartX, barY, barWidth, barHeight);
+            guiGraphics.blitSprite(RenderPipelines.GUI_TEXTURED, Identifier.fromNamespaceAndPath(Constants.MOD_ID, "widget/grid_bar_fill"), barStartX + (int) (barWidth * progressStart), barY, progressWidth, barHeight);
         }
     }
 

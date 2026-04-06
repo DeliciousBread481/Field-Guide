@@ -59,14 +59,12 @@ public class PauseScreenMixin extends Screen {
         int finalY = targetY + config.pauseButtonYOffset;
 
         ImageButton guideButton = new ImageButton(finalX, finalY, buttonSize, buttonSize, PAUSE_BUTTON_SPRITES, (button) -> {
-            if (this.minecraft != null) {
-                if (!FieldGuideClient.canOpenGuide()) return;
-                String defaultMode = ClientConfig.get().defaultScreen;
-                if ("last_opened_screen".equals(defaultMode) && BookScreen.lastOpenedScreen != null) {
-                    this.minecraft.setScreen(BookScreen.lastOpenedScreen);
-                } else {
-                    this.minecraft.setScreen(new FieldGuideCategoryScreen());
-                }
+            if (!FieldGuideClient.canOpenGuide()) return;
+            String defaultMode = ClientConfig.get().defaultScreen;
+            if ("last_opened_screen".equals(defaultMode) && BookScreen.lastOpenedScreen != null) {
+                this.minecraft.setScreen(BookScreen.lastOpenedScreen);
+            } else {
+                this.minecraft.setScreen(new FieldGuideCategoryScreen());
             }
         },
                 message

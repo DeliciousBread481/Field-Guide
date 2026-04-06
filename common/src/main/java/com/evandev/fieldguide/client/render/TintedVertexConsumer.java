@@ -33,6 +33,11 @@ public class TintedVertexConsumer implements VertexConsumer {
     }
 
     @Override
+    public VertexConsumer setColor(int color) {
+        return this;
+    }
+
+    @Override
     public @NotNull VertexConsumer setUv(float u, float v) {
         delegate.setUv(u, v);
         return this;
@@ -53,6 +58,11 @@ public class TintedVertexConsumer implements VertexConsumer {
     @Override
     public @NotNull VertexConsumer setNormal(float x, float y, float z) {
         delegate.setNormal(x, y, z);
+        return this;
+    }
+
+    @Override
+    public VertexConsumer setLineWidth(float width) {
         return this;
     }
 }

@@ -1,32 +1,11 @@
 package com.evandev.fieldguide.client.gui.util;
 
-import com.evandev.fieldguide.Constants;
-import com.evandev.fieldguide.api.AutoPopulateRegistry;
-import com.evandev.fieldguide.compat.emf.EmfCompat;
-import com.evandev.fieldguide.platform.Services;
-import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.platform.Lighting;
-import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.VertexSorting;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.Identifier;
-import org.joml.Matrix4f;
-import org.joml.Matrix4fStack;
-import org.lwjgl.opengl.GL11;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.stream.Stream;
+import java.util.Optional;
 
 public class IconCacheManager {
-    private static final Path CACHE_DIR = Services.PLATFORM.getConfigDirectory().resolve("../fieldguide_cache");
+/*    private static final Path CACHE_DIR = Services.PLATFORM.getConfigDirectory().resolve("../fieldguide_cache");
     private static final int RENDER_SIZE = 256;
 
     private static final Map<String, Identifier> TEXTURE_CACHE = new ConcurrentHashMap<>();
@@ -40,10 +19,10 @@ public class IconCacheManager {
                 t.setDaemon(true);
                 return t;
             }
-    );
+    );*/
 
     public static void tick() {
-        long startTime = System.currentTimeMillis();
+/*        long startTime = System.currentTimeMillis();
         int processed = 0;
 
         while (!MAIN_THREAD_TASKS.isEmpty() && processed < 5 && (System.currentTimeMillis() - startTime) < 10) {
@@ -52,19 +31,19 @@ public class IconCacheManager {
                 task.run();
                 processed++;
             }
-        }
+        }*/
     }
 
     public static void init() {
-        try {
+/*        try {
             Files.createDirectories(CACHE_DIR);
         } catch (IOException e) {
             Constants.LOG.error("Failed to create icon cache directory", e);
-        }
+        }*/
     }
 
     public static void clearCache() {
-        Minecraft mc = Minecraft.getInstance();
+/*        Minecraft mc = Minecraft.getInstance();
         for (Identifier id : TEXTURE_CACHE.values()) {
             mc.getTextureManager().release(id);
         }
@@ -82,10 +61,11 @@ public class IconCacheManager {
                     Constants.LOG.error("Failed to delete icon cache directory", e);
                 }
             }
-        }, IO_EXECUTOR);
+        }, IO_EXECUTOR);*/
     }
 
     public static Optional<Identifier> getOrGenerateIcon(Object baseEntry, Object cacheKey, boolean isPage, Runnable renderAction) {
+/*
         String entryKey = AutoPopulateRegistry.getEntryKey(baseEntry);
         if (entryKey.isEmpty()) return Optional.empty();
 
@@ -132,11 +112,13 @@ public class IconCacheManager {
                 MAIN_THREAD_TASKS.addFirst(() -> generateAndSaveIcon(id.getNamespace(), fileName, key, renderAction));
             }
         }, Minecraft.getInstance());
+*/
+        renderAction.run();
 
         return Optional.empty();
     }
 
-    private static void generateAndSaveIcon(String namespace, String fileName, String key, Runnable renderAction) {
+/*    private static void generateAndSaveIcon(String namespace, String fileName, String key, Runnable renderAction) {
         if (TEXTURE_CACHE.containsKey(key)) {
             PENDING_GENERATIONS.remove(key);
             return;
@@ -214,5 +196,5 @@ public class IconCacheManager {
             renderTarget.destroyBuffers();
             PENDING_GENERATIONS.remove(key);
         }
-    }
+    }*/
 }

@@ -1,93 +1,14 @@
 package com.evandev.fieldguide.client;
 
-import com.evandev.fieldguide.Constants;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.server.packs.resources.ResourceProvider;
-import org.lwjgl.opengl.GL11;
+import net.minecraft.client.renderer.rendertype.RenderType;
 
-import java.io.IOException;
-import java.util.IdentityHashMap;
-import java.util.Map;
-import java.util.function.Consumer;
-
-public class ModRenderTypes extends RenderType {
-
-    private static final Map<RenderType, RenderType> SCAN_WRAP_CACHE = new IdentityHashMap<>();
-    private static final Map<RenderType, RenderType> DEPTH_WRAP_CACHE = new IdentityHashMap<>();
-
-    public static ShaderInstance SCAN_BLOCK_SHADER;
-    private static final ShaderStateShard SCAN_BLOCK_STATE = new ShaderStateShard(() -> SCAN_BLOCK_SHADER);
-    public static ShaderInstance SCAN_ENTITY_SHADER;
-    private static final ShaderStateShard SCAN_ENTITY_STATE = new ShaderStateShard(() -> SCAN_ENTITY_SHADER);
-
-    public ModRenderTypes(String name, VertexFormat format, VertexFormat.Mode mode, int bufferSize, boolean affectsCrumbling, boolean sortOnUpload, Runnable setupState, Runnable clearState) {
-        super(name, format, mode, bufferSize, affectsCrumbling, sortOnUpload, setupState, clearState);
-    }
+public class ModRenderTypes {
 
     public static RenderType wrapForDepth(RenderType original, boolean isEntity) {
-        return DEPTH_WRAP_CACHE.computeIfAbsent(original, type -> new ModRenderTypes(
-                Constants.MOD_ID + "_scan_depth_wrap",
-                type.format(),
-                type.mode(),
-                type.bufferSize(),
-                type.affectsCrumbling(),
-                false,
-                () -> {
-                    type.setupRenderState();
-                    (isEntity ? SCAN_ENTITY_STATE : SCAN_BLOCK_STATE).setupRenderState();
-                    DEPTH_WRITE.setupRenderState();
-                },
-                () -> {
-                    DEPTH_WRITE.clearRenderState();
-                    (isEntity ? SCAN_ENTITY_STATE : SCAN_BLOCK_STATE).clearRenderState();
-                    type.clearRenderState();
-                }
-        ));
+        return original; // TODO: Port custom scan shaders to 26.1 RenderPipelines
     }
 
     public static RenderType wrapForScan(RenderType original, boolean isEntity) {
-        return SCAN_WRAP_CACHE.computeIfAbsent(original, type -> new ModRenderTypes(
-                Constants.MOD_ID + "_scan_wrap",
-                type.format(),
-                type.mode(),
-                type.bufferSize(),
-                type.affectsCrumbling(),
-                false,
-                () -> {
-                    type.setupRenderState();
-                    (isEntity ? SCAN_ENTITY_STATE : SCAN_BLOCK_STATE).setupRenderState();
-                    TRANSLUCENT_TRANSPARENCY.setupRenderState();
-                    COLOR_WRITE.setupRenderState();
-                    new DepthTestStateShard("equal_depth", GL11.GL_EQUAL).setupRenderState();
-                },
-                () -> {
-                    new DepthTestStateShard("equal_depth", GL11.GL_EQUAL).clearRenderState();
-                    COLOR_WRITE.clearRenderState();
-                    TRANSLUCENT_TRANSPARENCY.clearRenderState();
-                    (isEntity ? SCAN_ENTITY_STATE : SCAN_BLOCK_STATE).clearRenderState();
-                    type.clearRenderState();
-                }
-        ));
-    }
-
-    public static void registerShaders(Consumer<ShaderInstance> provider, ResourceProvider resourceProvider) throws IOException {
-        provider.accept(new ShaderInstance(resourceProvider, Constants.MOD_ID + ":fieldguide_scan_block", DefaultVertexFormat.BLOCK) {
-            @Override
-            public void apply() {
-                ModRenderTypes.SCAN_BLOCK_SHADER = this;
-                super.apply();
-            }
-        });
-
-        provider.accept(new ShaderInstance(resourceProvider, Constants.MOD_ID + ":fieldguide_scan_entity", DefaultVertexFormat.NEW_ENTITY) {
-            @Override
-            public void apply() {
-                ModRenderTypes.SCAN_ENTITY_SHADER = this;
-                super.apply();
-            }
-        });
+        return original; // TODO: Port custom scan shaders to 26.1 RenderPipelines
     }
 }

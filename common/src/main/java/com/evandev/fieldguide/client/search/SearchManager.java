@@ -5,7 +5,6 @@ import com.evandev.fieldguide.api.seasons.SeasonsAPI;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.manager.ClientLootManager;
 import com.evandev.fieldguide.entry.EntryResolver;
-import com.evandev.fieldguide.platform.Services;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -99,19 +98,19 @@ public class SearchManager {
 
             if (coreEntry instanceof EntityType<?> type) {
                 var key = BuiltInRegistries.ENTITY_TYPE.getResourceKey(type);
-                key.flatMap(BuiltInRegistries.ENTITY_TYPE::getHolder).ifPresent(holder -> {
+                key.flatMap(BuiltInRegistries.ENTITY_TYPE::get).ifPresent(holder -> {
                     if (holder.tags().anyMatch(tag -> matchLocation(tag.location(), tagQuery, exactMatch)))
                         results.add(entry);
                 });
             } else if (coreEntry instanceof Block block) {
                 var key = BuiltInRegistries.BLOCK.getResourceKey(block);
-                key.flatMap(BuiltInRegistries.BLOCK::getHolder).ifPresent(holder -> {
+                key.flatMap(BuiltInRegistries.BLOCK::get).ifPresent(holder -> {
                     if (holder.tags().anyMatch(tag -> matchLocation(tag.location(), tagQuery, exactMatch)))
                         results.add(entry);
                 });
             } else if (coreEntry instanceof Item item) {
                 var key = BuiltInRegistries.ITEM.getResourceKey(item);
-                key.flatMap(BuiltInRegistries.ITEM::getHolder).ifPresent(holder -> {
+                key.flatMap(BuiltInRegistries.ITEM::get).ifPresent(holder -> {
                     if (holder.tags().anyMatch(tag -> matchLocation(tag.location(), tagQuery, exactMatch)))
                         results.add(entry);
                 });
@@ -139,17 +138,17 @@ public class SearchManager {
 
         var connection = Minecraft.getInstance().getConnection();
         if (connection != null) {
-            var biomeRegistry = connection.registryAccess().registryOrThrow(Registries.BIOME);
+            var biomeRegistry = connection.registryAccess().lookupOrThrow(Registries.BIOME);
 
-            for (var biomeEntry : biomeRegistry.entrySet()) {
-                if (matchLocation(biomeEntry.getKey().location(), biomeQuery, exactMatch)) {
+            biomeRegistry.listElements().forEach(biomeEntry -> {
+                if (matchLocation(biomeEntry.key().identifier(), biomeQuery, exactMatch)) {
                     try {
-                        Biome biome = biomeEntry.getValue();
+                        Biome biome = biomeEntry.value();
 
                         for (MobCategory cat : MobCategory.values()) {
                             for (var spawn : biome.getMobSettings().getMobs(cat).unwrap()) {
 
-                                Object entry = ClientFieldGuideManager.getInstance().getEntryForTarget(spawn.type);
+                                Object entry = ClientFieldGuideManager.getInstance().getEntryForTarget(spawn.value().type());
                                 Identifier categoryId = null;
 
                                 if (entry != null) {
@@ -159,7 +158,7 @@ public class SearchManager {
                                     }
                                 }
 
-                                if (EntryResolver.isValidEntity(spawn.type, categoryId)) {
+                                if (EntryResolver.isValidEntity(spawn.value().type(), categoryId)) {
                                     if (entry != null && !results.contains(entry) && entries.contains(entry)) {
                                         results.add(entry);
                                     }
@@ -169,7 +168,7 @@ public class SearchManager {
 
                         /*if (Services.PLATFORM.isModLoaded("cobblemon")) {
                             for (Object entry : entries) {
-                                if (ClientFieldGuideCobblemonCompat.isCobblemonBiomeMatch(entry, biomeEntry.getKey().location(), biomeRegistry.getHolderOrThrow(biomeEntry.getKey()))) {
+                                if (ClientFieldGuideCobblemonCompat.isCobblemonBiomeMatch(entry, biomeEntry.key().location(), biomeEntry.value())) {
                                     if (!results.contains(entry)) {
                                         results.add(entry);
                                     }
@@ -179,7 +178,7 @@ public class SearchManager {
                     } catch (Exception ignored) {
                     }
                 }
-            }
+            });
         }
 
         for (Object entry : entries) {

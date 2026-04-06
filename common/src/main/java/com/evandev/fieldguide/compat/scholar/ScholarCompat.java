@@ -18,18 +18,18 @@ public class ScholarCompat {
     }
 
     public static AbstractWidget createTextArea(Font font, int x, int y, int width, int height, int maxVisibleLines, int lineHeight, int textColor, boolean scrollable, int maxCharacters, String initialText, Consumer<String> onChanged, Consumer<String> onSpillover) {
-        if (Services.PLATFORM.isModLoaded("scholar")) {
+/*        if (Services.PLATFORM.isModLoaded("scholar")) {
             return ScholarWidgetHelper.createTextArea(font, x, y, width, height, maxVisibleLines, lineHeight, textColor, scrollable, maxCharacters, initialText, onChanged, onSpillover);
-        }
+        }*/
         BookTextAreaWidget widget = new BookTextAreaWidget(font, x, y, width, height, maxVisibleLines, lineHeight, textColor, scrollable, maxCharacters, initialText, onChanged);
         if (onSpillover != null) widget.setOnSpillover(onSpillover);
         return widget;
     }
 
     public static AbstractWidget createTextField(Font font, int x, int y, int width, int height, String initialText, int textColor, int maxTextWidth, int maxCharacters, Consumer<String> onChanged, boolean centered) {
-        if (Services.PLATFORM.isModLoaded("scholar")) {
+/*        if (Services.PLATFORM.isModLoaded("scholar")) {
             return ScholarWidgetHelper.createTextField(font, x, y, width, height, initialText, textColor, maxTextWidth, maxCharacters, onChanged, centered);
-        }
+        }*/
         return new BookTextFieldWidget(font, x, y, width, height, initialText, textColor, maxTextWidth, maxCharacters, onChanged).setCentered(centered);
     }
 }

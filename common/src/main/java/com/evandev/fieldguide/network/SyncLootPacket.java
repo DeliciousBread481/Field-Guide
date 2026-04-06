@@ -22,7 +22,7 @@ public record SyncLootPacket(Map<Identifier, List<ItemStack>> lootCache,
             ByteBufCodecs.<RegistryFriendlyByteBuf, Identifier, List<ItemStack>, Map<Identifier, List<ItemStack>>>map(
                     HashMap::new,
                     Identifier.STREAM_CODEC,
-                    ItemStack.LIST_STREAM_CODEC
+                    ItemStack.OPTIONAL_LIST_STREAM_CODEC
             ),
             SyncLootPacket::lootCache,
             ByteBufCodecs.BOOL,
