@@ -7,6 +7,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -221,26 +222,18 @@ public class BookTextAreaWidget extends AbstractWidget {
         return false;
     }
 
-    // TODO: fix this
-    public boolean charTyped(char codePoint, int modifiers) {
-        return handleCharTyped(codePoint);
-    }
-
-    public boolean charTyped(char codePoint) {
-        return handleCharTyped(codePoint);
-    }
-
-    private boolean handleCharTyped(char codePoint) {
+    @Override
+    public boolean charTyped(@NonNull CharacterEvent event) {
         if (!this.isFocused() || !this.editable) return false;
         String proposedText;
         int newCursor;
         if (selectionPos != cursorPos) {
             int start = Math.min(cursorPos, selectionPos);
             int end = Math.max(cursorPos, selectionPos);
-            proposedText = text.substring(0, start) + codePoint + text.substring(end);
+            proposedText = text.substring(0, start) + event.codepointAsString() + text.substring(end);
             newCursor = start + 1;
         } else {
-            proposedText = text.substring(0, cursorPos) + codePoint + text.substring(cursorPos);
+            proposedText = text.substring(0, cursorPos) + event.codepointAsString() + text.substring(cursorPos);
             newCursor = cursorPos + 1;
         }
         updateText(proposedText, newCursor);
