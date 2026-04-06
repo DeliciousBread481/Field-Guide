@@ -438,7 +438,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
         guiGraphics.pose().pushMatrix();
 
-        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0f, 0f, this.bounds.width(), this.bounds.height(), 256, 256);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0f, 0f, this.bounds.width(), this.bounds.height(), 300, 200);
 
         // Page Numbers
         int leftPageNum, rightPageNum;
@@ -452,7 +452,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
         if (currentPage > 0 || isSearching) {
             int titleY = this.rightPageBounds.top() + 8;
-            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.LIST_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0f, 0f, this.bounds.width(), this.bounds.height(), 256, 256);
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.LIST_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0f, 0f, this.bounds.width(), this.bounds.height(), 300, 200);
             renderPageNumber(leftPageNum, this.leftPageBounds, guiGraphics);
             if (isSearching) {
                 if (currentEntries.size() > leftPageNum * ITEMS_PER_PAGE) {
@@ -472,7 +472,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
                                 int iconSize = 16;
                                 int iconY = titleY - 5;
                                 int iconX = this.leftPageBounds.left() + 3;
-                                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, texture, iconX, iconY, 0f, 0f, iconSize, iconSize, 256, 256);
+                                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, texture, iconX, iconY, 0f, 0f, iconSize, iconSize, iconSize, iconSize);
                                 iconOffset = iconSize;
                             }
                         }
@@ -605,7 +605,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
     }
 
     private void renderCategoryInfo(GuiGraphicsExtractor guiGraphics) {
-        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.TITLE_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0f, 0f, this.bounds.width(), this.bounds.height(), 256, 256);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.TITLE_PAGE_TEXTURE, this.bounds.left(), this.bounds.top(), 0f, 0f, this.bounds.width(), this.bounds.height(), 300, 200);
 
         Category category = this.getSelectedCategory();
         Component title = Component.translatable(category.getTranslationKey());
@@ -664,9 +664,9 @@ public class FieldGuideCategoryScreen extends BookScreen {
 
             boolean hovered = bounds.contains(mouseX, mouseY);
             if (hovered) {
-                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.LIST_ENTRY_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0f, (float) CELL_SIZE, CELL_SIZE, CELL_SIZE, 256, 256);
+                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.LIST_ENTRY_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0f, (float) CELL_SIZE, CELL_SIZE, CELL_SIZE, 300, 200);
             } else {
-                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.LIST_ENTRY_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0f, 0f, CELL_SIZE, CELL_SIZE, 256, 256);
+                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.LIST_ENTRY_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0f, 0f, CELL_SIZE, CELL_SIZE, 300, 200);
             }
 
             renderEntryInGrid(guiGraphics, entry, bounds.x_center(), bounds.y_center(), true);
@@ -706,9 +706,9 @@ public class FieldGuideCategoryScreen extends BookScreen {
                 boolean hovered = bounds.contains(mouseX, mouseY);
 
                 if (hovered) {
-                    guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.LIST_ENTRY_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0f, (float) CELL_SIZE, CELL_SIZE, CELL_SIZE, 256, 256);
+                    guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.LIST_ENTRY_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0f, (float) CELL_SIZE, CELL_SIZE, CELL_SIZE, 300, 200);
                 } else {
-                    guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.LIST_ENTRY_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0f, 0f, CELL_SIZE, CELL_SIZE, 256, 256);
+                    guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.LIST_ENTRY_BACKGROUND_TEXTURE, bounds.x(), bounds.y(), 0f, 0f, CELL_SIZE, CELL_SIZE, 300, 200);
                 }
 
                 renderEntryInGrid(guiGraphics, entry, bounds.x_center(), bounds.y_center(), unlocked);
@@ -783,7 +783,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
     private void renderNewLabel(GuiGraphicsExtractor guiGraphics, Bounds bounds) {
         guiGraphics.pose().pushMatrix();
         guiGraphics.pose().translate(0f, 0f);
-        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.LIST_ENTRY_NEW_TEXTURE, bounds.x(), bounds.y(), 0f, (float) CELL_SIZE, CELL_SIZE, CELL_SIZE, 256, 256);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.LIST_ENTRY_NEW_TEXTURE, bounds.x(), bounds.y(), 0f, 0f, CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE);
         guiGraphics.pose().popMatrix();
     }
 

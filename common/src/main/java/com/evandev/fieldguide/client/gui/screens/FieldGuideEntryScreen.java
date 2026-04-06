@@ -470,10 +470,10 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         guiGraphics.pose().pushMatrix();
 
-        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0f, 0f, this.bounds.width(), this.bounds.height(), 256, 256);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.BOOK_TEXTURE, this.bounds.left(), this.bounds.top(), 0f, 0f, this.bounds.width(), this.bounds.height(), 300, 200);
 
         Identifier detailsTexture = getDetailsTexture();
-        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, detailsTexture, this.bounds.left(), this.bounds.top(), 0f, 0f, this.bounds.width(), this.bounds.height(), 256, 256);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, detailsTexture, this.bounds.left(), this.bounds.top(), 0f, 0f, this.bounds.width(), this.bounds.height(), 300, 200);
 
         boolean unlocked = ClientFieldGuideManager.isUnlocked(entry);
 
@@ -507,7 +507,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
                 int quillX = this.rightPageBounds.right() - 15;
                 int quillY = this.rightPageBounds.top() + 5;
-                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.QUILL_ICON, quillX, quillY, 0f, 0f, 11, 11, 256, 256);
+                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.QUILL_ICON, quillX, quillY, 0f, 0f, 11, 11, 11, 11);
 
                 if (mouseX >= quillX && mouseX <= quillX + 11 && mouseY >= quillY && mouseY <= quillY + 11) {
                     guiGraphics.setTooltipForNextFrame(this.font, dateComponent, mouseX, mouseY);
@@ -661,7 +661,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                     v = 8;
                 }
             }
-            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.SEASONS_TEXTURE, drawX, startY, (float) u, (float) v, 8, 8, 256, 256);
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.SEASONS_TEXTURE, drawX, startY, (float) u, (float) v, 8, 8, 8, 8);
 
             if (hovered) {
                 guiGraphics.pose().popMatrix();
@@ -728,11 +728,11 @@ public class FieldGuideEntryScreen extends BookScreen {
                 int offset = (itemSize - 16) / 2;
 
                 if (Minecraft.getInstance().getResourceManager().getResource(texture).isPresent()) {
-                    graphics.blit(RenderPipelines.GUI_TEXTURED, texture, x + offset, y + offset, 0f, 0f, 16, 16, 256, 256);
+                    graphics.blit(RenderPipelines.GUI_TEXTURED, texture, x + offset, y + offset, 0f, 0f, 16, 16, 16, 16);
                 } else {
                     Identifier plainsTexture = Identifier.fromNamespaceAndPath("minecraft", "textures/immersiveoverlays/plains.png");
                     if (Minecraft.getInstance().getResourceManager().getResource(plainsTexture).isPresent()) {
-                        graphics.blit(RenderPipelines.GUI_TEXTURED, plainsTexture, x + offset, y + offset, 0f, 0f, 16, 16, 256, 256);
+                        graphics.blit(RenderPipelines.GUI_TEXTURED, plainsTexture, x + offset, y + offset, 0f, 0f, 16, 16, 16, 16);
                     }
                 }
 

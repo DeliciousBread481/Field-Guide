@@ -33,23 +33,23 @@ public class ClientConfig {
     public boolean playUnlockSound = true;
 
     public boolean showOutOfRangeOverlay = true;
-    public String scanOverlayColor = "#F9EED0";
+    public String scanOverlayColor = "#0xFFF9EED0";
     public double scanOverlayAlpha = 0.5D;
 
-    public String textColor = "#8A5E3B";
-    public String textTitleColor = "#704623";
-    public String textMutedColor = "#C7A875";
+    public String textColor = "#0xFF8A5E3B";
+    public String textTitleColor = "#0xFF704623";
+    public String textMutedColor = "#0xFFC7A875";
     public String textCursorColor = "#0xFF704623";
-    public String pageNumberColor = "#C7A875";
+    public String pageNumberColor = "#0xFFC7A875";
 
-    public String listSilhouetteColor = "#DDC69B";
+    public String listSilhouetteColor = "#0xFFDDC69B";
     public double listSilhouetteAlpha = 1.0D;
-    public String listUnlockedSilhouetteColor = "#DDC69B";
+    public String listUnlockedSilhouetteColor = "#0xFFDDC69B";
     public double listUnlockedSilhouetteAlpha = 1.0D;
 
-    public String detailsSilhouetteColor = "#DDC69B";
+    public String detailsSilhouetteColor = "#0xFFDDC69B";
     public double detailsSilhouetteAlpha = 1.0D;
-    public String detailsUnlockedSilhouetteColor = "#DDC69B";
+    public String detailsUnlockedSilhouetteColor = "#0xFFDDC69B";
     public double detailsUnlockedSilhouetteAlpha = 1.0D;
 
     public boolean useRealWorldDate = false;
@@ -90,19 +90,19 @@ public class ClientConfig {
     }
 
     public int getScanOverlayColorInt() {
-        return parseColor(scanOverlayColor, 0xF9EED0);
+        return parseColor(scanOverlayColor, 0xFFF9EED0);
     }
 
     public int getTextColorInt() {
-        return parseColor(textColor, 0x8A5E3B);
+        return parseColor(textColor, 0xFF8A5E3B);
     }
 
     public int getTextTitleColorInt() {
-        return parseColor(textTitleColor, 0x704623);
+        return parseColor(textTitleColor, 0xFF704623);
     }
 
     public int getTextMutedColorInt() {
-        return parseColor(textMutedColor, 0xC7A875);
+        return parseColor(textMutedColor, 0xFFC7A875);
     }
 
     public int getTextCursorColorInt() {
@@ -110,29 +110,34 @@ public class ClientConfig {
     }
 
     public int getPageNumberColorInt() {
-        return parseColor(pageNumberColor, 0xC7A875);
+        return parseColor(pageNumberColor, 0xFFC7A875);
     }
 
     public int getListSilhouetteColorInt() {
-        return parseColor(listSilhouetteColor, 0xDDC69B);
+        return parseColor(listSilhouetteColor, 0xFFDDC69B);
     }
 
     public int getListUnlockedSilhouetteColorInt() {
-        return parseColor(listUnlockedSilhouetteColor, 0xDDC69B);
+        return parseColor(listUnlockedSilhouetteColor, 0xFFDDC69B);
     }
 
     public int getDetailsSilhouetteColorInt() {
-        return parseColor(detailsSilhouetteColor, 0xDDC69B);
+        return parseColor(detailsSilhouetteColor, 0xFFDDC69B);
     }
 
     public int getDetailsUnlockedSilhouetteColorInt() {
-        return parseColor(detailsUnlockedSilhouetteColor, 0xDDC69B);
+        return parseColor(detailsUnlockedSilhouetteColor, 0xFFDDC69B);
     }
 
     private int parseColor(String colorStr, int fallback) {
         try {
-            String hex = colorStr.startsWith("#") ? colorStr.substring(1) : colorStr;
-            return Integer.parseInt(hex, 16);
+            String hex = colorStr.replace("#", "").replace("0x", "");
+            long color = Long.parseLong(hex, 16);
+            if (hex.length() <= 6) {
+                color |= 0xFF000000L;
+            }
+
+            return (int) color;
         } catch (Exception e) {
             return fallback;
         }
