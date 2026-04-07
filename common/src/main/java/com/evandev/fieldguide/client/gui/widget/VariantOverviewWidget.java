@@ -14,6 +14,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
@@ -102,7 +103,7 @@ public class VariantOverviewWidget extends AbstractWidget {
         guiGraphics.pose().pushMatrix();
         guiGraphics.pose().translate(0f, 0f);
 
-        guiGraphics.blit(Constants.VARIANT_WIDGET_TEXTURE, this.getX(), this.getY(), 0, 0, this.width, this.height, this.width, this.height);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.VARIANT_WIDGET_TEXTURE, this.getX(), this.getY(), 0f, 0f, this.width, this.height, this.width, this.height);
 
         Component tooltipText = null;
 
