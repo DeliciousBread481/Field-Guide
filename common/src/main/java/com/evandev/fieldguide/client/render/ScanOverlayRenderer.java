@@ -8,28 +8,45 @@ import com.evandev.fieldguide.client.scan.FieldGuideScanner;
 import com.evandev.fieldguide.compat.etf.EtfCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.platform.Services;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.model.Model;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.OrderedSubmitNodeCollector;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.block.BlockModelRenderState;
+import net.minecraft.client.renderer.block.BlockModelResolver;
+import net.minecraft.client.renderer.block.MovingBlockRenderState;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
+import net.minecraft.client.renderer.block.model.BlockDisplayContext;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
+import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.geometry.BakedQuad;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragonPart;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
-import org.jetbrains.annotations.NotNull;
-import org.lwjgl.opengl.GL11;
+import org.joml.Quaternionf;
+import org.jspecify.annotations.NonNull;
 
 import java.awt.*;
 import java.util.*;
@@ -39,7 +56,17 @@ import java.util.Queue;
 public class ScanOverlayRenderer {
     private static final float VERTICAL_BUFFER = 1.3f;
 
-    public static void render(PoseStack poseStack, float partialTick, Camera camera, MultiBufferSource.BufferSource bufferSource) {
+    public static int getPackedScanLightCoords(float limitY, float r, float g, float b, float a) {
+        short encodedLimit = (short) Mth.clamp(limitY * 100.0f, -32000, 32000);
+        int r4 = (int) (r * 15);
+        int g4 = (int) (g * 15);
+        int b4 = (int) (b * 15);
+        int a4 = (int) (a * 15);
+        short colorPacked = (short) ((r4 << 12) | (g4 << 8) | (b4 << 4) | a4);
+        return (encodedLimit & 0xFFFF) | ((colorPacked & 0xFFFF) << 16);
+    }
+
+    public static void render(PoseStack poseStack, float partialTick, Camera camera, SubmitNodeCollector collector) {
         FieldGuideScanner scanner = FieldGuideScanner.getInstance();
         Minecraft mc = Minecraft.getInstance();
 
@@ -51,72 +78,50 @@ public class ScanOverlayRenderer {
         BlockPos targetBlock = (scanner.getScanningTarget() instanceof Block && scanner.getScanningPos() != null) ? scanner.getScanningPos() : (scanner.getFadingPos() != null ? scanner.getFadingPos() : outOfRangePos);
 
         if (targetEntity == null && targetBlock == null) return;
-        // RenderSystem.clear(GL11.GL_DEPTH_BUFFER_BIT, false);
 
-        Vec3 camPos = new Vec3(0, 0, 0); // camera.getPosition();
+        Vec3 camPos = camera.position();
         float red, green, blue, alpha;
 
         if ((outOfRangeEntity != null && targetEntity == outOfRangeEntity) || (outOfRangePos != null && targetBlock == outOfRangePos)) {
-            if (!ClientConfig.get().showOutOfRangeOverlay) {
-                return;
-            }
-
+            if (!ClientConfig.get().showOutOfRangeOverlay) return;
             red = 1.0F;
             green = 0.0F;
             blue = 0.0F;
-            float pulse = (float) (Math.sin(System.currentTimeMillis() / 200.0) * 0.5 + 0.5);
-            alpha = 0.0F + (pulse * 0.2F);
+            alpha = 0.0F + ((float) (Math.sin(System.currentTimeMillis() / 200.0) * 0.5 + 0.5) * 0.2F);
         } else {
-            int colorInt = ClientConfig.get().getScanOverlayColorInt();
-            Color c = new Color(colorInt);
+            Color c = new Color(ClientConfig.get().getScanOverlayColorInt());
             red = c.getRed() / 255.0F;
             green = c.getGreen() / 255.0F;
             blue = c.getBlue() / 255.0F;
-            alpha = (float) (scanner.getScanningEntity() != null || scanner.getScanningTarget() != null
-                    ? ClientConfig.get().scanOverlayAlpha
-                    : ClientConfig.get().scanOverlayAlpha * scanner.getFadeProgress(partialTick));
+            alpha = (float) (scanner.getScanningEntity() != null || scanner.getScanningTarget() != null ? ClientConfig.get().scanOverlayAlpha : ClientConfig.get().scanOverlayAlpha * scanner.getFadeProgress(partialTick));
         }
 
         if (targetBlock != null && alpha > 0.01f) {
-            renderBlockOverlay(poseStack, partialTick, camPos, bufferSource, targetBlock, scanner, mc, red, green, blue, alpha);
+            renderBlockOverlay(poseStack, partialTick, camPos, collector, targetBlock, scanner, mc, red, green, blue, alpha);
         }
 
         if (targetEntity != null && alpha > 0.01f) {
-            renderEntityOverlay(poseStack, partialTick, camPos, bufferSource, targetEntity, outOfRangeEntity, scanner, mc, red, green, blue, alpha);
+            renderEntityOverlay(poseStack, partialTick, camPos, collector, targetEntity, outOfRangeEntity, scanner, mc, red, green, blue, alpha);
         }
     }
 
     private static Entity resolveEntity(Entity entity) {
         if (entity == null) return null;
-        if (entity instanceof EnderDragonPart dragonPart) {
-            return dragonPart.parentMob;
-        }
+        if (entity instanceof EnderDragonPart dragonPart) return dragonPart.parentMob;
         try {
-            java.lang.reflect.Method getParent = entity.getClass().getMethod("getParent");
-            Object parent = getParent.invoke(entity);
-            if (parent instanceof Entity parentEntity) {
-                return parentEntity;
-            }
+            return (Entity) entity.getClass().getMethod("getParent").invoke(entity);
         } catch (Exception ignored) {
+            return entity;
         }
-        return entity;
     }
 
-    private static VertexConsumer createTintedConsumer(VertexConsumer delegate, MultiBufferSource provider, float r, float g, float b, float a) {
-        if (Services.PLATFORM.isModLoaded("entity_texture_features")) {
-            return EtfCompat.createTintedConsumer(delegate, provider, r, g, b, a);
-        }
-        return new TintedVertexConsumer(delegate, r, g, b, a);
-    }
-
-    private static void renderBlockOverlay(PoseStack poseStack, float partialTick, Vec3 camPos, MultiBufferSource.BufferSource bufferSource, BlockPos targetBlock, FieldGuideScanner scanner, Minecraft mc, float red, float green, float blue, float alpha) {
+    private static void renderBlockOverlay(PoseStack poseStack, float partialTick, Vec3 camPos, SubmitNodeCollector collector, BlockPos targetBlock, FieldGuideScanner scanner, Minecraft mc, float red, float green, float blue, float alpha) {
         boolean isOutOfRange = scanner.getOutOfRangePos() != null && targetBlock == scanner.getOutOfRangePos();
         float progress = isOutOfRange ? 1.0f : (scanner.getScanningTarget() != null ? scanner.getScanProgress(partialTick) : scanner.getFadeProgress(partialTick));
         if (progress <= 0.0f) return;
 
         float fillHeight = scanner.getScanningTarget() != null ? progress : 1.0f;
-
-        BlockState targetState = mc.level.getBlockState(targetBlock);
+        BlockState targetState = Objects.requireNonNull(mc.level).getBlockState(targetBlock);
         Block targetBlockType = targetState.getBlock();
         Object entry = ClientFieldGuideManager.getInstance().getEntryForTarget(targetBlockType);
 
@@ -134,14 +139,11 @@ public class ScanOverlayRenderer {
 
                 while (!queue.isEmpty() && blocksToRender.size() < maxBlocks) {
                     BlockPos pos = queue.poll();
-
                     for (int dx = -1; dx <= 1; dx++) {
                         for (int dy = -1; dy <= 1; dy++) {
                             for (int dz = -1; dz <= 1; dz++) {
                                 if (dx == 0 && dy == 0 && dz == 0) continue;
-
                                 BlockPos neighbor = pos.offset(dx, dy, dz);
-
                                 int hDist = Math.max(Math.abs(neighbor.getX() - targetBlock.getX()), Math.abs(neighbor.getZ() - targetBlock.getZ()));
                                 int vDist = Math.abs(neighbor.getY() - targetBlock.getY());
                                 if (hDist > 6 || vDist > 32) continue;
@@ -152,10 +154,8 @@ public class ScanOverlayRenderer {
                                 if (isHorizontal && (composite.childEntries() == null || !composite.childEntries().contains(neighborId)))
                                     continue;
 
-
                                 if (!blocksToRender.contains(neighbor)) {
-                                    if ((composite.childEntries() != null && composite.childEntries().contains(neighborId)) ||
-                                            (composite.displayId() != null && composite.displayId().equals(neighborId))) {
+                                    if ((composite.childEntries() != null && composite.childEntries().contains(neighborId)) || (composite.displayId() != null && composite.displayId().equals(neighborId))) {
                                         blocksToRender.add(neighbor);
                                         queue.add(neighbor);
                                     }
@@ -171,14 +171,11 @@ public class ScanOverlayRenderer {
 
                 while (!queue.isEmpty() && blocksToRender.size() < maxBlocks) {
                     BlockPos pos = queue.poll();
-
                     for (int dx = -1; dx <= 1; dx++) {
                         for (int dy = -1; dy <= 1; dy++) {
                             for (int dz = -1; dz <= 1; dz++) {
                                 if (dx == 0 && dy == 0 && dz == 0) continue;
-
                                 BlockPos neighbor = pos.offset(dx, dy, dz);
-
                                 int hDist = Math.max(Math.abs(neighbor.getX() - targetBlock.getX()), Math.abs(neighbor.getZ() - targetBlock.getZ()));
                                 int vDist = Math.abs(neighbor.getY() - targetBlock.getY());
                                 if (hDist > 5 || vDist > 32) continue;
@@ -203,59 +200,46 @@ public class ScanOverlayRenderer {
         for (BlockPos pos : blocksToRender) {
             minY = Math.min(minY, pos.getY());
             BlockState state = mc.level.getBlockState(pos);
-            double shapeHeight = 1.0;
-            if (mc.player != null && !state.isAir()) {
-                shapeHeight = state.isCollisionShapeFullBlock(mc.level, pos)
-                        ? 1.0
-                        : Math.max(1.0, state.getShape(mc.level, pos, CollisionContext.of(mc.player)).max(Direction.Axis.Y));
-            }
+            double shapeHeight = (mc.player != null && !state.isAir() && !state.isCollisionShapeFullBlock(mc.level, pos)) ? Math.max(1.0, state.getShape(mc.level, pos, CollisionContext.of(mc.player)).max(Direction.Axis.Y)) : 1.0;
             maxAbsoluteY = Math.max(maxAbsoluteY, pos.getY() + shapeHeight);
         }
 
-        double totalHeight = maxAbsoluteY - minY;
-        double globalScanLimitY = fillHeight >= 1.0f ? 10000.0 : (minY + (totalHeight * fillHeight));
+        float globalScanLimitY = fillHeight >= 1.0f ? 10000.0f : (float) (minY + ((maxAbsoluteY - minY) * fillHeight));
+
+        BlockModelRenderState blockRenderState = new BlockModelRenderState();
+        BlockModelResolver resolver = new BlockModelResolver(mc.getModelManager());
 
         for (BlockPos pos : blocksToRender) {
             BlockState state = mc.level.getBlockState(pos);
-            if (!state.isAir()) {
+            if (!state.isAir() && state.getRenderShape() == RenderShape.MODEL) {
                 Vec3 offset = state.getOffset(pos);
                 double x = pos.getX() - camPos.x + offset.x;
                 double y = pos.getY() - camPos.y + offset.y;
                 double z = pos.getZ() - camPos.z + offset.z;
 
-                poseStack.pushPose();
-                poseStack.translate(x, y, z);
+                float localScanLimitY = fillHeight >= 1.0f ? 10000.0f : (globalScanLimitY - pos.getY());
 
-                // MultiBufferSource depthSource = requestedType -> createTintedConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForDepth(requestedType, false)), bufferSource, 1, 1, 1, 1);
-                // mc.getBlockRenderer().renderSingleBlock(state, poseStack, depthSource, 15728880, OverlayTexture.pack(0, 10));
-
-                poseStack.popPose();
-                bufferSource.endBatch();
-            }
-        }
-
-        for (BlockPos pos : blocksToRender) {
-            BlockState state = mc.level.getBlockState(pos);
-            if (!state.isAir()) {
-                Vec3 offset = state.getOffset(pos);
-                double x = pos.getX() - camPos.x + offset.x;
-                double y = pos.getY() - camPos.y + offset.y;
-                double z = pos.getZ() - camPos.z + offset.z;
+                SubmitNodeCollector depthCollector = new ScanNodeCollector(collector, 1f, 1f, 1f, 0f, localScanLimitY, true);
+                SubmitNodeCollector tintedCollector = new ScanNodeCollector(collector, red, green, blue, alpha, localScanLimitY, false);
 
                 poseStack.pushPose();
                 poseStack.translate(x, y, z);
-
-                // MultiBufferSource tintedSource = requestedType -> createTintedConsumer(bufferSource.getBuffer(ModRenderTypes.wrapForScan(requestedType, false)), bufferSource, red, green, blue, alpha);
-                // mc.getBlockRenderer().renderSingleBlock(state, poseStack, tintedSource, 15728880, OverlayTexture.pack(0, 10));
-
+                resolver.update(blockRenderState, state, BlockDisplayContext.create());
+                blockRenderState.submit(poseStack, depthCollector, 15728880, OverlayTexture.NO_OVERLAY, 0);
                 poseStack.popPose();
-                bufferSource.endBatch();
+
+                poseStack.pushPose();
+                poseStack.translate(x, y, z);
+                blockRenderState.submit(poseStack, tintedCollector, 15728880, OverlayTexture.NO_OVERLAY, 0);
+                poseStack.popPose();
             }
         }
     }
 
     private static Set<BlockPos> gatherTreeBlocks(Minecraft mc, BlockPos startPos) {
         Set<BlockPos> blocks = new HashSet<>();
+        if (mc.level == null) return blocks;
+
         BlockState startState = mc.level.getBlockState(startPos);
         BlockPos trunkStart = startPos;
 
@@ -319,7 +303,6 @@ public class ScanOverlayRenderer {
         while (!leafQueue.isEmpty() && leaves.size() < 600) {
             BlockPos pos = leafQueue.poll();
             int currentDist = leafDistances.get(pos);
-
             if (currentDist >= 5) continue;
 
             for (Direction dir : Direction.values()) {
@@ -338,59 +321,108 @@ public class ScanOverlayRenderer {
         blocks.addAll(trunk);
         blocks.addAll(leaves);
         blocks.add(startPos);
-
         return blocks;
     }
 
-    private static void renderEntityOverlay(PoseStack poseStack, float partialTick, Vec3 camPos, MultiBufferSource.BufferSource bufferSource, Entity targetEntity, Entity outOfRangeEntity, FieldGuideScanner scanner, Minecraft mc, float red, float green, float blue, float alpha) {
+    private static void renderEntityOverlay(PoseStack poseStack, float partialTick, Vec3 camPos, SubmitNodeCollector collector, Entity targetEntity, Entity outOfRangeEntity, FieldGuideScanner scanner, Minecraft mc, float red, float green, float blue, float alpha) {
         float fillHeight = (outOfRangeEntity != null || scanner.getScanningEntity() == null) ? 1.0f : scanner.getScanProgress(partialTick);
 
-        double x = Mth.lerp(partialTick, targetEntity.xOld, targetEntity.getX()) - camPos.x;
-        double y = Mth.lerp(partialTick, targetEntity.yOld, targetEntity.getY()) - camPos.y;
-        double z = Mth.lerp(partialTick, targetEntity.zOld, targetEntity.getZ()) - camPos.z;
-
-        poseStack.pushPose();
-        poseStack.translate(x, y, z);
-
-        double entityHeight = targetEntity.getBbHeight();
-        float localScanLimitY = fillHeight >= 1.0f ? 10000.0f : (float) (entityHeight * fillHeight * VERTICAL_BUFFER);
-
-        float yaw = Mth.lerp(partialTick, targetEntity.yRotO, targetEntity.getYRot());
+        float localScanLimitY = fillHeight >= 1.0f ? 10000.0f : (targetEntity.getBbHeight() * fillHeight * VERTICAL_BUFFER);
 
         boolean isEtfLoaded = Services.PLATFORM.isModLoaded("entity_texture_features");
+        if (isEtfLoaded) EtfCompat.preventRenderLayerTextureModify();
 
-        if (isEtfLoaded) {
-            EtfCompat.preventRenderLayerTextureModify();
-        }
+        SubmitNodeCollector depthCollector = new ScanNodeCollector(collector, 1f, 1f, 1f, 0f, localScanLimitY, true);
+        SubmitNodeCollector forcedCollector = new ScanNodeCollector(collector, red, green, blue, alpha, localScanLimitY, false);
 
-        MultiBufferSource depthSource = new ScanBufferSourceWrapper(bufferSource, 1, 1, 1, 1, true);
-        try {
-            // mc.getEntityRenderDispatcher().render(targetEntity, 0.0D, 0.0D, 0.0D, yaw, partialTick, poseStack, depthSource, 15728880);
-        } catch (Exception ignored) {
-        }
-        bufferSource.endBatch();
+        EntityRenderDispatcher dispatcher = mc.getEntityRenderDispatcher();
+        EntityRenderState state = dispatcher.extractEntity(targetEntity, partialTick);
+        CameraRenderState cameraState = mc.gameRenderer.getGameRenderState().levelRenderState.cameraRenderState;
 
-        MultiBufferSource forcedSource = new ScanBufferSourceWrapper(bufferSource, red, green, blue, alpha, false);
-        try {
-            // mc.getEntityRenderDispatcher().render(targetEntity, 0.0D, 0.0D, 0.0D, yaw, partialTick, poseStack, forcedSource, 15728880);
-        } catch (Exception ignored) {
-        }
+        double x = state.x - camPos.x;
+        double y = state.y - camPos.y;
+        double z = state.z - camPos.z;
 
-        if (isEtfLoaded) {
-            EtfCompat.allowRenderLayerTextureModify();
-        }
+        dispatcher.submit(state, cameraState, x, y, z, poseStack, depthCollector);
+        dispatcher.submit(state, cameraState, x, y, z, poseStack, forcedCollector);
 
-        poseStack.popPose();
-        }
+        if (isEtfLoaded) EtfCompat.allowRenderLayerTextureModify();
+    }
 
-    private record ScanBufferSourceWrapper(MultiBufferSource.BufferSource delegate, float r, float g, float b, float a,
-                                           boolean isDepth) implements MultiBufferSource {
+    private record ScanNodeCollector(SubmitNodeCollector delegate, float r, float g, float b, float a, float limitY,
+                                     boolean isDepth) implements SubmitNodeCollector {
 
         @Override
-        public @NotNull VertexConsumer getBuffer(@NotNull RenderType type) {
-            RenderType wrappedType = isDepth ? ModRenderTypes.wrapForDepth(type, true) : ModRenderTypes.wrapForScan(type, true);
-            VertexConsumer buffer = delegate.getBuffer(wrappedType);
-            return createTintedConsumer(buffer, this, r, g, b, a);
+        public @NonNull OrderedSubmitNodeCollector order(int order) {
+            return this;
+        }
+
+        @Override
+        public void submitBlockModel(@NonNull PoseStack poseStack, @NonNull RenderType renderType, @NonNull List<BlockStateModelPart> parts, int @NonNull [] tintLayers, int lightCoords, int overlayCoords, int outlineColor) {
+            RenderType wrapped = isDepth ? ModRenderTypes.wrapForDepth(renderType) : ModRenderTypes.wrapForScan(renderType);
+            delegate.submitBlockModel(poseStack, wrapped, parts, tintLayers, getPackedScanLightCoords(limitY, r, g, b, a), overlayCoords, outlineColor);
+        }
+
+        @Override
+        public <S> void submitModel(@NonNull Model<? super S> model, S state, @NonNull PoseStack poseStack, @NonNull RenderType renderType, int lightCoords, int overlayCoords, int tintedColor, TextureAtlasSprite sprite, int outlineColor, ModelFeatureRenderer.CrumblingOverlay crumblingOverlay) {
+            RenderType wrapped = isDepth ? ModRenderTypes.wrapForDepth(renderType) : ModRenderTypes.wrapForScan(renderType);
+            delegate.submitModel(model, state, poseStack, wrapped, getPackedScanLightCoords(limitY, r, g, b, a), overlayCoords, tintedColor, sprite, outlineColor, crumblingOverlay);
+        }
+
+        @Override
+        public void submitModelPart(@NonNull ModelPart modelPart, @NonNull PoseStack poseStack, @NonNull RenderType renderType, int lightCoords, int overlayCoords, TextureAtlasSprite sprite, boolean sheeted, boolean hasFoil, int tintedColor, ModelFeatureRenderer.CrumblingOverlay crumblingOverlay, int outlineColor) {
+            RenderType wrapped = isDepth ? ModRenderTypes.wrapForDepth(renderType) : ModRenderTypes.wrapForScan(renderType);
+            delegate.submitModelPart(modelPart, poseStack, wrapped, getPackedScanLightCoords(limitY, r, g, b, a), overlayCoords, sprite, sheeted, hasFoil, tintedColor, crumblingOverlay, outlineColor);
+        }
+
+        @Override
+        public void submitShadow(@NonNull PoseStack poseStack, float radius, @NonNull List<EntityRenderState.ShadowPiece> pieces) {
+            delegate.submitShadow(poseStack, radius, pieces);
+        }
+
+        @Override
+        public void submitNameTag(@NonNull PoseStack poseStack, Vec3 nameTagAttachment, int offset, @NonNull Component name, boolean seeThrough, int lightCoords, double distanceToCameraSq, @NonNull CameraRenderState camera) {
+            delegate.submitNameTag(poseStack, nameTagAttachment, offset, name, seeThrough, lightCoords, distanceToCameraSq, camera);
+        }
+
+        @Override
+        public void submitText(@NonNull PoseStack poseStack, float x, float y, net.minecraft.util.@NonNull FormattedCharSequence string, boolean dropShadow, net.minecraft.client.gui.Font.@NonNull DisplayMode displayMode, int lightCoords, int color, int backgroundColor, int outlineColor) {
+            delegate.submitText(poseStack, x, y, string, dropShadow, displayMode, lightCoords, color, backgroundColor, outlineColor);
+        }
+
+        @Override
+        public void submitFlame(@NonNull PoseStack poseStack, @NonNull EntityRenderState renderState, @NonNull Quaternionf rotation) {
+            delegate.submitFlame(poseStack, renderState, rotation);
+        }
+
+        @Override
+        public void submitLeash(@NonNull PoseStack poseStack, EntityRenderState.@NonNull LeashState leashState) {
+            delegate.submitLeash(poseStack, leashState);
+        }
+
+        @Override
+        public void submitMovingBlock(@NonNull PoseStack poseStack, @NonNull MovingBlockRenderState movingBlockRenderState) {
+            delegate.submitMovingBlock(poseStack, movingBlockRenderState);
+        }
+
+        @Override
+        public void submitBreakingBlockModel(@NonNull PoseStack poseStack, @NonNull BlockStateModel model, long seed, int progress) {
+            delegate.submitBreakingBlockModel(poseStack, model, seed, progress);
+        }
+
+        @Override
+        public void submitItem(@NonNull PoseStack poseStack, @NonNull ItemDisplayContext itemDisplayContext, int i, int i1, int i2, int @NonNull [] ints, @NonNull List<BakedQuad> list, ItemStackRenderState.@NonNull FoilType foilType) {
+            delegate.submitItem(poseStack, itemDisplayContext, i, i1, i2, ints, list, foilType);
+        }
+
+        @Override
+        public void submitCustomGeometry(@NonNull PoseStack poseStack, @NonNull RenderType renderType, @NonNull CustomGeometryRenderer customGeometryRenderer) {
+            delegate.submitCustomGeometry(poseStack, renderType, customGeometryRenderer);
+        }
+
+        @Override
+        public void submitParticleGroup(@NonNull ParticleGroupRenderer particleGroupRenderer) {
+            delegate.submitParticleGroup(particleGroupRenderer);
         }
     }
 }

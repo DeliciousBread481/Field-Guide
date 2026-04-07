@@ -18,6 +18,7 @@ public class EtfCompat {
         ETFRenderContext.allowRenderLayerTextureModify();
     }
 
+    // TODO: is this even necessary anymore
     public static VertexConsumer createTintedConsumer(VertexConsumer delegate, MultiBufferSource provider, float r, float g, float b, float a) {
         return new EtfTintedConsumer(delegate, provider, r, g, b, a);
     }

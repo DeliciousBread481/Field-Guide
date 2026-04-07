@@ -2,6 +2,7 @@ package com.evandev.fieldguide.client.render;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 public class TintedVertexConsumer implements VertexConsumer {
     private final VertexConsumer delegate;
@@ -33,7 +34,7 @@ public class TintedVertexConsumer implements VertexConsumer {
     }
 
     @Override
-    public VertexConsumer setColor(int color) {
+    public @NonNull VertexConsumer setColor(int color) {
         return this;
     }
 
@@ -62,7 +63,7 @@ public class TintedVertexConsumer implements VertexConsumer {
     }
 
     @Override
-    public VertexConsumer setLineWidth(float width) {
+    public @NonNull VertexConsumer setLineWidth(float width) {
         return this;
     }
 }
