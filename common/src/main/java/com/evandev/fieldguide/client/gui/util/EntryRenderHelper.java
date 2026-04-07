@@ -15,6 +15,7 @@ import com.evandev.fieldguide.mixin.accessor.EntityAccessor;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.structure.StructureUtils;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
+import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -28,6 +29,7 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
@@ -44,14 +46,16 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.joml.Quaternionf;
 
 import java.awt.*;
+import java.io.InputStream;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
 public class EntryRenderHelper {
-    private static final Set<Identifier> GENERATED_RP_SILHOUETTES = ConcurrentHashMap.newKeySet();
+
     private static final Map<String, Optional<Identifier>> OVERRIDE_CACHE = new HashMap<>();
+    private static final Set<Identifier> GENERATED_RP_SILHOUETTES = ConcurrentHashMap.newKeySet();
 
     public static void clearCache() {
         OVERRIDE_CACHE.clear();
@@ -189,7 +193,8 @@ public class EntryRenderHelper {
 
         poseStack.pushPose();
         poseStack.scale(clampedScale, -clampedScale, -clampedScale);
-        poseStack.mulPose(new Quaternionf().rotationX((float) Math.toRadians(30.0F)).rotateY((float) Math.toRadians(yRotation)));
+        poseStack.mulPose(new Quaternionf().rotationX((float) Math.toRadians(30.0)));
+        poseStack.mulPose(new Quaternionf().rotationY((float) Math.toRadians(yRotation)));
         poseStack.translate(xOff / clampedScale, (entityHeight / -2.0F) + (yOff / clampedScale), 0.0F);
 
         if (entity instanceof LivingEntity living) {
@@ -240,7 +245,8 @@ public class EntryRenderHelper {
 
             poseStack.pushPose();
             poseStack.scale(clampedScale, -clampedScale, -clampedScale);
-            poseStack.mulPose(new Quaternionf().rotationX((float) Math.toRadians(30.0)).rotateY((float) Math.toRadians(210.0)));
+            poseStack.mulPose(new Quaternionf().rotationX((float) Math.toRadians(30.0)));
+            poseStack.mulPose(new Quaternionf().rotationY((float) Math.toRadians(210.0)));
             poseStack.translate(-0.5f, -0.5f, -0.5f);
 
             BlockModelRenderState blockRenderState = new BlockModelRenderState();
@@ -309,7 +315,8 @@ public class EntryRenderHelper {
 
             poseStack.pushPose();
             poseStack.scale(scale, -scale, -scale);
-            poseStack.mulPose(new Quaternionf().rotationX((float) Math.toRadians(30.0)).rotateY((float) Math.toRadians(210.0)));
+            poseStack.mulPose(new Quaternionf().rotationX((float) Math.toRadians(30.0)));
+            poseStack.mulPose(new Quaternionf().rotationY((float) Math.toRadians(210.0)));
             poseStack.translate(-centerX, -centerY, -centerZ);
 
             List<Map.Entry<BlockPos, BlockState>> sortedBlocks = new ArrayList<>(blocks.entrySet());
@@ -380,7 +387,9 @@ public class EntryRenderHelper {
     }
 
     private static Identifier getOrCreateResourcePackSilhouette(Identifier baseTexture) {
-        Identifier silLoc = Identifier.fromNamespaceAndPath(baseTexture.getNamespace(), baseTexture.getPath().replace(".png", "_silhouette.png"));
+        String path = baseTexture.getPath();
+        String silPath = path.endsWith(".png") ? path.replace(".png", "_silhouette.png") : path + "_silhouette";
+        Identifier silLoc = Identifier.fromNamespaceAndPath(baseTexture.getNamespace(), silPath);
 
         if (GENERATED_RP_SILHOUETTES.contains(silLoc)) {
             return silLoc;
@@ -395,21 +404,21 @@ public class EntryRenderHelper {
         try {
             var resource = mc.getResourceManager().getResource(baseTexture);
             if (resource.isPresent()) {
-                try (java.io.InputStream stream = resource.get().open()) {
-                    com.mojang.blaze3d.platform.NativeImage image = com.mojang.blaze3d.platform.NativeImage.read(stream);
-                    com.mojang.blaze3d.platform.NativeImage silhouetteImage = new com.mojang.blaze3d.platform.NativeImage(image.getWidth(), image.getHeight(), false);
+                try (InputStream stream = resource.get().open()) {
+                    NativeImage image = NativeImage.read(stream);
+                    NativeImage silhouetteImage = new NativeImage(image.getWidth(), image.getHeight(), false);
                     for (int y = 0; y < image.getHeight(); y++) {
                         for (int x = 0; x < image.getWidth(); x++) {
                             int pixel = image.getPixel(x, y);
-                            int alpha = net.minecraft.util.ARGB.alpha(pixel);
+                            int alpha = ARGB.alpha(pixel);
                             if (alpha > 0) {
-                                silhouetteImage.setPixel(x, y, net.minecraft.util.ARGB.color(alpha, 255, 255, 255));
+                                silhouetteImage.setPixel(x, y, ARGB.color(alpha, 255, 255, 255));
                             } else {
                                 silhouetteImage.setPixel(x, y, 0);
                             }
                         }
                     }
-                    net.minecraft.client.renderer.texture.DynamicTexture dynamicTexture = new net.minecraft.client.renderer.texture.DynamicTexture(silLoc::toString, silhouetteImage);
+                    DynamicTexture dynamicTexture = new DynamicTexture(silLoc::toString, silhouetteImage);
                     mc.getTextureManager().register(silLoc, dynamicTexture);
 
                     GENERATED_RP_SILHOUETTES.add(silLoc);

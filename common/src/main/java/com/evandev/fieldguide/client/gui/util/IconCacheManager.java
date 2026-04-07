@@ -3,9 +3,11 @@ package com.evandev.fieldguide.client.gui.util;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.api.AutoPopulateRegistry;
 import com.evandev.fieldguide.compat.emf.EmfCompat;
+import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.platform.Services;
 import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.Lighting;
@@ -21,7 +23,9 @@ import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
+import net.minecraft.world.entity.EntityType;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
@@ -137,7 +141,7 @@ public class IconCacheManager {
                 PENDING_GENERATIONS.remove(key);
             } else {
                 Identifier id = AutoPopulateRegistry.getEntryId(baseEntry);
-                MAIN_THREAD_TASKS.addFirst(() -> generateAndSaveIcon(id.getNamespace(), fileName, key, renderAction));
+                MAIN_THREAD_TASKS.addFirst(() -> generateAndSaveIcon(baseEntry, id.getNamespace(), fileName, key, renderAction));
             }
         }, Minecraft.getInstance());
 
@@ -168,7 +172,7 @@ public class IconCacheManager {
         TEXTURE_CACHE.put(key + "_silhouette", silLoc);
     }
 
-    private static void generateAndSaveIcon(String namespace, String fileName, String key, BiConsumer<PoseStack, SubmitNodeCollector> renderAction) {
+    private static void generateAndSaveIcon(Object baseEntry, String namespace, String fileName, String key, BiConsumer<PoseStack, SubmitNodeCollector> renderAction) {
         if (TEXTURE_CACHE.containsKey(key)) {
             PENDING_GENERATIONS.remove(key);
             return;
@@ -199,8 +203,28 @@ public class IconCacheManager {
         PoseStack poseStack = new PoseStack();
         poseStack.translate(RENDER_SIZE / 2.0f, RENDER_SIZE / 2.0f, 1000.0f);
 
-        Lighting lighting = new Lighting();
-        lighting.setupFor(Lighting.Entry.ENTITY_IN_UI);
+        Object coreEntry = EntryResolver.resolveCoreEntry(baseEntry);
+        boolean isEntity = coreEntry instanceof EntityType<?>;
+
+        Vector3f light0;
+        Vector3f light1;
+        if (isEntity) {
+            light0 = new Vector3f(1.0F, -1.0F, -1.0F).normalize();
+            light1 = new Vector3f(-1.0F, -1.0F, -1.0F).normalize();
+        } else {
+            light0 = new Vector3f(0.2F, -1.0F, 0.7F).normalize();
+            light1 = new Vector3f(-0.2F, 0.0F, -0.7F).normalize();
+        }
+
+        GpuBuffer lightBuffer = RenderSystem.getDevice().createBuffer(() -> "FieldGuide Lighting", 136, Lighting.UBO_SIZE);
+        try (MemoryStack memoryStack = MemoryStack.stackPush()) {
+            ByteBuffer buffer = Std140Builder.onStack(memoryStack, Lighting.UBO_SIZE)
+                    .putVec3(light0)
+                    .putVec3(light1)
+                    .get();
+            encoder.writeToBuffer(lightBuffer.slice(), buffer);
+        }
+        RenderSystem.setShaderLights(lightBuffer.slice());
 
         if (Services.PLATFORM.isModLoaded("entity_model_features")) {
             EmfCompat.setInGui(true);
@@ -221,7 +245,7 @@ public class IconCacheManager {
             EmfCompat.setInGui(false);
         }
 
-        lighting.close();
+        lightBuffer.close();
         RenderSystem.restoreProjectionMatrix();
 
         RenderSystem.outputColorTextureOverride = null;
