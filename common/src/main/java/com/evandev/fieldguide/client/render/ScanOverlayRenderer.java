@@ -200,7 +200,7 @@ public class ScanOverlayRenderer {
                 double y = pos.getY() - camPos.y + offset.y;
                 double z = pos.getZ() - camPos.z + offset.z;
 
-                float localScanLimitY = fillHeight >= 1.0f ? 10000.0f : (globalScanLimitY - pos.getY());
+                float localScanLimitY = fillHeight >= 1.0f ? 10000.0f : (globalScanLimitY - (float) camPos.y);
 
                 SubmitNodeCollector depthCollector = new ScanNodeCollector(collector, 1f, 1f, 1f, 0f, localScanLimitY, true);
                 SubmitNodeCollector tintedCollector = new ScanNodeCollector(collector, red, green, blue, alpha, localScanLimitY, false);
@@ -310,7 +310,11 @@ public class ScanOverlayRenderer {
     private static void renderEntityOverlay(PoseStack poseStack, float partialTick, Vec3 camPos, SubmitNodeCollector collector, Entity targetEntity, Entity outOfRangeEntity, FieldGuideScanner scanner, Minecraft mc, float red, float green, float blue, float alpha) {
         float fillHeight = (outOfRangeEntity != null || scanner.getScanningEntity() == null) ? 1.0f : scanner.getScanProgress(partialTick);
 
-        float localScanLimitY = fillHeight >= 1.0f ? 10000.0f : (targetEntity.getBbHeight() * fillHeight * VERTICAL_BUFFER);
+        EntityRenderDispatcher dispatcher = mc.getEntityRenderDispatcher();
+        EntityRenderState state = dispatcher.extractEntity(targetEntity, partialTick);
+
+        float globalEntityLimitY = (float) state.y + (targetEntity.getBbHeight() * fillHeight * VERTICAL_BUFFER);
+        float localScanLimitY = fillHeight >= 1.0f ? 10000.0f : (globalEntityLimitY - (float) camPos.y);
 
         boolean isEtfLoaded = Services.PLATFORM.isModLoaded("entity_texture_features");
         if (isEtfLoaded) EtfCompat.preventRenderLayerTextureModify();
@@ -318,8 +322,6 @@ public class ScanOverlayRenderer {
         SubmitNodeCollector depthCollector = new ScanNodeCollector(collector, 1f, 1f, 1f, 0f, localScanLimitY, true);
         SubmitNodeCollector forcedCollector = new ScanNodeCollector(collector, red, green, blue, alpha, localScanLimitY, false);
 
-        EntityRenderDispatcher dispatcher = mc.getEntityRenderDispatcher();
-        EntityRenderState state = dispatcher.extractEntity(targetEntity, partialTick);
         CameraRenderState cameraState = mc.gameRenderer.getGameRenderState().levelRenderState.cameraRenderState;
 
         double x = state.x - camPos.x;
@@ -331,5 +333,4 @@ public class ScanOverlayRenderer {
 
         if (isEtfLoaded) EtfCompat.allowRenderLayerTextureModify();
     }
-
 }

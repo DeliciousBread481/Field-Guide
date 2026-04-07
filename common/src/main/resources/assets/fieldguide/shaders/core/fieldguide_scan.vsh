@@ -2,7 +2,12 @@
 
 #moj_import <minecraft:projection.glsl>
 
-uniform mat4 ModelViewMat;
+uniform DynamicTransforms {
+    mat4 ModelViewMat;
+    vec4 ColorModulator;
+    vec3 FogColor;
+    mat4 TextureMat;
+};
 
 in vec3 Position;
 in vec4 Color;
@@ -16,7 +21,8 @@ out float scanLimitY;
 out vec4 scanColor;
 
 void main() {
-    gl_Position = ProjMat * ModelViewMat * vec4(Position, 1.0);
+    vec4 viewPos = ModelViewMat * vec4(Position, 1.0);
+    gl_Position = ProjMat * viewPos;
 
     vertexColor = Color;
     texCoord0 = UV0;
