@@ -4,9 +4,7 @@ import com.evandev.fieldguide.ModTags;
 import com.evandev.fieldguide.api.GuideEntry;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.scan.FieldGuideScanner;
-import com.evandev.fieldguide.compat.etf.EtfCompat;
 import com.evandev.fieldguide.config.ClientConfig;
-import com.evandev.fieldguide.platform.Services;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -316,9 +314,6 @@ public class ScanOverlayRenderer {
         float globalEntityLimitY = (float) state.y + (targetEntity.getBbHeight() * fillHeight * VERTICAL_BUFFER);
         float localScanLimitY = fillHeight >= 1.0f ? 10000.0f : (globalEntityLimitY - (float) camPos.y);
 
-        boolean isEtfLoaded = Services.PLATFORM.isModLoaded("entity_texture_features");
-        if (isEtfLoaded) EtfCompat.preventRenderLayerTextureModify();
-
         SubmitNodeCollector depthCollector = new ScanNodeCollector(collector, 1f, 1f, 1f, 0f, localScanLimitY, true);
         SubmitNodeCollector forcedCollector = new ScanNodeCollector(collector, red, green, blue, alpha, localScanLimitY, false);
 
@@ -330,7 +325,5 @@ public class ScanOverlayRenderer {
 
         dispatcher.submit(state, cameraState, x, y, z, poseStack, depthCollector);
         dispatcher.submit(state, cameraState, x, y, z, poseStack, forcedCollector);
-
-        if (isEtfLoaded) EtfCompat.allowRenderLayerTextureModify();
     }
 }
