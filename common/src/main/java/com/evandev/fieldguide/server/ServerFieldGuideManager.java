@@ -663,7 +663,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
         for (var biomeEntry : biomeRegistry.entrySet()) {
             try {
-                Identifier biomeId = biomeEntry.getKey().registryKey().identifier();
+                Identifier biomeId = biomeEntry.getKey().identifier();
                 Biome biome = biomeEntry.getValue();
 
                 for (MobCategory cat : MobCategory.values()) {
@@ -673,7 +673,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                     }
                 }
             } catch (IllegalStateException e) {
-                Constants.LOG.warn("Skipping unbound biome in registry: {}", biomeEntry.getKey().registryKey().identifier());
+                Constants.LOG.warn("Skipping unbound biome in registry: {}", biomeEntry.getKey().identifier());
             }
         }
 
@@ -764,7 +764,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
                     TagKey<Biome> tagKey = TagKey.create(Registries.BIOME, Identifier.parse(tagPath));
                     biomeRegistry.getTagOrEmpty(tagKey).forEach(holder -> {
                         holder.unwrapKey().ifPresent(key -> {
-                            expanded.add(parts[0] + "|" + key.registryKey());
+                            expanded.add(parts[0] + "|" + key.identifier());
                         });
                     });
                 } catch (Exception e) {

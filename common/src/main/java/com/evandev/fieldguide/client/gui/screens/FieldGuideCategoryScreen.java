@@ -122,7 +122,7 @@ public class FieldGuideCategoryScreen extends BookScreen {
             String defaultMode = ClientConfig.get().defaultScreen;
             if ("current_biome".equals(defaultMode) && this.minecraft.level != null && this.minecraft.player != null) {
                 var biomeOpt = this.minecraft.level.getBiome(this.minecraft.player.blockPosition()).unwrapKey();
-                biomeOpt.ifPresent(biomeResourceKey -> this.searchQuery = "=!" + biomeResourceKey.registryKey());
+                biomeOpt.ifPresent(biomeResourceKey -> this.searchQuery = "=!" + biomeResourceKey.identifier());
             } else if (!"last_opened_category".equals(defaultMode) && !defaultMode.isEmpty()) {
                 Identifier catId = Identifier.tryParse(defaultMode);
                 if (catId != null) {
