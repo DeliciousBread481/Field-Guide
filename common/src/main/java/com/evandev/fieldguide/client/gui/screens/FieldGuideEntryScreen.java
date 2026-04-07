@@ -28,6 +28,7 @@ import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.entry.EntryResolver;
 import com.evandev.fieldguide.network.CopyPagePacket;
+import com.evandev.fieldguide.network.UpdateEntryDataPacket;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
 import net.minecraft.ChatFormatting;
@@ -42,6 +43,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.sounds.SoundManager;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -255,6 +257,7 @@ public class FieldGuideEntryScreen extends BookScreen {
                             Identifier entryId = ClientFieldGuideManager.getEntryId(entry);
                             if (entryId != null) {
                                 ProgressManager.getInstance().setCustomVariantName(entryId, variantId, newName);
+                                Services.NETWORK.sendToServer(UpdateEntryDataPacket.setVariantName(entryId, variantId, newName));
                             }
                         }, false);
                 this.addRenderableWidget(this.variantWidget);
@@ -711,7 +714,20 @@ public class FieldGuideEntryScreen extends BookScreen {
     private void setupDropWidget(boolean unlocked) {
         if (ServerConfig.get().disableLootDisplay) return;
 
-        List<ItemStack> drops = loadedDrops;
+        List<ItemStack> drops = new ArrayList<>();
+        Object coreEntry = EntryResolver.resolveCoreEntry(entry);
+        boolean isSheep = coreEntry instanceof EntityType<?> type && BuiltInRegistries.ENTITY_TYPE.getKey(type).getPath().equals("sheep");
+
+        for (ItemStack stack : loadedDrops) {
+            if (isSheep) {
+                String variantStr = this.initialVariant != null ? this.initialVariant : "white";
+                Identifier itemId = BuiltInRegistries.ITEM.getKey(stack.getItem());
+                if (itemId.getPath().endsWith("_wool") && !itemId.getPath().equals(variantStr + "_wool")) {
+                    continue;
+                }
+            }
+            drops.add(stack);
+        }
 
         if (!drops.isEmpty()) {
             int dropItemSize = 20;

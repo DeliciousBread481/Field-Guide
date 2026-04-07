@@ -279,6 +279,13 @@ public class PlayerFieldGuideProgress {
 
     public boolean isUnlocked(String entryId) {
         if (unlockedEntries.contains(entryId)) return true;
+
+        for (String unlocked : unlockedEntries) {
+            if (unlocked.startsWith(entryId + "#")) {
+                return true;
+            }
+        }
+
         try {
             Identifier id = Identifier.parse(entryId);
             Identifier rawId = EntryResolver.getRawId(id);

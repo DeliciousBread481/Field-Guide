@@ -19,7 +19,7 @@ public class FieldGuideSearchBox extends EditBox {
         this.setMaxLength(50);
         this.setBordered(true);
         this.setVisible(true);
-        this.setTextColor(0xFCF3DD);
+        this.setTextColor(0xFFFCF3DD);
         this.setValue(value);
         this.setResponder(onSearch);
     }

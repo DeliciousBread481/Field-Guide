@@ -19,9 +19,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
@@ -231,11 +228,6 @@ public class ProgressManager {
         }
     }
 
-    public String getCustomName(Object entry) {
-        Identifier id = ClientFieldGuideManager.getEntryId(entry);
-        return id != null ? getCustomName(id.toString()) : null;
-    }
-
     public String getCustomName(String entryId) {
         return customNames.get(entryId);
     }
@@ -433,7 +425,7 @@ public class ProgressManager {
     }
 
     public void exportToLang(String type) {
-        /*try {
+        try {
             JsonObject langJson = getLangJson(type);
 
             Path exportDir = Minecraft.getInstance().gameDirectory.toPath().resolve("fieldguide_exports");
@@ -443,20 +435,32 @@ public class ProgressManager {
             try (FileWriter writer = new FileWriter(exportFile)) {
                 GSON.toJson(langJson, writer);
             }
+
             if (Minecraft.getInstance().player != null) {
                 Component message = Component.literal("§aExported Field Guide data to ")
                         .append(Component.literal(exportFile.getName())
                                 .withStyle(style -> style
                                         .withUnderlined(true)
-                                        .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, exportDir.toFile().getAbsolutePath()))
-                                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("Click to open folder")))));
-                Minecraft.getInstance().player.displayClientMessage(message, false);
+                                        .withClickEvent(new ClickEvent.OpenFile(exportDir.toFile().getAbsolutePath()))
+                                        .withHoverEvent(new HoverEvent.ShowText(Component.literal("Click to open folder")))));
+                Minecraft.getInstance().player.sendSystemMessage(message);
             }
         } catch (Exception e) {
             Constants.LOG.error("Failed to export lang file", e);
             if (Minecraft.getInstance().player != null)
                 Minecraft.getInstance().player.sendSystemMessage(Component.literal("§cFailed to export: " + e.getMessage()));
-        }*/
+        }
+    }
+
+    public String getCustomName(Object entry, String variantId) {
+        Identifier id = ClientFieldGuideManager.getEntryId(entry);
+        if (id == null) return null;
+
+        String key = id.toString();
+        if (variantId != null && !variantId.isEmpty()) {
+            key += "#" + variantId;
+        }
+        return customNames.get(key);
     }
 
     private @NotNull JsonObject getLangJson(String type) {
