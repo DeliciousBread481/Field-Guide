@@ -5,6 +5,7 @@ import com.evandev.fieldguide.server.data.ItemStackKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.storage.loot.LootContext;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.LootPool;
@@ -120,12 +121,12 @@ public class StaticLootParser {
                     }
                 }
 
-/*                if (!stack.is(Items.AIR)) {
-                    boolean isHidden = Services.PLATFORM.isModLoaded("reliable_remover") && ServerConfig.get().enableReliableRemover && ReliableRemoverCompat.isHidden(stack);
-                    if (!isHidden) {
-                        drops.add(new ParsedDrop(stack, branchChance, min, max));
-                    }
-                }*/
+                if (!stack.is(Items.AIR)) {
+                    // boolean isHidden = Services.PLATFORM.isModLoaded("reliable_remover") && ServerConfig.get().enableReliableRemover && ReliableRemoverCompat.isHidden(stack);
+                    // if (!isHidden) {
+                    drops.add(new ParsedDrop(stack, branchChance, min, max));
+                    //}
+                }
             }
             case NestedLootTable reference -> handleReference(reference, drops, branchChance, context);
             case CompositeEntryBase composite -> {
