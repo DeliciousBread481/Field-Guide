@@ -28,6 +28,7 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
@@ -244,7 +245,7 @@ public class EntryRenderHelper {
             BlockModelResolver resolver = new BlockModelResolver(Minecraft.getInstance().getModelManager());
 
             resolver.update(blockRenderState, block.defaultBlockState(), BlockDisplayContext.create());
-            blockRenderState.submit(poseStack, collector, 15728880, 65536, 0);
+            blockRenderState.submit(poseStack, collector, 15728880, OverlayTexture.NO_OVERLAY, 0);
 
             poseStack.popPose();
         });
@@ -264,8 +265,7 @@ public class EntryRenderHelper {
 
             ItemStackRenderState state = new ItemStackRenderState();
             Minecraft.getInstance().getItemModelResolver().updateForTopItem(state, stack, ItemDisplayContext.GUI, Minecraft.getInstance().level, Minecraft.getInstance().player, 0);
-
-            state.submit(poseStack, collector, 15728880, 65536, 0);
+            state.submit(poseStack, collector, 15728880, OverlayTexture.NO_OVERLAY, 0);
 
             poseStack.popPose();
         });
@@ -329,7 +329,7 @@ public class EntryRenderHelper {
                 poseStack.translate(pos.getX(), pos.getY(), pos.getZ());
 
                 resolver.update(blockRenderState, state, BlockDisplayContext.create());
-                blockRenderState.submit(poseStack, collector, 15728880, 65536, 0);
+                blockRenderState.submit(poseStack, collector, 15728880, OverlayTexture.NO_OVERLAY, 0);
 
                 poseStack.popPose();
             }
@@ -400,16 +400,14 @@ public class EntryRenderHelper {
             Color rgb = new Color(color);
             int argb = ARGB.color((int) (alpha * 255), rgb.getRed(), rgb.getGreen(), rgb.getBlue());
 
-            String variantSuffix = "";
-            String cacheKeyStr = cacheKey.toString();
-            if (cacheKeyStr.contains("#")) {
-                variantSuffix = "_" + cacheKeyStr.substring(cacheKeyStr.indexOf('#') + 1).replace(":", "_").toLowerCase(Locale.ROOT);
+            if (texture.getPath().startsWith("generated_icon/")) {
+                targetTexture = Identifier.fromNamespaceAndPath(texture.getNamespace(), texture.getPath() + "_silhouette");
+            } else {
+                Identifier silLoc = Identifier.fromNamespaceAndPath(texture.getNamespace(), texture.getPath().replace(".png", "_silhouette.png"));
+                if (Minecraft.getInstance().getResourceManager().getResource(silLoc).isPresent()) {
+                    targetTexture = silLoc;
+                }
             }
-            String key = (texture.getPath().replace("textures/fieldguide/entries/", "").replace(".png", "") + variantSuffix + (isPage ? "_page" : "_grid")).toLowerCase(Locale.ROOT);
-
-            Identifier silLoc = Identifier.fromNamespaceAndPath(texture.getNamespace(), "generated_icon/" + key + "_silhouette");
-            Minecraft.getInstance().getTextureManager().getTexture(silLoc);
-            targetTexture = silLoc;
 
             guiGraphics.blit(RenderPipelines.GUI_TEXTURED, targetTexture, drawX, drawY, 0, 0, scaledWidth, scaledHeight, scaledWidth, scaledHeight, argb);
         } else {
