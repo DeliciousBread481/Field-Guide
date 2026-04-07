@@ -182,9 +182,9 @@ public class EntryRenderHelper {
         }
 
         poseStack.pushPose();
+        poseStack.scale(clampedScale, -clampedScale, -clampedScale);
+        poseStack.mulPose(new Quaternionf().rotationX((float) Math.toRadians(30.0F)).rotateY((float) Math.toRadians(yRotation)));
         poseStack.translate(xOff / clampedScale, (entityHeight / -2.0F) + (yOff / clampedScale), 0.0F);
-        poseStack.mulPose(new Quaternionf().rotateX((float) Math.toRadians(30.0F)).rotateY((float) Math.toRadians(yRotation)));
-        poseStack.scale(clampedScale, clampedScale, clampedScale);
 
         if (entity instanceof LivingEntity living) {
             living.setYHeadRot(0.0F);
@@ -232,7 +232,8 @@ public class EntryRenderHelper {
             ItemStack stack = new ItemStack(block);
             if (!stack.isEmpty()) {
                 EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(block);
-                float clampedScale = (getVisualScale(visual, isPage) * bounceScale) * 1.5f;
+
+                float clampedScale = 100f * getVisualScale(visual, isPage) * bounceScale;
 
                 poseStack.pushPose();
                 poseStack.scale(clampedScale, -clampedScale, 1.0f);
@@ -253,7 +254,8 @@ public class EntryRenderHelper {
         renderWithCache(item, item, guiGraphics, x, y, scaledSize, scaledSize, unlocked, isPage, bounceScale, (poseStack, collector) -> {
             ItemStack stack = new ItemStack(item);
             EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(item);
-            float clampedScale = (getVisualScale(visual, isPage) * bounceScale) * 1.5f;
+
+            float clampedScale = 100f * getVisualScale(visual, isPage) * bounceScale;
 
             poseStack.pushPose();
             poseStack.scale(clampedScale, -clampedScale, 1.0f);
@@ -305,7 +307,7 @@ public class EntryRenderHelper {
             if (dummyDisplay == null) return;
 
             Quaternionf rotation = new Quaternionf()
-                    .rotateX((float) Math.toRadians(30.0))
+                    .rotationX((float) Math.toRadians(30.0))
                     .rotateY((float) Math.toRadians(210.0));
 
             List<Map.Entry<BlockPos, BlockState>> sortedBlocks = new ArrayList<>(blocks.entrySet());
@@ -336,9 +338,9 @@ public class EntryRenderHelper {
     @SuppressWarnings("unchecked")
     private static <T extends Entity, S extends EntityRenderState> void extractAndSubmitBlock(T entity, float scale, Vector3f trans, Quaternionf rotation, PoseStack poseStack, SubmitNodeCollector collector) {
         poseStack.pushPose();
-        poseStack.translate(trans.x(), trans.y(), trans.z());
+        poseStack.scale(scale, -scale, -scale);
         poseStack.mulPose(rotation);
-        poseStack.scale(scale, scale, scale);
+        poseStack.translate(trans.x(), trans.y(), trans.z());
 
         var dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         var renderer = (EntityRenderer<T, S>) dispatcher.getRenderer(entity);
