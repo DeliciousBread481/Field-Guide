@@ -206,6 +206,13 @@ public class ScanOverlayRenderer {
                 poseStack.pushPose();
                 poseStack.translate(x, y, z);
                 resolver.update(blockRenderState, state, BlockDisplayContext.create());
+
+                if (!blockRenderState.tintLayers().isEmpty()) {
+                    for (int i = 0; i < blockRenderState.tintLayers().size(); i++) {
+                        blockRenderState.tintLayers().set(i, -1);
+                    }
+                }
+
                 blockRenderState.submit(poseStack, depthCollector, 15728880, OverlayTexture.NO_OVERLAY, 0);
                 poseStack.popPose();
 
