@@ -126,6 +126,7 @@ public class FieldGuideEntryScreen extends BookScreen {
     }
 
     public void refresh() {
+        this.clearWidgets();
         this.init();
     }
 

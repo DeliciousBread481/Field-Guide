@@ -14,6 +14,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastManager;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -50,30 +51,21 @@ public class FieldGuideToast implements Toast {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor guiGraphics, @NonNull Font font, long fullyVisibleForMs) {
-        guiGraphics.blit(Constants.TOAST_TEXTURE, 0, 0, 0, 0, this.width(), this.height(), 160, 32);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.TOAST_TEXTURE, 0, 0, 0, 0, this.width(), this.height(), 160, 32);
 
         Component name = ClientFieldGuideManager.getEntryName(entry);
         Component discovered = Component.translatable("fieldguide.toast.discovered");
 
         guiGraphics.text(font, name, 30, 7, ClientConfig.get().getTextTitleColorInt(), false);
-        guiGraphics.text(font, discovered, 30, 17, 0xAF8C5C, false);
+        guiGraphics.text(font, discovered, 30, 17, 0xFFAF8C5C, false);
 
         int iconX = 16;
         int iconY = 17;
         Object coreEntry = EntryResolver.resolveCoreEntry(this.entry);
 
-        boolean isCobblemon = this.entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "cobblemon".equals(ge.virtualData().virtualType());
         boolean isTutorial = this.entry instanceof GuideEntry ge && ge.isVirtual() && ge.virtualData() != null && "tutorial".equals(ge.virtualData().virtualType());
 
         if (!entityInitialized) {
-/*            if (Services.PLATFORM.isModLoaded("cobblemon") && isCobblemon) {
-                Identifier id = ((GuideEntry) this.entry).id();
-                if (variantId != null) {
-                    cachedEntity = ClientFieldGuideCobblemonCompat.getDummyVariant(id, variantId, Minecraft.getInstance().level);
-                } else {
-                    cachedEntity = ClientFieldGuideCobblemonCompat.getDummyPokemon(id, Minecraft.getInstance().level);
-                }
-            } else */
             if (coreEntry instanceof EntityType<?> type) {
                 cachedEntity = type.create(Objects.requireNonNull(Minecraft.getInstance().level), EntitySpawnReason.TRIGGERED);
 
@@ -95,24 +87,20 @@ public class FieldGuideToast implements Toast {
 
         if (this.entry instanceof GuideEntry ge && ge.isStructure() && coreEntry instanceof Block) {
             EntryRenderHelper.renderStructure(guiGraphics, ge, iconX, iconY, 24, true, false, 1.0F);
-        }
-/*        else if (isCobblemon && cachedEntity instanceof LivingEntity) {
-            EntryRenderHelper.renderCobblemon(guiGraphics, (GuideEntry) this.entry, iconX, iconY, 24, 24, true, false, 1.0F, false);
-        } */
-        else if (isTutorial) {
+        } else if (isTutorial) {
             EntryRenderHelper.renderTutorial(guiGraphics, (GuideEntry) this.entry, iconX, iconY, 24, 24, true, false, 1.0F);
         } else if (coreEntry instanceof EntityType<?>) {
             if (cachedEntity != null) {
                 EntryRenderHelper.renderEntityNormalized(guiGraphics, cachedEntity, iconX, iconY, 24, 24, true, false, 1.0F, false);
             } else {
-                guiGraphics.blit(Constants.TOAST_ICON, 8, 8, 0, 0, 16, 16, 16, 16);
+                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.TOAST_ICON, 8, 8, 0, 0, 16, 16, 16, 16);
             }
         } else if (coreEntry instanceof Block block) {
             EntryRenderHelper.renderBlock(guiGraphics, block, iconX, iconY, 12.0F, true, false, 1.0F);
         } else if (coreEntry instanceof Item item) {
             EntryRenderHelper.renderItem(guiGraphics, item, iconX, iconY, 20.0F, true, false, 1.0F);
         } else {
-            guiGraphics.blit(Constants.TOAST_ICON, 8, 8, 0, 0, 16, 16, 16, 16);
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Constants.TOAST_ICON, 8, 8, 0, 0, 16, 16, 16, 16);
         }
     }
 }
