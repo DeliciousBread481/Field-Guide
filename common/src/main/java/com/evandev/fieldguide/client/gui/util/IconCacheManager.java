@@ -200,7 +200,7 @@ public class IconCacheManager {
         poseStack.translate(RENDER_SIZE / 2.0f, RENDER_SIZE / 2.0f, 1000.0f);
 
         Lighting lighting = new Lighting();
-        lighting.setupFor(Lighting.Entry.ITEMS_FLAT);
+        lighting.setupFor(Lighting.Entry.ENTITY_IN_UI);
 
         if (Services.PLATFORM.isModLoaded("entity_model_features")) {
             EmfCompat.setInGui(true);

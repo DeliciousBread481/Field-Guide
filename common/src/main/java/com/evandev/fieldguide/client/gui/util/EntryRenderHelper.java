@@ -46,14 +46,16 @@ import org.joml.Quaternionf;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
 public class EntryRenderHelper {
-
+    private static final Set<Identifier> GENERATED_RP_SILHOUETTES = ConcurrentHashMap.newKeySet();
     private static final Map<String, Optional<Identifier>> OVERRIDE_CACHE = new HashMap<>();
 
     public static void clearCache() {
         OVERRIDE_CACHE.clear();
+        GENERATED_RP_SILHOUETTES.clear();
         IconCacheManager.clearCache();
     }
 
@@ -377,6 +379,52 @@ public class EntryRenderHelper {
         return visual.xOffset;
     }
 
+    private static Identifier getOrCreateResourcePackSilhouette(Identifier baseTexture) {
+        Identifier silLoc = Identifier.fromNamespaceAndPath(baseTexture.getNamespace(), baseTexture.getPath().replace(".png", "_silhouette.png"));
+
+        if (GENERATED_RP_SILHOUETTES.contains(silLoc)) {
+            return silLoc;
+        }
+
+        Minecraft mc = Minecraft.getInstance();
+
+        if (mc.getResourceManager().getResource(silLoc).isPresent()) {
+            return silLoc;
+        }
+
+        try {
+            var resource = mc.getResourceManager().getResource(baseTexture);
+            if (resource.isPresent()) {
+                try (java.io.InputStream stream = resource.get().open()) {
+                    com.mojang.blaze3d.platform.NativeImage image = com.mojang.blaze3d.platform.NativeImage.read(stream);
+                    com.mojang.blaze3d.platform.NativeImage silhouetteImage = new com.mojang.blaze3d.platform.NativeImage(image.getWidth(), image.getHeight(), false);
+                    for (int y = 0; y < image.getHeight(); y++) {
+                        for (int x = 0; x < image.getWidth(); x++) {
+                            int pixel = image.getPixel(x, y);
+                            int alpha = net.minecraft.util.ARGB.alpha(pixel);
+                            if (alpha > 0) {
+                                silhouetteImage.setPixel(x, y, net.minecraft.util.ARGB.color(alpha, 255, 255, 255));
+                            } else {
+                                silhouetteImage.setPixel(x, y, 0);
+                            }
+                        }
+                    }
+                    net.minecraft.client.renderer.texture.DynamicTexture dynamicTexture = new net.minecraft.client.renderer.texture.DynamicTexture(silLoc::toString, silhouetteImage);
+                    mc.getTextureManager().register(silLoc, dynamicTexture);
+
+                    GENERATED_RP_SILHOUETTES.add(silLoc);
+
+                    image.close();
+                    return silLoc;
+                }
+            }
+        } catch (Exception e) {
+            Constants.LOG.error("Failed to generate silhouette for resource pack texture: {}", baseTexture, e);
+        }
+
+        return baseTexture;
+    }
+
     private static void drawCachedTexture(GuiGraphicsExtractor guiGraphics, Identifier texture, Object cacheKey, int x, int y, int width, int height, boolean unlocked, boolean isPage, float bounceScale) {
         int scaledWidth = (int) (width * bounceScale);
         int scaledHeight = (int) (height * bounceScale);
@@ -403,10 +451,7 @@ public class EntryRenderHelper {
             if (texture.getPath().startsWith("generated_icon/")) {
                 targetTexture = Identifier.fromNamespaceAndPath(texture.getNamespace(), texture.getPath() + "_silhouette");
             } else {
-                Identifier silLoc = Identifier.fromNamespaceAndPath(texture.getNamespace(), texture.getPath().replace(".png", "_silhouette.png"));
-                if (Minecraft.getInstance().getResourceManager().getResource(silLoc).isPresent()) {
-                    targetTexture = silLoc;
-                }
+                targetTexture = getOrCreateResourcePackSilhouette(texture);
             }
 
             guiGraphics.blit(RenderPipelines.GUI_TEXTURED, targetTexture, drawX, drawY, 0, 0, scaledWidth, scaledHeight, scaledWidth, scaledHeight, argb);
