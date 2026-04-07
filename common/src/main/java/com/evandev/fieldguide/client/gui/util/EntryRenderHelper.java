@@ -16,18 +16,23 @@ import com.evandev.fieldguide.mixin.accessor.EntityAccessor;
 import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.structure.StructureUtils;
 import com.evandev.fieldguide.variant.FieldGuideVariantManager;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.client.renderer.item.ItemStackRenderState;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.animal.fish.WaterAnimal;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -37,6 +42,7 @@ import org.joml.Vector3f;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 public class EntryRenderHelper {
 
@@ -83,7 +89,7 @@ public class EntryRenderHelper {
         return Optional.empty();
     }
 
-    private static void renderWithCache(Object baseEntry, Object cacheKey, GuiGraphicsExtractor guiGraphics, int x, int y, int width, int height, boolean unlocked, boolean isPage, float bounceScale, Runnable renderAction) {
+    private static void renderWithCache(Object baseEntry, Object cacheKey, GuiGraphicsExtractor guiGraphics, int x, int y, int width, int height, boolean unlocked, boolean isPage, float bounceScale, BiConsumer<PoseStack, SubmitNodeCollector> renderAction) {
         Optional<Identifier> textureOpt = getResourcePackOverride(baseEntry, cacheKey, isPage);
 
         if (textureOpt.isEmpty()) {
@@ -133,7 +139,7 @@ public class EntryRenderHelper {
         final VariantProvider<Mob> finalProvider = provider;
         final VariantDef finalVariant = currentVariant;
 
-        renderWithCache(baseId, cacheKey, guiGraphics, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, () -> {
+        renderWithCache(baseId, cacheKey, guiGraphics, x, y, maxWidth, maxHeight, unlocked, isPage, bounceScale, (poseStack, collector) -> {
 
             VariantDef tempOriginal = null;
             if (finalProvider != null && entity instanceof Mob mob) {
@@ -141,7 +147,7 @@ public class EntryRenderHelper {
                 finalProvider.apply(mob, finalVariant);
             }
 
-            renderEntity(guiGraphics, entity, entity.getType(), isPage, -30.0F, x, y, maxWidth, maxHeight, bounceScale);
+            renderEntity(entity, entity.getType(), isPage, -30.0F, x, y, maxWidth, maxHeight, bounceScale, poseStack, collector);
 
             if (finalProvider != null && entity instanceof Mob mob && tempOriginal != null) {
                 finalProvider.apply(mob, tempOriginal);
@@ -157,7 +163,7 @@ public class EntryRenderHelper {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T extends Entity, S extends EntityRenderState> void renderEntity(GuiGraphicsExtractor guiGraphics, T entity, Object entrySource, boolean isPage, float yRotation, int x, int y, int maxWidth, int maxHeight, float bounceScale) {
+    private static <T extends Entity, S extends EntityRenderState> void renderEntity(T entity, Object entrySource, boolean isPage, float yRotation, int x, int y, int maxWidth, int maxHeight, float bounceScale, PoseStack poseStack, SubmitNodeCollector collector) {
         EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(entrySource);
 
         float visualScale = getVisualScale(visual, isPage);
@@ -175,8 +181,10 @@ public class EntryRenderHelper {
             clampedScale = safetyClamp / maxDimension;
         }
 
-        Quaternionf rotation = new Quaternionf().rotateX((float) Math.toRadians(30.0F)).rotateY((float) Math.toRadians(yRotation));
-        Vector3f translation = new Vector3f(xOff / clampedScale, (entityHeight / -2.0F) + (yOff / clampedScale), 0.0F);
+        poseStack.pushPose();
+        poseStack.translate(xOff / clampedScale, (entityHeight / -2.0F) + (yOff / clampedScale), 0.0F);
+        poseStack.mulPose(new Quaternionf().rotateX((float) Math.toRadians(30.0F)).rotateY((float) Math.toRadians(yRotation)));
+        poseStack.scale(clampedScale, clampedScale, clampedScale);
 
         if (entity instanceof LivingEntity living) {
             living.setYHeadRot(0.0F);
@@ -185,6 +193,10 @@ public class EntryRenderHelper {
             living.setYBodyRot(0.0F);
             living.yBodyRot = 0.0F;
             living.yBodyRotO = 0.0F;
+            living.walkAnimation.setSpeed(0.0F);
+            living.walkAnimation.position(0.0F);
+            living.attackAnim = 0.0F;
+            living.oAttackAnim = 0.0F;
         }
 
         entity.tickCount = 1;
@@ -199,31 +211,38 @@ public class EntryRenderHelper {
 
         try {
             EntityRenderDispatcher dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
-            net.minecraft.client.renderer.entity.EntityRenderer<T, S> renderer = (net.minecraft.client.renderer.entity.EntityRenderer<T, S>) dispatcher.getRenderer(entity);
+            EntityRenderer<T, S> renderer = (EntityRenderer<T, S>) dispatcher.getRenderer(entity);
+
             S state = renderer.createRenderState();
             renderer.extractRenderState(entity, state, 0.0F);
-            state.outlineColor = 0;
 
-            guiGraphics.entity(state, clampedScale, translation, rotation, null, x - maxWidth / 2, y - maxHeight / 2, x + maxWidth / 2, y + maxHeight / 2);
+            CameraRenderState camera = Minecraft.getInstance().gameRenderer.getGameRenderState().levelRenderState.cameraRenderState;
+            renderer.submit(state, poseStack, collector, camera);
         } catch (Exception e) {
             Constants.LOG.error("Failed to render entity in Field Guide: {}", entrySource, e);
         }
+
+        poseStack.popPose();
     }
 
     public static void renderBlock(GuiGraphicsExtractor guiGraphics, Block block, int x, int y, float baseScale, boolean unlocked, boolean isPage, float bounceScale) {
         int scaledSize = (int) (baseScale * 2);
 
-        renderWithCache(block, block, guiGraphics, x, y, scaledSize, scaledSize, unlocked, isPage, bounceScale, () -> {
+        renderWithCache(block, block, guiGraphics, x, y, scaledSize, scaledSize, unlocked, isPage, bounceScale, (poseStack, collector) -> {
             ItemStack stack = new ItemStack(block);
             if (!stack.isEmpty()) {
                 EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(block);
                 float clampedScale = (getVisualScale(visual, isPage) * bounceScale) * 1.5f;
 
-                guiGraphics.pose().pushMatrix();
-                guiGraphics.pose().translate((float) x, (float) y);
-                guiGraphics.pose().scale(clampedScale, clampedScale);
-                guiGraphics.item(stack, -8, -8);
-                guiGraphics.pose().popMatrix();
+                poseStack.pushPose();
+                poseStack.scale(clampedScale, -clampedScale, 1.0f);
+
+                ItemStackRenderState state = new ItemStackRenderState();
+                Minecraft.getInstance().getItemModelResolver().updateForTopItem(state, stack, ItemDisplayContext.GUI, Minecraft.getInstance().level, Minecraft.getInstance().player, 0);
+
+                state.submit(poseStack, collector, 15728880, 65536, 0);
+
+                poseStack.popPose();
             }
         });
     }
@@ -231,21 +250,25 @@ public class EntryRenderHelper {
     public static void renderItem(GuiGraphicsExtractor guiGraphics, Item item, int x, int y, float baseScale, boolean unlocked, boolean isPage, float bounceScale) {
         int scaledSize = (int) (baseScale * 2);
 
-        renderWithCache(item, item, guiGraphics, x, y, scaledSize, scaledSize, unlocked, isPage, bounceScale, () -> {
+        renderWithCache(item, item, guiGraphics, x, y, scaledSize, scaledSize, unlocked, isPage, bounceScale, (poseStack, collector) -> {
             ItemStack stack = new ItemStack(item);
             EntryVisual visual = ClientFieldGuideManager.getInstance().getEntryVisual(item);
             float clampedScale = (getVisualScale(visual, isPage) * bounceScale) * 1.5f;
 
-            guiGraphics.pose().pushMatrix();
-            guiGraphics.pose().translate((float) x, (float) y);
-            guiGraphics.pose().scale(clampedScale, clampedScale);
-            guiGraphics.item(stack, -8, -8);
-            guiGraphics.pose().popMatrix();
+            poseStack.pushPose();
+            poseStack.scale(clampedScale, -clampedScale, 1.0f);
+
+            ItemStackRenderState state = new ItemStackRenderState();
+            Minecraft.getInstance().getItemModelResolver().updateForTopItem(state, stack, ItemDisplayContext.GUI, Minecraft.getInstance().level, Minecraft.getInstance().player, 0);
+
+            state.submit(poseStack, collector, 15728880, 65536, 0);
+
+            poseStack.popPose();
         });
     }
 
     public static void renderStructure(GuiGraphicsExtractor guiGraphics, GuideEntry composite, int x, int y, int size, boolean unlocked, boolean isPage, float bounceScale) {
-        renderWithCache(composite, composite, guiGraphics, x, y, size, size, unlocked, isPage, bounceScale, () -> {
+        renderWithCache(composite, composite, guiGraphics, x, y, size, size, unlocked, isPage, bounceScale, (poseStack, collector) -> {
             Map<BlockPos, BlockState> blocks = StructureUtils.getStructureBlocks(composite);
             if (blocks.isEmpty() && composite.structureData() != null && composite.structureData().stackedBlocks() != null && !composite.structureData().stackedBlocks().isEmpty()) {
                 blocks = StructureUtils.getStackedBlocks(composite.structureData().stackedBlocks());
@@ -305,21 +328,28 @@ public class EntryRenderHelper {
 
                 Vector3f trans = new Vector3f(blockX, blockY, blockZ);
 
-                extractAndSubmitBlock(guiGraphics, dummyDisplay, scale, trans, rotation, x, y, size);
+                extractAndSubmitBlock(dummyDisplay, scale, trans, rotation, poseStack, collector);
             }
         });
     }
 
     @SuppressWarnings("unchecked")
-    private static <T extends Entity, S extends EntityRenderState> void extractAndSubmitBlock(GuiGraphicsExtractor guiGraphics, T entity, float scale, Vector3f trans, Quaternionf rotation, int x, int y, int size) {
+    private static <T extends Entity, S extends EntityRenderState> void extractAndSubmitBlock(T entity, float scale, Vector3f trans, Quaternionf rotation, PoseStack poseStack, SubmitNodeCollector collector) {
+        poseStack.pushPose();
+        poseStack.translate(trans.x(), trans.y(), trans.z());
+        poseStack.mulPose(rotation);
+        poseStack.scale(scale, scale, scale);
+
         var dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         var renderer = (EntityRenderer<T, S>) dispatcher.getRenderer(entity);
 
-        S state = renderer.createRenderState(entity, 1.0F);
+        S state = renderer.createRenderState();
         renderer.extractRenderState(entity, state, 0.0F);
-        state.outlineColor = 0;
 
-        guiGraphics.entity(state, scale, trans, rotation, null, x - size, y - size, x + size, y + size);
+        CameraRenderState camera = Minecraft.getInstance().gameRenderer.getGameRenderState().levelRenderState.cameraRenderState;
+        renderer.submit(state, poseStack, collector, camera);
+
+        poseStack.popPose();
     }
 
     private static float getScaleFactorForEntity(Entity entity) {

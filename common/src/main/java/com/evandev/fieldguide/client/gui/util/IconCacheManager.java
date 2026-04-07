@@ -1,11 +1,40 @@
 package com.evandev.fieldguide.client.gui.util;
 
+import com.evandev.fieldguide.Constants;
+import com.evandev.fieldguide.api.AutoPopulateRegistry;
+import com.evandev.fieldguide.compat.emf.EmfCompat;
+import com.evandev.fieldguide.platform.Services;
+import com.mojang.blaze3d.ProjectionType;
+import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.pipeline.TextureTarget;
+import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.blaze3d.platform.NativeImage;
+import com.mojang.blaze3d.systems.CommandEncoder;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.SubmitNodeStorage;
+import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
+import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.Identifier;
+import org.joml.Matrix4f;
+import org.lwjgl.system.MemoryUtil;
 
-import java.util.Optional;
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.function.BiConsumer;
+import java.util.stream.Stream;
 
 public class IconCacheManager {
-/*    private static final Path CACHE_DIR = Services.PLATFORM.getConfigDirectory().resolve("../fieldguide_cache");
+    private static final Path CACHE_DIR = Services.PLATFORM.getConfigDirectory().resolve("../fieldguide_cache");
     private static final int RENDER_SIZE = 256;
 
     private static final Map<String, Identifier> TEXTURE_CACHE = new ConcurrentHashMap<>();
@@ -19,10 +48,10 @@ public class IconCacheManager {
                 t.setDaemon(true);
                 return t;
             }
-    );*/
+    );
 
     public static void tick() {
-/*        long startTime = System.currentTimeMillis();
+        long startTime = System.currentTimeMillis();
         int processed = 0;
 
         while (!MAIN_THREAD_TASKS.isEmpty() && processed < 5 && (System.currentTimeMillis() - startTime) < 10) {
@@ -31,19 +60,19 @@ public class IconCacheManager {
                 task.run();
                 processed++;
             }
-        }*/
+        }
     }
 
     public static void init() {
-/*        try {
+        try {
             Files.createDirectories(CACHE_DIR);
         } catch (IOException e) {
             Constants.LOG.error("Failed to create icon cache directory", e);
-        }*/
+        }
     }
 
     public static void clearCache() {
-/*        Minecraft mc = Minecraft.getInstance();
+        Minecraft mc = Minecraft.getInstance();
         for (Identifier id : TEXTURE_CACHE.values()) {
             mc.getTextureManager().release(id);
         }
@@ -61,11 +90,10 @@ public class IconCacheManager {
                     Constants.LOG.error("Failed to delete icon cache directory", e);
                 }
             }
-        }, IO_EXECUTOR);*/
+        }, IO_EXECUTOR);
     }
 
-    public static Optional<Identifier> getOrGenerateIcon(Object baseEntry, Object cacheKey, boolean isPage, Runnable renderAction) {
-/*
+    public static Optional<Identifier> getOrGenerateIcon(Object baseEntry, Object cacheKey, boolean isPage, BiConsumer<PoseStack, SubmitNodeCollector> renderAction) {
         String entryKey = AutoPopulateRegistry.getEntryKey(baseEntry);
         if (entryKey.isEmpty()) return Optional.empty();
 
@@ -102,8 +130,8 @@ public class IconCacheManager {
             return null;
         }, IO_EXECUTOR).thenAcceptAsync(image -> {
             if (image != null) {
-                DynamicTexture texture = new DynamicTexture(image);
                 Identifier texLoc = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "generated_icon/" + key);
+                DynamicTexture texture = new DynamicTexture(texLoc::toString, image);
                 Minecraft.getInstance().getTextureManager().register(texLoc, texture);
                 TEXTURE_CACHE.put(key, texLoc);
                 PENDING_GENERATIONS.remove(key);
@@ -112,89 +140,111 @@ public class IconCacheManager {
                 MAIN_THREAD_TASKS.addFirst(() -> generateAndSaveIcon(id.getNamespace(), fileName, key, renderAction));
             }
         }, Minecraft.getInstance());
-*/
-        renderAction.run();
 
         return Optional.empty();
     }
 
-/*    private static void generateAndSaveIcon(String namespace, String fileName, String key, Runnable renderAction) {
+    private static void generateAndSaveIcon(String namespace, String fileName, String key, BiConsumer<PoseStack, SubmitNodeCollector> renderAction) {
         if (TEXTURE_CACHE.containsKey(key)) {
             PENDING_GENERATIONS.remove(key);
             return;
         }
 
         Minecraft mc = Minecraft.getInstance();
-        Matrix4f oldProjection = RenderSystem.getProjectionMatrix();
 
-        RenderTarget renderTarget = new TextureTarget(RENDER_SIZE, RENDER_SIZE, true, Minecraft.ON_OSX);
-        renderTarget.setClearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        renderTarget.clear(Minecraft.ON_OSX);
+        RenderTarget renderTarget = new TextureTarget("IconGenerator", RENDER_SIZE, RENDER_SIZE, true);
+        CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
 
-        renderTarget.bindWrite(true);
-        RenderSystem.viewport(0, 0, RENDER_SIZE, RENDER_SIZE);
+        encoder.clearColorAndDepthTextures(renderTarget.getColorTexture(), 0, renderTarget.getDepthTexture(), 1.0);
 
-        RenderSystem.clear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(true);
+        RenderSystem.outputColorTextureOverride = renderTarget.getColorTextureView();
+        RenderSystem.outputDepthTextureOverride = renderTarget.getDepthTextureView();
 
-        Matrix4f projectionMatrix = new Matrix4f().setOrtho(0.0F, RENDER_SIZE, RENDER_SIZE, 0.0F, 10000.0F, -10000.0F);
-        RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.ORTHOGRAPHIC_Z);
+        RenderSystem.backupProjectionMatrix();
 
-        Matrix4fStack poseStack = RenderSystem.getModelViewStack();
-        poseStack.pushMatrix();
-        poseStack.identity();
+        Matrix4f ortho = new Matrix4f().setOrtho(0.0F, RENDER_SIZE, RENDER_SIZE, 0.0F, 10000.0F, -10000.0F);
+        GpuBuffer projBuffer = RenderSystem.getDevice().createBuffer(() -> "Icon Proj", 136, RenderSystem.PROJECTION_MATRIX_UBO_SIZE);
+
+        try (org.lwjgl.system.MemoryStack stack = org.lwjgl.system.MemoryStack.stackPush()) {
+            ByteBuffer buffer = stack.malloc(RenderSystem.PROJECTION_MATRIX_UBO_SIZE);
+            ortho.get(buffer);
+            encoder.writeToBuffer(projBuffer.slice(), buffer);
+        }
+        RenderSystem.setProjectionMatrix(projBuffer.slice(), ProjectionType.ORTHOGRAPHIC);
+
+        PoseStack poseStack = new PoseStack();
         poseStack.translate(RENDER_SIZE / 2.0f, RENDER_SIZE / 2.0f, 1000.0f);
-        RenderSystem.applyModelViewMatrix();
+
+        Lighting lighting = new Lighting();
+        lighting.setupFor(Lighting.Entry.ITEMS_FLAT);
 
         if (Services.PLATFORM.isModLoaded("entity_model_features")) {
             EmfCompat.setInGui(true);
         }
 
-        renderAction.run();
+        SubmitNodeStorage storage = mc.gameRenderer.getSubmitNodeStorage();
+        FeatureRenderDispatcher featureDispatcher = mc.gameRenderer.getFeatureRenderDispatcher();
+        MultiBufferSource.BufferSource buffers = mc.renderBuffers().bufferSource();
+
+        renderAction.accept(poseStack, storage);
+
+        featureDispatcher.renderAllFeatures();
+        buffers.endBatch();
+
+        storage.clear();
 
         if (Services.PLATFORM.isModLoaded("entity_model_features")) {
             EmfCompat.setInGui(false);
         }
 
-        poseStack.popMatrix();
-        RenderSystem.applyModelViewMatrix();
-        Lighting.setupForFlatItems();
+        lighting.close();
+        RenderSystem.restoreProjectionMatrix();
 
-        RenderSystem.setProjectionMatrix(oldProjection, VertexSorting.ORTHOGRAPHIC_Z);
+        RenderSystem.outputColorTextureOverride = null;
+        RenderSystem.outputDepthTextureOverride = null;
 
-        renderTarget.unbindWrite();
-        mc.getMainRenderTarget().bindWrite(true);
-        RenderSystem.viewport(0, 0, mc.getWindow().getWidth(), mc.getWindow().getHeight());
+        long bufferSize = (long) RENDER_SIZE * RENDER_SIZE * 4;
+        GpuBuffer readbackBuffer = RenderSystem.getDevice().createBuffer(() -> "Readback", 9, bufferSize);
 
-        NativeImage nativeImage = new NativeImage(RENDER_SIZE, RENDER_SIZE, false);
+        encoder.copyTextureToBuffer(renderTarget.getColorTexture(), readbackBuffer, 0, () -> {
+            try {
+                CommandEncoder mapEncoder = RenderSystem.getDevice().createCommandEncoder();
 
-        try {
-            RenderSystem.bindTexture(renderTarget.getColorTextureId());
-            nativeImage.downloadTexture(0, false);
-            nativeImage.flipY();
+                try (GpuBuffer.MappedView view = mapEncoder.mapBuffer(readbackBuffer, true, false)) {
+                    ByteBuffer pixels = view.data();
 
-            DynamicTexture texture = new DynamicTexture(nativeImage);
-            Identifier texLoc = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "generated_icon/" + key);
-            mc.getTextureManager().register(texLoc, texture);
-            TEXTURE_CACHE.put(key, texLoc);
+                    NativeImage nativeImage = new NativeImage(RENDER_SIZE, RENDER_SIZE, false);
 
-            CompletableFuture.runAsync(() -> {
-                try {
-                    Path cachedFilePath = CACHE_DIR.resolve(namespace).resolve("textures/fieldguide/entries").resolve(fileName);
-                    cachedFilePath.getParent().toFile().mkdirs();
-                    nativeImage.writeToFile(cachedFilePath.toFile());
-                } catch (IOException e) {
-                    Constants.LOG.error("Failed to save generated icon", e);
+                   MemoryUtil.memCopy(
+                            MemoryUtil.memAddress(pixels),
+                            nativeImage.getPointer(),
+                            (long) RENDER_SIZE * RENDER_SIZE * 4
+                    );
+
+                    Identifier texLoc = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "generated_icon/" + key);
+
+                    DynamicTexture texture = new DynamicTexture(texLoc::toString, nativeImage);
+                    mc.getTextureManager().register(texLoc, texture);
+                    TEXTURE_CACHE.put(key, texLoc);
+
+                    CompletableFuture.runAsync(() -> {
+                        try {
+                            Path cachedFilePath = CACHE_DIR.resolve(namespace).resolve("textures/fieldguide/entries").resolve(fileName);
+                            cachedFilePath.getParent().toFile().mkdirs();
+                            nativeImage.writeToFile(cachedFilePath.toFile());
+                        } catch (IOException e) {
+                            Constants.LOG.error("Failed to save generated icon", e);
+                        }
+                    }, IO_EXECUTOR);
                 }
-            }, IO_EXECUTOR);
-
-        } catch (Exception e) {
-            Constants.LOG.error("Failed to process generated icon", e);
-            nativeImage.close();
-        } finally {
-            renderTarget.destroyBuffers();
-            PENDING_GENERATIONS.remove(key);
-        }
-    }*/
+            } catch (Exception e) {
+                Constants.LOG.error("Failed to process generated icon", e);
+            } finally {
+                readbackBuffer.close();
+                renderTarget.destroyBuffers();
+                projBuffer.close();
+                PENDING_GENERATIONS.remove(key);
+            }
+        }, 0);
+    }
 }
