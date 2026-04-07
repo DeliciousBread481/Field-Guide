@@ -20,7 +20,9 @@ import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.ARGB;
 import org.joml.Matrix4f;
+import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
 import java.io.File;
@@ -131,9 +133,7 @@ public class IconCacheManager {
         }, IO_EXECUTOR).thenAcceptAsync(image -> {
             if (image != null) {
                 Identifier texLoc = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "generated_icon/" + key);
-                DynamicTexture texture = new DynamicTexture(texLoc::toString, image);
-                Minecraft.getInstance().getTextureManager().register(texLoc, texture);
-                TEXTURE_CACHE.put(key, texLoc);
+                mcRegisterWithSilhouette(key, texLoc, image);
                 PENDING_GENERATIONS.remove(key);
             } else {
                 Identifier id = AutoPopulateRegistry.getEntryId(baseEntry);
@@ -142,6 +142,30 @@ public class IconCacheManager {
         }, Minecraft.getInstance());
 
         return Optional.empty();
+    }
+
+    private static void mcRegisterWithSilhouette(String key, Identifier texLoc, NativeImage image) {
+        Minecraft mc = Minecraft.getInstance();
+
+        DynamicTexture texture = new DynamicTexture(texLoc::toString, image);
+        mc.getTextureManager().register(texLoc, texture);
+        TEXTURE_CACHE.put(key, texLoc);
+
+        NativeImage silhouetteImage = new NativeImage(image.getWidth(), image.getHeight(), false);
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                int pixel = image.getPixel(x, y);
+                int alpha = ARGB.alpha(pixel);
+                if (alpha > 0) {
+                    silhouetteImage.setPixel(x, y, ARGB.color(alpha, 255, 255, 255));
+                } else {
+                    silhouetteImage.setPixel(x, y, 0);
+                }
+            }
+        }
+        Identifier silLoc = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "generated_icon/" + key + "_silhouette");
+        mc.getTextureManager().register(silLoc, new DynamicTexture(silLoc::toString, silhouetteImage));
+        TEXTURE_CACHE.put(key + "_silhouette", silLoc);
     }
 
     private static void generateAndSaveIcon(String namespace, String fileName, String key, BiConsumer<PoseStack, SubmitNodeCollector> renderAction) {
@@ -214,18 +238,23 @@ public class IconCacheManager {
                     ByteBuffer pixels = view.data();
 
                     NativeImage nativeImage = new NativeImage(RENDER_SIZE, RENDER_SIZE, false);
+                    int bytesPerRow = RENDER_SIZE * 4;
+                    long ptr = nativeImage.getPointer();
 
-                   MemoryUtil.memCopy(
-                            MemoryUtil.memAddress(pixels),
-                            nativeImage.getPointer(),
-                            (long) RENDER_SIZE * RENDER_SIZE * 4
-                    );
+                    // TODO: this is terrible
+                    try (MemoryStack memoryStack = MemoryStack.stackPush()) {
+                        memoryStack.malloc(bytesPerRow);
+                        long srcAddr = MemoryUtil.memAddress(pixels);
+
+                        for (int i = 0; i < RENDER_SIZE; i++) {
+                            long srcRowPtr = srcAddr + ((RENDER_SIZE - 1 - i) * bytesPerRow);
+                            long destRowPtr = ptr + (i * bytesPerRow);
+                            MemoryUtil.memCopy(srcRowPtr, destRowPtr, bytesPerRow);
+                        }
+                    }
 
                     Identifier texLoc = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "generated_icon/" + key);
-
-                    DynamicTexture texture = new DynamicTexture(texLoc::toString, nativeImage);
-                    mc.getTextureManager().register(texLoc, texture);
-                    TEXTURE_CACHE.put(key, texLoc);
+                    mcRegisterWithSilhouette(key, texLoc, nativeImage);
 
                     CompletableFuture.runAsync(() -> {
                         try {

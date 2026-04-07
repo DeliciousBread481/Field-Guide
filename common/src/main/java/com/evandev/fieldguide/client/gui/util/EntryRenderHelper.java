@@ -26,6 +26,7 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
@@ -37,7 +38,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.joml.Quaternionf;
-import org.joml.Vector3f;
 
 import java.awt.*;
 import java.util.*;
@@ -241,7 +241,7 @@ public class EntryRenderHelper {
                 ItemStackRenderState state = new ItemStackRenderState();
                 Minecraft.getInstance().getItemModelResolver().updateForTopItem(state, stack, ItemDisplayContext.GUI, Minecraft.getInstance().level, Minecraft.getInstance().player, 0);
 
-                state.submit(poseStack, collector, 15728880, 65536, 0);
+                state.submit(poseStack, collector, 15728880, OverlayTexture.NO_OVERLAY, 0);
 
                 poseStack.popPose();
             }
@@ -263,7 +263,7 @@ public class EntryRenderHelper {
             ItemStackRenderState state = new ItemStackRenderState();
             Minecraft.getInstance().getItemModelResolver().updateForTopItem(state, stack, ItemDisplayContext.GUI, Minecraft.getInstance().level, Minecraft.getInstance().player, 0);
 
-            state.submit(poseStack, collector, 15728880, 65536, 0);
+            state.submit(poseStack, collector, 15728880, OverlayTexture.NO_OVERLAY, 0);
 
             poseStack.popPose();
         });
@@ -306,9 +306,10 @@ public class EntryRenderHelper {
             Display.BlockDisplay dummyDisplay = EntityType.BLOCK_DISPLAY.create(mc.level, EntitySpawnReason.COMMAND);
             if (dummyDisplay == null) return;
 
-            Quaternionf rotation = new Quaternionf()
-                    .rotationX((float) Math.toRadians(30.0))
-                    .rotateY((float) Math.toRadians(210.0));
+            poseStack.pushPose();
+            poseStack.scale(scale, -scale, -scale);
+            poseStack.mulPose(new Quaternionf().rotationX((float) Math.toRadians(30.0)).rotateY((float) Math.toRadians(210.0)));
+            poseStack.translate(-centerX, -centerY, -centerZ);
 
             List<Map.Entry<BlockPos, BlockState>> sortedBlocks = new ArrayList<>(blocks.entrySet());
             sortedBlocks.sort((a, b) -> {
@@ -324,34 +325,30 @@ public class EntryRenderHelper {
 
                 ((BlockDisplayAccessor) dummyDisplay).fieldguide$setBlockState(state);
 
-                float blockX = pos.getX() - centerX - 0.5f;
-                float blockY = pos.getY() - centerY - 0.5f;
-                float blockZ = pos.getZ() - centerZ - 0.5f;
+                poseStack.pushPose();
+                poseStack.translate(pos.getX(), pos.getY(), pos.getZ());
 
-                Vector3f trans = new Vector3f(blockX, blockY, blockZ);
+                extractAndSubmitBlock(dummyDisplay, poseStack, collector);
 
-                extractAndSubmitBlock(dummyDisplay, scale, trans, rotation, poseStack, collector);
+                poseStack.popPose();
             }
+
+            poseStack.popPose();
         });
     }
 
     @SuppressWarnings("unchecked")
-    private static <T extends Entity, S extends EntityRenderState> void extractAndSubmitBlock(T entity, float scale, Vector3f trans, Quaternionf rotation, PoseStack poseStack, SubmitNodeCollector collector) {
-        poseStack.pushPose();
-        poseStack.scale(scale, -scale, -scale);
-        poseStack.mulPose(rotation);
-        poseStack.translate(trans.x(), trans.y(), trans.z());
-
+    private static <T extends Entity, S extends EntityRenderState> void extractAndSubmitBlock(T entity, PoseStack poseStack, SubmitNodeCollector collector) {
         var dispatcher = Minecraft.getInstance().getEntityRenderDispatcher();
         var renderer = (EntityRenderer<T, S>) dispatcher.getRenderer(entity);
 
         S state = renderer.createRenderState();
         renderer.extractRenderState(entity, state, 0.0F);
 
+        state.distanceToCameraSq = 0;
+
         CameraRenderState camera = Minecraft.getInstance().gameRenderer.getGameRenderState().levelRenderState.cameraRenderState;
         renderer.submit(state, poseStack, collector, camera);
-
-        poseStack.popPose();
     }
 
     private static float getScaleFactorForEntity(Entity entity) {
@@ -400,6 +397,7 @@ public class EntryRenderHelper {
         int drawY = y - scaledHeight / 2;
 
         boolean silhouette = !unlocked || ServerConfig.get().keepSilhouetteWhenUnlocked;
+        Identifier targetTexture = texture;
 
         if (silhouette) {
             int color;
@@ -415,9 +413,13 @@ public class EntryRenderHelper {
             Color rgb = new Color(color);
             int argb = ARGB.color((int) (alpha * 255), rgb.getRed(), rgb.getGreen(), rgb.getBlue());
 
-            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, texture, drawX, drawY, 0, 0, scaledWidth, scaledHeight, scaledWidth, scaledHeight, argb);
+            Identifier silLoc = Identifier.fromNamespaceAndPath(texture.getNamespace(), texture.getPath() + "_silhouette");
+            Minecraft.getInstance().getTextureManager().getTexture(silLoc);
+            targetTexture = silLoc;
+
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, targetTexture, drawX, drawY, 0, 0, scaledWidth, scaledHeight, scaledWidth, scaledHeight, argb);
         } else {
-            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, texture, drawX, drawY, 0, 0, scaledWidth, scaledHeight, scaledWidth, scaledHeight, -1);
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, targetTexture, drawX, drawY, 0, 0, scaledWidth, scaledHeight, scaledWidth, scaledHeight, -1);
         }
     }
 }
