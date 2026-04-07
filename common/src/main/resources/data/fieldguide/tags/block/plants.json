@@ -35,6 +35,7 @@
     "minecraft:melon",
     "minecraft:pumpkin",
     "minecraft:cocoa",
+    "minecraft:firefly_bush",
     {
       "id": "atmospheric:golden_growth",
       "required": false

@@ -8,6 +8,7 @@ import com.evandev.fieldguide.api.variant.VariantProvider;
 import com.evandev.fieldguide.client.ClientFieldGuideManager;
 import com.evandev.fieldguide.client.data.EntryVisual;
 import com.evandev.fieldguide.client.progress.ProgressManager;
+import com.evandev.fieldguide.client.render.FullbrightNodeCollector;
 import com.evandev.fieldguide.compat.tide.ClientTideCompat;
 import com.evandev.fieldguide.config.ClientConfig;
 import com.evandev.fieldguide.config.ServerConfig;
@@ -228,7 +229,7 @@ public class EntryRenderHelper {
             renderer.extractRenderState(entity, state, 0.0F);
 
             CameraRenderState camera = Minecraft.getInstance().gameRenderer.getGameRenderState().levelRenderState.cameraRenderState;
-            renderer.submit(state, poseStack, collector, camera);
+            renderer.submit(state, poseStack, new FullbrightNodeCollector(collector), camera);
         } catch (Exception e) {
             Constants.LOG.error("Failed to render entity in Field Guide: {}", entrySource, e);
         }
