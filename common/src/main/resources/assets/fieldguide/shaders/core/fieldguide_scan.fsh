@@ -1,8 +1,6 @@
 #version 150
 
 uniform sampler2D Sampler0;
-uniform sampler2D Sampler1;
-uniform sampler2D Sampler2;
 
 in vec4 vertexColor;
 in vec2 texCoord0;
@@ -22,12 +20,7 @@ void main() {
         discard;
     }
 
-    vec4 dummy1 = texture(Sampler1, texCoord0);
-    vec4 dummy2 = texture(Sampler2, texCoord0);
-
     vec4 baseColor = vec4(vertexColor.rgb * scanColor.rgb, vertexColor.a * texSample.a * scanColor.a);
-
-    baseColor.rgb += (dummy1.rgb * 0.00001) + (dummy2.rgb * 0.00001);
 
     float outlineThickness = 0.05;
 

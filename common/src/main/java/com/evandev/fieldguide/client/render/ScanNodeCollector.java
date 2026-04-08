@@ -24,7 +24,7 @@ import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 
-record ScanNodeCollector(SubmitNodeCollector delegate, float r, float g, float b, float a, float limitY,
+public record ScanNodeCollector(SubmitNodeCollector delegate, float r, float g, float b, float a, float limitY,
                          boolean isDepth) implements SubmitNodeCollector {
 
     @Override
