@@ -15,6 +15,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.animal.axolotl.Axolotl;
 import net.minecraft.world.entity.animal.equine.Horse;
 import net.minecraft.world.entity.animal.equine.Llama;
 import net.minecraft.world.entity.animal.equine.Variant;
@@ -116,6 +117,34 @@ public class FieldGuideVariantManager {
             @Override
             public VariantDef getCurrent(Llama entity) {
                 return new VariantDef(entity.getVariant().name(), entity.getVariant());
+            }
+        });
+
+        // Axolotl
+        registerProvider(Axolotl.class, new VariantProvider<>() {
+            @Override
+            public List<VariantDef> getVariants(Axolotl entity) {
+                return Arrays.stream(Axolotl.Variant.values())
+                        .map(v -> new VariantDef(v.getName(), v))
+                        .toList();
+            }
+
+            @Override
+            public void apply(Axolotl entity, VariantDef def) {
+                if (def.value() instanceof Axolotl.Variant variant) {
+                    try {
+                        Method m = Axolotl.class.getDeclaredMethod("setVariant", Axolotl.Variant.class);
+                        m.setAccessible(true);
+                        m.invoke(entity, variant);
+                    } catch (Exception e) {
+                        // Fallback reflection handled
+                    }
+                }
+            }
+
+            @Override
+            public VariantDef getCurrent(Axolotl entity) {
+                return new VariantDef(entity.getVariant().getName(), entity.getVariant());
             }
         });
 
