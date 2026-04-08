@@ -51,7 +51,6 @@ public class FieldGuideMod {
             //FieldGuideVariantManager.registerProvider(Mob.class, new MixedLitterCompat.MixedLitterVariantProvider());
         }
 
-        // Initialize client events explicitly to bypass annotation issues
         if (FMLLoader.getCurrent().getDist() == Dist.CLIENT) {
             FieldGuideNeoForgeClient.init(modEventBus);
         }

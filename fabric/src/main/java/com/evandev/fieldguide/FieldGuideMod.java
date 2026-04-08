@@ -1,5 +1,6 @@
 package com.evandev.fieldguide;
 
+import com.evandev.fieldguide.api.AutoPopulateRegistry;
 import com.evandev.fieldguide.api.EntryUnlockData;
 import com.evandev.fieldguide.api.variant.VariantDef;
 import com.evandev.fieldguide.api.variant.VariantProvider;
@@ -20,7 +21,6 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -129,10 +129,10 @@ public class FieldGuideMod implements ModInitializer {
                     FieldGuideTriggers.SCAN_AND_KILL.get().trigger(player, killedEntity);
                 }
 
-                Identifier entityId = BuiltInRegistries.ENTITY_TYPE.getKey(killedEntity.getType());
+                Identifier entryId = AutoPopulateRegistry.getEntryId(killedEntity.getType(), true);
                 PlayerFieldGuideProgress progress = manager.getProgress(player);
 
-                if (progress != null) {
+                if (progress != null && entryId != null) {
                     String variantId = "";
                     List<VariantDef> variants = FieldGuideVariantManager.getVariants(killedEntity);
                     if (!variants.isEmpty()) {
@@ -142,7 +142,7 @@ public class FieldGuideMod implements ModInitializer {
                             if (current != null) variantId = current.id();
                         }
                     }
-                    progress.tryUnlock(player, entityId, variantId, EntryUnlockData.UnlockTrigger.KILL);
+                    progress.tryUnlock(player, entryId, variantId, EntryUnlockData.UnlockTrigger.KILL);
                 }
             }
         });
