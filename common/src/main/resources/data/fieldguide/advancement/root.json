@@ -10,7 +10,7 @@
     "description": {
       "translate": "advancements.fieldguide.root.description"
     },
-    "background": "minecraft:textures/block/oak_log.png",
+    "background": "minecraft:block/oak_log",
     "show_toast": false,
     "announce_to_chat": false,
     "hidden": false
