@@ -146,10 +146,6 @@
             "type": "mod_loaded",
             "modid": "mixed_litter"
           }
-        },
-        {
-          "type": "mod_loaded",
-          "modid": "vanillabackport"
         }
       ],
       "variants": [
@@ -176,10 +172,6 @@
             "type": "mod_loaded",
             "modid": "mixed_litter"
           }
-        },
-        {
-          "type": "mod_loaded",
-          "modid": "vanillabackport"
         }
       ],
       "variants": [
@@ -206,10 +198,6 @@
             "type": "mod_loaded",
             "modid": "mixed_litter"
           }
-        },
-        {
-          "type": "mod_loaded",
-          "modid": "vanillabackport"
         }
       ],
       "variants": [
