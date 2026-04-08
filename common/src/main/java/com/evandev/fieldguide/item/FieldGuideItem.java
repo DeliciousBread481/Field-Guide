@@ -1,6 +1,7 @@
 package com.evandev.fieldguide.item;
 
 import com.evandev.fieldguide.config.ServerConfig;
+import com.evandev.fieldguide.platform.Services;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
@@ -22,7 +23,16 @@ public class FieldGuideItem extends Item {
         super(properties);
     }
 
-    public InteractionResult use(@NonNull Level level, @NonNull Player player, @NonNull InteractionHand hand) {
+    public @NonNull InteractionResult use(@NonNull Level level, @NonNull Player player, @NonNull InteractionHand hand) {
+
+        if (!ServerConfig.get().enableFieldGuideItem) {
+            return InteractionResult.PASS;
+        }
+
+        if (level.isClientSide()) {
+            Services.getClient().openFieldGuide();
+        }
+
         return InteractionResult.SUCCESS;
     }
 
