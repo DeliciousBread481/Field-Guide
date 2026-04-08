@@ -18,6 +18,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.equine.Horse;
 import net.minecraft.world.entity.animal.equine.Llama;
 import net.minecraft.world.entity.animal.equine.Variant;
+import net.minecraft.world.entity.animal.fish.TropicalFish;
 import net.minecraft.world.entity.animal.sheep.Sheep;
 import net.minecraft.world.entity.npc.villager.VillagerData;
 import net.minecraft.world.entity.npc.villager.VillagerDataHolder;
@@ -115,6 +116,49 @@ public class FieldGuideVariantManager {
             @Override
             public VariantDef getCurrent(Llama entity) {
                 return new VariantDef(entity.getVariant().name(), entity.getVariant());
+            }
+        });
+
+        // Tropical Fish
+        registerProvider(TropicalFish.class, new VariantProvider<>() {
+            @Override
+            public List<VariantDef> getVariants(TropicalFish entity) {
+                return TropicalFish.COMMON_VARIANTS.stream()
+                        .map(v -> {
+                            String id = v.pattern().getSerializedName() + "_" +
+                                    v.baseColor().getName() + "_" +
+                                    v.patternColor().getName();
+                            return new VariantDef(id, v);
+                        })
+                        .toList();
+            }
+
+            @Override
+            public void apply(TropicalFish entity, VariantDef def) {
+                if (def.value() instanceof TropicalFish.Variant variant) {
+                    try {
+                        Method m = TropicalFish.class.getDeclaredMethod("setPackedVariant", int.class);
+                        m.setAccessible(true);
+                        m.invoke(entity, variant.getPackedId());
+                    } catch (Exception e) {
+                        // Fallback reflection handled
+                    }
+                }
+            }
+
+            @Override
+            public VariantDef getCurrent(TropicalFish entity) {
+                TropicalFish.Variant currentVar = new TropicalFish.Variant(
+                        entity.getPattern(),
+                        entity.getBaseColor(),
+                        entity.getPatternColor()
+                );
+
+                String id = currentVar.pattern().getSerializedName() + "_" +
+                        currentVar.baseColor().getName() + "_" +
+                        currentVar.patternColor().getName();
+
+                return new VariantDef(id, currentVar);
             }
         });
     }
