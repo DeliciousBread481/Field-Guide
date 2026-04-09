@@ -3,6 +3,7 @@ package com.evandev.fieldguide.server.scan;
 import com.evandev.fieldguide.Constants;
 import com.evandev.fieldguide.config.ServerConfig;
 import com.evandev.fieldguide.entry.EntryResolver;
+import com.evandev.fieldguide.platform.Services;
 import com.evandev.fieldguide.server.ServerFieldGuideManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
