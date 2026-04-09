@@ -21,7 +21,7 @@ public class ScanVerifier {
 
         if (config.disableScanning) return false;
 
-        boolean hasSpyglass = player.isScoping(); // TODO: actually check curios here
+        boolean hasSpyglass = player.isScoping() || Services.PLATFORM.hasSpyglass(player);
 
         double activeScanDist;
         if (hasSpyglass && config.enableSpyglassScanning) {

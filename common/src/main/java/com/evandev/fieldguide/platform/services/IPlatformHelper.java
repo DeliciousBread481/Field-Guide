@@ -58,6 +58,6 @@ public interface IPlatformHelper {
      * @return True if a spyglass is equipped in a special slot, false otherwise.
      */
     default boolean hasSpyglass(Player player) {
-        return false;
+        return true; // TODO
     }
 }
