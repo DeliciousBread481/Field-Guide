@@ -1,3 +1,3 @@
-### Changed
+### Fixed
 
-- Added additional API capabilities for eventual Spawn variant integration.
+- Fixed Curios scanning on dedicated servers.

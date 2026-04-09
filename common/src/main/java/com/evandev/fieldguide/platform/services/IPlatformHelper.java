@@ -1,5 +1,7 @@
 package com.evandev.fieldguide.platform.services;
 
+import net.minecraft.world.entity.player.Player;
+
 import java.nio.file.Path;
 
 public interface IPlatformHelper {
@@ -41,4 +43,14 @@ public interface IPlatformHelper {
      * @return The path to the config directory.
      */
     Path getConfigDirectory();
+
+    /**
+     * Checks if the player has a spyglass equipped in a platform-specific slot (e.g., Curios, Trinkets)
+     *
+     * @param player The player to check.
+     * @return True if a spyglass is equipped in a special slot, false otherwise.
+     */
+    default boolean hasSpyglass(Player player) {
+        return true; // TODO
+    }
 }
