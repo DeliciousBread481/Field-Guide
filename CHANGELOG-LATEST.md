@@ -1,3 +1,3 @@
-### Added
+### Fixed
 
-- Added config option to disable the red out of range overlay.
+- Fixed Curios scanning on dedicated servers.
