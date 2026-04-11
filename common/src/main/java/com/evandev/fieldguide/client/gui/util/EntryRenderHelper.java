@@ -43,7 +43,12 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.block.state.properties.Property;
 import org.joml.Quaternionf;
 
 import java.awt.*;
@@ -238,6 +243,11 @@ public class EntryRenderHelper {
     }
 
     public static void renderBlock(GuiGraphicsExtractor guiGraphics, Block block, int x, int y, float baseScale, boolean unlocked, boolean isPage, float bounceScale) {
+        if (block instanceof EntityBlock) {
+            renderItem(guiGraphics, block.asItem(), x, y, baseScale, unlocked, isPage, bounceScale);
+            return;
+        }
+
         int scaledSize = (int) (baseScale * 2);
 
         renderWithCache(block, block, guiGraphics, x, y, scaledSize, scaledSize, unlocked, isPage, bounceScale, (poseStack, collector) -> {
@@ -250,11 +260,53 @@ public class EntryRenderHelper {
             poseStack.mulPose(new Quaternionf().rotationY((float) Math.toRadians(210.0)));
             poseStack.translate(-0.5f, -0.5f, -0.5f);
 
+            BlockState state = block.defaultBlockState();
+
+            for (Property<?> prop : state.getProperties()) {
+                if (prop instanceof IntegerProperty intProp) {
+                    String name = prop.getName();
+                    if (!name.equals("bites") && !name.equals("level") && !name.equals("rotation")) {
+                        int max = intProp.getPossibleValues().stream().max(Integer::compareTo).orElse(0);
+                        state = state.setValue(intProp, max);
+                    }
+                }
+            }
+
             BlockModelRenderState blockRenderState = new BlockModelRenderState();
             BlockModelResolver resolver = new BlockModelResolver(Minecraft.getInstance().getModelManager());
 
-            resolver.update(blockRenderState, block.defaultBlockState(), BlockDisplayContext.create());
-            blockRenderState.submit(poseStack, collector, 15728880, OverlayTexture.NO_OVERLAY, 0);
+            Property<?> verticalProp = state.getProperties().stream()
+                    .filter(p -> p instanceof EnumProperty<?> enumProp && enumProp.getValueClass() == DoubleBlockHalf.class)
+                    .findFirst()
+                    .orElse(null);
+
+            try {
+                if (verticalProp == null) {
+                    resolver.update(blockRenderState, state, BlockDisplayContext.create());
+                    blockRenderState.submit(poseStack, collector, 15728880, OverlayTexture.NO_OVERLAY, 0);
+                } else {
+                    Collection<?> values = verticalProp.getPossibleValues();
+
+                    poseStack.translate(0.0F, -0.5F * (values.size() - 1), 0.0F);
+
+                    List<?> sortedValues = values.stream()
+                            .sorted((a, b) -> Integer.compare(((Enum<?>) b).ordinal(), ((Enum<?>) a).ordinal()))
+                            .toList();
+
+                    for (Object value : sortedValues) {
+                        @SuppressWarnings({"unchecked", "rawtypes"})
+                        BlockState variant = state.setValue((Property) verticalProp, (Comparable) value);
+
+                        BlockModelRenderState variantRenderState = new BlockModelRenderState();
+                        resolver.update(variantRenderState, variant, BlockDisplayContext.create());
+                        variantRenderState.submit(poseStack, collector, 15728880, OverlayTexture.NO_OVERLAY, 0);
+
+                        poseStack.translate(0.0F, 1.0F, 0.0F);
+                    }
+                }
+            } catch (Exception e) {
+                Constants.LOG.error("Failed to render block in Field Guide: {}", block, e);
+            }
 
             poseStack.popPose();
         });
