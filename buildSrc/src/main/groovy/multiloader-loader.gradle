@@ -54,6 +54,8 @@ publishMods {
         accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
         projectId = "1470590"
         minecraftVersions.add("${minecraft_version}")
+        minecraftVersions.add("26.1.1")
+        minecraftVersions.add("26.1")
 
         requires("item-descriptions")
         optional("cloth-config")
@@ -64,6 +66,8 @@ publishMods {
         accessToken = providers.environmentVariable("MODRINTH_TOKEN")
         projectId = "72RRCWM6"
         minecraftVersions.add("${minecraft_version}")
+        minecraftVersions.add("26.1.1")
+        minecraftVersions.add("26.1")
 
         requires("item-descriptions")
         optional("cloth-config")
