@@ -16,7 +16,9 @@
         "minecraft:taiga",
         "minecraft:snowy_taiga",
         "minecraft:sparse_jungle",
-        "minecraft:old_growth_pine_taiga"
+        "minecraft:old_growth_pine_taiga",
+        "minecraft:eroded_badlands",
+        "minecraft:wooded_badlands"
       ]
     },
     {
@@ -57,7 +59,9 @@
         "minecraft:birch_forest",
         "minecraft:flower_forest",
         "minecraft:plains",
-        "minecraft:cherry_grove"
+        "minecraft:cherry_grove",
+        "minecraft:eroded_badlands",
+        "minecraft:wooded_badlands"
       ]
     }
   ]
