@@ -1,4 +1,3 @@
-/*
 package com.evandev.fieldguide.compat.reliableremover;
 
 import com.evandev.reliable_remover.api.ReliableRemoverAPI;
@@ -13,4 +12,4 @@ public class ReliableRemoverCompat {
     public static boolean isHidden(Block block) {
         return ReliableRemoverAPI.isItemHidden(new ItemStack(block));
     }
-}*/
+}
