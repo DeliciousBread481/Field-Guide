@@ -436,11 +436,7 @@ public class ScanOverlayRenderer {
         }
 
         MultiBufferSource depthSource = new ScanBufferSourceWrapper(bufferSource, 1, 1, 1, 1, true);
-        try {
-            mc.getEntityRenderDispatcher().render(targetEntity, 0.0D, 0.0D, 0.0D, yaw, partialTick, poseStack, depthSource, 15728880);
-        } catch (Exception ignored) {
-            // Failsafe catch for entity parts trying to utilize incorrect render layers
-        }
+        mc.getEntityRenderDispatcher().render(targetEntity, 0.0D, 0.0D, 0.0D, yaw, partialTick, poseStack, depthSource, 15728880);
         bufferSource.endBatch();
 
         if (ModRenderTypes.SCAN_ENTITY_SHADER != null && ModRenderTypes.SCAN_ENTITY_SHADER.getUniform("ColorModulator") != null) {
@@ -448,10 +444,7 @@ public class ScanOverlayRenderer {
         }
 
         MultiBufferSource forcedSource = new ScanBufferSourceWrapper(bufferSource, red, green, blue, alpha, false);
-        try {
-            mc.getEntityRenderDispatcher().render(targetEntity, 0.0D, 0.0D, 0.0D, yaw, partialTick, poseStack, forcedSource, 15728880);
-        } catch (Exception ignored) {
-        }
+        mc.getEntityRenderDispatcher().render(targetEntity, 0.0D, 0.0D, 0.0D, yaw, partialTick, poseStack, forcedSource, 15728880);
         bufferSource.endBatch();
 
         if (isEtfLoaded) {

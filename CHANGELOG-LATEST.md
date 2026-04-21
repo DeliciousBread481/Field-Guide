@@ -1,3 +1,3 @@
 ### Fixed
 
-- Fixed Curios scanning on dedicated servers.
+- Improved error handling.

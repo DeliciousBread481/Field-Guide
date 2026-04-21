@@ -28,49 +28,57 @@ public class ModRenderTypes extends RenderType {
     }
 
     public static RenderType wrapForDepth(RenderType original, boolean isEntity) {
-        return DEPTH_WRAP_CACHE.computeIfAbsent(original, type -> new ModRenderTypes(
-                Constants.MOD_ID + "_scan_depth_wrap",
-                type.format(),
-                type.mode(),
-                type.bufferSize(),
-                type.affectsCrumbling(),
-                false,
-                () -> {
-                    type.setupRenderState();
-                    (isEntity ? SCAN_ENTITY_STATE : SCAN_BLOCK_STATE).setupRenderState();
-                    DEPTH_WRITE.setupRenderState();
-                },
-                () -> {
-                    DEPTH_WRITE.clearRenderState();
-                    (isEntity ? SCAN_ENTITY_STATE : SCAN_BLOCK_STATE).clearRenderState();
-                    type.clearRenderState();
-                }
-        ));
+        try {
+            return DEPTH_WRAP_CACHE.computeIfAbsent(original, type -> new ModRenderTypes(
+                    Constants.MOD_ID + "_scan_depth_wrap",
+                    type.format(),
+                    type.mode(),
+                    type.bufferSize(),
+                    type.affectsCrumbling(),
+                    false,
+                    () -> {
+                        type.setupRenderState();
+                        (isEntity ? SCAN_ENTITY_STATE : SCAN_BLOCK_STATE).setupRenderState();
+                        DEPTH_WRITE.setupRenderState();
+                    },
+                    () -> {
+                        DEPTH_WRITE.clearRenderState();
+                        (isEntity ? SCAN_ENTITY_STATE : SCAN_BLOCK_STATE).clearRenderState();
+                        type.clearRenderState();
+                    }
+            ));
+        } catch (Exception e) {
+            return original;
+        }
     }
 
     public static RenderType wrapForScan(RenderType original, boolean isEntity) {
-        return SCAN_WRAP_CACHE.computeIfAbsent(original, type -> new ModRenderTypes(
-                Constants.MOD_ID + "_scan_wrap",
-                type.format(),
-                type.mode(),
-                type.bufferSize(),
-                type.affectsCrumbling(),
-                false,
-                () -> {
-                    type.setupRenderState();
-                    (isEntity ? SCAN_ENTITY_STATE : SCAN_BLOCK_STATE).setupRenderState();
-                    TRANSLUCENT_TRANSPARENCY.setupRenderState();
-                    COLOR_WRITE.setupRenderState();
-                    new DepthTestStateShard("equal_depth", GL11.GL_EQUAL).setupRenderState();
-                },
-                () -> {
-                    new DepthTestStateShard("equal_depth", GL11.GL_EQUAL).clearRenderState();
-                    COLOR_WRITE.clearRenderState();
-                    TRANSLUCENT_TRANSPARENCY.clearRenderState();
-                    (isEntity ? SCAN_ENTITY_STATE : SCAN_BLOCK_STATE).clearRenderState();
-                    type.clearRenderState();
-                }
-        ));
+        try {
+            return SCAN_WRAP_CACHE.computeIfAbsent(original, type -> new ModRenderTypes(
+                    Constants.MOD_ID + "_scan_wrap",
+                    type.format(),
+                    type.mode(),
+                    type.bufferSize(),
+                    type.affectsCrumbling(),
+                    false,
+                    () -> {
+                        type.setupRenderState();
+                        (isEntity ? SCAN_ENTITY_STATE : SCAN_BLOCK_STATE).setupRenderState();
+                        TRANSLUCENT_TRANSPARENCY.setupRenderState();
+                        COLOR_WRITE.setupRenderState();
+                        new DepthTestStateShard("equal_depth", GL11.GL_EQUAL).setupRenderState();
+                    },
+                    () -> {
+                        new DepthTestStateShard("equal_depth", GL11.GL_EQUAL).clearRenderState();
+                        COLOR_WRITE.clearRenderState();
+                        TRANSLUCENT_TRANSPARENCY.clearRenderState();
+                        (isEntity ? SCAN_ENTITY_STATE : SCAN_BLOCK_STATE).clearRenderState();
+                        type.clearRenderState();
+                    }
+            ));
+        } catch (Exception e) {
+            return original;
+        }
     }
 
     public static void registerShaders(Consumer<ShaderInstance> provider, ResourceProvider resourceProvider) throws IOException {
