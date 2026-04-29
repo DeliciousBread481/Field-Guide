@@ -1,0 +1,90 @@
+{
+  "entries": [
+    {
+      "id": "environmental:koi",
+      "replace": false,
+      "variants": [
+        {
+          "id": "kohaku",
+          "nbt": "{Variant:0}"
+        },
+        {
+          "id": "ogon",
+          "nbt": "{Variant:1}"
+        },
+        {
+          "id": "kigoi",
+          "nbt": "{Variant:2}"
+        },
+        {
+          "id": "tancho",
+          "nbt": "{Variant:3}"
+        },
+        {
+          "id": "higoi",
+          "nbt": "{Variant:4}"
+        },
+        {
+          "id": "chagoi",
+          "nbt": "{Variant:5}"
+        },
+        {
+          "id": "narumi_asagi",
+          "nbt": "{Variant:6}"
+        },
+        {
+          "id": "tancho_sanke",
+          "nbt": "{Variant:7}"
+        },
+        {
+          "id": "platinum_ogon",
+          "nbt": "{Variant:8}"
+        },
+        {
+          "id": "orenji_ogon",
+          "nbt": "{Variant:9}"
+        },
+        {
+          "id": "hi_utsuri",
+          "nbt": "{Variant:10}"
+        },
+        {
+          "id": "magoi",
+          "nbt": "{Variant:11}"
+        },
+        {
+          "id": "konjo_asagi",
+          "nbt": "{Variant:12}"
+        },
+        {
+          "id": "ochiba",
+          "nbt": "{Variant:13}"
+        },
+        {
+          "id": "kumonryu",
+          "nbt": "{Variant:14}"
+        },
+        {
+          "id": "aka_matsuba",
+          "nbt": "{Variant:15}"
+        },
+        {
+          "id": "doitsu_chagoi",
+          "nbt": "{Variant:16}"
+        },
+        {
+          "id": "kin_showa",
+          "nbt": "{Variant:17}"
+        },
+        {
+          "id": "showa",
+          "nbt": "{Variant:18}"
+        },
+        {
+          "id": "shiro_utsuri",
+          "nbt": "{Variant:19}"
+        }
+      ]
+    }
+  ]
+}

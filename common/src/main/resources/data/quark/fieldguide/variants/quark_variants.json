@@ -1,0 +1,54 @@
+{
+  "entries": [
+    {
+      "id": "quark:stoneling",
+      "replace": false,
+      "variants": [
+        {
+          "id": "Fine",
+          "nbt": "{variant:0b}"
+        },
+        {
+          "id": "Belligerent",
+          "nbt": "{variant:1b}"
+        },
+        {
+          "id": "Omnipotent",
+          "nbt": "{variant:2b}"
+        },
+        {
+          "id": "Bashful",
+          "nbt": "{variant:3b}"
+        },
+        {
+          "id": "Poised",
+          "nbt": "{variant:4b}"
+        },
+        {
+          "id": "Pugnacious",
+          "nbt": "{variant:5b}"
+        },
+        {
+          "id": "Impish",
+          "nbt": "{variant:6b}"
+        },
+        {
+          "id": "Foolish",
+          "nbt": "{variant:7b}"
+        },
+        {
+          "id": "Withdrawn",
+          "nbt": "{variant:8b}"
+        },
+        {
+          "id": "Imperious",
+          "nbt": "{variant:9b}"
+        },
+        {
+          "id": "Deranged",
+          "nbt": "{variant:10b}"
+        }
+      ]
+    }
+  ]
+}

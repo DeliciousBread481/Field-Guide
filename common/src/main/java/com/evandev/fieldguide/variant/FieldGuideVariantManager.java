@@ -3,6 +3,7 @@ package com.evandev.fieldguide.variant;
 import com.evandev.fieldguide.api.variant.DatapackVariant;
 import com.evandev.fieldguide.api.variant.VariantDef;
 import com.evandev.fieldguide.api.variant.VariantProvider;
+import com.evandev.fieldguide.config.ServerConfig;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
@@ -108,6 +109,7 @@ public class FieldGuideVariantManager {
 
     @SuppressWarnings("unchecked")
     public static <T extends Mob> VariantProvider<T> getProvider(Entity entity) {
+        if (ServerConfig.get().disableVariants) return null;
         if (!(entity instanceof Mob mob)) return null;
 
         ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
@@ -152,6 +154,7 @@ public class FieldGuideVariantManager {
     }
 
     public static List<VariantDef> getVariants(Entity entity) {
+        if (ServerConfig.get().disableVariants) return List.of();
         if (!(entity instanceof Mob mob)) return List.of();
 
         VariantProvider<Mob> provider = getProvider(entity);
@@ -171,6 +174,8 @@ public class FieldGuideVariantManager {
     }
 
     public static List<VariantDef> getVariants(EntityType<?> type, Level level) {
+        if (ServerConfig.get().disableVariants) return List.of();
+
         if (level != null) {
             try {
                 Entity entity = type.create(level);
@@ -279,7 +284,8 @@ public class FieldGuideVariantManager {
             if (m.getParameterCount() == 0 && (name.startsWith("get") || name.startsWith("is")) &&
                     (name.contains("Variant") || name.contains("Variation") || name.contains("Type") || name.contains("Color")) &&
                     !name.equals("getCollarColor") && !name.contains("Order") && !name.contains("Mode") && !name.contains("Status") &&
-                    !name.contains("Behaviour") && !name.contains("Accessibility") && !name.contains("State")) {
+                    !name.contains("Behaviour") && !name.contains("Accessibility") && !name.contains("State") &&
+                    !name.contains("SpawnType")) {
 
                 if (!m.getReturnType().isEnum() || m.getReturnType().getSimpleName().equals("DyeColor")) {
                     continue;

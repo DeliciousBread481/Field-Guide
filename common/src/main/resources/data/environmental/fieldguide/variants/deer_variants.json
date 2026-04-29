@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "environmental:deer",
+      "replace": false,
+      "variants": [
+        {
+          "id": "Creamy",
+          "nbt": "{CoatType:0,CoatColor:0}"
+        },
+        {
+          "id": "Chestnut",
+          "nbt": "{CoatType:0,CoatColor:1}"
+        },
+        {
+          "id": "Gray",
+          "nbt": "{CoatType:0,CoatColor:2}"
+        }
+      ]
+    }
+  ]
+}

@@ -723,18 +723,37 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (unlocked && !spawnBiomes.isEmpty()) {
             int itemSize = 20;
             this.addRenderableWidget(new PaginatedGridWidget<>(this.rightPageBounds.left() + 2, this.rightPageBounds.bottom() - 33, this.rightPageBounds.width() - 4, itemSize, 5, itemSize, 0, new ArrayList<>(spawnBiomes), (graphics, item, x, y, mouseX, mouseY) -> {
-                ResourceLocation texture = new ResourceLocation(item.getNamespace(), "textures/immersiveoverlays/" + item.getPath() + ".png");
+                var resourceManager = Minecraft.getInstance().getResourceManager();
+
+                ResourceLocation baseTexture = new ResourceLocation(item.getNamespace(), "textures/immersiveoverlays/" + item.getPath() + ".png");
+                ResourceLocation txtFile = new ResourceLocation(item.getNamespace(), "textures/immersiveoverlays/" + item.getPath() + ".txt");
+
+                ResourceLocation renderTexture = baseTexture;
+
+                if (resourceManager.getResource(txtFile).isPresent()) {
+                    try (java.io.BufferedReader reader = resourceManager.getResource(txtFile).get().openAsReader()) {
+                        String redirectStr = reader.readLine();
+                        if (redirectStr != null && !redirectStr.trim().isEmpty()) {
+                            ResourceLocation redirectLoc = new ResourceLocation(redirectStr.trim());
+                            renderTexture = new ResourceLocation(redirectLoc.getNamespace(), "textures/immersiveoverlays/" + redirectLoc.getPath() + ".png");
+                        }
+                    } catch (Exception e) {
+                        Constants.LOG.error("Failed to read Immersive Overlay redirect file for biome {}", item, e);
+                    }
+                }
 
                 boolean mouseOver = Bounds.isMouseOver(mouseX, mouseY, x, y, itemSize, itemSize) && (this.variantOverviewWidget == null || !this.variantOverviewWidget.isMouseOver(mouseX, mouseY));
                 int backgroundOffset = mouseOver ? itemSize : 0;
                 graphics.blit(Constants.WIDGETS_TEXTURE, x, y, 20, 64 + backgroundOffset, itemSize, itemSize);
                 int offset = (itemSize - 16) / 2;
 
-                if (Minecraft.getInstance().getResourceManager().getResource(texture).isPresent()) {
-                    graphics.blit(texture, x + offset, y + offset, 0, 0, 16, 16, 16, 16);
+                if (resourceManager.getResource(renderTexture).isPresent()) {
+                    graphics.blit(renderTexture, x + offset, y + offset, 0, 0, 16, 16, 16, 16);
+                } else if (resourceManager.getResource(baseTexture).isPresent()) {
+                    graphics.blit(baseTexture, x + offset, y + offset, 0, 0, 16, 16, 16, 16);
                 } else {
                     ResourceLocation plainsTexture = new ResourceLocation("minecraft", "textures/immersiveoverlays/plains.png");
-                    if (Minecraft.getInstance().getResourceManager().getResource(plainsTexture).isPresent()) {
+                    if (resourceManager.getResource(plainsTexture).isPresent()) {
                         graphics.blit(plainsTexture, x + offset, y + offset, 0, 0, 16, 16, 16, 16);
                     }
                 }

@@ -23,6 +23,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.TagParser;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -368,6 +369,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         StaticLootParser.clearCache();
         this.serverLootCache = LootTableHelper.generateLootMap(server.overworld());
         expandBiomeTags(server);
+        expandItemTags(server);
         generateAutoBiomeAdditions(server);
         calculatePrefixedLists();
     }
@@ -381,6 +383,7 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
         StaticLootParser.clearCache();
         this.serverLootCache = LootTableHelper.generateLootMap(server.overworld());
         expandBiomeTags(server);
+        expandItemTags(server);
         generateAutoBiomeAdditions(server);
         calculatePrefixedLists();
 
@@ -553,10 +556,20 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             for (Resource resource : entry.getValue()) {
                 try (Reader reader = resource.openAsReader()) {
                     JsonObject json = GsonHelper.parse(reader);
+
+                    if (GsonHelper.getAsBoolean(json, "replace", false)) {
+                        data.composites.clear();
+                    }
+
                     if (json.has("values")) {
                         for (JsonElement el : GsonHelper.getAsJsonArray(json, "values")) {
                             JsonObject obj = el.getAsJsonObject();
                             ResourceLocation id = new ResourceLocation(GsonHelper.getAsString(obj, "id"));
+
+                            if (GsonHelper.getAsBoolean(obj, "replace", false)) {
+                                data.composites.removeIf(c -> c.id().equals(id));
+                            }
+
                             ResourceLocation displayId = obj.has("display") ? new ResourceLocation(GsonHelper.getAsString(obj, "display")) : id;
 
                             List<ResourceLocation> components = new ArrayList<>();
@@ -740,12 +753,16 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
 
     private void expandBiomeTags(MinecraftServer server) {
         Registry<Biome> biomeRegistry = server.registryAccess().registryOrThrow(Registries.BIOME);
-
-        this.biomeAdditions = expandTagsForList(this.biomeAdditions, biomeRegistry);
-        this.biomeRemovals = expandTagsForList(this.biomeRemovals, biomeRegistry);
+        this.biomeAdditions = expandTagsForList(this.biomeAdditions, biomeRegistry, Registries.BIOME);
+        this.biomeRemovals = expandTagsForList(this.biomeRemovals, biomeRegistry, Registries.BIOME);
     }
 
-    private List<String> expandTagsForList(List<String> list, Registry<Biome> biomeRegistry) {
+    private void expandItemTags(MinecraftServer server) {
+        this.lootAdditions = expandTagsForList(this.lootAdditions, BuiltInRegistries.ITEM, Registries.ITEM);
+        this.lootRemovals = expandTagsForList(this.lootRemovals, BuiltInRegistries.ITEM, Registries.ITEM);
+    }
+
+    private <T> List<String> expandTagsForList(List<String> list, Registry<T> registry, ResourceKey<? extends Registry<T>> registryKey) {
         Set<String> expanded = new LinkedHashSet<>();
 
         for (String item : list) {
@@ -753,14 +770,14 @@ public class ServerFieldGuideManager extends SimplePreparableReloadListener<Serv
             if (parts.length == 2 && parts[1].startsWith("#")) {
                 String tagPath = parts[1].substring(1);
                 try {
-                    TagKey<Biome> tagKey = TagKey.create(Registries.BIOME, new ResourceLocation(tagPath));
-                    biomeRegistry.getTagOrEmpty(tagKey).forEach(holder -> {
+                    TagKey<T> tagKey = TagKey.create(registryKey, new ResourceLocation(tagPath));
+                    registry.getTagOrEmpty(tagKey).forEach(holder -> {
                         holder.unwrapKey().ifPresent(key -> {
                             expanded.add(parts[0] + "|" + key.location());
                         });
                     });
                 } catch (Exception e) {
-                    Constants.LOG.error("Failed to expand biome tag: {}", parts[1], e);
+                    Constants.LOG.error("Failed to expand tag: {}", parts[1], e);
                     expanded.add(item);
                 }
             } else {

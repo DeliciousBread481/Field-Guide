@@ -1,0 +1,234 @@
+{
+  "entries": [
+    {
+      "id": "environmental:slabfish",
+      "replace": false,
+      "variants": [
+        {
+          "id": "aspen",
+          "nbt": "{SlabfishType:\"environmental:aspen\"}"
+        },
+        {
+          "id": "badlands",
+          "nbt": "{SlabfishType:\"environmental:badlands\"}"
+        },
+        {
+          "id": "bamboo",
+          "nbt": "{SlabfishType:\"environmental:bamboo\"}"
+        },
+        {
+          "id": "basalt_deltas",
+          "nbt": "{SlabfishType:\"environmental:basalt_deltas\"}"
+        },
+        {
+          "id": "beach",
+          "nbt": "{SlabfishType:\"environmental:beach\"}"
+        },
+        {
+          "id": "blossom",
+          "nbt": "{SlabfishType:\"environmental:blossom\"}"
+        },
+        {
+          "id": "brown_mushroom",
+          "nbt": "{SlabfishType:\"environmental:brown_mushroom\"}"
+        },
+        {
+          "id": "cave",
+          "nbt": "{SlabfishType:\"environmental:cave\"}"
+        },
+        {
+          "id": "cherry_grove",
+          "nbt": "{SlabfishType:\"environmental:cherry_grove\"}"
+        },
+        {
+          "id": "chorus",
+          "nbt": "{SlabfishType:\"environmental:chorus\"}"
+        },
+        {
+          "id": "crimson",
+          "nbt": "{SlabfishType:\"environmental:crimson\"}"
+        },
+        {
+          "id": "dark_forest",
+          "nbt": "{SlabfishType:\"environmental:dark_forest\"}"
+        },
+        {
+          "id": "deep_dark",
+          "nbt": "{SlabfishType:\"environmental:deep_dark\"}"
+        },
+        {
+          "id": "deepslate",
+          "nbt": "{SlabfishType:\"environmental:deepslate\"}"
+        },
+        {
+          "id": "desert",
+          "nbt": "{SlabfishType:\"environmental:desert\"}"
+        },
+        {
+          "id": "dripstone_caves",
+          "nbt": "{SlabfishType:\"environmental:dripstone_caves\"}"
+        },
+        {
+          "id": "drowned",
+          "nbt": "{SlabfishType:\"environmental:drowned\"}"
+        },
+        {
+          "id": "dunes",
+          "nbt": "{SlabfishType:\"environmental:dunes\"}"
+        },
+        {
+          "id": "end",
+          "nbt": "{SlabfishType:\"environmental:end\"}"
+        },
+        {
+          "id": "flower_forest",
+          "nbt": "{SlabfishType:\"environmental:flower_forest\"}"
+        },
+        {
+          "id": "forest",
+          "nbt": "{SlabfishType:\"environmental:forest\"}"
+        },
+        {
+          "id": "frozen_ocean",
+          "nbt": "{SlabfishType:\"environmental:frozen_ocean\"}"
+        },
+        {
+          "id": "ghost",
+          "nbt": "{SlabfishType:\"environmental:ghost\"}"
+        },
+        {
+          "id": "hill",
+          "nbt": "{SlabfishType:\"environmental:hill\"}"
+        },
+        {
+          "id": "ice_spikes",
+          "nbt": "{SlabfishType:\"environmental:ice_spikes\"}"
+        },
+        {
+          "id": "jungle",
+          "nbt": "{SlabfishType:\"environmental:jungle\"}"
+        },
+        {
+          "id": "kousa",
+          "nbt": "{SlabfishType:\"environmental:kousa\"}"
+        },
+        {
+          "id": "laurel",
+          "nbt": "{SlabfishType:\"environmental:laurel\"}"
+        },
+        {
+          "id": "lush_caves",
+          "nbt": "{SlabfishType:\"environmental:lush_caves\"}"
+        },
+        {
+          "id": "mangrove",
+          "nbt": "{SlabfishType:\"environmental:mangrove\"}"
+        },
+        {
+          "id": "maple",
+          "nbt": "{SlabfishType:\"environmental:maple\"}"
+        },
+        {
+          "id": "marsh",
+          "nbt": "{SlabfishType:\"environmental:marsh\"}"
+        },
+        {
+          "id": "mountain",
+          "nbt": "{SlabfishType:\"environmental:mountain\"}"
+        },
+        {
+          "id": "mushroom",
+          "nbt": "{SlabfishType:\"environmental:mushroom\"}"
+        },
+        {
+          "id": "nether",
+          "nbt": "{SlabfishType:\"environmental:nether\"}"
+        },
+        {
+          "id": "nightmare",
+          "nbt": "{SlabfishType:\"environmental:nightmare\"}"
+        },
+        {
+          "id": "ocean",
+          "nbt": "{SlabfishType:\"environmental:ocean\"}"
+        },
+        {
+          "id": "pine",
+          "nbt": "{SlabfishType:\"environmental:pine\"}"
+        },
+        {
+          "id": "plains",
+          "nbt": "{SlabfishType:\"environmental:plains\"}"
+        },
+        {
+          "id": "poise",
+          "nbt": "{SlabfishType:\"environmental:poise\"}"
+        },
+        {
+          "id": "rainforest",
+          "nbt": "{SlabfishType:\"environmental:rainforest\"}"
+        },
+        {
+          "id": "river",
+          "nbt": "{SlabfishType:\"environmental:river\"}"
+        },
+        {
+          "id": "savanna",
+          "nbt": "{SlabfishType:\"environmental:savanna\"}"
+        },
+        {
+          "id": "scrubland",
+          "nbt": "{SlabfishType:\"environmental:scrubland\"}"
+        },
+        {
+          "id": "skeleton",
+          "nbt": "{SlabfishType:\"environmental:skeleton\"}"
+        },
+        {
+          "id": "sky",
+          "nbt": "{SlabfishType:\"environmental:sky\"}"
+        },
+        {
+          "id": "snowy",
+          "nbt": "{SlabfishType:\"environmental:snowy\"}"
+        },
+        {
+          "id": "soul_sand_valley",
+          "nbt": "{SlabfishType:\"environmental:soul_sand_valley\"}"
+        },
+        {
+          "id": "spiny_thicket",
+          "nbt": "{SlabfishType:\"environmental:spiny_thicket\"}"
+        },
+        {
+          "id": "stray",
+          "nbt": "{SlabfishType:\"environmental:stray\"}"
+        },
+        {
+          "id": "swamp",
+          "nbt": "{SlabfishType:\"environmental:swamp\"}"
+        },
+        {
+          "id": "taiga",
+          "nbt": "{SlabfishType:\"environmental:taiga\"}"
+        },
+        {
+          "id": "totem",
+          "nbt": "{SlabfishType:\"environmental:totem\"}"
+        },
+        {
+          "id": "warm_ocean",
+          "nbt": "{SlabfishType:\"environmental:warm_ocean\"}"
+        },
+        {
+          "id": "warped",
+          "nbt": "{SlabfishType:\"environmental:warped\"}"
+        },
+        {
+          "id": "wither",
+          "nbt": "{SlabfishType:\"environmental:wither\"}"
+        }
+      ]
+    }
+  ]
+}

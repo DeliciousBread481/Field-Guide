@@ -1,0 +1,46 @@
+{
+  "entries": [
+    {
+      "id": "atmospheric:tetra",
+      "replace": false,
+      "variants": [
+        {
+          "id": "beacon",
+          "nbt": "{Variant:\"atmospheric:beacon\"}"
+        },
+        {
+          "id": "cardinal",
+          "nbt": "{Variant:\"atmospheric:cardinal\"}"
+        },
+        {
+          "id": "diamond",
+          "nbt": "{Variant:\"atmospheric:diamond\"}"
+        },
+        {
+          "id": "emperor",
+          "nbt": "{Variant:\"atmospheric:emperor\"}"
+        },
+        {
+          "id": "flame",
+          "nbt": "{Variant:\"atmospheric:flame\"}"
+        },
+        {
+          "id": "jewel",
+          "nbt": "{Variant:\"atmospheric:jewel\"}"
+        },
+        {
+          "id": "neon",
+          "nbt": "{Variant:\"atmospheric:neon\"}"
+        },
+        {
+          "id": "ornate",
+          "nbt": "{Variant:\"atmospheric:ornate\"}"
+        },
+        {
+          "id": "royal",
+          "nbt": "{Variant:\"atmospheric:royal\"}"
+        }
+      ]
+    }
+  ]
+}

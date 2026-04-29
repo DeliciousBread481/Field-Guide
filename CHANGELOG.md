@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-04-29
+
+### Added
+
+- Added additional variants for mobs from Environmental, Neapolitan, Quark, and Caverns and Chasms (@mc_polaris)
+- Added support for biome tags and item tags in biome and loot modifications respectively.
+- Composites now support a `"replace": true` field for overwriting.
+- Added a config option to disable variants as a whole.
+
+### Fixed
+
+- Fixed variant issues with Goety.
+- Fixed Field Guide biomes ignoring Immersive Overlays text files.
+
 ## [1.6.9] - 2026-04-09
 
 ### Fixed

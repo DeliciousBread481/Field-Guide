@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "neapolitan:chimpanzee",
+      "replace": false,
+      "variants": [
+        {
+          "id": "Jungle",
+          "nbt": "{ChimpanzeeType:0}"
+        },
+        {
+          "id": "Rainforest",
+          "nbt": "{ChimpanzeeType:1}"
+        },
+        {
+          "id": "Bamboo",
+          "nbt": "{ChimpanzeeType:2}"
+        }
+      ]
+    }
+  ]
+}
