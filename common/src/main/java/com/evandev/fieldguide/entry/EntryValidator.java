@@ -45,11 +45,28 @@ public class EntryValidator {
     }
 
     public static boolean isValidItem(Item item, Identifier categoryId) {
-        // TODO: add blacklisting
+        var holder = BuiltInRegistries.ITEM.wrapAsHolder(item);
 
-        if (Services.PLATFORM.isModLoaded("reliable_remover") && ServerConfig.get().enableReliableRemover && ReliableRemoverCompat.isHidden(item.getDefaultInstance())) {
+        boolean blacklisted = false;
+
+        if (holder.is(ModTags.Items.BLACKLISTED)) {
+            blacklisted = true;
+        } else if (categoryId != null) {
+            TagKey<Item> catTag = TagKey.create(
+                    Registries.ITEM,
+                    Identifier.fromNamespaceAndPath(Constants.MOD_ID, "blacklisted/" + categoryId.getNamespace() + "/" + categoryId.getPath())
+            );
+            blacklisted = holder.is(catTag);
+        }
+
+        if (blacklisted) return false;
+
+        if (Services.PLATFORM.isModLoaded("reliable_remover") &&
+                ServerConfig.get().enableReliableRemover &&
+                ReliableRemoverCompat.isHidden(item.getDefaultInstance())) {
             return false;
         }
+
         return true;
     }
 }
