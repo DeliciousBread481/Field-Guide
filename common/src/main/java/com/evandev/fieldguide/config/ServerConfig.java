@@ -26,6 +26,7 @@ public class ServerConfig {
     public boolean disableBiomeDisplay = false;
     public boolean disableEditingDescriptions = false;
     public boolean disableEditingNames = false;
+    public boolean disableVariants = false;
     public boolean keepSilhouetteWhenUnlocked = false;
     public boolean unlockAllVariants = false;
     public boolean enableFieldGuideItem = false;
