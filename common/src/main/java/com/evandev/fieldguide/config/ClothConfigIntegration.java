@@ -155,6 +155,12 @@ public class ClothConfigIntegration {
                 .setSaveConsumer(newValue -> serverConfig.disableBiomeDisplay = newValue)
                 .build());
 
+        general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.disable_variants"), serverConfig.disableVariants)
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("option.fieldguide.disable_variants.tooltip"))
+                .setSaveConsumer(newValue -> serverConfig.disableVariants = newValue)
+                .build());
+
         general.addEntry(entryBuilder.startBooleanToggle(Component.translatable("option.fieldguide.disable_editing_descriptions"), serverConfig.disableEditingDescriptions)
                 .setDefaultValue(false)
                 .setTooltip(Component.translatable("option.fieldguide.disable_editing_descriptions.tooltip"))

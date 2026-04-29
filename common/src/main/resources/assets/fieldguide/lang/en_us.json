@@ -204,6 +204,9 @@
   "option.fieldguide.require_item_to_open": "Require Item to Open",
   "option.fieldguide.require_item_to_open.tooltip": "If enabled, players must have the physical item to open their Field Guide.",
 
+  "option.fieldguide.disable_variants": "Disable Variants",
+  "option.fieldguide.disable_variants.tooltip": "If enabled, completely disables the display and tracking of mob variants in the Field Guide.",
+
   "fieldguide.alignment.passive": "Passive",
   "fieldguide.alignment.neutral": "Neutral",
   "fieldguide.alignment.hostile": "Hostile",

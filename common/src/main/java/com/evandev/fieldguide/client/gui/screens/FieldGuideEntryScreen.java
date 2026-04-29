@@ -58,6 +58,7 @@ import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 
+import java.io.BufferedReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -247,20 +248,22 @@ public class FieldGuideEntryScreen extends BookScreen {
             int currentY = titleY + LINE_HEIGHT + 2;
 
             if (!entityVariants.isEmpty() && currentVariantIndex < entityVariants.size()) {
-                VariantDef variant = entityVariants.get(currentVariantIndex);
-                String variantId = variant.id();
-                String customVariantName = ProgressManager.getInstance().getCustomName(ClientFieldGuideManager.getEntryId(entry).toString() + "#" + variantId);
-                String initialVariantName = customVariantName != null ? customVariantName : FieldGuideVariantManager.getVariantDisplayName(variant).getString();
+                if (!ServerConfig.get().disableEditingNames) {
+                    VariantDef variant = entityVariants.get(currentVariantIndex);
+                    String variantId = variant.id();
+                    String customVariantName = ProgressManager.getInstance().getCustomName(ClientFieldGuideManager.getEntryId(entry).toString() + "#" + variantId);
+                    String initialVariantName = customVariantName != null ? customVariantName : FieldGuideVariantManager.getVariantDisplayName(variant).getString();
 
-                this.variantWidget = ScholarCompat.createTextField(this.font, textX, currentY, textAreaWidth, LINE_HEIGHT, initialVariantName, ClientConfig.get().getTextMutedColorInt(), textAreaWidth, FieldGuideLimits.MAX_ENTRY_NAME_LENGTH,
-                        newName -> {
-                            Identifier entryId = ClientFieldGuideManager.getEntryId(entry);
-                            if (entryId != null) {
-                                ProgressManager.getInstance().setCustomVariantName(entryId, variantId, newName);
-                                Services.NETWORK.sendToServer(UpdateEntryDataPacket.setVariantName(entryId, variantId, newName));
-                            }
-                        }, false);
-                this.addRenderableWidget(this.variantWidget);
+                    this.variantWidget = ScholarCompat.createTextField(this.font, textX, currentY, textAreaWidth, LINE_HEIGHT, initialVariantName, ClientConfig.get().getTextMutedColorInt(), textAreaWidth, FieldGuideLimits.MAX_ENTRY_NAME_LENGTH,
+                            newName -> {
+                                Identifier entryId = ClientFieldGuideManager.getEntryId(entry);
+                                if (entryId != null) {
+                                    ProgressManager.getInstance().setCustomVariantName(entryId, variantId, newName);
+                                    Services.NETWORK.sendToServer(UpdateEntryDataPacket.setVariantName(entryId, variantId, newName));
+                                }
+                            }, false);
+                    this.addRenderableWidget(this.variantWidget);
+                }
                 currentY += LINE_HEIGHT;
             }
 
@@ -291,7 +294,7 @@ public class FieldGuideEntryScreen extends BookScreen {
 
         if (renderEntry instanceof EntityType<?> type) {
             try {
-                this.renderedEntity = type.create(this.minecraft.level, EntitySpawnReason.COMMAND);
+                this.renderedEntity = type.create(this.minecraft.level, EntitySpawnReason.LOAD);
             } catch (Exception ignored) {
             }
         }
@@ -688,18 +691,34 @@ public class FieldGuideEntryScreen extends BookScreen {
         if (unlocked && !spawnBiomes.isEmpty()) {
             int itemSize = 20;
             this.addRenderableWidget(new PaginatedGridWidget<>(this.rightPageBounds.left() + 2, this.rightPageBounds.bottom() - 33, this.rightPageBounds.width() - 4, itemSize, 5, itemSize, 0, new ArrayList<>(spawnBiomes), (graphics, item, x, y, mouseX, mouseY) -> {
-                Identifier texture = Identifier.fromNamespaceAndPath(item.getNamespace(), "textures/immersiveoverlays/" + item.getPath() + ".png");
-
+                var resourceManager = Minecraft.getInstance().getResourceManager();
+                Identifier baseTexture = Identifier.fromNamespaceAndPath(item.getNamespace(), "textures/immersiveoverlays/" + item.getPath() + ".png");
+                Identifier txtFile = Identifier.fromNamespaceAndPath(item.getNamespace(), "textures/immersiveoverlays/" + item.getPath() + ".txt");
+                Identifier renderTexture = baseTexture;
+                if (resourceManager.getResource(txtFile).isPresent()) {
+                    try (BufferedReader reader = resourceManager.getResource(txtFile).get().openAsReader()) {
+                        String redirectStr = reader.readLine();
+                        if (redirectStr != null && !redirectStr.trim().isEmpty()) {
+                            Identifier redirectLoc = Identifier.parse(redirectStr.trim());
+                            renderTexture = Identifier.fromNamespaceAndPath(redirectLoc.getNamespace(), "textures/immersiveoverlays/" + redirectLoc.getPath() + ".png");
+                        }
+                    } catch (Exception e) {
+                        Constants.LOG.error("Failed to read Immersive Overlay redirect file for biome {}", item, e);
+                    }
+                }
+                
                 boolean mouseOver = Bounds.isMouseOver(mouseX, mouseY, x, y, itemSize, itemSize) && (this.variantOverviewWidget == null || !this.variantOverviewWidget.isMouseOver(mouseX, mouseY));
                 int backgroundOffset = mouseOver ? itemSize : 0;
                 graphics.blit(RenderPipelines.GUI_TEXTURED, Constants.WIDGETS_TEXTURE, x, y, 20f, (float) (64 + backgroundOffset), itemSize, itemSize, 256, 256);
                 int offset = (itemSize - 16) / 2;
 
-                if (Minecraft.getInstance().getResourceManager().getResource(texture).isPresent()) {
-                    graphics.blit(RenderPipelines.GUI_TEXTURED, texture, x + offset, y + offset, 0f, 0f, 16, 16, 16, 16);
+                if (resourceManager.getResource(renderTexture).isPresent()) {
+                    graphics.blit(RenderPipelines.GUI_TEXTURED, renderTexture, x + offset, y + offset, 0f, 0f, 16, 16, 16, 16);
+                } else if (resourceManager.getResource(baseTexture).isPresent()) {
+                    graphics.blit(RenderPipelines.GUI_TEXTURED, baseTexture, x + offset, y + offset, 0f, 0f, 16, 16, 16, 16);
                 } else {
                     Identifier plainsTexture = Identifier.fromNamespaceAndPath("minecraft", "textures/immersiveoverlays/plains.png");
-                    if (Minecraft.getInstance().getResourceManager().getResource(plainsTexture).isPresent()) {
+                    if (resourceManager.getResource(plainsTexture).isPresent()) {
                         graphics.blit(RenderPipelines.GUI_TEXTURED, plainsTexture, x + offset, y + offset, 0f, 0f, 16, 16, 16, 16);
                     }
                 }

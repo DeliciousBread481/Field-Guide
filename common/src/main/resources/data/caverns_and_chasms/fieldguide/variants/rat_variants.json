@@ -1,0 +1,30 @@
+{
+  "entries": [
+    {
+      "id": "caverns_and_chasms:rat",
+      "replace": false,
+      "variants": [
+        {
+          "id": "white",
+          "nbt": "{Variant:\"caverns_and_chasms:white\"}"
+        },
+        {
+          "id": "blue",
+          "nbt": "{Variant:\"caverns_and_chasms:blue\"}"
+        },
+        {
+          "id": "black",
+          "nbt": "{Variant:\"caverns_and_chasms:black\"}"
+        },
+        {
+          "id": "gray",
+          "nbt": "{Variant:\"caverns_and_chasms:gray\"}"
+        },
+        {
+          "id": "brown",
+          "nbt": "{Variant:\"caverns_and_chasms:brown\"}"
+        }
+      ]
+    }
+  ]
+}
