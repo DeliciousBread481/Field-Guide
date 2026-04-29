@@ -45,7 +45,17 @@ public class EntryValidator {
     }
 
     public static boolean isValidItem(Item item, ResourceLocation categoryId) {
-        // TODO: add blacklist tag
+        boolean blacklisted = BuiltInRegistries.ITEM.getResourceKey(item).flatMap(BuiltInRegistries.ITEM::getHolder).map(h -> {
+            if (h.is(ModTags.Items.BLACKLISTED)) return true;
+            if (categoryId != null) {
+                TagKey<Item> catTag = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "blacklisted/" + categoryId.getNamespace() + "/" + categoryId.getPath()));
+                return (h.is(catTag));
+            }
+            return false;
+        }).orElse(false);
+
+        if (blacklisted) return false;
+
         if (Services.PLATFORM.isModLoaded("reliable_remover") && ServerConfig.get().enableReliableRemover && ReliableRemoverCompat.isHidden(item.getDefaultInstance())) {
             return false;
         }
